@@ -8,7 +8,7 @@ import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.{Interval, RelationTriple}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
 
 trait OpenIEAnnotator {
@@ -40,7 +40,7 @@ trait OpenIEAnnotator {
         None
     }
 
-  override def relationExtraction(doc: Document) {
+  override def relationExtraction(doc: Document): Unit = {
     val annotation = relationExtractionSanityCheck(doc)
     if(annotation.isEmpty) return
 

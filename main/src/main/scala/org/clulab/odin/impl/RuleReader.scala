@@ -9,12 +9,13 @@ import java.nio.charset.StandardCharsets
 import org.apache.commons.text.StrSubstitutor
 import org.apache.commons.io.FileUtils.readFileToString
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.io.{Codec, Source}
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 import org.clulab.odin._
 import org.clulab.odin.impl.MarkdownGeneration._
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Closer.AutoCloser
 
@@ -235,7 +236,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       val input = readFileOrResource(path)
       val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
       val vars = yaml.load(input).asInstanceOf[JMap[String, Any]]
-      vars.asScala.mapValues(v => processVar(v)).toMap
+      vars.asScala.map { case (k, v) => k -> processVar(v) }.toMap
   }
 
   /**

@@ -20,6 +20,7 @@ import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.SeqOdometer
 
 import java.io.File
+import scala.collection.mutable
 
 class TestLexiconNER extends FatdynetTest {
 
@@ -165,18 +166,24 @@ class TestLexiconNER extends FatdynetTest {
   val overrideKBs = Seq(
     "org/clulab/processors/overrideKB.tsv"
   )
+  val prioritizedOverrideKBs =
+      Seq("org/clulab/processors/overrideKB0.tsv") ++
+      overrideKBs ++
+      Seq("org/clulab/processors/overrideKB2.tsv")
 
   behavior of "NERs"
 
   it should "work for all setting combinations" in {
-    val entityValidators = Seq(new TrueEntityValidator, new LowerEntityValidator)
-    val useLemmas = Seq(false, true)
-    val caseInsensitives = Seq(false, true)
+    val entityValidators: Array[Any] = Array(new TrueEntityValidator, new LowerEntityValidator)
+    val useLemmas: Array[Any] = Array(false, true)
+    val caseInsensitives: Array[Any] = Array(false, true)
     val odometer = new SeqOdometer(Array(entityValidators, useLemmas, caseInsensitives))
 
-    odometer.foreach { case Seq(entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean) =>
-      testKBsAndNers(kbs, overrideKBs, "a a b b a",   Seq("B-A", "I-A", "B-B", "I-B", "O"),        entityValidator, useLemmas, caseInsensitive)
-      testKBsAndNers(kbs, overrideKBs, "a a a b b a", Seq("B-B", "I-B", "I-B", "B-B", "I-B", "O"), entityValidator, useLemmas, caseInsensitive)
+    odometer.foreach {
+      case mutable.ArraySeq(entityValidator: EntityValidator, useLemmas: Boolean, caseInsensitive: Boolean) =>
+        testKBsAndNers(kbs, overrideKBs, "a a b b a",   Seq("B-A", "I-A", "B-B", "I-B", "O"),        entityValidator, useLemmas, caseInsensitive)
+        testKBsAndNers(kbs, overrideKBs, "a a a b b a", Seq("B-B", "I-B", "I-B", "B-B", "I-B", "O"), entityValidator, useLemmas, caseInsensitive)
+      case _ => throw new RuntimeException("Odometer didn't work!")
     }
   }
 
@@ -276,6 +283,38 @@ class TestLexiconNER extends FatdynetTest {
     ), entityValidator, useLemmas, caseInsensitive)
   }
 
+  it should "prioritize standard KBs as expected" in {
+    val entityValidator = new TrueEntityValidator()
+    val useLemmas = true
+    val caseInsensitive = true
+    val text = "this abc that"
+
+    testKBsAndNers(kbs, Seq.empty, text, Seq(
+      "O",   // this
+      "B-A", // abc, use the first standard KB
+      "O"    // that
+    ), entityValidator, useLemmas, caseInsensitive)
+  }
+
+  it should "prioritize override KBs as expected" in {
+    val entityValidator = new TrueEntityValidator()
+    val useLemmas = true
+    val caseInsensitive = true
+    val text = "this abc that"
+
+    def test(overrideKBs: Seq[String]): Unit = {
+      testKBsAndNers(kbs, overrideKBs, text, Seq(
+        "O",   // this
+        "B-A", // abc, use the highest priority standard KB
+        "O"    // that
+      ), entityValidator, useLemmas, caseInsensitive)
+    }
+
+    prioritizedOverrideKBs.permutations.foreach { permutatedOverrideKBs =>
+      test(permutatedOverrideKBs)
+    }
+  }
+
   it should "support case changes" in {
     val entityValidator = new TrueEntityValidator()
     val useLemmas = false
@@ -327,7 +366,7 @@ class TestLexiconNER extends FatdynetTest {
 class LowerEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).exists { word =>
+    !sentence.words.slice(start, end).exists { word =>
       word.exists(_.isUpper) // Make sure there is none of this.
     }
   }
@@ -338,7 +377,7 @@ class LowerEntityValidator() extends EntityValidator {
 class NoAEntityValidator() extends EntityValidator {
 
   override def validMatch(sentence: Sentence, start: Int, end: Int): Boolean = {
-    !sentence.words.view(start, end).contains("a")
+    !sentence.words.slice(start, end).contains("a")
   }
 }
 

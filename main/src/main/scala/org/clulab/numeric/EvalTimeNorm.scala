@@ -3,7 +3,9 @@ package org.clulab.numeric
 import org.clulab.dynet.Utils
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.utils.Closer.AutoCloser
 
+import java.nio.charset.StandardCharsets
 import scala.io.Source
 
 object EvalTimeNorm {
@@ -21,13 +23,17 @@ object EvalTimeNorm {
         case Array(docId, startSpan, endSpan, startIntervalStr) =>
           (docId, (startSpan, endSpan, startIntervalStr))
       }
-    }).groupBy(t => t._1).mapValues(_.map(_._2))
+    }).groupBy(t => t._1).map { case (k, v) => k -> v.map(_._2) }
     // For each docId in goldTimex keys get parse the document and get the number of
     // gold time expressions, predicted time expressions and the intersection
     val valuesPerDocument = for (docId <- goldTimex.keys.toSeq.sorted) yield {
       val gold = goldTimex(docId).toSet
-      val docStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$docId/$docId")
-      val docText = Source.fromInputStream(docStream).getLines().mkString("\n")
+      val resource = s"$timeNormEvalDir/$docId/$docId"
+      val docStream = getClass.getResourceAsStream(resource)
+      val docText = Source.fromInputStream(docStream)(StandardCharsets.UTF_8).autoClose { source =>
+        // This ensures that line endings are LF.  FileUtils.getTextFromResource() will not.
+        source.getLines().mkString("\n")
+      }
       val doc = proc.annotate(docText)
       val mentions = ner.extractFrom(doc)
       setLabelsAndNorms(doc, mentions)

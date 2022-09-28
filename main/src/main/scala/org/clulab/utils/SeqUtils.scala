@@ -1,5 +1,7 @@
 package org.clulab.utils
 
+import org.clulab.scala.WrappedListBuffer._
+
 import scala.collection.mutable.ListBuffer
 
 /**

@@ -1,20 +1,28 @@
 package org.clulab.processors.clu
 
+import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
+import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
-import com.typesafe.config.{Config, ConfigFactory}
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.sequences.{LexiconNER, NamedEntity}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.ThreadUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import java.util.regex.Pattern
+
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.sequences.LexiconNER
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
-
-import java.util.regex.Pattern
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -201,7 +209,7 @@ class CluProcessor protected (
   def mkConstEmbeddings(doc: Document): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc)
 
   protected lazy val isPreparedToAnnotate: Boolean = {
-    Array(
+    ThreadUtils.parallelize(Seq(
       lazyTokenizer,               // tokenize
       lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
       lazyMtlNer,                  // recognizeNamedEntities
@@ -210,7 +218,7 @@ class CluProcessor protected (
       lazyMtlDepsLabel,            // parse
       lazyLemmatizer,              // lemmatize
       lazyMtlSrla                  // srl
-    ).par.foreach(_.value)
+    )).foreach(_.value)
     true
   }
 
@@ -320,7 +328,7 @@ class CluProcessor protected (
     if (!isStandard)
       originalWord
     else if (label == "UI")
-      Character.toUpperCase(loweredWord(0)) + loweredWord.substring(1)
+      s"${Character.toUpperCase(loweredWord(0))}${loweredWord.substring(1)}"
     else if (label == "UA")
       loweredWord.toUpperCase()
     else
@@ -360,24 +368,26 @@ class CluProcessor protected (
     }
 
     if(optionalNERLabels.isEmpty) {
-      (allLabels(0), None)
+      allLabels(0) -> None
     } else {
-      (mergeNerLabels(allLabels(0), optionalNERLabels.get), None)
+      mergeNerLabels(allLabels(0), optionalNERLabels.get) -> None
     }
   }
 
-  // The custom labels override the generic ones!
-  private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): Array[String] = {
-    assert(generic.length == custom.length)
-    val labels = new Array[String](generic.length)
-    for(i <- generic.indices) {
-      if(custom(i) != OUTSIDE) {
-        labels(i) = custom(i)
-      } else {
-        labels(i) = generic(i)
-      }
+  private def mergeNerLabels(generic: IndexedSeq[String], custom: IndexedSeq[String]): IndexedSeq[String] = {
+    require(generic.length == custom.length)
+
+    val customNamedEntities = NamedEntity.collect(custom)
+    val result = generic.toArray // A copy of the generic labels is created here.
+
+    if (customNamedEntities.isEmpty)
+      result
+    else {
+      val genericNamedEntities = NamedEntity.collect(generic)
+
+      // The custom labels override the generic ones!
+      NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
     }
-    labels
   }
 
   /** Gets the index of all predicates in this sentence */
@@ -656,8 +666,9 @@ class CluProcessor protected (
         sent.endOffsets,
         docDate,
         embeddings)
+      val patchedLabels = NamedEntity.patch(labels.toArray)
 
-      sent.entities = Some(labels.toArray)
+      sent.entities = Some(patchedLabels)
       if(norms.nonEmpty) {
         sent.norms = Some(norms.get.toArray)
       }
@@ -667,6 +678,7 @@ class CluProcessor protected (
     // numeric entities using our Odin rules
     //
     val numericMentions = numericEntityRecognizer.extractFrom(doc)
+
     setLabelsAndNorms(doc, numericMentions)
   }
 
@@ -772,7 +784,6 @@ class CluProcessor protected (
     for(sent <- doc.sentences) {
       val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
       parserPostProcessing(sent, headsWithLabels)
-      //println("headsWithLabels: " + headsWithLabels.mkString(" "))
 
       val edges = new ListBuffer[Edge[String]]()
       val roots = new mutable.HashSet[Int]()
@@ -893,7 +904,7 @@ object CluProcessor {
 
   val OUTSIDE = "O"
 
-  val EMPTY_GRAPH = new GraphMap
+  val EMPTY_GRAPH = GraphMap()
 
   // These are the NE labels used to train the SRL model
   val NAMED_LABELS_FOR_SRL = Set(

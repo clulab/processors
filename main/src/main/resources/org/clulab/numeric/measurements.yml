@@ -1,4 +1,5 @@
 rules:
+
   - name: measurement-1
     label: Measurement
     priority: ${ rulepriority }
@@ -14,6 +15,14 @@ rules:
     action: mkMeasurementWithRangeMention
     pattern: |
       @number:NumberRange @unit:MeasurementUnit
+
+  - name: measurement-3
+    label: Measurement
+    priority: ${ rulepriority }
+    type: token
+    action: mkSharedMeasurementMention
+    pattern: |
+      ((?<number> [mention = "NumberWord" & !mention = "PossibleYear"]) ([tag = IN] [tag = CD])? [!tag = /^NN|LRB|CD/]{0,2} [word = /,|and|to/]*)+ @number:Number @unit:MeasurementUnit
 
   - name: measurement-percentage
     label: Percentage

@@ -3,6 +3,7 @@ package org.clulab.numeric.actions
 import org.clulab.numeric.SeasonNormalizer
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
+import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -16,7 +17,24 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
     val convertedMentions = new ArrayBuffer[Mention]()
     for(m <- mentions) {
       try {
-        convertedMentions += converter(m)
+        convertedMentions += converter(m )
+      } catch {
+        case e: Exception =>
+          // sometimes these conversions fail, mainly on broken texts
+          // let's be robust here: report the error and move on
+          System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
+          e.printStackTrace()
+      }
+    }
+    convertedMentions
+  }
+
+  /** Converts a sequence of mentions to new types given the converter function */
+  private def convertWithOneToManyConverter(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
+    val convertedMentions = new ArrayBuffer[Mention]()
+    for(m <- mentions) {
+      try {
+        convertedMentions ++= converter(m )
       } catch {
         case e: Exception =>
           // sometimes these conversions fail, mainly on broken texts
@@ -36,6 +54,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a MeasurementMention from a token pattern */
   def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toMeasurementMention, "toMeasurementMention")
+  }
+
+  /** Constructs a MeasurementMention from a token pattern */
+  def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convertWithOneToManyConverter(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
   }
 
   def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -118,6 +141,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionVagueSeason(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionFromVagueSeason, "mkDateRangeMentionVagueSeason")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionOneTokenYearRange(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionFromOneTokenYearRange, "mkDateRangeMentionOneTokenYearRange")
   }
 
   /** Constructs a DateMention from a token pattern */

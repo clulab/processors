@@ -1,6 +1,7 @@
 package org.clulab.sequences
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArray._
 import org.clulab.sequences.LexiconNER._
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.BooleanHashTrie

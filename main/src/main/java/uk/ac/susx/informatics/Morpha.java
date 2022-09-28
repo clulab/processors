@@ -52723,8 +52723,7 @@ public class Morpha {
 	 * input is encountered or an I/O-Error occurs.
 	 * 
 	 * @return the next token
-	 * @exception java.io.IOException
-	 *                if any I/O-Error occurs
+	 * <!-- FIXME: @throws java.io.IOException if any I/O-Error occurs -->
 	 */
 	public String next() throws java.io.IOException {
 		int zzInput;

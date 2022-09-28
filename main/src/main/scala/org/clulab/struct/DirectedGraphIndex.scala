@@ -1,5 +1,7 @@
 package org.clulab.struct
 
+import org.clulab.scala.WrappedListBuffer._
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex

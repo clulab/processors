@@ -6,9 +6,11 @@ import java.nio.file.StandardCopyOption
 import java.nio.file.{Files => JFiles, Path, Paths}
 import java.util.zip.ZipFile
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Closer.AutoCloser
 
-import scala.collection.JavaConverters._
+
+import scala.jdk.CollectionConverters._
 import scala.io.Source
 
 object FileUtils {
@@ -25,7 +27,7 @@ object FileUtils {
     val children = new Iterable[File] {
       def iterator = if (file.isDirectory) file.listFiles.iterator else Iterator.empty
     }
-    Seq(file) ++: children.flatMap(walkTree(_))
+    Seq(file) ++ children.flatMap(walkTree(_))
   }
 
   def walkTree(filename: String): Iterable[File] = walkTree(new File(filename))

@@ -3,6 +3,7 @@ package org.clulab.numeric
 import org.clulab.numeric.actions.NumericActions
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.FileUtils
@@ -42,7 +43,6 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
   def extractFrom(doc:Document): Seq[Mention] = {
     // dictionaries
     val originalEntities = matchLexiconNer(doc)
-
     // grammars
     var mentions = extractor.extractFrom(doc)
 
@@ -52,9 +52,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
     }
 
     // global actions *after* all grammars are done
-    mentions = actions.cleanupAction(mentions)
-
-    mentions
+    actions.cleanupAction(mentions)
   }
 }
 

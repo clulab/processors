@@ -5,7 +5,7 @@ import org.scalatest._
 import java.io.Closeable
 import scala.io.Source
 
-class TestClosing extends FlatSpec with Matchers {
+class TestClosing extends Test {
 
   class Closing(exception: Option[Throwable] = None) extends Closeable {
     var closed: Boolean = false // test

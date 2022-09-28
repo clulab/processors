@@ -4,13 +4,14 @@ import java.util.Properties
 
 import org.clulab.processors.corenlp.CoreNLPUtils._
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArray._
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 
 object CoreNLPSentimentAnalyzer {
@@ -18,7 +19,7 @@ object CoreNLPSentimentAnalyzer {
   private lazy val proc = new CoreNLPProcessor()
   private lazy val sentimentAnalyzer = mkSentimentAnalyzer
 
-  /** Get a sentiment score from [[org.clulab.processors.Document Document]] */
+  /** Get a sentiment score from org.clulab.processors.Document */
   def sentiment(doc: Document): Seq[Int] = for {
     s <- doc.sentences
   } yield sentiment(s)
@@ -42,7 +43,7 @@ object CoreNLPSentimentAnalyzer {
     doc
   }
 
-  /** Get a sentiment score for a [[org.clulab.processors.Sentence Sentence]] */
+  /** Get a sentiment score for a org.clulab.processors.Sentence */
   def sentiment(s: Sentence): Int = {
 
     val a = sentenceToAnnotation(s)
@@ -61,7 +62,7 @@ object CoreNLPSentimentAnalyzer {
   }
 
   /**
-   * Get a Sentiment score for each [[org.clulab.processors.Sentence Sentence]] in a span of text
+   * Get a Sentiment score for each org.clulab.processors.Sentence in a span of text
    * @param text a String
    */
   def sentiment(text: String): Seq[Int] = {

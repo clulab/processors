@@ -137,7 +137,7 @@ class MyThread (val estimatedTimes:Array[Long],
                 val proc:Processor,
                 val text:String,
                 val dependencies:Array[String]) extends Runnable  {
-  override def run() {
+  override def run(): Unit = {
     // run the annotation pipeline once to load all models in memory
     proc.annotate("This is a simple sentence.")
 

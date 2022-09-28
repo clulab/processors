@@ -2,7 +2,7 @@ package org.clulab.numeric
 
 import de.jollyday.{Holiday, HolidayCalendar, HolidayManager, ManagerParameters}
 
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object HolidayNormalizer {
   private val normMapper = UnitNormalizer.readNormsFromResource("/org/clulab/numeric/HOLIDAY.tsv")

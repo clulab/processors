@@ -49,7 +49,7 @@ object ParallelProcessorExample {
     val timer = new Timer(label)
     timer.start()
 
-    (if (parallel) parFiles else serFiles).foreach { file =>
+    (if (parallel) parFiles else serFiles).iterator.foreach { file =>
       println(s"Processing ${file.getName}...")
 
       val text = FileUtils.getTextFromFile(file)

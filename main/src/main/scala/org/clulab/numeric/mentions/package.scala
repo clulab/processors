@@ -1,6 +1,8 @@
 package org.clulab.numeric
 
-import org.clulab.odin.{Mention, RelationMention, TextBoundMention}
+import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
+import org.clulab.struct.Interval
+
 import java.util.regex.Pattern
 
 package object mentions {
@@ -67,6 +69,36 @@ package object mentions {
     case m =>
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
+
+  def toSharedMeasurementMention(mention: Mention): Seq[Mention] =  mention match {
+    case m:  MeasurementMention => Seq(m)
+
+    case m: RelationMention =>
+      mention.arguments("number").sortBy(_.tokenInterval).map { a =>
+        val newArgs = Seq(m.arguments("unit").head, a).sortBy(_.tokenInterval)
+        // if num and unit are adjacent, include both in new token int, else use the token int of the number arg
+        val newTokInt = if (newArgs.last.start - newArgs.head.end == 1) {
+          Interval(newArgs.head.tokenInterval.start, newArgs.last.tokenInterval.end)
+        } else a.tokenInterval
+        new MeasurementMention(
+          m.labels,
+          a.tokenInterval,
+          m.sentence,
+          m.document,
+          m.keep,
+          m.foundBy,
+          m.attachments,
+          Some(a.words),
+          getArgWords("unit", m),
+          false
+        )
+      }
+
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
+  }
+
 
   def toPercentageMention(mention: Mention): PercentageMention =  mention match {
     case m:  PercentageMention => m
@@ -464,6 +496,22 @@ package object mentions {
         m,
         TempEvalFormatter.mkDate(None, None, Some(year)),
         TempEvalFormatter.mkDate(None, None, Some(year))
+      )
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  /** handles one token year ranges, e.g., 2020/2021 and 2020-2021 */
+  def toDateRangeMentionFromOneTokenYearRange(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: TextBoundMention =>
+      val years = m.text.split("[-\\/]")
+      DateRangeMention(
+        m,
+        TempEvalFormatter.mkDate(None, None, Some(Seq(years.head))),
+        TempEvalFormatter.mkDate(None, None, Some(Seq(years.last)))
       )
 
     case m =>

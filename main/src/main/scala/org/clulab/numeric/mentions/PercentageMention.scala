@@ -22,7 +22,7 @@ class PercentageMention ( labels: Seq[String],
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the percentage ${raw.mkString(" ")}!")
 
-    numValueOpt.get + " %"
+    s"${numValueOpt.get} %"
   }
 
   override def neLabel: String = {

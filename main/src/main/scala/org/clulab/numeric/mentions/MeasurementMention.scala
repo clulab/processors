@@ -31,7 +31,7 @@ class MeasurementMention ( labels: Seq[String],
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the measurement ${raw.mkString(" ")}!")
     val unitNorm = UnitNormalizer.norm(unit.get)
 
-    numValueOpt.get + " " + unitNorm
+    s"${numValueOpt.get} $unitNorm"
   }
 
   override def neLabel: String = {

@@ -1,8 +1,10 @@
 package org.clulab.learning
 
 import java.io.{Serializable, Writer}
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, Lexicon}
 import org.clulab.utils.MathUtils
+import org.clulab.utils.ThreadUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -85,7 +87,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     logger.debug("Beginning tree building...")
     numThreads match {
       case 0 => // use as many threads as possible
-        val parBags = bags.toSet.par
+        val parBags = ThreadUtils.parallelize(bags.toSet)
         trees = Some(parBags.map(buildTreeMain).toArray)
       case 1 => // sequential run in the same thread
         trees = Some(bags.map(buildTreeMain).toArray)
