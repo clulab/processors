@@ -8,9 +8,25 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
 
+class Arguments[A, Mention](t: Map[String, Mention]) extends Map[String, Mention]  {
+  private val internalMap = t
+  def +[B >: Mention](kv: (String, B)) = new Arguments(internalMap + kv)
+  def -(key: String) = new Arguments(internalMap - key)
+  def get(key: String) = internalMap.get(key)
+  def iterator = internalMap.iterator
+}
+
+object Arguments {
+
+  def apply(map: Map[String, Seq[Mention]]): Arguments[String, Seq[Mention]] = {
+      if (map.isInstanceOf[Arguments[_, _]]) map.asInstanceOf[Arguments[String, Seq[Mention]]]
+      else new Arguments[String, Seq[Mention]](map)
+  }
+}
 
 @SerialVersionUID(1L)
 trait Mention extends Equals with Ordered[Mention] with Serializable {
+  type Arguments = Map[String, Seq[Mention]]
 
   /** A sequence of labels for this mention.
     * The first label in the sequence is considered the default.
@@ -35,7 +51,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     * that can have several arguments with the same name.
     * For example, in the biodomain, Binding may have several themes.
     */
-  val arguments: Map[String, Seq[Mention]]
+  val arguments: Arguments
 
   /** Attachments that can modify a Mention. */
   val attachments: Set[Attachment]
@@ -231,7 +247,7 @@ class TextBoundMention(
   ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy, Set.empty)
 
   // TextBoundMentions don't have arguments
-  val arguments: Map[String, Seq[Mention]] = Map.empty
+  val arguments: Arguments = Arguments(Map.empty)
   val paths: Map[String, Map[Mention, SynPath]] = Map.empty
 
   // Copy constructor for TextBoundMention
@@ -269,7 +285,7 @@ class EventMention(
   val labels: Seq[String],
   val tokenInterval: Interval,
   val trigger: TextBoundMention,
-  val arguments: Map[String, Seq[Mention]],
+  rawArguments: Map[String, Seq[Mention]],
   val paths: Map[String, Map[Mention, SynPath]],
   val sentence: Int,
   val document: Document,
@@ -277,6 +293,7 @@ class EventMention(
   val foundBy: String,
   val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
+  val arguments = Arguments(rawArguments)
 
   def this(
       label: String,
@@ -398,7 +415,7 @@ class EventMention(
 class RelationMention(
     val labels: Seq[String],
     val tokenInterval: Interval,
-    val arguments: Map[String, Seq[Mention]],
+    val rawArguments: Map[String, Seq[Mention]],
     val paths: Map[String, Map[Mention, SynPath]],
     val sentence: Int,
     val document: Document,
@@ -406,6 +423,7 @@ class RelationMention(
     val foundBy: String,
     val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
+  val arguments = Arguments(rawArguments)
 
   require(arguments.values.flatten.nonEmpty, "RelationMentions need arguments")
 
@@ -515,12 +533,13 @@ class CrossSentenceMention(
   val labels: Seq[String],
   val anchor: Mention,
   val neighbor: Mention,
-  val arguments: Map[String, Seq[Mention]],
+  val rawArguments: Map[String, Seq[Mention]],
   val document: Document,
   val keep: Boolean,
   val foundBy: String,
   val attachments: Set[Attachment] = Set.empty
 ) extends Mention {
+  val arguments = Arguments(rawArguments)
 
   require(arguments.size == 2, "CrossSentenceMention must have exactly two arguments")
 
