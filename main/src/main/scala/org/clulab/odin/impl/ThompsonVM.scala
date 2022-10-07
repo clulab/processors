@@ -19,6 +19,7 @@ object ThompsonVM {
   import Direction._
 
   sealed trait Thread {
+    val name: String = Namer.name(this)
     def isDone: Boolean
     def isReallyDone: Boolean
     def results: Seq[(NamedGroups, NamedMentions)]
