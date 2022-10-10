@@ -8,25 +8,26 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
 
-class Arguments[A, Mention](t: Map[String, Mention]) extends Map[String, Mention]  {
-  private val internalMap = t
-  def +[B >: Mention](kv: (String, B)) = new Arguments(internalMap + kv)
-  def -(key: String) = new Arguments(internalMap - key)
-  def get(key: String) = internalMap.get(key)
-  def iterator = internalMap.iterator
+class ArgumentsClass[M](val map: Map[String, M]) extends Map[String, M]  {
+  def +[B >: M](kv: (String, B)) = new ArgumentsClass(map + kv)
+  def -(key: String) = new ArgumentsClass(map - key)
+  def get(key: String) = map.get(key)
+  def iterator = map.iterator
 }
 
 object Arguments {
 
-  def apply(map: Map[String, Seq[Mention]]): Arguments[String, Seq[Mention]] = {
-      if (map.isInstanceOf[Arguments[_, _]]) map.asInstanceOf[Arguments[String, Seq[Mention]]]
-      else new Arguments[String, Seq[Mention]](map)
-  }
+  def apply(map: Map[String, Seq[Mention]]) = map
+
+   /* def apply(map: Map[String, Seq[Mention]]): Arguments[Seq[Mention]] = {
+      if (map.isInstanceOf[Arguments[_]]) map.asInstanceOf[Arguments[String, Seq[Mention]]]
+      else new Arguments[Seq[Mention]](map)
+  }*/
 }
 
 @SerialVersionUID(1L)
 trait Mention extends Equals with Ordered[Mention] with Serializable {
-  type Arguments = Map[String, Seq[Mention]]
+//  type Arguments = ArgumentsClass[Seq[Mention]]
 
   /** A sequence of labels for this mention.
     * The first label in the sequence is considered the default.
@@ -51,7 +52,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     * that can have several arguments with the same name.
     * For example, in the biodomain, Binding may have several themes.
     */
-  val arguments: Arguments
+  val arguments: Map[String, Seq[Mention]] // ArgumentsClass
 
   /** Attachments that can modify a Mention. */
   val attachments: Set[Attachment]
@@ -247,7 +248,7 @@ class TextBoundMention(
   ) = this(Seq(label), tokenInterval, sentence, document, keep, foundBy, Set.empty)
 
   // TextBoundMentions don't have arguments
-  val arguments: Arguments = Arguments(Map.empty)
+  val arguments = Arguments(Map.empty)
   val paths: Map[String, Map[Mention, SynPath]] = Map.empty
 
   // Copy constructor for TextBoundMention
