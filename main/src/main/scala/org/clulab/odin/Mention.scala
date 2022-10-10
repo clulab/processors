@@ -8,21 +8,24 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
 
-class ArgumentsClass[M](val map: Map[String, M]) extends Map[String, M]  {
-  def +[B >: M](kv: (String, B)) = new ArgumentsClass(map + kv)
-  def -(key: String) = new ArgumentsClass(map - key)
+// https://stackoverflow.com/questions/23834164/scala-extend-map-or-hashmap-and-allow-a-constructor-list-of-mappings
+class Arguments[M](val map: Map[String, M]) extends Map[String, M]  {
+  def +[B >: M](kv: (String, B)) = new Arguments(map + kv)
+  def -(key: String) = new Arguments(map - key)
   def get(key: String) = map.get(key)
   def iterator = map.iterator
 }
 
 object Arguments {
 
-  def apply(map: Map[String, Seq[Mention]]) = map
+//  def apply(map: Map[String, Seq[Mention]]) = map
 
-   /* def apply(map: Map[String, Seq[Mention]]): Arguments[Seq[Mention]] = {
-      if (map.isInstanceOf[Arguments[_]]) map.asInstanceOf[Arguments[String, Seq[Mention]]]
-      else new Arguments[Seq[Mention]](map)
-  }*/
+   def apply(map: Map[String, Seq[Mention]]): Arguments[Seq[Mention]] = {
+      if (map.isInstanceOf[Arguments[_]])
+        map.asInstanceOf[Arguments[Seq[Mention]]]
+      else
+        new Arguments(map)
+  }
 }
 
 @SerialVersionUID(1L)
