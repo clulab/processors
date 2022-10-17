@@ -156,7 +156,10 @@ object ThompsonVM {
       } yield result
       // the same mention may be the argument of many mentions
       // so we may encounter it many times
-      mentions.distinct
+      val distinctMentions = mentions.distinct
+      if (mentions.length != distinctMentions.length)
+        println("Is this correct?")
+      distinctMentions
     }
 
     def mkMentionCapture(
