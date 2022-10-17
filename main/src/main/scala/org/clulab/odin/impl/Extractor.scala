@@ -181,7 +181,7 @@ class CrossSentenceExtractor(
       labels,
       anchor = anchor,
       neighbor = neighbor,
-      arguments = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor)),
+      rawArguments = Map(anchorRole -> Seq(anchor), neighborRole -> Seq(neighbor)),
       anchor.document,
       keep,
       name
