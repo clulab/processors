@@ -43,6 +43,11 @@ class Sentence(
   var graphs: GraphMap = new GraphMap
   /** Relation triples from OpenIE */
   var relations:Option[Array[RelationTriple]] = None
+  /**
+    * Hierarchy of section names to which this sentence belongs.
+    * The first element is inner-most sub-section name, and the last is the top-most section name
+    */
+  var section:Option[Array[String]] = None
 
 
   def size:Int = raw.length
