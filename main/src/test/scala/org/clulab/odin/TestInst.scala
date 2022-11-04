@@ -7,6 +7,16 @@ class TestInst extends Test {
 
   behavior of "Inst"
 
+  it should "not distinguish Done and Done" in {
+    val done1 = Done
+    val done2 = Done
+
+    val done1Hash = done1.##
+    val done2Hash = done2.##
+
+    done1 should be (done2)
+  }
+
   it should "distinguish Done and Pass" in {
     val done = Done
     val pass = Pass
@@ -72,7 +82,7 @@ class TestInst extends Test {
 
     val equiv = inst0 == inst1 // true
     val equivNext = inst0.next == inst1.next // false
-    inst0 should be (inst1)
+    inst0 should not be (inst1)
   }
 
   case class CaseClass(value: Int) {

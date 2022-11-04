@@ -4,10 +4,12 @@ import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
 
+import scala.collection.immutable.ListMap
+
 object ThompsonVM {
 
-  type NamedGroups = Map[String, Seq[Interval]]
-  type NamedMentions = Map[String, Seq[Mention]]
+  type NamedGroups = ListMap[String, Seq[Interval]]
+  type NamedMentions = ListMap[String, Seq[Mention]]
   // a partial group is the name and the start of a group, without the end
   type PartialGroups = List[(String, Int)]
 
@@ -18,11 +20,19 @@ object ThompsonVM {
   }
   import Direction._
 
+  case class Evidence(thread: Thread) {
+
+  }
+
+  case class Result(evidence: Evidence, namedGroups: NamedGroups, namedMentions: NamedMentions) {
+    println("A result was created!")
+  }
+
   sealed trait Thread {
     val name: String = Namer.name(this)
     def isDone: Boolean
     def isReallyDone: Boolean
-    def results: Seq[(NamedGroups, NamedMentions)]
+    def results: Seq[Result]
   }
 
   private case class SingleThread(
@@ -33,17 +43,27 @@ object ThompsonVM {
       mentions: NamedMentions,
       partialGroups: PartialGroups
   ) extends Thread {
+    println(toString())
+
+    override def toString(): String = {
+      val groupNames = groups.keys.mkString("[", ", ", "]")
+      val mentionNames = mentions.keys.mkString("[", ", ", "]")
+      val partialNames = partialGroups.map(_._1).mkString("[", ", ", "]")
+      s"name = $name, ## = ${this.##}, tok = $tok, inst = ${inst.toString}, dir = $dir, groupNames = $groupNames, mentionNames = $mentionNames, partialNames = $partialNames ..."
+    }
+
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
-    def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
+    def results: Seq[Result] = Seq(Result(Evidence(this), groups, mentions))
   }
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
+    println(s"${this.name}: ${this.hashCode}")
     // at least one thread is done and the threads after the threadbundle can be dropped
     def isDone: Boolean = bundles.exists(_.exists(_.isDone))
     // all bundles are done and we can retrieve the results
     def isReallyDone: Boolean = bundles.forall(_.head.isReallyDone)
-    def results: Seq[(NamedGroups, NamedMentions)] = for {
+    def results: Seq[Result] = for {
       ts <- bundles
       t = ts.head
       if t.isReallyDone
@@ -57,7 +77,7 @@ object ThompsonVM {
       sent: Int,
       doc: Document,
       state: State
-  ): Seq[(NamedGroups, NamedMentions)] = {
+  ): Seq[Result] = {
 
     // Executes instruction on token and returns the produced threads.
     // Threads are created by following all no-Match instructions.
@@ -65,8 +85,8 @@ object ThompsonVM {
         tok: Int,
         inst: Inst,
         dir: Direction = LeftToRight,
-        groups: NamedGroups = Map.empty,
-        mentions: NamedMentions = Map.empty,
+        groups: NamedGroups = ListMap.empty,
+        mentions: NamedMentions = ListMap.empty,
         partialGroups: PartialGroups = Nil
     ): Seq[Thread] = {
       @annotation.tailrec
@@ -159,6 +179,8 @@ object ThompsonVM {
       val distinctMentions = mentions.distinct
       if (mentions.length != distinctMentions.length)
         println("Is this correct?")
+      else
+        println("Yes, it is.")
       distinctMentions
     }
 
@@ -195,10 +217,66 @@ object ThompsonVM {
       case t: ThreadBundle => stepThreadBundle(t)
     }
 
-    def stepThreads(threads: Seq[Thread]): Seq[Thread] =
-      (threads flatMap stepThread).distinct
+    def stepThreads(threads: Seq[Thread]): Seq[Thread] = {
+      val indistincts = threads flatMap stepThread
+      val distincts = indistincts.distinct
 
-    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) =
+      indistincts.foreach { indistinct =>
+        if (indistinct.hashCode != indistinct.##)
+          println("This shouldn't happen.")
+      }
+
+      if (indistincts.length != distincts.length) {
+        println("Some threads were removed.")
+        val distincts = indistincts.distinct
+        // Find out which ones.
+        import java.util.{IdentityHashMap => JIdentityHashMap}
+        val distinctMap = new JIdentityHashMap[Thread, Int]()
+        distincts.foreach { thread =>
+          distinctMap.put(thread, distinctMap.size)
+        }
+        indistincts.foreach { thread =>
+          print(s"${thread.name}: ${thread.##},")
+        }
+        println()
+        indistincts.foreach { indistinct =>
+          if (!distinctMap.containsKey(indistinct)) {
+            val name = indistinct.name
+            println(s"Thread $name: ${indistinct.##} has been removed!")
+            // Check to see if hash code matches anything in the distinct ones.  It should!
+
+            var matches = false
+            distincts.foreach { case distinct =>
+              if (distinct.## == indistinct.##)
+                matches = true
+            }
+            if (!matches)
+              println("Why was it removed?")
+
+//            if (indistinct.isInstanceOf[SingleThread]) {
+              // So there should be one among the distincts with the same posId.
+//              val indistinctThread = indistinct.asInstanceOf[SingleThread]
+//              if (!distincts.exists { distinct =>
+//                distinct.isInstanceOf[SingleThread] && distinct.asInstanceOf[SingleThread].posId == indistinctThread..posId
+//              })
+//                println("Why was it deleted?")
+//            }
+          }
+        }
+      }
+      distincts
+    }
+
+    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) = {
+      val doneThreads = threads.filter(_.isDone)
+      if (doneThreads.length > 1) {
+        println("More than one thread is done.")
+        val distincts = doneThreads.distinct
+
+        if (distincts.length != doneThreads.length)
+          println("This could go wrong!")
+      }
+
       threads find (_.isDone) match {
         // no thread has finished, return them all
         case None => (threads, None)
@@ -209,6 +287,7 @@ object ThompsonVM {
         // a thread finished, drop all threads to its right but keep the ones to its left
         case Some(t) => (threads.takeWhile(_ != t), Some(t))
       }
+    }
 
     @annotation.tailrec
     def eval(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
@@ -226,13 +305,35 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
-  var posId: Int = 0
-  var next: Inst = null
+  var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  var next: Inst = null // See deepcopy for the write.
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
     if (next != null) inst.next = next.deepcopy()
     inst
+  }
+  override def toString(): String = {
+    val nextString = Option(next).map(_.toString)
+
+    s"${getClass.getName}: posId = $posId, next = $nextString"
+  }
+
+  override def hashCode: Int = posId
+
+  def canEqual(other: Any): Boolean = {
+    // Since both are from the same class, we shouldn't need to check if other.canEqual(this).
+    this.getClass == other.getClass && this.hashCode == other.hashCode
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: Inst => this.eq(that) ||
+        this.canEqual(that) &&
+        this.posId == that.posId &&
+        this.next == that.next // Go all the way down.
+      case _ => false
+    }
   }
 }
 
@@ -249,25 +350,71 @@ case class Pass() extends Inst {
 // split execution
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
-  override def hashCode: Int = (lhs, rhs, posId).##
+  override def hashCode: Int = {
+    val tuple = (lhs, rhs, super.hashCode)
+    val hash = tuple.##
+
+    hash
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: Split => this.eq(that) ||
+        this.canEqual(that) &&
+        this.lhs == that.lhs &&
+        this.rhs == that.rhs &&
+        super.equals(that) // Save the recursion for the end.
+      case _ => false
+    }
+  }
 }
 
 // start capturing tokens
 case class SaveStart(name: String) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = ("start", name, posId).##
+  override def hashCode: Int = (name, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: SaveStart => this.eq(that) ||
+        this.canEqual(that) &&
+        this.name == that.name &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
 
 // end capturing tokens
 case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = ("end", name, posId).##
+  override def hashCode: Int = (name, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: SaveEnd => this.eq(that) ||
+        this.canEqual(that) &&
+        this.name == that.name &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
 
 // matches token using token constraint
 case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = (c, posId).##
+  override def hashCode: Int = (c, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchToken => this.eq(that) ||
+        this.canEqual(that) &&
+        this.c == that.c &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
 
 // matches mention by label using string matcher
@@ -277,7 +424,19 @@ case class MatchMention(
     arg: Option[String]
 ) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = (m, name, arg, posId).##
+  override def hashCode: Int = (m, name, arg, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchMention => this.eq(that) ||
+        this.canEqual(that) &&
+        this.m == that.m &&
+        this.name == that.name &&
+        this.arg == that.arg &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
 
 // matches sentence start
@@ -293,11 +452,35 @@ case class MatchSentenceEnd() extends Inst {
 // zero-width look-ahead assertion
 case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
-  override def hashCode: Int = ("lookahead", start, negative).##
+  override def hashCode: Int = (start, negative, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    if (posId != 0)
+      println("I guess this happens")
+    other match {
+      case that: MatchLookAhead => this.eq(that) ||
+        this.canEqual(that) &&
+        this.start == that.start &&
+        this.negative == that.negative &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
 
 // zero-width look-behind assertion
 case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
-  override def hashCode: Int = ("lookbehind", start, negative).##
+  override def hashCode: Int = (start, negative, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchLookBehind => this.eq(that) ||
+        this.canEqual(that) &&
+        this.start == that.start &&
+        this.negative == that.negative &&
+        super.equals(that)
+      case _ => false
+    }
+  }
 }
