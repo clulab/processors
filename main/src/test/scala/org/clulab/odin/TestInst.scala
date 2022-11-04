@@ -27,6 +27,28 @@ class TestInst extends Test {
     done should not be (pass)
   }
 
+  it should "distinguish MatchLookAhead and MatchLookBehind" in {
+    val matchLookAhead = MatchLookAhead(Pass(), true)
+    val matchLookBehind = MatchLookBehind(Pass(), true)
+
+    // These will match, but == should not.
+    val aheadHash = matchLookAhead.##
+    val behindHash = matchLookBehind.##
+
+    matchLookAhead should not be (matchLookBehind)
+  }
+
+  it should "distinguish SaveStart and SaveEnd" in {
+    val saveStart = SaveStart("Hello")
+    val saveEnd = SaveEnd("Hello")
+
+    // These will match, but == should not.
+    val startHash = saveStart.##
+    val endHash = saveEnd.##
+
+    saveStart should not be (saveEnd)
+  }
+
   it should "distinguish Done and MatchToken" in {
     val done = Done
     val matchToken = MatchToken(TokenWildcard)

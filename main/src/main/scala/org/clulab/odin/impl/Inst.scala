@@ -28,7 +28,7 @@ sealed trait Inst {
       case that: Inst => this.eq(that) ||
         this.canEqual(that) &&
         this.posId == that.posId &&
-        this.nextOpt == that.nextOpt // Go all the way down.
+        this.nextOpt == that.nextOpt // TODO. Go all the way down?
       case _ => false
     }
   }
