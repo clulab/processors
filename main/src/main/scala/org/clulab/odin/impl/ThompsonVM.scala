@@ -247,11 +247,13 @@ sealed trait Inst {
     other match {
       case that: Inst => this.eq(that) ||
         this.canEqual(that) &&
-        this.posId == that.posId // &&
-        // this.nextOpt == that.nextOpt // TODO. Go all the way down?
+        shortEquals(that) // &&
+        // this.nextOpt == that.nextOpt // Do not go all the way down!
       case _ => false
     }
   }
+
+  def shortEquals(that: Inst): Boolean = this.posId == that.posId
 }
 
 // the pattern matched successfully
@@ -273,9 +275,9 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
     other match {
       case that: Split => this.eq(that) ||
         this.canEqual(that) &&
+        super.shortEquals(that) &&
         this.lhs == that.lhs &&
-        this.rhs == that.rhs &&
-        super.equals(that) // Save the recursion (if any) for the end.
+        this.rhs == that.rhs
       case _ => false
     }
   }
@@ -290,8 +292,8 @@ case class SaveStart(name: String) extends Inst {
     other match {
       case that: SaveStart => this.eq(that) ||
         this.canEqual(that) &&
-        this.name == that.name &&
-        super.equals(that)
+        super.shortEquals(that) &&
+        this.name == that.name
       case _ => false
     }
   }
@@ -306,8 +308,8 @@ case class SaveEnd(name: String) extends Inst {
     other match {
       case that: SaveEnd => this.eq(that) ||
         this.canEqual(that) &&
-        this.name == that.name &&
-        super.equals(that)
+        super.shortEquals(that) &&
+        this.name == that.name
       case _ => false
     }
   }
@@ -322,8 +324,8 @@ case class MatchToken(c: TokenConstraint) extends Inst {
     other match {
       case that: MatchToken => this.eq(that) ||
         this.canEqual(that) &&
-        this.c == that.c &&
-        super.equals(that)
+        super.shortEquals(that) &&
+        this.c == that.c
       case _ => false
     }
   }
@@ -342,10 +344,10 @@ case class MatchMention(
     other match {
       case that: MatchMention => this.eq(that) ||
         this.canEqual(that) &&
+        super.shortEquals(that) &&
         this.m == that.m &&
         this.name == that.name &&
-        this.arg == that.arg &&
-        super.equals(that)
+        this.arg == that.arg
       case _ => false
     }
   }
@@ -370,9 +372,9 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
     other match {
       case that: MatchLookAhead => this.eq(that) ||
         this.canEqual(that) &&
+        super.shortEquals(that) &&
         this.start == that.start &&
-        this.negative == that.negative &&
-        super.equals(that)
+        this.negative == that.negative
       case _ => false
     }
   }
@@ -387,9 +389,9 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
     other match {
       case that: MatchLookBehind => this.eq(that) ||
         this.canEqual(that) &&
+        super.shortEquals(that) &&
         this.start == that.start &&
-        this.negative == that.negative &&
-        super.equals(that)
+        this.negative == that.negative
       case _ => false
     }
   }
