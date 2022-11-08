@@ -1,6 +1,6 @@
 package org.clulab.odin
 
-import org.clulab.odin.impl.{Constant, Done, ExactStringMatcher, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RegexStringMatcher, SaveEnd, SaveStart, Split, TokenWildcard, WordConstraint}
+import org.clulab.odin.impl.{Done, ExactStringMatcher, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RegexStringMatcher, SaveEnd, SaveStart, Split, TokenWildcard, WordConstraint}
 import org.clulab.utils.Test
 
 class TestInst extends Test {
