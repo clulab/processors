@@ -49,7 +49,7 @@ object ThompsonVM {
       val groupNames = groups.keys.mkString("[", ", ", "]")
       val mentionNames = mentions.keys.mkString("[", ", ", "]")
       val partialNames = partialGroups.map(_._1).mkString("[", ", ", "]")
-      s"name = $name, ## = ${this.##}, tok = $tok, inst = ${inst.toString}, dir = $dir, groupNames = $groupNames, mentionNames = $mentionNames, partialNames = $partialNames ..."
+      s"name = $name, ## = ${this.##}, tok = $tok, posId = ${inst.posId}, inst = ${inst.toString}, dir = $dir, groupNames = $groupNames, mentionNames = $mentionNames, partialNames = $partialNames ..."
     }
 
     def isDone: Boolean = inst == Done
@@ -250,10 +250,12 @@ object ThompsonVM {
               if (distinct.## == indistinct.##)
                 matches = true
             }
-            if (!matches)
+            if (!matches) {
+              println(s"removed unnecessarily: $indistinct")
               println("Why was it removed?")
+            }
 
-//            if (indistinct.isInstanceOf[SingleThread]) {
+            //            if (indistinct.isInstanceOf[SingleThread]) {
               // So there should be one among the distincts with the same posId.
 //              val indistinctThread = indistinct.asInstanceOf[SingleThread]
 //              if (!distincts.exists { distinct =>
