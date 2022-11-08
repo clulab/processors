@@ -254,7 +254,7 @@ sealed trait Inst {
   }
 }
 
-// the pattern matched succesfully
+// the pattern matched successfully
 case object Done extends Inst {
   def dup() = this
 }
@@ -267,12 +267,7 @@ case class Pass() extends Inst {
 // split execution
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
-  override def hashCode: Int = {
-    val tuple = (lhs, rhs, super.hashCode)
-    val hash = tuple.##
-
-    hash
-  }
+  override def hashCode: Int = (lhs, rhs, super.hashCode).##
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -280,7 +275,7 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
         this.canEqual(that) &&
         this.lhs == that.lhs &&
         this.rhs == that.rhs &&
-        super.equals(that) // Save the recursion for the end.
+        super.equals(that) // Save the recursion (if any) for the end.
       case _ => false
     }
   }
@@ -372,8 +367,6 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   override def hashCode: Int = (start, negative, super.hashCode).##
 
   override def equals(other: Any): Boolean = {
-    if (posId != 0)
-      println("I guess this happens")
     other match {
       case that: MatchLookAhead => this.eq(that) ||
         this.canEqual(that) &&
