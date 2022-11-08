@@ -75,7 +75,7 @@ class TokenPattern(val start: Inst) {
 
   def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     ThompsonVM.evaluate(start, tok, sent, doc, state) map {
-      case (groups, mentions) =>
+      case ThompsonVM.Result(evidence, groups, mentions) =>
         // there must be one GlobalCapture only
         val globalCapture = groups(GlobalCapture).head
         Result(globalCapture, groups - GlobalCapture, mentions)

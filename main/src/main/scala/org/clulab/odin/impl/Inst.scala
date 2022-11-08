@@ -3,15 +3,15 @@ package org.clulab.odin.impl
 // instruction
 sealed trait Inst {
   var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
-  var nextOpt: Option[Inst] = None // See deepcopy for the write.
+  var next: Inst = null // See deepcopy for the write.
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
-    inst.nextOpt = nextOpt.map(_.deepcopy())
+    if (next != null) inst.next = next.deepcopy()
     inst
   }
   override def toString(): String = {
-    val nextString = Option(nextOpt).map(_.toString)
+    val nextString = Option(next).map(_.toString)
 
     s"${getClass.getName}: posId = $posId, next = $nextString"
   }
