@@ -35,7 +35,6 @@ class FatdynetTest extends FlatSpec with Matchers with BeforeAndAfterAll {
     )
     val lexiconNer = LexiconNER(kbs, Seq(false), useLemmasForMatching = false) // case sensitive match on this KB
 
-    DynetUtils.initializeDyNet()
     new CluProcessor(optionalNER = Some(lexiconNer))
   }
 

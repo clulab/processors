@@ -20,8 +20,6 @@ class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
 
-  Utils.initializeDyNet()
-
   case class WordEmbeddingConfig(useFileElseResource: Boolean, useTxtElseBin: Boolean,
       useExplicitElseCompact: Boolean, useOldElseNew: Boolean) {
     val compactExt = ".compact"

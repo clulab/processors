@@ -36,8 +36,6 @@ object ParallelProcessorExample {
     val startupTimer = new Timer("This is how long it takes to start up")
     startupTimer.start()
 
-    Utils.initializeDyNet()
-
     val processor: Processor = new CluProcessor()
     processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
     startupTimer.stop()

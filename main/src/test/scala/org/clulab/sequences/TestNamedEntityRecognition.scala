@@ -5,8 +5,6 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Test
 
 class TestNamedEntityRecognition extends Test {
-  Utils.initializeDyNet()
-
   val processor = new CluProcessor()
 
   behavior of "named entity recognition"

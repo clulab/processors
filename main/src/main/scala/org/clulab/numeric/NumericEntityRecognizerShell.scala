@@ -22,8 +22,6 @@ class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableP
 }
 
 class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends ReloadableShell {
-  Utils.initializeDyNet()
-
   val proc = new ReloadableNumericProcessor(ruleDirOpt)
 
   /** The actual work, including printing out the output */

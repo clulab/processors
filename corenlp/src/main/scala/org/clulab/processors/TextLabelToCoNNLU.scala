@@ -139,10 +139,7 @@ object TextLabelToCoNLLU {
 
     val proc =
       if (props.get("proc").exists(_ == "corenlp")) new FastNLPProcessor()
-      else {
-        Utils.initializeDyNet()
-        new CluProcessor()
-      }
+      else new CluProcessor()
     val isCoreNLP = props.get("proc").exists(_ == "corenlp")
     val converter = new TextLabelToCoNLLU(proc, isCoreNLP)
 
