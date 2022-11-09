@@ -53,7 +53,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   lazy val chunker: CRFChunker = mkChunker
 
 
-  protected def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
+  def newStanfordCoreNLP(props: Properties, enforceRequirements: Boolean = true): StanfordCoreNLP = {
     // Prevent knownLCWords from changing on us.  To be safe, this is added every time
     // because of potential caching of annotators.  Yes, the 0 must be a string.
     props.put("maxAdditionalKnownLCWords", "0")

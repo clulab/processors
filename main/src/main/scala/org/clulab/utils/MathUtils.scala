@@ -4,6 +4,7 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 /**
  * Math utility methods useful for stats and ML
@@ -60,15 +61,19 @@ object MathUtils {
    * @return
    */
   def denseSoftmax(vector: Array[Double], gamma: Double = 1.0): Array[Double] = {
-    val scoreArray = if (gamma != 1.0) for{
-      v <- vector
-    } yield gamma * v
+    val scoreArray = if (gamma != 1.0) {
+      val result = for{
+        v <- vector
+      } yield gamma * v
+      result.toArray
+    }
     else vector
 
     val logSumStatic = logSum(scoreArray)
-    for {
+    val result = for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic)
+    result.toArray
   }
 
   /**
@@ -78,15 +83,19 @@ object MathUtils {
    * @return
    */
   def denseSoftmaxFloat(vector: Array[Float], gamma: Float = 1.0f): Array[Float] = {
-    val scoreArray = if (gamma != 1.0f) for{
-      v <- vector
-    } yield gamma * v
+    val scoreArray = if (gamma != 1.0f) {
+      val result = for{
+        v <- vector
+      } yield gamma * v
+      result.toArray
+    }
     else vector
 
-    val logSumStatic = logSumFloat(scoreArray)
-    for {
+    val logSumStatic = logSumFloat(scoreArray.toArray)
+    val result = for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic).toFloat
+    result.toArray
   }
 
   def logSum(logInputs:IndexedSeq[Double]):Double =
@@ -191,7 +200,7 @@ object MathUtils {
   }
 
   // Manifest: http://stackoverflow.com/questions/6085085/why-cant-i-create-an-array-of-generic-type
-  def nBest[T: Manifest](scoringFunction: T=>Double)(xs: Iterable[T], howMany:Int): List[
+  def nBest[T: ClassTag](scoringFunction: T=>Double)(xs: Iterable[T], howMany:Int): List[
     (T, Double)] = {
     val bestd = new Array[Double](howMany)
     val bestw = new Array[T](howMany)
@@ -283,14 +292,16 @@ object MathUtils {
    *                                     viewed as Seq[T] via an implicit conversion
    * @param numeric                      - implicit param to be able to use the same methods for all number types
    */
-  implicit class EnhancedNumericCollection[T, CT](coll: CT)(implicit collectionToSequenceImplicit: CT => Seq[T], numeric: Numeric[T]) {
+  implicit class EnhancedNumericCollection[T: ClassTag, CT: ClassTag](_coll: CT)(implicit collectionToSequenceImplicit: CT => IndexedSeq[T], numeric: Numeric[T]) {
+    val coll = collectionToSequenceImplicit(_coll)
+
     def mean(): Double = {
       // coll.sum might overflow
       var sum = 0.0
       for (n <- coll) {
         sum += numeric.toDouble(n)
       }
-      sum / (coll.size.toDouble)
+      sum / (coll.length.toDouble)
     }
 
     def variance(): Double = {

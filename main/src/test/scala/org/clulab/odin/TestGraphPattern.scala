@@ -588,7 +588,7 @@ class TestGraphPattern extends Test {
 }
 
 // Original tests using Stanford dependencies
-class TestGraphPatternSD extends FlatSpec with Matchers {
+class TestGraphPatternSD extends Test {
 
   "GraphPattern" should "support multiline patterns" in {
 

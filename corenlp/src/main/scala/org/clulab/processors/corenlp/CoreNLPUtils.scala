@@ -49,8 +49,8 @@ object CoreNLPUtils {
       // Using list.distinct instead of Set.toList will preserve the order of edges.
       // Set can be sorted in different ways even on different runs with the same data.
       sg.edgeIterable().asScala.toList.map { edge =>
-        val head: Int = edge.getGovernor.get(classOf[IndexAnnotation])
-        val modifier: Int = edge.getDependent.get(classOf[IndexAnnotation])
+        val head: Int = edge.getGovernor.get[Integer](classOf[IndexAnnotation])
+        val modifier: Int = edge.getDependent.get[Integer](classOf[IndexAnnotation])
         val specOpt = Option(edge.getRelation.getSpecific)
         val label = edge.getRelation.getShortName + specOpt.map("_" + _).getOrElse("")
         if (debug)

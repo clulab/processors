@@ -1,7 +1,8 @@
 package org.clulab.utils
 
 import java.io._
-import scala.language.reflectiveCalls
+// import scala.language.reflectiveCalls
+import scala.reflect.Selectable.reflectiveSelectable
 
 object Serializer {
 

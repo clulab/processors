@@ -643,7 +643,7 @@ class CluProcessor protected (
   def cheapLemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val lemmas = sent.words.map(_.toLowerCase())
+      val lemmas = sent.words.map(_.toLowerCase()).toArray
       sent.lemmas = Some(lemmas)
     }
   }

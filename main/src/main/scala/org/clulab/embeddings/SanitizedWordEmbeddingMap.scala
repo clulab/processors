@@ -476,16 +476,20 @@ object SanitizedWordEmbeddingMap {
     (m.toMap, dims)
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(filename: String): SanitizedWordEmbeddingMap = fromBinary(new File(filename))
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(file: File): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(inputStream: InputStream): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(bytes: Array[Byte]): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(bytes))
   }
@@ -547,6 +551,7 @@ object SanitizedWordEmbeddingMap {
     m.toMap
   }
 
+  @annotation.nowarn("cat=deprecation")
   def main(args:Array[String]): Unit = {
     val w2v = new SanitizedWordEmbeddingMap(args(0), None)
 

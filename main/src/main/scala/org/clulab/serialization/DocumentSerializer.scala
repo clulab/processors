@@ -9,6 +9,7 @@ import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
 import org.clulab.utils.Logging
+import org.json4s.DefaultFormats
 
 /**
   * Saves/loads a Document to/from a stream

@@ -362,7 +362,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
         x <- matrix(word)
       } yield x * p
       // add it in place to the sum vector
-      add(v, scaled)
+      add(v, scaled.toArray)
     }
     OldWordEmbeddingMap.norm(v)
     v

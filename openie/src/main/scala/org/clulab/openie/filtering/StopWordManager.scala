@@ -51,7 +51,7 @@ class StopWordManager(stopWordsPath: String, transparentPath: String, tagSet: Ta
 
     val lemmas = s.lemmas.get.slice(span.start, span.end)
     val tags = s.tags.get.slice(span.start, span.end)
-    val entities = s.entities.map(_.slice(span.start, span.end))
+    val entities = s.entities.map(_.slice(span.start, span.end).toArray)
 
     hasNonStopContent(lemmas, tags, entities)
   }

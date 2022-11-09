@@ -21,7 +21,7 @@ object DependencyUtils {
   type Policy = Seq[Int] => Int
 
   // get all the governors of the given token according to the dependency graph
-  def followIncoming(tok: Int, graph: DependencyGraph): Array[Int] = graph.incomingEdges.lift(tok).getOrElse(Array.empty).map(_._1)
+  def followIncoming(tok: Int, graph: DependencyGraph): Array[Int] = graph.incomingEdges.lift(tok).getOrElse(Array.empty[(Int, String)]).map(_._1).toArray
 
   // by default we choose the last element of the sequence
   val defaultPolicy: Policy = _.last

@@ -2,12 +2,13 @@
 // Suppresses problems with scaladoc @throws links.
 // Compile / doc / scalacOptions += "-no-link-warnings"
 ThisBuild / Compile / scalacOptions ++= Seq(
-  "-feature", "-unchecked"
+  "-feature",
+  "-unchecked"
 ) ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, 11)) => Seq.empty // The deprecation check is disabled.
     case Some((2, 12) | (2, 13)) => Seq("-deprecation")
-    case Some((3, _)) => Seq("-deprecation")
+    case Some((3, _)) => Seq("-deprecation", "-explain")
     case _ => Seq.empty
   }
 }

@@ -41,7 +41,8 @@ object JSONSerializer {
             case jValue: JValue =>
               val text = prettyJson(jValue)
               throw new RuntimeException(s"ERROR: While deserializing document attachments expected JObject but found this: $text")
-            case _ => // noop.  It should never get here.  (Famous last words.)
+            // case _ => // noop.  It should never get here.  (Famous last words.)
+            case null => // noop.  It should never get here.  (Famous last words.)  Scala 3 prefers null over _.
           }
         }
       case _ => // Leave documentAttachments as is: None

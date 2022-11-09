@@ -21,8 +21,8 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
   def equalsForSerialization(other: AnyRef): Boolean = {
     other.isInstanceOf[BooleanHashTrie] && {
       val that = other.asInstanceOf[BooleanHashTrie]
-      val thisString = this.toString()
-      val thatString = that.toString()
+      val thisString = this.toString
+      val thatString = that.toString
 
       val result = this.label == that.label &&
       this.caseInsensitive == that.caseInsensitive &&
