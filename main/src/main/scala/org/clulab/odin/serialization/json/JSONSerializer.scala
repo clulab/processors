@@ -54,6 +54,8 @@ object JSONSerializer {
     * only a reference to the document json is contained within each mention.
     * A map from doc reference to document json is used to avoid redundancies and reduce file size during serialization.
     * */
+  // This annotation is to avoid "Compiler synthesis of Manifest and OptManifest is deprecated".
+  @annotation.nowarn("cat=deprecation")
   def toMention(mjson: JValue, docMap: Map[String, Document]): Mention = {
     implicit val formats: DefaultFormats.type = DefaultFormats
 
@@ -186,7 +188,7 @@ object JSONSerializer {
   /** create a map pointing from a Doc.equivalenceHash -> Document */
   def mkDocumentMap(djson: JValue): Map[String, Document] = {
     val kvPairs: List[(String, Document)] = for {
-      JObject(kvpair) <- djson
+      case JObject(kvpair) <- djson
       JField(docHash: String, docjson) <- kvpair
       // this child should contain sentences
       if (docjson \ "sentences") != JNothing

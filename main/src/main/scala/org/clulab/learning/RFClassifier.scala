@@ -335,98 +335,98 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   /** Constructs a single decision tree from the given dataset sample */
   def buildTree(job:RFJob[L, F]):RFTree = {
-    //
-    // termination condition: all datums have the same labels in this split
-    //
-    if(sameLabels(job)) {
-      //logger.debug(s"Found termination condition due to uniform labels on job")
-      return new RFLeaf(job.leafLabels)
-    }
 
-    // termination condition: reached maximum depth
-    if(maxTreeDepth > 0 && job.activeNodes.size > maxTreeDepth) {
-      //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
-      return new RFLeaf(job.leafLabels)
-    }
-
-    // termination condition: the remaining dataset is too small
-    if(splitTooSmallPct > 0 && job.trainIndices.length < splitTooSmallPct * job.dataset.size) {
-      //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
-      return new RFLeaf(job.leafLabels)
-    }
-
-    //
-    // randomly select a subset of features from the features present in this partition
-    //
-    val currentFeatureIndices = randomFeatureSelection(
-      job.features, job.dataset.featureLexicon.size, job.random)
-    // logger.debug(s"Will work with ${currentFeatureIndices.length} features in this node.")
+    def inner(): RFTree = {
+      //
+      // randomly select a subset of features from the features present in this partition
+      //
+      val currentFeatureIndices = randomFeatureSelection(
+        job.features, job.dataset.featureLexicon.size, job.random)
+      // logger.debug(s"Will work with ${currentFeatureIndices.length} features in this node.")
 
 
-    //
-    // compute contingency tables for all selected features and all their thresholds
-    //
-    // count only the non-zero features
-    val contingencyTables = computeContingencyTables(job, currentFeatureIndices)
-    // compute the label distribution for this job
-    val overallLabels = job.labelCounts
-    // update contingency tables for the selected features that had zero values in this job
-    updateContingencyTables(currentFeatureIndices, contingencyTables, overallLabels)
-    //printContingencyTables(contingencyTables, job.featureThresholds)
+      //
+      // compute contingency tables for all selected features and all their thresholds
+      //
+      // count only the non-zero features
+      val contingencyTables = computeContingencyTables(job, currentFeatureIndices)
+      // compute the label distribution for this job
+      val overallLabels = job.labelCounts
+      // update contingency tables for the selected features that had zero values in this job
+      updateContingencyTables(currentFeatureIndices, contingencyTables, overallLabels)
+      //printContingencyTables(contingencyTables, job.featureThresholds)
 
-    //
-    // find feature with highest utility
-    //
-    var best:Option[Utility] = None
-    for(f <- currentFeatureIndices) {
-      val utility = featureUtility(f, job.featureThresholds(f), contingencyTables(f), job.activeNodes, job.currentUtility)
-      /*
-      if(utility.isDefined)
-        logger.debug(s"Utility for feature ${featureLexicon.get.get(f)} and threshold ${utility.get._2} is ${utility.get._3}")
-      else
-        logger.debug(s"Feature ${featureLexicon.get.get(f)} has no utility!")
-      */
+      //
+      // find feature with highest utility
+      //
+      var best:Option[Utility] = None
+      for(f <- currentFeatureIndices) {
+        val utility = featureUtility(f, job.featureThresholds(f), contingencyTables(f), job.activeNodes, job.currentUtility)
+        /*
+        if(utility.isDefined)
+          logger.debug(s"Utility for feature ${featureLexicon.get.get(f)} and threshold ${utility.get._2} is ${utility.get._3}")
+        else
+          logger.debug(s"Feature ${featureLexicon.get.get(f)} has no utility!")
+        */
 
-      if(verbose && utility.isDefined) {
-        println("Current utility:")
-        debugUtility(utility.get, job)
-      }
+        if(verbose && utility.isDefined) {
+          println("Current utility:")
+          debugUtility(utility.get, job)
+        }
 
-      if(utility.isDefined) {
-        if(best.isEmpty || best.get.value < utility.get.value) {
-          best = utility
-          if(verbose) println("CHOSEN NEW BEST!")
+        if(utility.isDefined) {
+          if(best.isEmpty || best.get.value < utility.get.value) {
+            best = utility
+            if(verbose) println("CHOSEN NEW BEST!")
+          }
         }
       }
-    }
 
-    //
-    // nothing found, take majority class
-    //
-    if(best.isEmpty) {
-      // logger.debug("No useful feature found.")
-      new RFLeaf(job.leafLabels)
-    }
-
-    //
-    // otherwise, construct a non-terminal node on the best split and recurse
-    //
-    else {
-      if(verbose) {
-        println("BEST OVERALL:")
-        debugUtility(best.get, job)
+      //
+      // nothing found, take majority class
+      //
+      if(best.isEmpty) {
+        // logger.debug("No useful feature found.")
+        new RFLeaf(job.leafLabels)
       }
 
-      //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+      //
+      // otherwise, construct a non-terminal node on the best split and recurse
+      //
+      else {
+        if(verbose) {
+          println("BEST OVERALL:")
+          debugUtility(best.get, job)
+        }
 
-      val newActiveNodes = new mutable.HashSet[(Int, Double)]()
-      newActiveNodes ++= job.activeNodes
-      newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
-      val newActiveNodesSet = newActiveNodes.toSet
-      new RFNonTerminal(best.get.feature, best.get.threshold,
-        buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue, newActiveNodesSet)),
-        buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue, newActiveNodesSet)))
+        //logger.debug(s"Found split point at feature ${featureLexicon.get.get(best.get._1)} with threshold ${best.get._2} and utility ${best.get._3}.")
+
+        val newActiveNodes = new mutable.HashSet[(Int, Double)]()
+        newActiveNodes ++= job.activeNodes
+        newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
+        val newActiveNodesSet = newActiveNodes.toSet
+        new RFNonTerminal(best.get.feature, best.get.threshold,
+          buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue, newActiveNodesSet)),
+          buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue, newActiveNodesSet)))
+      }
     }
+
+    // termination condition: all datums have the same labels in this split
+    if (sameLabels(job)) {
+      //logger.debug(s"Found termination condition due to uniform labels on job")
+      new RFLeaf(job.leafLabels)
+    }
+    // termination condition: reached maximum depth
+    else if (maxTreeDepth > 0 && job.activeNodes.size > maxTreeDepth) {
+      //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
+      new RFLeaf(job.leafLabels)
+    }
+    // termination condition: the remaining dataset is too small
+    else if (splitTooSmallPct > 0 && job.trainIndices.length < splitTooSmallPct * job.dataset.size) {
+      //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
+      new RFLeaf(job.leafLabels)
+    }
+    else inner()
   }
 
   def debugUtility(utility:Utility, job:RFJob[L, F]): Unit = {
@@ -496,25 +496,26 @@ class RFClassifier[L, F](numTrees:Int = 100,
     */
 
     // bail out if any of the splits is empty; in this case IG doesn't change
-    if(leftCounter.getTotal == 0 || rightCounter.getTotal == 0) {
+    if (leftCounter.getTotal == 0 || rightCounter.getTotal == 0) {
       //logger.debug("\tEmpty splits in contingency tables!")
-      return None
+      None
     }
+    else {
+      val leftWeight = leftCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
+      val rightWeight = rightCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
+      val leftEntropy = entropy(leftCounter)
+      val rightEntropy = entropy(rightCounter)
+      val value =  currentEntropy - (leftWeight * leftEntropy) - (rightWeight * rightEntropy)
 
-    val leftWeight = leftCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
-    val rightWeight = rightCounter.getTotal / (leftCounter.getTotal + rightCounter.getTotal)
-    val leftEntropy = entropy(leftCounter)
-    val rightEntropy = entropy(rightCounter)
-    val value =  currentEntropy - (leftWeight * leftEntropy) - (rightWeight * rightEntropy)
-
-    if(value < utilityTooSmallThreshold) {
-      // if the change in entropy if too small; bail out
-      // this is a simple form of regularization
-      //logger.debug("\tUtility too small!")
-      return None
+      if (value < utilityTooSmallThreshold) {
+        // if the change in entropy if too small; bail out
+        // this is a simple form of regularization
+        //logger.debug("\tUtility too small!")
+        None
+      }
+      else
+        Some(Utility(feature, threshold, value, currentEntropy, leftEntropy, rightEntropy, leftCounter, rightCounter))
     }
-
-    Some(Utility(feature, threshold, value, currentEntropy, leftEntropy, rightEntropy, leftCounter, rightCounter))
   }
 
   /** Randomly picks selectedFeats features between 0 .. numFeats */

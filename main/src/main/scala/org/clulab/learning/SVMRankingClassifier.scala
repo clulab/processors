@@ -222,10 +222,10 @@ class SVMRankingClassifier[F] (
     weights
   }
 
-  private def splitSVMLine(line:String):(String, String) = {
+  private def splitSVMLine(line: String): (String, String) = {
     val pound = line.indexOf("#")
-    if(pound < 0) return (line, "")
-    (line.substring(0, pound).trim, line.substring(pound + 1). trim)
+    if (pound < 0) (line, "")
+    else (line.substring(0, pound).trim, line.substring(pound + 1). trim)
   }
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {

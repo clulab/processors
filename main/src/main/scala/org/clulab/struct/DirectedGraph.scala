@@ -184,15 +184,16 @@ case class DirectedGraph[E](
   }
 
   private def hasCycle(current:Int, traversed:mutable.HashSet[Int]):Boolean = {
-    if(traversed.contains(current)) {
+    if (traversed.contains(current)) {
       // println(s"Found cycle on offset $current!")
-      return true
-    } else if(incomingEdges(current).nonEmpty) {
+      true
+    }
+    else if (incomingEdges(current).nonEmpty) {
       // assumption: each node has a single head (stored in incoming)
       traversed += current
-      return hasCycle(incomingEdges(current)(0)._1, traversed)
+      hasCycle(incomingEdges(current)(0)._1, traversed)
     }
-    false
+    else false
   }
 
   def toDirectedGraphIndex(sentenceLength:Int = size): DirectedGraphIndex[E] = {

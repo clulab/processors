@@ -131,16 +131,18 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
-    if (doc.sentences.length == 0) return None
-    if (doc.sentences(0).words == null)
-      throw new RuntimeException("ERROR: Sentence.words == null!")
+    if (doc.sentences.length == 0) None
+    else {
+      if (doc.sentences(0).words == null)
+        throw new RuntimeException("ERROR: Sentence.words == null!")
 
-    if (checkAnnotation && doc.isInstanceOf[CoreNLPDocument]) {
-      val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
-        throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
-      Some(annotation)
-    } else {
-      None
+      if (checkAnnotation && doc.isInstanceOf[CoreNLPDocument]) {
+        val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
+          throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
+        Some(annotation)
+      }
+      else
+        None
     }
   }
 
@@ -183,94 +185,92 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   }
 
   def tagPartsOfSpeech(doc:Document): Unit = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    basicSanityCheck(doc).foreach { annotation =>
+      posTagger.annotate(annotation)
 
-    posTagger.annotate(annotation.get)
+      postprocessTags(annotation)
 
-    postprocessTags(annotation.get)
-
-    // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
-    var offset = 0
-    for (sa <- sas) {
-      val tb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation]).asScala
-      for (ta <- tas) {
-        tb += in(ta.tag())
+      // convert CoreNLP Annotations to our data structures
+      val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+      var offset = 0
+      for (sa <- sas) {
+        val tb = new ArrayBuffer[String]
+        val tas = sa.get(classOf[TokensAnnotation]).asScala
+        for (ta <- tas) {
+          tb += in(ta.tag())
+        }
+        doc.sentences(offset).tags = Some(tb.toArray)
+        offset += 1
       }
-      doc.sentences(offset).tags = Some(tb.toArray)
-      offset += 1
     }
   }
 
   def lemmatize(doc:Document): Unit = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before lemmatization!")
+    basicSanityCheck(doc).foreach { annotation =>
+      if (doc.sentences.head.tags.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the POS tagger before lemmatization!")
 
-    lemmatizer.annotate(annotation.get)
+      lemmatizer.annotate(annotation)
 
-    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
-    var offset = 0
-    for (sa <- sas) {
-      val tb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation]).asScala
-      for (ta <- tas) {
-        tb += in(ta.lemma())
+      val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+      var offset = 0
+      for (sa <- sas) {
+        val tb = new ArrayBuffer[String]
+        val tas = sa.get(classOf[TokensAnnotation]).asScala
+        for (ta <- tas) {
+          tb += in(ta.lemma())
+        }
+        doc.sentences(offset).lemmas = Some(tb.toArray)
+        offset += 1
       }
-      doc.sentences(offset).lemmas = Some(tb.toArray)
-      offset += 1
     }
   }
 
   def namedEntitySanityCheck(doc:Document):Option[Annotation] = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return None
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
-    annotation
+    basicSanityCheck(doc).map { annotation =>
+      if (doc.sentences.head.tags.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the POS tagger before NER!")
+      if (doc.sentences.head.lemmas.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the lemmatizer before NER!")
+      annotation
+    }
   }
 
   def recognizeNamedEntities(doc:Document): Unit = {
-    val annotation = namedEntitySanityCheck(doc)
-    if(annotation.isEmpty) return
+    namedEntitySanityCheck(doc).foreach { annotation =>
+      if(doc.getDCT.isDefined)
+        annotation.set(classOf[DocDateAnnotation], doc.getDCT.get)
 
-    if(doc.getDCT.isDefined)
-      annotation.get.set(classOf[DocDateAnnotation], doc.getDCT.get)
-
-    try {
-      ner.annotate(annotation.get)
-    } catch {
-      case e:Exception =>
-        println("Caught NER exception!")
-        println("Document:\n" + doc)
-        throw e
-    }
-
-    // convert CoreNLP Annotations to our data structures
-    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
-    var offset = 0
-    for (sa <- sas) {
-      val tb = new ArrayBuffer[String]
-      val nb = new ArrayBuffer[String]
-      val tas = sa.get(classOf[TokensAnnotation]).asScala
-      for (ta <- tas) {
-        tb += in(ta.ner())
-        val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])
-        //println(s"NORM: $n")
-        if (n != null) nb += in(n)
-        else nb += in("O")
+      try {
+        ner.annotate(annotation)
+      } catch {
+        case e:Exception =>
+          println("Caught NER exception!")
+          println("Document:\n" + doc)
+          throw e
       }
 
-      //println("NORMS: " + nb.mkString(", "))
+      // convert CoreNLP Annotations to our data structures
+      val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+      var offset = 0
+      for (sa <- sas) {
+        val tb = new ArrayBuffer[String]
+        val nb = new ArrayBuffer[String]
+        val tas = sa.get(classOf[TokensAnnotation]).asScala
+        for (ta <- tas) {
+          tb += in(ta.ner())
+          val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])
+          //println(s"NORM: $n")
+          if (n != null) nb += in(n)
+          else nb += in("O")
+        }
 
-      doc.sentences(offset).entities = Some(tb.toArray)
-      doc.sentences(offset).norms = Some(nb.toArray)
-      offset += 1
+        //println("NORMS: " + nb.mkString(", "))
+
+        doc.sentences(offset).entities = Some(tb.toArray)
+        doc.sentences(offset).norms = Some(nb.toArray)
+        offset += 1
+      }
     }
   }
 

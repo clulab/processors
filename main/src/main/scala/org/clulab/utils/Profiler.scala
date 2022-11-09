@@ -19,16 +19,15 @@ object Profiler {
       if (ids(i) == id) return i    // ID found
     }
     // ID not found
-    if (makeNewID == true) {
+    if (makeNewID) {
       ids.append(id)
       startTimes.append(0)
       deltas.append(0)
       numSamples.append(0)
 
-      return (ids.size - 1)
-    } else {
-      -1
+      ids.size - 1
     }
+    else -1
   }
 
   def start(id:String): Unit = {

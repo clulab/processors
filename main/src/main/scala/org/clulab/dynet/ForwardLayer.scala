@@ -155,53 +155,55 @@ object ForwardLayer {
                  labelCounter: Counter[String],
                  isDual: Boolean,
                  inputSize: Int): Option[ForwardLayer] = {
-    if (!config.contains(paramPrefix)) {
-      return None
+
+    def inner(): Option[ForwardLayer] = {
+      val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
+      val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DEFAULT_DROPOUT_PROB))
+
+      val nonlinAsString = config.getArgString(paramPrefix + ".nonlinearity", Some(""))
+      val nonlin = nonlinAsString match {
+        case "relu" => NONLIN_RELU
+        case "tanh" => NONLIN_TANH
+        case "" => NONLIN_NONE
+        case _ => throw new RuntimeException(s"ERROR: unknown non-linearity $nonlinAsString!")
+      }
+
+      val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
+      val i2t = fromIndexToString(t2i)
+
+      val distanceEmbeddingSize = config.getArgInt(paramPrefix + ".distanceEmbeddingSize", Some(0))
+      val distanceLookupParameters =
+        if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
+        else None
+
+      val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
+
+      val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
+      val rootParam = parameters.addParameters(Dim(inputSize))
+
+      inferenceType match {
+        case TYPE_GREEDY_STRING =>
+          Some(new GreedyForwardLayer(parameters,
+            inputSize, isDual,
+            t2i, i2t, H, rootParam,
+            distanceEmbeddingSize, distanceLookupParameters,
+            nonlin, dropoutProb))
+        case TYPE_VITERBI_STRING =>
+          val T = mkTransitionMatrix(parameters, t2i)
+          val layer = new ViterbiForwardLayer(parameters,
+            inputSize, isDual,
+            t2i, i2t, H, T, rootParam,
+            distanceEmbeddingSize, distanceLookupParameters,
+            nonlin, dropoutProb)
+          layer.initializeTransitions()
+          Some(layer)
+        case _ =>
+          new RuntimeException(s"ERROR: unknown inference type $inferenceType!")
+          None
+      }
     }
-
-    val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DEFAULT_DROPOUT_PROB))
-
-    val nonlinAsString = config.getArgString(paramPrefix + ".nonlinearity", Some(""))
-    val nonlin = nonlinAsString match {
-      case "relu" => NONLIN_RELU
-      case "tanh" => NONLIN_TANH
-      case "" => NONLIN_NONE
-      case _ => throw new RuntimeException(s"ERROR: unknown non-linearity $nonlinAsString!")
-    }
-
-    val t2i = labelCounter.keySet.toList.sorted.zipWithIndex.toMap
-    val i2t = fromIndexToString(t2i)
-
-    val distanceEmbeddingSize = config.getArgInt(paramPrefix + ".distanceEmbeddingSize", Some(0))
-    val distanceLookupParameters =
-      if(distanceEmbeddingSize > 0) Some(parameters.addLookupParameters(101, Dim(distanceEmbeddingSize)))
-      else None
-
-    val actualInputSize = if(isDual) 2 * inputSize + distanceEmbeddingSize else inputSize
-
-    val H = parameters.addParameters(Dim(t2i.size, actualInputSize))
-    val rootParam = parameters.addParameters(Dim(inputSize))
-
-    inferenceType match {
-      case TYPE_GREEDY_STRING =>
-        Some(new GreedyForwardLayer(parameters,
-          inputSize, isDual,
-          t2i, i2t, H, rootParam,
-          distanceEmbeddingSize, distanceLookupParameters,
-          nonlin, dropoutProb))
-      case TYPE_VITERBI_STRING =>
-        val T = mkTransitionMatrix(parameters, t2i)
-        val layer = new ViterbiForwardLayer(parameters,
-          inputSize, isDual,
-          t2i, i2t, H, T, rootParam,
-          distanceEmbeddingSize, distanceLookupParameters,
-          nonlin, dropoutProb)
-        layer.initializeTransitions()
-        Some(layer)
-      case _ =>
-        new RuntimeException(s"ERROR: unknown inference type $inferenceType!")
-        None
-    }
+ 
+    if (!config.contains(paramPrefix)) None
+    else inner()
   }
 }

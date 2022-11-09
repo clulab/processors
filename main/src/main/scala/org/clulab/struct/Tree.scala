@@ -147,8 +147,8 @@ trait Tree {
   }
 
   protected def findHeadPosition:Int = {
-    if(isLeaf) return startOffset
-    children.get(head).findHeadPosition
+    if (isLeaf) startOffset
+    else children.get(head).findHeadPosition
   }
 }
 

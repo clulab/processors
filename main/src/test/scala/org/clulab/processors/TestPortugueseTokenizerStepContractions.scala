@@ -678,6 +678,6 @@ class TestPortugueseTokenizerStepContractions extends Test {
     val tokenizer = new TokenizerStepPortugueseContractions()    
     val processedTokens = tokenizer.process(tokensRaw.toArray)
 
-    return(processedTokens)
+    processedTokens
   }
 }

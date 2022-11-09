@@ -29,11 +29,11 @@ class StopWordManager(stopWordsPath: String, transparentPath: String, tagSet: Ta
 
   def hasNonStopContent(lemmas: Seq[String], tags: Seq[String], entities: Option[Array[String]]): Boolean = {
     // There should be at least one noun
-    if (!tags.exists(tagSet.isAnyNoun)) return false
+    if (!tags.exists(tagSet.isAnyNoun)) false
     // This above can be combined with those below
 
     // There should be at least one word which:
-    lemmas.indices.exists { i =>
+    else lemmas.indices.exists { i =>
       // has more than one character
       lemmas(i).length > 1 &&
         // has a content POS tag

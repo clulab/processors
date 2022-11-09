@@ -391,119 +391,120 @@ object EmbeddingLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  wordCounter: Counter[String]): Option[InitialLayer] = {
-    if(! config.contains(paramPrefix)) {
-      return None
+
+    def inner(): Option[InitialLayer] = {
+      val learnedWordEmbeddingSize =
+        config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
+          Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
+      val charEmbeddingSize =
+        config.getArgInt(paramPrefix + ".charEmbeddingSize",
+          Some(DEFAULT_CHAR_EMBEDDING_SIZE))
+      val charRnnStateSize =
+        config.getArgInt(paramPrefix + ".charRnnStateSize",
+          Some(DEFAULT_CHAR_RNN_STATE_SIZE))
+      val posTagEmbeddingSize =
+        config.getArgInt(paramPrefix + ".posTagEmbeddingSize",
+          Some(DEFAULT_POS_TAG_EMBEDDING_SIZE))
+      val neTagEmbeddingSize =
+        config.getArgInt(paramPrefix + ".neTagEmbeddingSize",
+          Some(DEFAULT_NE_TAG_EMBEDDING_SIZE))
+      val distanceEmbeddingSize =
+        config.getArgInt(paramPrefix + ".distanceEmbeddingSize",
+          Some(DEFAULT_DISTANCE_EMBEDDING_SIZE))
+      val distanceWindowSize =
+        config.getArgInt(paramPrefix + ".distanceWindowSize",
+          Some(DEFAULT_DISTANCE_WINDOW_SIZE))
+      val useIsPredicate =
+        config.getArgBoolean(paramPrefix + ".useIsPredicate",
+          Some(DEFAULT_USE_IS_PREDICATE == 1))
+      val positionEmbeddingSize =
+        config.getArgInt(paramPrefix + ".positionEmbeddingSize",
+          Some(DEFAULT_POSITION_EMBEDDING_SIZE))
+      val dropoutProb =
+        config.getArgFloat(paramPrefix + ".dropoutProb",
+          Some(EmbeddingLayer.DEFAULT_DROPOUT_PROB))
+
+      // the word at position 0 is always reserved for UNK
+      val wordList = List(Utils.UNK_WORD) ++ wordCounter.keySet.toList.sorted
+      val w2i = wordList.zipWithIndex.toMap
+
+      val wordLookupParameters:LookupParameter = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
+
+      val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
+      val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
+        val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
+        val lines = source.getLines().buffered
+        val c2i = byLineCharMapBuilder.build(lines)
+        //println(s"c2i has size ${c2i.size}")
+        c2i
+      }
+
+      val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
+      val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
+      val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
+
+      val (tag2i, posTagLookupParameters) =
+        if(posTagEmbeddingSize > 0) {
+          val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/tag2i-en.txt")))
+          val posTagLookupParameters = parameters.addLookupParameters(tag2i.size, Dim(posTagEmbeddingSize))
+          (Some(tag2i), Some(posTagLookupParameters))
+        } else {
+          (None, None)
+        }
+
+      val (ne2i, neTagLookupParameters) =
+        if(neTagEmbeddingSize > 0) {
+          val ne2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".ne2i", Some("org/clulab/ne2i-en.txt")))
+          val neTagLookupParameters = parameters.addLookupParameters(ne2i.size, Dim(neTagEmbeddingSize))
+          //println(s"INITIALIZE: neTagLookupParameters has dim ${ne2i.size} x $neTagEmbeddingSize")
+          (Some(ne2i), Some(neTagLookupParameters))
+        } else {
+          (None, None)
+        }
+
+      val distanceLookupParameters =
+        if(distanceEmbeddingSize > 0) {
+          // Position embeddings [-distanceWindowSize, distanceWindowSize] + < distanceWindowSize + > distanceWindowSize. total = 43
+          val distanceLookupParameters = parameters.addLookupParameters(distanceWindowSize * 2 + 3, Dim(distanceEmbeddingSize))
+          Some(distanceLookupParameters)
+        } else {
+          None
+        }
+
+      val positionLookupParameters =
+        if(positionEmbeddingSize > 0) {
+          val positionLookupParameters = parameters.addLookupParameters(101, Dim(positionEmbeddingSize))
+          Some(positionLookupParameters)
+        } else {
+          None
+        }
+
+      val layer = new EmbeddingLayer(
+        parameters:ParameterCollection,
+        w2i, wordCounter, c2i, tag2i, ne2i,
+        learnedWordEmbeddingSize,
+        charEmbeddingSize,
+        charRnnStateSize,
+        posTagEmbeddingSize,
+        neTagEmbeddingSize,
+        distanceEmbeddingSize,
+        distanceWindowSize,
+        positionEmbeddingSize,
+        useIsPredicate,
+        wordLookupParameters,
+        charLookupParameters,
+        charFwRnnBuilder,
+        charBwRnnBuilder,
+        posTagLookupParameters,
+        neTagLookupParameters,
+        distanceLookupParameters,
+        positionLookupParameters,
+        dropoutProb)
+
+      Some(layer)
     }
 
-    val learnedWordEmbeddingSize =
-      config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
-        Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
-    val charEmbeddingSize =
-      config.getArgInt(paramPrefix + ".charEmbeddingSize",
-        Some(DEFAULT_CHAR_EMBEDDING_SIZE))
-    val charRnnStateSize =
-      config.getArgInt(paramPrefix + ".charRnnStateSize",
-        Some(DEFAULT_CHAR_RNN_STATE_SIZE))
-    val posTagEmbeddingSize =
-      config.getArgInt(paramPrefix + ".posTagEmbeddingSize",
-        Some(DEFAULT_POS_TAG_EMBEDDING_SIZE))
-    val neTagEmbeddingSize =
-      config.getArgInt(paramPrefix + ".neTagEmbeddingSize",
-        Some(DEFAULT_NE_TAG_EMBEDDING_SIZE))
-    val distanceEmbeddingSize =
-      config.getArgInt(paramPrefix + ".distanceEmbeddingSize",
-        Some(DEFAULT_DISTANCE_EMBEDDING_SIZE))
-    val distanceWindowSize =
-      config.getArgInt(paramPrefix + ".distanceWindowSize",
-        Some(DEFAULT_DISTANCE_WINDOW_SIZE))
-    val useIsPredicate =
-      config.getArgBoolean(paramPrefix + ".useIsPredicate",
-        Some(DEFAULT_USE_IS_PREDICATE == 1))
-    val positionEmbeddingSize =
-      config.getArgInt(paramPrefix + ".positionEmbeddingSize",
-        Some(DEFAULT_POSITION_EMBEDDING_SIZE))
-    val dropoutProb =
-      config.getArgFloat(paramPrefix + ".dropoutProb",
-        Some(EmbeddingLayer.DEFAULT_DROPOUT_PROB))
-
-    // the word at position 0 is always reserved for UNK
-    val wordList = List(Utils.UNK_WORD) ++ wordCounter.keySet.toList.sorted
-    val w2i = wordList.zipWithIndex.toMap
-
-    val wordLookupParameters:LookupParameter = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
-
-    val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
-    val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
-      val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
-      val lines = source.getLines().buffered
-      val c2i = byLineCharMapBuilder.build(lines)
-      //println(s"c2i has size ${c2i.size}")
-      c2i
-    }
-
-    val charLookupParameters = parameters.addLookupParameters(c2i.size, Dim(charEmbeddingSize))
-    val charFwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
-    val charBwRnnBuilder = new LstmBuilder(1, charEmbeddingSize, charRnnStateSize, parameters)
-
-    val (tag2i, posTagLookupParameters) =
-      if(posTagEmbeddingSize > 0) {
-        val tag2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".tag2i", Some("org/clulab/tag2i-en.txt")))
-        val posTagLookupParameters = parameters.addLookupParameters(tag2i.size, Dim(posTagEmbeddingSize))
-        (Some(tag2i), Some(posTagLookupParameters))
-      } else {
-        (None, None)
-      }
-
-    val (ne2i, neTagLookupParameters) =
-      if(neTagEmbeddingSize > 0) {
-        val ne2i = Utils.readString2Ids(config.getArgString(paramPrefix + ".ne2i", Some("org/clulab/ne2i-en.txt")))
-        val neTagLookupParameters = parameters.addLookupParameters(ne2i.size, Dim(neTagEmbeddingSize))
-        //println(s"INITIALIZE: neTagLookupParameters has dim ${ne2i.size} x $neTagEmbeddingSize")
-        (Some(ne2i), Some(neTagLookupParameters))
-      } else {
-        (None, None)
-      }
-
-    val distanceLookupParameters =
-      if(distanceEmbeddingSize > 0) {
-        // Position embeddings [-distanceWindowSize, distanceWindowSize] + < distanceWindowSize + > distanceWindowSize. total = 43
-        val distanceLookupParameters = parameters.addLookupParameters(distanceWindowSize * 2 + 3, Dim(distanceEmbeddingSize))
-        Some(distanceLookupParameters)
-      } else {
-        None
-      }
-
-    val positionLookupParameters =
-      if(positionEmbeddingSize > 0) {
-        val positionLookupParameters = parameters.addLookupParameters(101, Dim(positionEmbeddingSize))
-        Some(positionLookupParameters)
-      } else {
-        None
-      }
-
-    val layer = new EmbeddingLayer(
-      parameters:ParameterCollection,
-      w2i, wordCounter, c2i, tag2i, ne2i,
-      learnedWordEmbeddingSize,
-      charEmbeddingSize,
-      charRnnStateSize,
-      posTagEmbeddingSize,
-      neTagEmbeddingSize,
-      distanceEmbeddingSize,
-      distanceWindowSize,
-      positionEmbeddingSize,
-      useIsPredicate,
-      wordLookupParameters,
-      charLookupParameters,
-      charFwRnnBuilder,
-      charBwRnnBuilder,
-      posTagLookupParameters,
-      neTagLookupParameters,
-      distanceLookupParameters,
-      positionLookupParameters,
-      dropoutProb)
-
-    Some(layer)
+    if (!config.contains(paramPrefix)) None
+    else inner()
   }
-
 }
