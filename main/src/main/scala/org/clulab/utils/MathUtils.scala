@@ -123,62 +123,60 @@ object MathUtils {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 
-    if(fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
-      return Double.NegativeInfinity
-
-    var maxIdx = fromIndex
-    var max = logInputs(fromIndex)
-    for (i <- fromIndex + 1 until toIndex) {
-      if (logInputs(i) > max) {
-        maxIdx = i
-        max = logInputs(i)
+    if (fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
+      Double.NegativeInfinity
+    else {
+      var maxIdx = fromIndex
+      var max = logInputs(fromIndex)
+      for (i <- fromIndex + 1 until toIndex) {
+        if (logInputs(i) > max) {
+          maxIdx = i
+          max = logInputs(i)
+        }
       }
-    }
 
-    var haveTerms = false
-    var intermediate = 0.0
-    var cutoff = max - LogTolerance
-    for (i <- fromIndex until toIndex) {
-      if (i != maxIdx && logInputs(i) > cutoff) {
-        haveTerms = true
-        intermediate += math.exp(logInputs(i) - max)
+      var haveTerms = false
+      var intermediate = 0.0
+      var cutoff = max - LogTolerance
+      for (i <- fromIndex until toIndex) {
+        if (i != maxIdx && logInputs(i) > cutoff) {
+          haveTerms = true
+          intermediate += math.exp(logInputs(i) - max)
+        }
       }
+      if (haveTerms) max + math.log(1.0 + intermediate)
+      else max
     }
-    if (haveTerms) {
-      return max + math.log(1.0 + intermediate)
-    }
-    max
   }
 
   def logSumFloat(logInputs:IndexedSeq[Float], fromIndex:Int, toIndex:Int):Float = {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 
-    if(fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
-      return Float.NegativeInfinity
-
-    var maxIdx = fromIndex
-    var max = logInputs(fromIndex)
-    for (i <- fromIndex + 1 until toIndex) {
-      if (logInputs(i) > max) {
-        maxIdx = i
-        max = logInputs(i)
+    if (fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
+      Float.NegativeInfinity
+    else {
+      var maxIdx = fromIndex
+      var max = logInputs(fromIndex)
+      for (i <- fromIndex + 1 until toIndex) {
+        if (logInputs(i) > max) {
+          maxIdx = i
+          max = logInputs(i)
+        }
       }
-    }
 
-    var haveTerms = false
-    var intermediate = 0.0f
-    var cutoff = max - LogTolerance
-    for (i <- fromIndex until toIndex) {
-      if (i != maxIdx && logInputs(i) > cutoff) {
-        haveTerms = true
-        intermediate += math.exp(logInputs(i) - max).toFloat
+      var haveTerms = false
+      var intermediate = 0.0f
+      var cutoff = max - LogTolerance
+      for (i <- fromIndex until toIndex) {
+        if (i != maxIdx && logInputs(i) > cutoff) {
+          haveTerms = true
+          intermediate += math.exp(logInputs(i) - max).toFloat
+        }
       }
+      if (haveTerms) max + math.log(1.0 + intermediate).toFloat
+      else max
     }
-    if (haveTerms) {
-      return max + math.log(1.0 + intermediate).toFloat
-    }
-    max
   }
 
   /**
@@ -269,21 +267,21 @@ object MathUtils {
    * This is useful to pretty print P/R/F1 scores
    */
   def round(d: Double, decimals: Int): Double = {
-    if(decimals < 0) {
-      return d // do not round when decimals is set to a negative value
-    }
+    if (decimals < 0)
+      d // do not round when decimals is set to a negative value
+    else {
+      var zeros = 1
+      var i = 0
+      while (i < decimals + 2) {
+        zeros *= 10
+        i += 1
+      }
 
-    var zeros = 1
-    var i = 0
-    while (i < decimals + 2) {
-      zeros *= 10
-      i += 1
+      val v = (d * zeros).toInt.toDouble / 100
+      v
     }
-
-    val v = (d * zeros).toInt.toDouble / 100
-    v
   }
-
+  
   /**
    *
    * @param coll                         - the collection on which to call the methods

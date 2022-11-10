@@ -63,10 +63,9 @@ class TestHashTrie extends Test {
   private def sameLabels(l1:Array[String], l2:Array[String]):Boolean = {
     if (l1.length != l2.length) false
     else {
-      l1.indices.foreach { i =>
-        if (l1(i) != l2(i)) return false
+      l1.indices.forall { i =>
+        l1(i) == l2(i)
       }
-      true
     }
   }
 }

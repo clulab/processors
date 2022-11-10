@@ -269,13 +269,18 @@ class CoNLLSRLToMetal {
     }
   }
 
-  def findEnd(sent:Array[CoNLLToken], start:Int):Int = {
-    var end = start + 1
-    while(end < sent.length) {
-      if(sent(end).pos != "HYPH") return end
-      else end = end + 2
+  def findEnd(sent: Array[CoNLLToken], start: Int): Int = {
+    @annotation.tailrec
+    def loop(end: Int): Int = {
+      if (end < sent.length) {
+        if (sent(end).pos != "HYPH") end
+        else loop(end + 2)
+      }
+      else
+        sent.length
     }
-    sent.length
+
+    loop(start + 1)
   }
 
   def mergeTokens(sent:Array[CoNLLToken], start:Int, end:Int, verbose:Boolean):CoNLLToken = {

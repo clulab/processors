@@ -683,13 +683,7 @@ class CluProcessor protected (
   }
 
   private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
-    for(d <- dependencies) {
-      if (d._2 == label) {
-        return true
-      }
-    }
-
-    false
+    dependencies.exists { d => d._2 == label }
   }
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {

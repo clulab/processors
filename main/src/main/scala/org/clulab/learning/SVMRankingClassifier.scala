@@ -335,41 +335,42 @@ class SVMRankingClassifier[F] (
 
   /** Saves important info to this file for debug purposes */
   def debug(): Unit = {
-    if(debugFile.length == 0) return
-    var features = new ArrayBuffer[(String, Int, Double)]
+    if (debugFile.nonEmpty) {
+      var features = new ArrayBuffer[(String, Int, Double)]
 
-    val pw = new PrintWriter(debugFile)
-    for(f <- featureLexicon.get.keySet)  {
-      val idx = featureLexicon.get.get(f)
-      idx match {
-        case Some(x) => if (x < weights.get.size) { features.append ( (f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)) ) }
-        case _ =>
+      val pw = new PrintWriter(debugFile)
+      for(f <- featureLexicon.get.keySet)  {
+        val idx = featureLexicon.get.get(f)
+        idx match {
+          case Some(x) => if (x < weights.get.size) { features.append ( (f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)) ) }
+          case _ =>
+        }
       }
-    }
 
-    // Sort features
-    features = features.sortBy(- _._3)
+      // Sort features
+      features = features.sortBy(- _._3)
 
-    // Output features
-    for (i <- 0 until features.size) {
-      val feature = features(i)
-      var featureString = feature._1
-      for (j <- 0 until (20 - featureString.size)) featureString += " "       // Make featureString a constant length for formatting
-      pw.println (featureString + " \t weight: " + feature._3)
-    }
-
-    pw.println ("")
-    pw.println("Weights:")
-    var first = true
-    for(i <- 0 until weights.get.size) {
-      if(weights.get(i) != 0.0) {
-        if(! first) pw.print(" ")
-        pw.print(s"$i:${weights.get(i)}")
-        first = false
+      // Output features
+      for (i <- 0 until features.size) {
+        val feature = features(i)
+        var featureString = feature._1
+        for (j <- 0 until (20 - featureString.size)) featureString += " "       // Make featureString a constant length for formatting
+        pw.println (featureString + " \t weight: " + feature._3)
       }
+
+      pw.println ("")
+      pw.println("Weights:")
+      var first = true
+      for(i <- 0 until weights.get.size) {
+        if(weights.get(i) != 0.0) {
+          if(! first) pw.print(" ")
+          pw.print(s"$i:${weights.get(i)}")
+          first = false
+        }
+      }
+      pw.println()
+      pw.close()
     }
-    pw.println()
-    pw.close()
   }
 }
 

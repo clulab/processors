@@ -34,28 +34,29 @@ object DependencyUtils {
    * @return the minimal Interval that contains all the nodes that are children of span's nodes
    */
   def subgraph(span: Interval, sent: Sentence): Option[Interval] = {
-    val graph = sent.dependencies.getOrElse(return None)
+    sent.dependencies.map { graph =>
 
-    val heads = if (span.size < 2) Seq(span.start) else findHeadsStrict(span, sent)
+      @annotation.tailrec
+      def followTrail(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
+        case Nil => results
+        case first +: rest if results contains first => followTrail(rest, results)
+        case first +: rest =>
+          val children: Seq[Int] = try {
+            graph.getOutgoingEdges(first).map(_._1)
+          } catch {
+            case e: Exception =>
+              Nil
+          }
+          followTrail(children ++ rest, first +: results)
+      }
 
-    @annotation.tailrec
-    def followTrail(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
-      case Nil => results
-      case first +: rest if results contains first => followTrail(rest, results)
-      case first +: rest =>
-        val children: Seq[Int] = try {
-          graph.getOutgoingEdges(first).map(_._1)
-        } catch {
-          case e: Exception =>
-            Nil
-        }
-        followTrail(children ++ rest, first +: results)
+      val heads = if (span.size < 2) Seq(span.start) else findHeadsStrict(span, sent)
+      val outgoing = (for (h <- heads) yield followTrail(Seq(h), Nil)).flatten.distinct
+
+      // outgoing may only have a single index
+      if (outgoing.length > 1) Interval(outgoing.min, outgoing.max+1)
+      else Interval(outgoing.min, outgoing.min + 1)
     }
-
-    val outgoing = (for (h <- heads) yield followTrail(Seq(h), Nil)).flatten.distinct
-
-    // outgoing may only have a single index
-    if (outgoing.length > 1) Some(Interval(outgoing.min, outgoing.max+1)) else Some(Interval(outgoing.min, outgoing.min + 1))
   }
 
   /**
@@ -220,16 +221,16 @@ object DependencyUtils {
    * @return returns true if Interval a contains Interval b or vice versa
    */
   def nested(a: Interval, b: Interval, sentA: Sentence, sentB: Sentence): Boolean = {
-    if (sentA != sentB) return false
+    if (sentA != sentB) false
+    else
+      if (sentA.dependencies.isEmpty) false
+      else {
+        val aSubgraph = subgraph(a, sentA)
+        val bSubgraph = subgraph(b, sentB)
 
-    val graph = sentA.dependencies.getOrElse(return false)
-
-    val aSubgraph = subgraph(a, sentA)
-    val bSubgraph = subgraph(b, sentB)
-
-    if((aSubgraph.isDefined && aSubgraph.get.contains(b)) ||
-      (bSubgraph.isDefined && bSubgraph.get.contains(a))) true
-    else false
+        (aSubgraph.isDefined && aSubgraph.get.contains(b)) ||
+        (bSubgraph.isDefined && bSubgraph.get.contains(a))
+      }
   }
 
   def mergeGraphs[T](dg1: DirectedGraph[T], dg2: DirectedGraph[T]): DirectedGraph[T] = {

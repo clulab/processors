@@ -48,20 +48,11 @@ object EmbeddingUtils {
     }
   }
 
-  def isNumber(w:String):Boolean = {
-    var i = 0
-    var foundDigit = false
-    while(i < w.length) {
-      val c = w.charAt(i)
-      if(! Character.isDigit(c) &&
-          c != '-' && c != '+' &&
-          c != ',' && c != '.' &&
-          c != '/' && c != '\\')
-        return false
-      if(Character.isDigit(c))
-        foundDigit = true
-      i += 1
+  def isNumber(w: String):Boolean = {
+    val isMaybeNumber = w.forall { c =>
+      Character.isDigit(c) || "-+,./\\".contains(c)
     }
-    foundDigit
+
+    isMaybeNumber && w.exists(Character.isDigit)
   }
 }

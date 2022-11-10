@@ -529,13 +529,12 @@ class RFClassifier[L, F](numTrees:Int = 100,
     feats.toArray
   }
 
-  def sameLabels(job:RFJob[L, F]):Boolean = {
+  def sameLabels(job: RFJob[L, F]): Boolean = {
     val ls = new mutable.HashSet[Int]()
-    for(i <- job.trainIndices) {
-      ls += job.dataset.labels(i)
-      if(ls.size > 1) return false
+
+    job.trainIndices.forall { i =>
+      ls.add(job.dataset.labels(i)) // "true if the element was not yet present in the set, false otherwise"
     }
-    true
   }
 
   def mkBag(dataset: CounterDataset[L, F],

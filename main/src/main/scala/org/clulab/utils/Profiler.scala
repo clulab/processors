@@ -15,19 +15,21 @@ object Profiler {
   val ids = new ArrayBuffer[String]()
 
   private def findIdxFromID(id:String, makeNewID:Boolean=false):Int = {
-    for (i <- 0 until ids.size) {
-      if (ids(i) == id) return i    // ID found
-    }
-    // ID not found
-    if (makeNewID) {
-      ids.append(id)
-      startTimes.append(0)
-      deltas.append(0)
-      numSamples.append(0)
+    val index = ids.indexOf(id)
+    
+    if (index >= 0) index
+    else {
+      // ID not found
+      if (makeNewID) {
+        ids.append(id)
+        startTimes.append(0)
+        deltas.append(0)
+        numSamples.append(0)
 
-      ids.size - 1
+        ids.size - 1
+      }
+      else -1
     }
-    else -1
   }
 
   def start(id:String): Unit = {

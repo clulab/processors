@@ -60,18 +60,13 @@ case class DirectedGraph[E](
   def getOutgoingEdges(node:Int): Array[(Int, E)] = outgoingEdges(node)
   def getIncomingEdges(node:Int): Array[(Int, E)] = incomingEdges(node)
 
-  def hasEdge(from:Int, to:Int, v:E):Boolean = {
+  def hasEdge(from: Int, to: Int, v: E): Boolean = {
     val fromEdges = outgoingEdges(from)
-    var offset = 0
-    while(offset < fromEdges.length) {
-      //println("checking edge: " + from + " " + fromEdges(offset)._1 + " " + fromEdges(offset)._2 + " against " + to + " " + v)
-      if (fromEdges(offset)._1 == to && fromEdges(offset)._2 == v) {
-        //println("\t\tTRUE")
-        return true
-      }
-      offset += 1
+
+    fromEdges.exists { fromEdge =>
+      //println("checking edge: " + from + " " + fromEdge._1 + " " + fromEdge._2 + " against " + to + " " + v)
+      fromEdge._1 == to && fromEdge._2 == v
     }
-    false
   }
 
   override def toString:String = {
@@ -174,13 +169,9 @@ case class DirectedGraph[E](
   }
 
   def containsCycles():Boolean = {
-    for(i <- 0 until size) {
-      val traversed = new mutable.HashSet[Int]
-      if(hasCycle(i, traversed)) {
-        return true
-      }
+    Range(0, size).exists { i =>
+      hasCycle(i, new mutable.HashSet[Int])
     }
-    false
   }
 
   private def hasCycle(current:Int, traversed:mutable.HashSet[Int]):Boolean = {
@@ -210,14 +201,10 @@ class DirectedGraphEdgeIterator[E](val graph:DirectedGraph[E]) extends Iterator[
   var node: Int = findNextNodeWithEdges(0)
   var nodeEdgeOffset = 0
 
-  def findNextNodeWithEdges(start:Int):Int = {
-    var n = start
-    while (n < graph.size) {
-      if (graph.getOutgoingEdges(n).length > 0)
-        return n
-      n += 1
-    }
-    graph.size
+  def findNextNodeWithEdges(start: Int): Int = {
+    Range(start, graph.size)
+        .find(graph.getOutgoingEdges(_).nonEmpty)
+        .getOrElse(graph.size)
   }
 
   def hasNext:Boolean = node < graph.size

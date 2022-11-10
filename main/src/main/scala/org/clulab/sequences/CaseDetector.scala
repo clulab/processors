@@ -31,12 +31,9 @@ object CaseDetector {
       CASE_o
   }
 
-  def isNumber(w:String): Boolean = {
-    for(i <- 0 until w.length) {
-      val c = w.charAt(i)
-      if(! c.isDigit && c != '-' && c != '.' && c != ',')
-        return false
+  def isNumber(w: String): Boolean = {
+    w.forall { c =>
+      c.isDigit || "-.,".contains(c)
     }
-    true
   }
 }
