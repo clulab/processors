@@ -251,7 +251,8 @@ class CluProcessor protected (
         chunks = None,
         tree = None,
         deps = EMPTY_GRAPH,
-        relations = None
+        relations = None,
+        sections = None
       )
 
       ner.find(sentence)

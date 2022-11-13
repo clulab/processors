@@ -224,6 +224,7 @@ class DocumentSerializer extends LazyLogging {
     var deps = new GraphMap
     var tree:Option[Tree] = None
     var relations:Option[Array[RelationTriple]] = None
+    var section:Option[Array[String]] = None
     do {
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
@@ -238,6 +239,9 @@ class DocumentSerializer extends LazyLogging {
       } else if (bits(0) == START_RELATIONS) {
         val sz = bits(1).toInt
         relations = loadRelations(r, sz)
+      } else if (bits(0) == START_SECTION) {
+        val numSubSections = bits(1).toInt
+        section = loadSections(r, numSubSections)
       }
     } while(bits(0) != END_OF_SENTENCE)
 
@@ -251,7 +255,7 @@ class DocumentSerializer extends LazyLogging {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      tree, deps, relations
+      tree, deps, relations, section
     )
   }
 
@@ -366,7 +370,23 @@ class DocumentSerializer extends LazyLogging {
       os.println(START_RELATIONS + SEP + relations.length)
       relations foreach (t => saveRelationTriple(t, os))
     }
+    // Added by Enrique to support sections names
+    if(sent.sections.nonEmpty){
+      val sections = sent.sections.get
+      os.println(START_SECTION + SEP + sections.length)
+      saveSections(sections, os)
+    }
     os.println(END_OF_SENTENCE)
+  }
+
+  private def saveSections(ss: Array[String], os: PrintWriter): Unit = {
+    ss foreach (section => os.print(section + SEP)) // The sections names from the root to the most concrete
+    os.println()
+  }
+
+  private def loadSections(r:BufferedReader, num:Int): Option[Array[String]] = {
+    val bits = read(r)
+    Some(bits.take(num))
   }
 
   private def saveTree(tree:Tree, os:PrintWriter): Unit = {
@@ -503,6 +523,7 @@ object DocumentSerializer {
   val START_DISCOURSE = "R"
   val START_RELATIONS = "OIE"
   val START_ATTACHMENTS = "A"
+  val START_SECTION = "Z"
 
   val END_OF_SENTENCE = "EOS"
   val END_OF_DOCUMENT = "EOD"

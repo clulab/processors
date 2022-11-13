@@ -47,7 +47,7 @@ class Sentence(
     * Hierarchy of section names to which this sentence belongs.
     * The first element is inner-most sub-section name, and the last is the top-most section name
     */
-  var section:Option[Array[String]] = None
+  var sections:Option[Array[String]] = None
 
 
   def size:Int = raw.length
@@ -97,7 +97,8 @@ class Sentence(
     val h7 = mix(h6, getAnnotationsHash(norms))
     val h8 = mix(h7, getAnnotationsHash(chunks))
     val h9 = mix(h8, if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode)
-    finalizeHash(h9, 10) 
+    val h10 = mix(h9, getAnnotationsHash(sections))
+    finalizeHash(h10, 11)
   }
 
   /**
@@ -195,18 +196,19 @@ object Sentence {
     new Sentence(raw, startOffsets, endOffsets, words)
 
   def apply(
-    raw: Array[String],
-    startOffsets: Array[Int],
-    endOffsets: Array[Int],
-    words: Array[String],
-    tags: Option[Array[String]],
-    lemmas: Option[Array[String]],
-    entities: Option[Array[String]],
-    norms: Option[Array[String]],
-    chunks: Option[Array[String]],
-    tree: Option[Tree],
-    deps: GraphMap,
-    relations: Option[Array[RelationTriple]]
+             raw: Array[String],
+             startOffsets: Array[Int],
+             endOffsets: Array[Int],
+             words: Array[String],
+             tags: Option[Array[String]],
+             lemmas: Option[Array[String]],
+             entities: Option[Array[String]],
+             norms: Option[Array[String]],
+             chunks: Option[Array[String]],
+             tree: Option[Tree],
+             deps: GraphMap,
+             relations: Option[Array[RelationTriple]],
+             sections: Option[Array[String]]
   ): Sentence = {
     val s = Sentence(raw, startOffsets, endOffsets, words)
     // update annotations
@@ -218,6 +220,7 @@ object Sentence {
     s.syntacticTree = tree
     s.graphs = deps
     s.relations = relations
+    s.sections = sections
     s
   }
 
