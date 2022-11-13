@@ -3,6 +3,7 @@ package org.clulab.serialization
 import org.clulab.processors.Processor
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest._
 
 /**
@@ -99,6 +100,33 @@ Phosphorylation of ASPP2 by MAPK is required for the RAS-induced translocation o
     val out2 = ser.save(doc2, keepText=true)
     // println(out2)                          // DEBUGGING
     (out2) should be (out1)
+  }
+
+  "DocumentSerializer" should "save and section names when provided" in {
+    val doc1 = proc.annotate(bigText, true) // explicit keep text
+
+    // Add a section name hierarchy to the first and last sentences of this document
+    val firstSection = Array("Document Title")
+    val lastSections = Array("Last subsection", "Last section")
+
+    doc1.sentences.head.sections = Some(firstSection)
+    doc1.sentences.last.sections = Some(lastSections)
+
+    val out1 = ser.save(doc1, keepText = true)
+
+    val doc2 = ser.load(out1)
+
+    val firstSentence = doc2.sentences.head
+    val lastSentence = doc2.sentences.last
+
+    firstSentence.sections.value should be (Array("Document Title"))
+    lastSentence.sections.value should be (Array("Last subsection", "Last section"))
+
+    doc2.sentences.drop(1).dropRight(1) foreach {
+      s =>
+        s.sections should be (None)
+    }
+
   }
 
 }
