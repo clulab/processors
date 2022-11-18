@@ -35,6 +35,9 @@ class MeasurementMention ( labels: Seq[String],
   }
 
   override def neLabel: String = {
-    "MEASUREMENT"
+    val unitClass = UnitNormalizer.unitClass(unit.get)
+    if (unitClass == "UNK") {
+      "MEASUREMENT"
+    } else f"MEASUREMENT-${unitClass.toUpperCase}"
   }
 }
