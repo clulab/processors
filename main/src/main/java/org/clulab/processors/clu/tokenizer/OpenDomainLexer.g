@@ -36,6 +36,9 @@ FRACTION: ONE_TO_FOUR_DIGITS ('/' | '\u2044') ONE_TO_FOUR_DIGITS;
 // abbreviations are handled in the org.clulab.processors.clulab.tokenizer.Tokenizer class.
 WORD: ALPHANUM+ (('.'|'-'|'_'|'\'') ALPHANUM+ )* ;
 
+// special control string that indicates forced sentence break
+SENTENCEBREAK: '[SB]' ;
+
 // Twitter user names and hashtags
 TWITTER_NAME: '@' (LOWER_CASE_LETTER|UPPER_CASE_LETTER|'_') (LOWER_CASE_LETTER|UPPER_CASE_LETTER|'_'|DIGIT)*;
 TWITTER_HASHTAG: '#' LETTER+;

@@ -223,6 +223,15 @@ class TestTokenizer extends FlatSpec with Matchers {
     }
   }
 
+  it should "recognize the control string for sentence breaks" in {
+    val orig = "this is one sentence [SB] this is another"
+    val sents = tok(orig)
+    sents.length should be (2)
+
+    sents(0).words.length should be (4)
+    sents(1).words.length should be (3)
+  }
+
   def tok(s:String):Array[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)

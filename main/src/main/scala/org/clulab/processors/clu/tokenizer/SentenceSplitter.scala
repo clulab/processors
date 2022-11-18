@@ -57,7 +57,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
           }
         }
 
-        // regular end-of-sentence marker; treat is a distinct token
+        // regular end-of-sentence marker; treat it as a distinct token
         else {
           raw += crt.raw
           words += crt.word
@@ -117,6 +117,16 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
         words += crt.word.substring(dotWordPosition + 1)
         beginPositions += lastPosition
         endPositions += lastPosition + raw.head.length
+      }
+
+      // found the control string that enforces sentence breaks
+      // note that this token is NOT added to the sentences produced
+      else if(crt.word == SENTENCE_BREAK_CONTROL_STRING) {
+        sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+        raw = new ArrayBuffer[String]()
+        words = new ArrayBuffer[String]()
+        beginPositions = new ArrayBuffer[Int]()
+        endPositions = new ArrayBuffer[Int]()
       }
 
       else {
@@ -185,6 +195,10 @@ class SpanishSentenceSplitter extends RuleBasedSentenceSplitter {
 
 object SentenceSplitter {
   val EOS: Regex = """^[\.!\?\s]+$""".r
+
+  // Control string that enforces a sentence break
+  // If you change this value, change also the SENTENCEBREAK in OpenDomainLexer.g to the same value (and recompile the Antlr grammar)
+  val SENTENCE_BREAK_CONTROL_STRING = "[SB]"
 
   val EOS_FOLLOWEDBY_BULLET = """\.\d+$""".r
 
