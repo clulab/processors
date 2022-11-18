@@ -121,7 +121,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
 
       // found the control string that enforces sentence breaks
       // note that this token is NOT added to the sentences produced
-      else if(crt.word == SENTENCE_BREAK_CONTROL_STRING) {
+      else if (SentenceSplitter.useControlStrings && crt.word == SENTENCE_BREAK_CONTROL_STRING) {
         sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
         raw = new ArrayBuffer[String]()
         words = new ArrayBuffer[String]()
@@ -199,6 +199,8 @@ object SentenceSplitter {
   // Control string that enforces a sentence break
   // If you change this value, change also the SENTENCEBREAK in OpenDomainLexer.g to the same value (and recompile the Antlr grammar)
   val SENTENCE_BREAK_CONTROL_STRING = "[SB]"
+  // Set the following to true in order to split sentences on the string above.
+  var useControlStrings = false
 
   val EOS_FOLLOWEDBY_BULLET = """\.\d+$""".r
 
