@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets
 import scala.io.Source
 
 object EvalTimeNorm {
-  Utils.initializeDyNet()
 
   def runEval(proc: CluProcessor, ner: NumericEntityRecognizer,
               testFile: String): Double = {

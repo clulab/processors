@@ -1,8 +1,7 @@
 package org.clulab.processors.clu
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair, Utils}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import org.clulab.scala.WrappedArray._
@@ -16,7 +15,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.util.regex.Pattern
-
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
@@ -932,6 +930,9 @@ object CluProcessor {
     // period, ), or ] all possibly repeated until the end of the sentence.
     ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
   )
+
+  Utils.initializeDyNet() // Assume it will be used if the class is referenced.
+  // If need be, call initializeDyNet() before making reference to CluProcessor.
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
