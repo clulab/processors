@@ -222,17 +222,41 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
-  var posId: Int = 0
-  var next: Inst = null
+  var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  var next: Inst = null // See deepcopy for the write.
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
     if (next != null) inst.next = next.deepcopy()
     inst
   }
+  override def toString(): String = {
+    val nextString = Option(next).map(_.toString)
+
+    s"${getClass.getName}: posId = $posId, next = $nextString"
+  }
+
+  override def hashCode: Int = posId
+
+  def canEqual(other: Any): Boolean = {
+    // Since both are from the same class, we shouldn't need to check if other.canEqual(this).
+    this.getClass == other.getClass && this.hashCode == other.hashCode
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: Inst => this.eq(that) ||
+        this.canEqual(that) &&
+        shortEquals(that) // &&
+        // this.nextOpt == that.nextOpt // Do not go all the way down!
+      case _ => false
+    }
+  }
+
+  def shortEquals(that: Inst): Boolean = this.posId == that.posId
 }
 
-// the pattern matched succesfully
+// the pattern matched successfully
 case object Done extends Inst {
   def dup() = this
 }
@@ -245,25 +269,66 @@ case class Pass() extends Inst {
 // split execution
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
-  override def hashCode: Int = (lhs, rhs, posId).##
+  override def hashCode: Int = (lhs, rhs, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: Split => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.lhs == that.lhs &&
+        this.rhs == that.rhs
+      case _ => false
+    }
+  }
 }
 
 // start capturing tokens
 case class SaveStart(name: String) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = ("start", name, posId).##
+  override def hashCode: Int = (name, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: SaveStart => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.name == that.name
+      case _ => false
+    }
+  }
 }
 
 // end capturing tokens
 case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = ("end", name, posId).##
+  override def hashCode: Int = (name, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: SaveEnd => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.name == that.name
+      case _ => false
+    }
+  }
 }
 
 // matches token using token constraint
 case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = (c, posId).##
+  override def hashCode: Int = (c, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchToken => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.c == that.c
+      case _ => false
+    }
+  }
 }
 
 // matches mention by label using string matcher
@@ -273,7 +338,19 @@ case class MatchMention(
     arg: Option[String]
 ) extends Inst {
   def dup() = copy()
-  override def hashCode: Int = (m, name, arg, posId).##
+  override def hashCode: Int = (m, name, arg, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchMention => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.m == that.m &&
+        this.name == that.name &&
+        this.arg == that.arg
+      case _ => false
+    }
+  }
 }
 
 // matches sentence start
@@ -289,11 +366,33 @@ case class MatchSentenceEnd() extends Inst {
 // zero-width look-ahead assertion
 case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
-  override def hashCode: Int = ("lookahead", start, negative).##
+  override def hashCode: Int = (start, negative, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchLookAhead => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.start == that.start &&
+        this.negative == that.negative
+      case _ => false
+    }
+  }
 }
 
 // zero-width look-behind assertion
 case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
-  override def hashCode: Int = ("lookbehind", start, negative).##
+  override def hashCode: Int = (start, negative, super.hashCode).##
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case that: MatchLookBehind => this.eq(that) ||
+        this.canEqual(that) &&
+        super.shortEquals(that) &&
+        this.start == that.start &&
+        this.negative == that.negative
+      case _ => false
+    }
+  }
 }
