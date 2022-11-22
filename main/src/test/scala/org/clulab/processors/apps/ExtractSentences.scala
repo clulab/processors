@@ -1,4 +1,4 @@
-package org.clulab.processors.clu.tokenizer
+package org.clulab.processors.apps
 
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Closer.AutoCloser
