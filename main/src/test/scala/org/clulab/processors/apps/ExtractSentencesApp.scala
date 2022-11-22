@@ -4,7 +4,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
 
-object ExtractSentences extends App {
+object ExtractSentencesApp extends App {
   val directoryName = args.lift(0).getOrElse("../corpora/Doc16k/txt")
   val fileName = args.lift(1).getOrElse("sentences.txt")
 
