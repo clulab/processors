@@ -47,7 +47,6 @@ class TestNumericEntityRecognition extends FlatSpec with Matchers {
     override def tokenizer: Tokenizer = habitusTokenizer
   }
 
-  Utils.initializeDyNet()
   val ner = NumericEntityRecognizer()
   val proc = new HabitusProcessor()
 

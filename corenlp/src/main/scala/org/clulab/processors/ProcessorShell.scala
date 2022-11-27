@@ -23,8 +23,6 @@ import java.io.PrintWriter
   * Last Modified: Fix compiler warning: remove redundant match case clause.
   */
 class ProcessorShell extends Shell {
-  Utils.initializeDyNet()
-
   val core = new PromptedReloadableProcessor("(core)>>> ", () => new CoreNLPProcessor()) // this uses the slower constituent parser
   val fast = new PromptedReloadableProcessor("(fast)>>> ", () => new FastNLPProcessorWithSemanticRoles()) // this uses the faster dependency parser
   val clu = new PromptedReloadableProcessor("(clu)>>> ", () => new CluProcessor(), true)

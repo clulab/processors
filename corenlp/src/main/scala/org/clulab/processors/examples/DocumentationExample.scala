@@ -13,7 +13,6 @@ object DocumentationExample extends App {
 
   // val proc: Processor = new FastNLPProcessor()
 
-  // org.clulab.dynet.Utils.initializeDyNet()
   // val proc: Processor = new CluProcessor()
 
   // org.clulab.dynet.Utils.initializeDyNet(mem = "1024,1024,1024,1024")

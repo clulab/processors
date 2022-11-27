@@ -191,14 +191,13 @@ Syntactic dependencies:
 Similarly, you can use our in-house processor with
 
 ```scala
-org.clulab.dynet.Utils.initializeDyNet()
 val proc: Processor = new CluProcessor()
 // Everything else stays the same.
 ```
 
 Note that our processor has slightly different components. `CluProcessor` does not include coreference resolution, but it includes a semantic role labeling component, which is missing from the CoreNLP processors.
 
-Also note that because `CluProcessor` relies on DyNet, you will have to initialize DyNet first, as shown in the code. The default initialization parameters should work in most cases, but, if you want to increase the memory that is initially allocated to DyNet, you can pass these values to the `initializeDyNet` method, e.g.:
+Also note that because `CluProcessor` relies on DyNet, you may need to initialize DyNet before using the processor, as shown in the code.  The processor will perform a default initialization if nothing else has. The default should work in most cases, but if you want to increase the memory that is initially allocated to DyNet, for example, you can pass these values to the `initializeDyNet` method, e.g.:
 
 ```scala
 org.clulab.dynet.Utils.initializeDyNet(mem = "1024,1024,1024,1024")
