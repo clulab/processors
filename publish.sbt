@@ -34,11 +34,25 @@ ThisBuild / pomPostProcess := {
 }
 // ThisBuild / publishMavenStyle := true // no longer applicable in sbt 1.6.2+
 ThisBuild / publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  val useArtifactory = true
+
+  if (useArtifactory) {
+    val artifactory = "http://artifactory.cs.arizona.edu:8081/artifactory/"
+    val repository = "sbt-release-local"
+    val details =
+      if (isSnapshot.value) ";build.timestamp=" + new java.util.Date().getTime
+      else ""
+    val location = artifactory + repository + details
+
+    Some(("Artifactory Realm" at location).withAllowInsecureProtocol(true))
+  }
+  else {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  }
 }
 ThisBuild / scmInfo := Some(
   ScmInfo(
