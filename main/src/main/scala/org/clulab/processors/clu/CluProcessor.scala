@@ -167,20 +167,24 @@ class CluProcessor protected (
   def mtlSrla: Metal = lazyMtlSrla.value
 
   protected val lazyMtlDepsHead: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+    mtlDepsHeadOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+      }
     }
   }
 
   def mtlDepsHead: Metal = lazyMtlDepsHead.value
 
   protected val lazyMtlDepsLabel: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+    mtlDepsLabelOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+      }
     }
   }
 
