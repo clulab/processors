@@ -1,5 +1,6 @@
-package org.clulab.processors.clu
+package org.clulab.utils
 
+import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
@@ -14,9 +15,9 @@ object ProcessCoNLL03 extends App {
   val rows = ColumnReader.readColumns(args(0))
   println(s"Found ${rows.length} sentences.")
   val pw = new PrintWriter(args(0) + ".reparsed")
-  for(row <- rows) {
+  for (row <- rows) {
     val words = row.map(e => e.get(0))
-    if(row.length == 1 && words(0) == "-DOCSTART-") {
+    if (row.length == 1 && words(0) == "-DOCSTART-") {
       saveSent(pw, row)
     } else {
       val doc = proc.mkDocumentFromTokens(Seq(words))
@@ -29,16 +30,16 @@ object ProcessCoNLL03 extends App {
   pw.close()
 
   def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Array[String]] = None, chunks: Option[Array[String]] = None): Unit = {
-    if(tags.isDefined) {
+    if (tags.isDefined) {
       assert(sent.length == tags.get.length)
       //println("Using generated POS tags")
     }
-    if(chunks.isDefined) {
+    if (chunks.isDefined) {
       assert(sent.length == chunks.get.length)
       //println("Using generated chunks")
     }
 
-    for(i <- sent.indices) {
+    for (i <- sent.indices) {
       val word = sent(i).get(0)
       val label = sent(i).get(3)
       val tag = if (tags.isDefined) tags.get(i) else sent(i).get(1)
