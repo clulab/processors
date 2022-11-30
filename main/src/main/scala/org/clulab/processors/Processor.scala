@@ -97,7 +97,7 @@ trait Processor {
     combinedDocument
   }
 
-  def mkDocument(texts: IndexedSeq[String], separators: IndexedSeq[String], keepText: Boolean = false): Document = {
+  def mkCombinedDocument(texts: IndexedSeq[String], separators: IndexedSeq[String], keepText: Boolean = false): Document = {
     require(texts.length == separators.length)
     texts.length match {
       case 0 => mkDocument("", keepText)
