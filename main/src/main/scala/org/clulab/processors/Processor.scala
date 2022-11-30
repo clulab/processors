@@ -12,10 +12,10 @@ trait Processor {
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization. */
   def mkDocument (text:String, keepText:Boolean = false): Document
 
-  protected def offsetSentence(sentence: Sentence, charOffset: Int): Sentence = {
+  protected def offsetSentence(sentence: Sentence, offset: Int): Sentence = {
     val raw = sentence.raw
-    val startOffsets = sentence.startOffsets.map(_ + charOffset)
-    val endOffsets = sentence.endOffsets.map(_ + charOffset)
+    val startOffsets = sentence.startOffsets.map(_ + offset)
+    val endOffsets = sentence.endOffsets.map(_ + offset)
     val words = sentence.words
     val newSentence = Sentence(raw, startOffsets, endOffsets, words)
 
@@ -97,20 +97,20 @@ trait Processor {
     combinedDocument
   }
 
-  def mkCombinedDocument(texts: IndexedSeq[String], separators: IndexedSeq[String], keepText: Boolean = false): Document = {
-    require(texts.length == separators.length)
+  def mkCombinedDocument(texts: IndexedSeq[String], trailers: IndexedSeq[String], keepText: Boolean = false): Document = {
+    require(texts.length == trailers.length)
     texts.length match {
       case 0 => mkDocument("", keepText)
       case 1 => mkDocument(texts.head, keepText)
       case _ =>
         val documents = texts.map(mkDocument(_, keepText))
-        val offsets = texts.zip(separators).scanLeft(0) { case (offset, (text, separator)) => offset + text.length + separator.length }
+        val offsets = texts.zip(trailers).scanLeft(0) { case (offset, (text, trailer)) => offset + text.length + trailer.length }
         val offsetDocuments = documents.zip(offsets).map { case (document, offset) =>
-          offsetDocument(document, offset) // charOffset and wordOffset, because some things are counted in words?
+          offsetDocument(document, offset)
         }
         val combinedTextOpt =
             if (keepText) {
-              val combinedText = texts.zip(separators).foldLeft(new StringBuilder) { case (stringBuilder, (text, separator)) =>
+              val combinedText = texts.zip(trailers).foldLeft(new StringBuilder) { case (stringBuilder, (text, separator)) =>
                 stringBuilder.append(text).append(separator)
               }.toString
 
