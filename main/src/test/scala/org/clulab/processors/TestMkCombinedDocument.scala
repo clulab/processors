@@ -70,7 +70,31 @@ class TestMkCombinedDocument extends Test {
 
   behavior of "dynamically separated texts"
 
-  it should "combine as expected" in {
+  it should "include separators in both text and words" in {
+    val text = "I found this text<br>on a web page."
+    val separator = "<br>"
+    val texts = text.split(separator)
+    val dirtyTexts = texts.zipWithIndex.map { case (text, index) =>
+      if (index != texts.indices.last) text + separator
+      else text
+    }
+    val indices = texts.indices
+    val trailers = indices.map { _ => "" }
+    val document = processor.mkCombinedDocument(dirtyTexts, trailers, keepText = true)
+
+    document.text.get should be (text)
+    document.sentences.length should be (indices.length)
+
+    document.sentences.zipWithIndex.foreach { case (sentence, index) =>
+      if (index != indices.last)
+        sentence.words should contain (separator)
+      else
+        sentence.words should not contain (separator)
+    }
+  }
+
+  // This is thought to be the standard case.
+  it should "include separators in text but not words" in {
     val text = "I found this text<br>on a web page."
     val separator = "<br>"
     val texts = text.split(separator)
@@ -79,10 +103,28 @@ class TestMkCombinedDocument extends Test {
     val document = processor.mkCombinedDocument(texts, trailers, keepText = true)
 
     document.text.get should be (text)
-    document.sentences.length should be (2)
+    document.sentences.length should be (indices.length)
 
     document.sentences.foreach { sentence =>
       sentence.words should not contain(separator)
+    }
+  }
+
+  it should "include separators in neither text nor words" in {
+    val text = "I found this text<br>on a web page."
+    val separator = "<br>"
+    val cleanSeparator = "    "
+    val cleanText = text.replace(separator, cleanSeparator)
+    val texts = text.split(separator)
+    val indices = texts.indices
+    val trailers = indices.map { index => if (index != indices.last) cleanSeparator else "" }
+    val document = processor.mkCombinedDocument(texts, trailers, keepText = true)
+
+    document.text.get should be(cleanText)
+    document.sentences.length should be(indices.length)
+
+    document.sentences.foreach { sentence =>
+      sentence.words should not contain (separator)
     }
   }
 }
