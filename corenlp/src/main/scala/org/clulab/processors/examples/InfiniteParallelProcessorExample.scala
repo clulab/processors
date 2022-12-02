@@ -40,8 +40,6 @@ object InfiniteParallelProcessorExample {
     val parFiles = ThreadUtils.parallelize(files, threads)
     val documentSerializer = new DocumentSerializer
 
-    Utils.initializeDyNet()
-
     def processFiles(parFiles: ParSeq[File], processor: Processor): Unit = {
 
       def printDocument(document: Document, printWriter: PrintWriter): Unit = document.prettyPrint(printWriter)

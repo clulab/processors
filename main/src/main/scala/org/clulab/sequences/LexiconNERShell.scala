@@ -25,7 +25,6 @@ class LexiconNERShell(val lexiconNer: LexiconNER) extends Shell {
 }
 
 object LexiconNERShell extends App {
-  Utils.initializeDyNet()
   val kb = args(0) // pass the KB file name as the first argument
   val lexiconNer = LexiconNER(Seq(kb))
   val shell = new LexiconNERShell(lexiconNer)

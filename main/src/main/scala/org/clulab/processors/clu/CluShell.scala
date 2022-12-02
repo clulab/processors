@@ -12,8 +12,6 @@ import java.io.PrintWriter
   * Date: 8/2/17
   */
 class CluShell extends Shell {
-  Utils.initializeDyNet()
-
   val printWriter = new PrintWriter(System.out, true)
   val proc = new ReloadableProcessor(() => new CluProcessor(), true)
 
