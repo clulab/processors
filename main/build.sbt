@@ -9,7 +9,18 @@ pomIncludeRepository := { (repo: MavenRepository) =>
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 
 libraryDependencies ++= {
-  val json4sVersion = "4.0.3" // 3.5.5 is lowest supporting Scala 2.13, 4.0.2 is first to support Scala 3
+  val json4sVersion = {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      // 4.0.2 => The TASTy file was produced by Scala 3.0.3-RC1-bin-20210725-7b4091b-NIGHTLY-git-7b4091b.
+      // 4.0.3 => No Manifest available for Int.
+      // 4.0.4 => The TASTy file was produced by Scala 3.1.1.
+      // 4.0.5 => The TASTy file was produced by Scala 3.1.1-bin-nonbootstrapped.
+      case Some((3,0)) => "4.0.3" // 4.0.2 is first to support Scala 3
+      case Some((3,_)) => "4.0.6"
+      case Some((2,_)) => "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
+      case _ => ???
+    }
+  }
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
   val parallelLibraries = {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -43,12 +54,12 @@ libraryDependencies ++= {
     "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
     "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization
     // logging
+    // Local logging is provided here and not published.
+    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
     // The Scala interface is not used in processors.
     // "com.typesafe.scala-logging" %% "scala-logging"            % "3.9.4",
     // Instead, all code makes use of the Java interface.
     "org.slf4j"                   % "slf4j-api"                % "1.7.10",
-    // Local logging is provided here and not published.
-    "ch.qos.logback"              % "logback-classic"          % "1.2.8",  // up to 1.2.8; less than 1.2 is vulnerable
     // testing
     "org.scalatest"              %% "scalatest"                % "3.2.10"  % Test,
     // trained models for local ML models used in both main and corenlp
@@ -58,8 +69,8 @@ libraryDependencies ++= {
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
 
     // for odin
-    "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.1",
     "org.apache.commons"          % "commons-text"             % "1.1",
+    "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.0", // up to 2.1.1
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
     "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0",
     "org.yaml"                    % "snakeyaml"                % "1.14",
