@@ -14,7 +14,8 @@ class MeasurementMention ( labels: Seq[String],
                            attachments: Set[Attachment],
                            val value: Option[Seq[String]],
                            val unit: Option[Seq[String]],
-                           val fromRange: Boolean)
+                           val fromRange: Boolean,
+                           unitNormalizer: UnitNormalizer)
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
   override def neNorm: String = {
@@ -29,15 +30,16 @@ class MeasurementMention ( labels: Seq[String],
       }
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the measurement ${raw.mkString(" ")}!")
-    val unitNorm = UnitNormalizer.norm(unit.get)
+    val unitNorm = unitNormalizer.norm(unit.get)
 
     s"${numValueOpt.get} $unitNorm"
   }
 
   override def neLabel: String = {
-    val unitClass = UnitNormalizer.unitClass(unit.get)
-    if (unitClass == "UNK") {
-      "MEASUREMENT"
-    } else f"MEASUREMENT-${unitClass.toUpperCase}"
+    val unitClassOpt = unitNormalizer.unitClassOpt(unit.get)
+
+    unitClassOpt
+        .map { unitClass => s"MEASUREMENT-${unitClass.toUpperCase}" }
+        .getOrElse("MEASUREMENT")
   }
 }

@@ -1,13 +1,13 @@
 package org.clulab.numeric.actions
 
-import org.clulab.numeric.SeasonNormalizer
+import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer}
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer) extends Actions {
   //
   // local actions
   //
@@ -53,12 +53,12 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
 
   /** Constructs a MeasurementMention from a token pattern */
   def mkMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    convert(mentions, toMeasurementMention, "toMeasurementMention")
+    convert(mentions, toMeasurementMention(unitNormalizer), "toMeasurementMention")
   }
 
   /** Constructs a MeasurementMention from a token pattern */
   def mkSharedMeasurementMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    convertWithOneToManyConverter(mentions, toSharedMeasurementMention, "toSharedMeasurementMention")
+    convertWithOneToManyConverter(mentions, toSharedMeasurementMention(unitNormalizer), "toSharedMeasurementMention")
   }
 
   def mkPercentage(mentions: Seq[Mention], state: State): Seq[Mention] = {
@@ -66,7 +66,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer) extends Actions {
   }
 
   def mkMeasurementWithRangeMention(mentions: Seq[Mention], state: State): Seq[Mention] = {
-    convert(mentions, toMeasurementWithRangeMention, "toMeasurementWithRangeMention")
+    convert(mentions, toMeasurementWithRangeMention(unitNormalizer), "toMeasurementWithRangeMention")
   }
 
   /** Constructs a DateRangeMention from a token pattern */

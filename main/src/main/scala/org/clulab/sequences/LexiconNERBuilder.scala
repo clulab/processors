@@ -492,8 +492,12 @@ object CommentedStandardKbSource {
         val code = line.substring(0, commentStart).trim
         val comment = line.substring(commentStart + COMMENT_LENGTH).trim
         val commentSepIndex = comment.indexOf(COMMENT_SEP)
-        val norm = if (commentSepIndex < 0) comment else comment.substring(0, commentSepIndex).trim
-        val unitClass = if (commentSepIndex < 0) None else Some(comment.substring(commentSepIndex + COMMENT_SEP.length).trim)
+        val (norm, unitClass) =
+            if (commentSepIndex < 0) (comment, None)
+            else (
+              comment.substring(0, commentSepIndex).trim,
+              Some(comment.substring(commentSepIndex + COMMENT_SEP.length).trim)
+            )
 
         f(code, Some(norm), unitClass)
       }
