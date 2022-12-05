@@ -1,19 +1,14 @@
 package org.clulab.utils
 
+import org.clulab.utils.Closer.Releasable
+
+import scala.language.implicitConversions
 import java.io._
-// import scala.language.reflectiveCalls
-import scala.reflect.Selectable.reflectiveSelectable
 
 object Serializer {
 
-  type Closable = { def close(): Unit }
-
-  def using[A <: Closable, B](resource: A)(f: A => B): B = {
-    try {
-      f(resource)
-    } finally {
-      Option(resource).foreach(_.close())
-   }
+  def using[Resource: Releasable, Result](resource: Resource)(function: Resource => Result): Result = {
+    Closer.autoClose(resource)(function)
   }
 
   /** serialize object to output stream */

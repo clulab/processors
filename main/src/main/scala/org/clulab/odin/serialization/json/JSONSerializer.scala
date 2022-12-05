@@ -41,7 +41,7 @@ object JSONSerializer {
     require(json \ "mentions" != JNothing, "\"mentions\" key missing from json")
 
     // build the documents once
-    val docMap = mkDocumentMap(json \ "documents")
+    val docMap = mkDocumentMap((json \ "documents").asInstanceOf[JObject])
     val mmjson = (json \ "mentions").asInstanceOf[JArray]
 
     mmjson.arr.map(mjson => toMention(mjson, docMap))
@@ -186,15 +186,16 @@ object JSONSerializer {
   }
 
   /** create a map pointing from a Doc.equivalenceHash -> Document */
-  def mkDocumentMap(djson: JValue): Map[String, Document] = {
-    val kvPairs: List[(String, Document)] = for {
-      case JObject(kvpair) <- djson
-      JField(docHash: String, docjson) <- kvpair
-      // this child should contain sentences
-      if (docjson \ "sentences") != JNothing
-    } yield docHash -> toDocument(docjson)
-
-    kvPairs.toMap
+  def mkDocumentMap(djson: JObject): Map[String, Document] = {
+    djson.obj
+        .filter { case (_, docjson) =>
+          // this child should contain sentences
+          (docjson \ "sentences") != JNothing
+        }
+        .map { case (docHash, docjson) =>
+          docHash -> toDocument(docjson)
+        }
+        .toMap
   }
 
   private def getStringOption(json: JValue, key: String): Option[String] = json \ key match {
