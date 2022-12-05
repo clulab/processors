@@ -107,7 +107,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
     stringBuilder.append(token)
     if (completePath) {
       stringBuilder.append("*")
-      label.foreach(stringBuilder.append)
+      label.foreach { label: String => stringBuilder.append(label) }
     }
     children.foreach { (children: ListBuffer[BooleanTrieNode]) =>
       stringBuilder.append(" (")

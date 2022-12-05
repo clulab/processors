@@ -91,7 +91,7 @@ object MathUtils {
     }
     else vector
 
-    val logSumStatic = logSumFloat(scoreArray.toArray)
+    val logSumStatic = logSumFloat(scoreArray)
     val result = for {
       s <- vector
     } yield math.exp((gamma * s) - logSumStatic).toFloat
