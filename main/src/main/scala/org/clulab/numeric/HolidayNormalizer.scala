@@ -30,7 +30,7 @@ object HolidayNormalizer {
             Some((date.getDayOfMonth.toString, date.getMonthValue.toString))
           case _ => None
         }
-      case _ => None
+      case None => None
     }
   }
 }
