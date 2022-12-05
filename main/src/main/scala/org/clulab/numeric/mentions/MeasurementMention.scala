@@ -39,7 +39,7 @@ class MeasurementMention ( labels: Seq[String],
     val unitClassOpt = unitNormalizer.unitClassOpt(unit.get)
 
     unitClassOpt
-        .map { unitClass => s"MEASUREMENT-${unitClass.toUpperCase}" }
+        .map { unitClass => s"MEASUREMENT-${unitClass.toUpperCase.replace(" ", "-")}" }
         .getOrElse("MEASUREMENT")
   }
 }

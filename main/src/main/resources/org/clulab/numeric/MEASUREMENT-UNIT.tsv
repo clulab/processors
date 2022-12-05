@@ -69,38 +69,38 @@ oz                  // oz, mass
 fl oz               // oz, volume
 pennyweight         // pw, mass
 dwt                 // dwt, mass
-year                // y, time
-yr                  // y, time
-years               // y, time
-nanosecond          // ns, time
-nanoseconds         // ns, time
-ns                  // ns, time
-week                // w, time
-weeks               // w, time
-wk                  // w, time
-day                 // d, time
-days                // d, time
-d                   // d, time
-ds                  // d, time
-month               // month, time
-months              // month, time
-minutes             // min, time
-minute              // min, time
-min                 // min, time
-mins                // min, time
-second              // s, time
-seconds             // s, time
-s                   // s, time
-hour                // h, time
-hours               // h, time
-h                   // h, time
-hs                  // h, time
+year                // y, duration
+yr                  // y, duration
+years               // y, duration
+nanosecond          // ns, duration
+nanoseconds         // ns, duration
+ns                  // ns, duration
+week                // w, duration
+weeks               // w, duration
+wk                  // w, duration
+day                 // d, duration
+days                // d, duration
+d                   // d, duration
+ds                  // d, duration
+month               // month, duration
+months              // month, duration
+minutes             // min, duration
+minute              // min, duration
+min                 // min, duration
+mins                // min, duration
+second              // s, duration
+seconds             // s, duration
+s                   // s, duration
+hour                // h, duration
+hours               // h, duration
+h                   // h, duration
+hs                  // h, duration
 cubic meter         // m3, volume
 cubic meters        // m3, volume
 m3                  // m3, volume
 liter               // l, volume
 liters              // l, volume
-liters ha-1         // l/ha
+liters ha-1         // l/ha, areal density
 l                   // l, volume
 milliliter          // ml, volume
 milliliters         // ml, volume
@@ -141,104 +141,104 @@ cubic yards         // yd3, volume
 yd3                 // yd3, volume
 tonnes              // t, mass
 tons                // t, mass
-tons per hectare    // t/ha
-ton per hectare     // t/ha
-ton for one hectare  // t/ha
-metric ton per hectare     // t/ha
-metric tons per hectare    // t/ha
-metric tons                // t
-mt                         // t
-kilograms per hectare      // kg/ha
-kilogram per hectare       // kg/ha
-kg / ha                    // kg/ha
-t per ha                   // t/ha
-t ha-1                     // t/ha
-t / ha                     // t/ha
-kg N / ha                  // kg/ha
-tonnes / ha                // t/ha
-tons / ha                  // t/ha
-ton / ha                   // t/ha
-mt / ha                    // t/ha
-kg ha-1                    // kg/ha
-g m−2                      // g/m2
-g / m2                     // g/m2
-mt per hectare             // t/ha
-mt / hectare               // t/ha
-kg urea ha-1               // kg/ha
-kg N ha-1                  // kg/ha
-kg P ha-1                  // kg/ha
-kg DAP ha-1                // kg/ha
-kg TSP ha-1                // kg/ha
-kg P2O5 /ha                // kg/ha
-kgP2O5/ha                  // kg/ha
-Mg ha-1                    // Mg/ha
-mg / l                     // mg/l
-mg.l-1                     // mg/l
-mg l-1                     // mg/l
-mg / kg                    // mg/kg
-mg.kg-1                    // mg/kg
-mg kg-1                    // mg/kg
-g / kg                     // g/kg
-g.kg-1                     // g/kg
-g kg-1                     // g/kg
-mg / g                     // mg/g
-mg g-1                     // mg/g
-mg.g-1                     // mg/g
-g / l                      // g/l
-g.l-1                      // g/l
-mg / ml                    // mg/ml
-mg.ml-1                    // mg/ml
-μg / μl                    // μg/μl
-μg.μl-1                    // μg/μl
-μg / g                     // μg/g
-μg.g-1                     // μg/g
-ng / μl                    // ng/μl
-ng.μl-1                    // ng/μl
-μg / kg                    // μg/kg
-μg.kg-1                    // μg/kg
-ng / g                     // ng/g
-ng.g-1                     // ng/g
-ng / kg                    // ng/kg
-ng.kg-1                    // ng/kg
-ng / ml                    // ng/ml
-ng.ml-1                    // ng/ml
-pg / μl                    // pg/μl
-pg.μl-1                    // pg/μl
-pg / g                     // pg/g
-pg.g-1                     // pg/g
-ng / ml                    // ng/ml
-pg.ml-1                    // pg/ml
-fg / μl                    // fg/μl
-m3 / ha                    // m3/ha
-m3/ ha                     // m3/ha
-ml acre-1                  // ml/acre
-cm2                        // cm2
+tons per hectare    // t/ha, areal density
+ton per hectare     // t/ha, areal density
+ton for one hectare  // t/ha, areal density
+metric ton per hectare     // t/ha, areal density
+metric tons per hectare    // t/ha, areal density
+metric tons                // t, mass
+mt                         // t, mass
+kilograms per hectare      // kg/ha, areal density
+kilogram per hectare       // kg/ha, areal density
+kg / ha                    // kg/ha, areal density
+t per ha                   // t/ha, areal density
+t ha-1                     // t/ha, areal density
+t / ha                     // t/ha, areal density
+kg N / ha                  // kg/ha, areal density
+tonnes / ha                // t/ha, areal density
+tons / ha                  // t/ha, areal density
+ton / ha                   // t/ha, areal density
+mt / ha                    // t/ha, areal density
+kg ha-1                    // kg/ha, areal density
+g m−2                      // g/m2, areal density
+g / m2                     // g/m2, areal density
+mt per hectare             // t/ha, areal density
+mt / hectare               // t/ha, areal density
+kg urea ha-1               // kg/ha, areal density
+kg N ha-1                  // kg/ha, areal density
+kg P ha-1                  // kg/ha, areal density
+kg DAP ha-1                // kg/ha, areal density
+kg TSP ha-1                // kg/ha, areal density
+kg P2O5 /ha                // kg/ha, areal density
+kgP2O5/ha                  // kg/ha, areal density
+Mg ha-1                    // Mg/ha, areal density
+mg / l                     // mg/l, concentration
+mg.l-1                     // mg/l, concentration
+mg l-1                     // mg/l, concentration
+mg / kg                    // mg/kg, concentration
+mg.kg-1                    // mg/kg, concentration
+mg kg-1                    // mg/kg, concentration
+g / kg                     // g/kg, concentration
+g.kg-1                     // g/kg, concentration
+g kg-1                     // g/kg, concentration
+mg / g                     // mg/g, concentration
+mg g-1                     // mg/g, concentration
+mg.g-1                     // mg/g, concentration
+g / l                      // g/l, concentration
+g.l-1                      // g/l, concentration
+mg / ml                    // mg/ml, concentration
+mg.ml-1                    // mg/ml, concentration
+μg / μl                    // μg/μl, concentration
+μg.μl-1                    // μg/μl, concentration
+μg / g                     // μg/g, concentration
+μg.g-1                     // μg/g, concentration
+ng / μl                    // ng/μl, concentration
+ng.μl-1                    // ng/μl, concentration
+μg / kg                    // μg/kg, concentration
+μg.kg-1                    // μg/kg, concentration
+ng / g                     // ng/g, concentration
+ng.g-1                     // ng/g, concentration
+ng / kg                    // ng/kg, concentration
+ng.kg-1                    // ng/kg, concentration
+ng / ml                    // ng/ml, concentration
+ng.ml-1                    // ng/ml, concentration
+pg / μl                    // pg/μl, concentration
+pg.μl-1                    // pg/μl, concentration
+pg / g                     // pg/g, concentration
+pg.g-1                     // pg/g, concentration
+ng / ml                    // ng/ml, concentration
+pg.ml-1                    // pg/ml, concentration
+fg / μl                    // fg/μl, concentration
+m3 / ha                    // m3/ha, areal density
+m3/ ha                     // m3/ha, areal density
+ml acre-1                  // ml/acre, areal density
+cm2                        // cm2, area
 m2 kg−1                    // m2/kg
 m2 / kg                    // m2/kg
 m3 / m3                    // m3/m3
 m3 m-3                     // m3/m3
-Mg m−3                     // Mg/m3
-Mg / m3                    // Mg/m3
-g / cm3                    // g/cm3
-g cm−3                     // g/cm3
-mole per cubic meter       // mol/m3
-gram per cubic meter       // g/m3
-centimole per liter        // cmol/l
-mol / m3                   // mol/m3
-mol m−3                    // mol/m3
-g m−3                      // g/m3
-g / m3                     // g/m3
-cmol / l                   // cmol/l
-cmol l−1                   // cmol/l
-cmol kg-1                  // cmol/kg
-cmol kg                    // cmol/kg
-cubic meter per hour       // m3/h
-m3 h−1                     // m3/h
-m3 / h                     // m3/h
-C                          // ˚C
-˚C                         // ˚C
-Celecius                   // ˚C
-t m-3                      // t/m3
-t / m3                     // t/m3
-Mg / m3                    // Mg/m3
-Mg m-3                     // Mg/m3
+Mg m−3                     // Mg/m3, density
+Mg / m3                    // Mg/m3, density
+g / cm3                    // g/cm3, density
+g cm−3                     // g/cm3, density
+mole per cubic meter       // mol/m3, amount-of-substance concentration
+gram per cubic meter       // g/m3, density
+centimole per liter        // cmol/l, concentration
+mol / m3                   // mol/m3, concentration
+mol m−3                    // mol/m3, concentration
+g m−3                      // g/m3, concentration
+g / m3                     // g/m3, concentration
+cmol / l                   // cmol/l, concentration
+cmol l−1                   // cmol/l, concentration
+cmol kg-1                  // cmol/kg, concentration
+cmol kg                    // cmol/kg, concentration
+cubic meter per hour       // m3/h, volumetric flow
+m3 h−1                     // m3/h, volumetric flow
+m3 / h                     // m3/h, volumetric flow
+C                          // ˚C, temperature
+˚C                         // ˚C, temperature
+Celecius                   // ˚C, temperature
+t m-3                      // t/m3, density
+t / m3                     // t/m3, density
+Mg / m3                    // Mg/m3, density
+Mg m-3                     // Mg/m3, density
