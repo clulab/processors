@@ -14,8 +14,8 @@ object HolidayNormalizer {
   /** Retrieves date (day and month) for a holiday */
   def norm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
     val holiday = holidaySeq.mkString(" ").toLowerCase()
-    normMapper.get(holiday) match {
-      case Some(holidayCanonical) =>
+    normMapper(holiday).norm match {
+      case holidayCanonical =>
         // If year is None use current year as default
         val year = yearOpt match {
           case Some(yearSeq) => yearSeq.mkString.toInt
