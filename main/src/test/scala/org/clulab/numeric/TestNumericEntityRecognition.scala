@@ -47,7 +47,6 @@ class TestNumericEntityRecognition extends Test {
     override def tokenizer: Tokenizer = habitusTokenizer
   }
 
-  Utils.initializeDyNet()
   val ner = NumericEntityRecognizer()
   val proc = new HabitusProcessor()
 

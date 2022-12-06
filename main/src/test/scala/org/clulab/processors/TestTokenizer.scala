@@ -76,6 +76,11 @@ class TestTokenizer extends Test {
     sents(0).size should be (8)
   }
 
+  it should "tokenize e.g. correctly" in {
+    val sents = tok("This is an example e.g. a phrase.")
+    sents.size should be (1)
+  }
+
   it should "handle contractions correctly" in {
     val sents = tok("I'm won't don't cont'd he's he'd.")
     sents(0).size should be (12)

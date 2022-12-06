@@ -1,8 +1,7 @@
 package org.clulab.processors.clu
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair, Utils}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import org.clulab.scala.WrappedArray._
@@ -16,7 +15,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.util.regex.Pattern
-
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
@@ -169,20 +167,24 @@ class CluProcessor protected (
   def mtlSrla: Metal = lazyMtlSrla.value
 
   protected val lazyMtlDepsHead: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+    mtlDepsHeadOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+      }
     }
   }
 
   def mtlDepsHead: Metal = lazyMtlDepsHead.value
 
   protected val lazyMtlDepsLabel: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+    mtlDepsLabelOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+      }
     }
   }
 
@@ -927,6 +929,9 @@ object CluProcessor {
     // period, ), or ] all possibly repeated until the end of the sentence.
     ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
   )
+
+  Utils.initializeDyNet() // Assume it will be used if the class is referenced.
+  // If need be, call initializeDyNet() before making reference to CluProcessor.
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,

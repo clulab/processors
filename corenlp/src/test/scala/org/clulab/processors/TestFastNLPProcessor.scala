@@ -11,7 +11,6 @@ import org.clulab.utils.Test
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends Test {
-  Utils.initializeDyNet()
   var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {

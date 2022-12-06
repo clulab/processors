@@ -355,7 +355,6 @@ object CoNLLSRLToMetal {
 
   def main(args: Array[String]): Unit = {
     assert(args.length == 2)
-    Utils.initializeDyNet()
 
     val file = new File(args(0))
     val reader = new CoNLLSRLToMetal

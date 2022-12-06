@@ -11,8 +11,6 @@ object RestoreCase extends App {
   val inputFileName = args(0)
   val outputFileName = inputFileName + ".restored"
   val pw = new PrintWriter(outputFileName)
-
-  Utils.initializeDyNet()
   val proc = new CluProcessor
 
   val sentences = ColumnReader.readColumns(inputFileName)

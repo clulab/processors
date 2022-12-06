@@ -15,7 +15,6 @@ import scala.collection.mutable
 import scala.io.Source
 
 class TestRepeatability extends Test {
-  Utils.initializeDyNet()
 
   def printDocument(document: Document): String = {
     val stringWriter = new StringWriter
