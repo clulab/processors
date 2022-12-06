@@ -9,7 +9,7 @@ val scala32  = "3.2.1"   // up to 3.2.1
 // Scala30: "If you are maintaining a library, you should drop Scala 3.0."  Dropped.
 // Scala31: This is the current LTS (long term support) version and default Scala 3 release.
 // Scala32: This is for experimentation, as in Scala Next, and not for release.
-ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala31, scala32) // , scala30)++
+ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala31) // , scala32) // , scala30)++
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
