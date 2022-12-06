@@ -28,11 +28,11 @@ object TokenClassifierTimerApp extends App {
       println(s"$index $line")
       if (index != 1382) {
         val words = line.split(" ")
-        val document = processor.mkDocumentFromTokens(Array(words.toIterable).toIterable)
+        val document = processor.mkDocumentFromTokens(Array(words.toList).toList)
 
         processor.annotate(document)
       }
     }
   }
-  Timers.summarize
+  Timers.summarize()
 }
