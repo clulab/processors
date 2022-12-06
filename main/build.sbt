@@ -11,14 +11,8 @@ resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifacto
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      // 4.0.2 => The TASTy file was produced by Scala 3.0.3-RC1-bin-20210725-7b4091b-NIGHTLY-git-7b4091b.
-      // 4.0.3 => No Manifest available for Int.
-      // 4.0.4 => The TASTy file was produced by Scala 3.1.1.
-      // 4.0.5 => The TASTy file was produced by Scala 3.1.1-bin-nonbootstrapped.
-      case Some((3,0)) => "4.0.3" // 4.0.2 is first to support Scala 3
-      case Some((3,_)) => "4.0.6"
-      case Some((2,_)) => "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
-      case _ => ???
+      case Some((3, 0)) => "4.0.3" // This is as close as we can get.
+      case _ => "4.0.6"
     }
   }
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
@@ -46,7 +40,7 @@ libraryDependencies ++= {
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion,
     "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
-    "org.clulab"                 %% "fatdynet"                 % "0.4.5-SNAPSHOT",
+    "org.clulab"                 %% "fatdynet"                 % "0.4.4",
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor

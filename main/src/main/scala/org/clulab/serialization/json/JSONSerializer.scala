@@ -15,7 +15,7 @@ import org.json4s.jackson.prettyJson
 
 /** JSON serialization utilities */
 // This annotation is to avoid "Compiler synthesis of Manifest and OptManifest is deprecated".
-// @annotation.nowarn("cat=deprecation")
+@annotation.nowarn("cat=deprecation")
 object JSONSerializer {
   implicit val formats: DefaultFormats.type = DefaultFormats
 
