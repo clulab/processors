@@ -2,7 +2,6 @@ package org.clulab.processors.apps
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.scala.WrappedArray._
 import org.clulab.utils.{Sourcer, Timers}
 
 
@@ -17,7 +16,7 @@ object TokenClassifierTimerApp extends App {
   }
   val lines = {
     val source = Sourcer.sourceFromFilename(fileName)
-    val lines = source.getLines.take(100).toArray
+    val lines = source.getLines().take(100).toArray
 
     source.close
     lines
@@ -29,7 +28,7 @@ object TokenClassifierTimerApp extends App {
       println(s"$index $line")
       if (index != 1382) {
         val words = line.split(" ")
-        val document = processor.mkDocumentFromTokens(Array(words.toIterable))
+        val document = processor.mkDocumentFromTokens(Array(words.toIndexedSeq))
 
         processor.annotate(document)
       }
