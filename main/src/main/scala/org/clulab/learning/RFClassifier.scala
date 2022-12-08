@@ -335,8 +335,22 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
   /** Constructs a single decision tree from the given dataset sample */
   def buildTree(job:RFJob[L, F]):RFTree = {
-
-    def inner(): RFTree = {
+    // termination condition: all datums have the same labels in this split
+    if (sameLabels(job)) {
+      //logger.debug(s"Found termination condition due to uniform labels on job")
+      new RFLeaf(job.leafLabels)
+    }
+    // termination condition: reached maximum depth
+    else if (maxTreeDepth > 0 && job.activeNodes.size > maxTreeDepth) {
+      //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
+      new RFLeaf(job.leafLabels)
+    }
+    // termination condition: the remaining dataset is too small
+    else if (splitTooSmallPct > 0 && job.trainIndices.length < splitTooSmallPct * job.dataset.size) {
+      //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
+      new RFLeaf(job.leafLabels)
+    }
+    else {
       //
       // randomly select a subset of features from the features present in this partition
       //
@@ -410,23 +424,6 @@ class RFClassifier[L, F](numTrees:Int = 100,
           buildTree(mkRightJob(job, best.get.feature, best.get.threshold, best.get.rightChildValue, newActiveNodesSet)))
       }
     }
-
-    // termination condition: all datums have the same labels in this split
-    if (sameLabels(job)) {
-      //logger.debug(s"Found termination condition due to uniform labels on job")
-      new RFLeaf(job.leafLabels)
-    }
-    // termination condition: reached maximum depth
-    else if (maxTreeDepth > 0 && job.activeNodes.size > maxTreeDepth) {
-      //logger.debug(s"Found termination condition at depth ${activeNodes.size}")
-      new RFLeaf(job.leafLabels)
-    }
-    // termination condition: the remaining dataset is too small
-    else if (splitTooSmallPct > 0 && job.trainIndices.length < splitTooSmallPct * job.dataset.size) {
-      //logger.debug(s"Found termination condition due to dataset too small: ${job.indices.length}")
-      new RFLeaf(job.leafLabels)
-    }
-    else inner()
   }
 
   def debugUtility(utility:Utility, job:RFJob[L, F]): Unit = {

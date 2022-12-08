@@ -117,8 +117,8 @@ object RnnLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  inputSize: Int): Option[IntermediateLayer] = {
-
-    def inner(): Option[IntermediateLayer] = {
+    if (!config.contains(paramPrefix)) None
+    else {
       val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
       val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
       val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
@@ -137,8 +137,5 @@ object RnnLayer {
 
       Some(layer)
     }
-
-    if (!config.contains(paramPrefix)) None
-    else inner()
   }
 }

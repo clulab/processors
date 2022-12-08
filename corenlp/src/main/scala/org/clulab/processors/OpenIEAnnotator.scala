@@ -25,22 +25,22 @@ trait OpenIEAnnotator {
   lazy val openIE: StanfordCoreNLP = mkOpenIE
 
   def relationExtractionSanityCheck(doc: Document): Option[Annotation] = {
-
-    def inner(): Option[Annotation] = {
+    if (withRelationExtraction) {
       val annotation = basicSanityCheck(doc)
 
       if (annotation.isEmpty) None
-      if (doc.sentences.head.tags.isEmpty)
-        throw new RuntimeException("ERROR: you have to run the POS tagger before OpenIE!")
-      if (doc.sentences.head.lemmas.isEmpty)
-        throw new RuntimeException("ERROR: you have to run the lemmatizer before OpenIE!")
-      if (doc.sentences.head.dependencies.isEmpty)
-        throw new RuntimeException("ERROR: you have to run the dependency parser before OpenIE!")
-      annotation
+      else {
+        if (doc.sentences.head.tags.isEmpty)
+          throw new RuntimeException("ERROR: you have to run the POS tagger before OpenIE!")
+        if (doc.sentences.head.lemmas.isEmpty)
+          throw new RuntimeException("ERROR: you have to run the lemmatizer before OpenIE!")
+        if (doc.sentences.head.dependencies.isEmpty)
+          throw new RuntimeException("ERROR: you have to run the dependency parser before OpenIE!")
+        annotation
+      }
     }
-
-    if (withRelationExtraction) inner()
-    else None
+    else
+      None
   }
 
   override def relationExtraction(doc: Document): Unit = {

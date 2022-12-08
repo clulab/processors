@@ -155,8 +155,8 @@ object ForwardLayer {
                  labelCounter: Counter[String],
                  isDual: Boolean,
                  inputSize: Int): Option[ForwardLayer] = {
-
-    def inner(): Option[ForwardLayer] = {
+    if (!config.contains(paramPrefix)) None
+    else {
       val inferenceType = config.getArgString(paramPrefix + ".inference", Some("greedy"))
       val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(ForwardLayer.DEFAULT_DROPOUT_PROB))
 
@@ -202,8 +202,5 @@ object ForwardLayer {
           None
       }
     }
- 
-    if (!config.contains(paramPrefix)) None
-    else inner()
   }
 }

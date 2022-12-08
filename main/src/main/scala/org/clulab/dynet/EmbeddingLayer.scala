@@ -391,8 +391,8 @@ object EmbeddingLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  wordCounter: Counter[String]): Option[InitialLayer] = {
-
-    def inner(): Option[InitialLayer] = {
+    if (!config.contains(paramPrefix)) None
+    else {
       val learnedWordEmbeddingSize =
         config.getArgInt(paramPrefix + ".learnedWordEmbeddingSize",
           Some(DEFAULT_LEARNED_WORD_EMBEDDING_SIZE))
@@ -503,8 +503,5 @@ object EmbeddingLayer {
 
       Some(layer)
     }
-
-    if (!config.contains(paramPrefix)) None
-    else inner()
   }
 }
