@@ -59,7 +59,7 @@ object CRFChunker {
   }
 
   def mkCoreLabels(words: Array[String], tags: Array[String]): Array[CoreLabel] =
-    words.zip(tags).map { case (word: String, tag: String) =>
+    words.zip(tags).map { case (word, tag) =>
       val label = new CoreLabel
       label.setWord(word)
       label.setTag(tag)

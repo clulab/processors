@@ -131,14 +131,13 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   def basicSanityCheck(doc:Document, checkAnnotation:Boolean = true): Option[Annotation] = {
     if (doc.sentences == null)
       throw new RuntimeException("ERROR: Document.sentences == null!")
-    if (doc.sentences.length == 0) None
+    if (doc.sentences.isEmpty) None
     else {
-      if (doc.sentences(0).words == null)
+      if (doc.sentences.head.words == null)
         throw new RuntimeException("ERROR: Sentence.words == null!")
-
       if (checkAnnotation && doc.isInstanceOf[CoreNLPDocument]) {
         val annotation = doc.asInstanceOf[CoreNLPDocument].annotation.getOrElse(
-          throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
+            throw new RuntimeException("ERROR: annotator called after Document.clear()!"))
         Some(annotation)
       }
       else

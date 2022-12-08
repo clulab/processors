@@ -221,16 +221,12 @@ object DependencyUtils {
    * @return returns true if Interval a contains Interval b or vice versa
    */
   def nested(a: Interval, b: Interval, sentA: Sentence, sentB: Sentence): Boolean = {
-    if (sentA != sentB) false
-    else
-      if (sentA.dependencies.isEmpty) false
-      else {
-        val aSubgraph = subgraph(a, sentA)
-        val bSubgraph = subgraph(b, sentB)
+    sentA == sentB && sentA.dependencies.nonEmpty && {
+      val aSubgraphOpt = subgraph(a, sentA)
+      val bSubgraphOpt = subgraph(b, sentB)
 
-        (aSubgraph.isDefined && aSubgraph.get.contains(b)) ||
-        (bSubgraph.isDefined && bSubgraph.get.contains(a))
-      }
+      aSubgraphOpt.exists(_.contains(b)) || bSubgraphOpt.exists(_.contains(a))
+    }
   }
 
   def mergeGraphs[T](dg1: DirectedGraph[T], dg2: DirectedGraph[T]): DirectedGraph[T] = {

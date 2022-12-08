@@ -136,7 +136,7 @@ class DocumentSerializer extends Logging {
   private def read(r:BufferedReader, howManyTokens:Int = 0): Array[String] = {
     val line = r.readLine()
     // println("READ LINE: [" + line + "]")
-    if (line.isEmpty) new Array[String](0)
+    if (line.isEmpty) Array.empty
     else line.split(SEP, howManyTokens)
   }
 

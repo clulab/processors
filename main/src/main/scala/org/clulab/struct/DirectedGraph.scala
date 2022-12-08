@@ -311,8 +311,8 @@ object DirectedGraph {
       else {
         val helper = unreachableLinks.head
         visit(helper)
-        val newUnreachableLinks = unreachableLinks.filterNot(_.visited)
-        helper :: help(newUnreachableLinks.toArray)
+        val newUnreachableLinks = unreachableLinks.filterNot(_.visited).toArray
+        helper :: help(newUnreachableLinks)
       }
     }
 
@@ -324,8 +324,8 @@ object DirectedGraph {
     sources.foreach(visit)
 
     // val reachableLinks = links.filter { node => node.visited }
-    val unreachableLinks = links.filterNot(_.visited)
-    val helpers = help(unreachableLinks.toArray)
+    val unreachableLinks = links.filterNot(_.visited).toArray
+    val helpers = help(unreachableLinks)
     val roots = loners ++ sources ++ helpers
 
     /* { // debugging

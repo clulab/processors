@@ -61,19 +61,12 @@ object MathUtils {
    * @return
    */
   def denseSoftmax(vector: Array[Double], gamma: Double = 1.0): Array[Double] = {
-    val scoreArray = if (gamma != 1.0) {
-      val result = for{
-        v <- vector
-      } yield gamma * v
-      result.toArray
-    }
-    else vector
-
+    val scoreArray =
+        if (gamma != 1.0) vector.map(gamma * _).toArray
+        else vector
     val logSumStatic = logSum(scoreArray)
-    val result = for {
-      s <- vector
-    } yield math.exp((gamma * s) - logSumStatic)
-    result.toArray
+
+    vector.map(math.exp((gamma * _) - logSumStatic)).toArray
   }
 
   /**
@@ -83,19 +76,12 @@ object MathUtils {
    * @return
    */
   def denseSoftmaxFloat(vector: Array[Float], gamma: Float = 1.0f): Array[Float] = {
-    val scoreArray = if (gamma != 1.0f) {
-      val result = for{
-        v <- vector
-      } yield gamma * v
-      result.toArray
-    }
-    else vector
-
+    val scoreArray =
+        if (gamma != 1.0f) vector.map(gamma * _).toArray
+        else vector
     val logSumStatic = logSumFloat(scoreArray)
-    val result = for {
-      s <- vector
-    } yield math.exp((gamma * s) - logSumStatic).toFloat
-    result.toArray
+
+    vector.map(math.exp((gamma * _) - logSumStatic).toFloat).toArray
   }
 
   def logSum(logInputs:IndexedSeq[Double]):Double =
