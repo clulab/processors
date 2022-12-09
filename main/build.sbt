@@ -44,7 +44,7 @@ libraryDependencies ++= {
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",  // for tokenization
-    "org.clulab"                  % "lemport"                  % "0.9.10", // Portuguese lemmatizer
+    "org.clulab"                  % "lemport"                  % "0.9.10" exclude("org.scala-lang", "scala-library"), // Portuguese lemmatizer
     "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization
     // logging
     // The Scala interface is not used in processors.
@@ -58,12 +58,12 @@ libraryDependencies ++= {
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
-    "org.clulab"                  % "processors-models"        % "0.2.4",
+    "org.clulab"                  % "processors-models"        % "0.2.4" exclude("org.scala-lang", "scala-library"),
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",
     // for odin
     "org.apache.commons"          % "commons-text"             % "1.1",
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
-    "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0",
+    "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0", // up to 2.9.0, but match fatdynet
     "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.1", // up to 2.1.1
     "org.yaml"                    % "snakeyaml"                % "1.14",
     // progress bar for training
