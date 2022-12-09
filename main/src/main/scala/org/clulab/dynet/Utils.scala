@@ -251,22 +251,13 @@ object Utils {
     pw.println()
   }
 
-  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores */
+  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores.
+    * For each element of the first Array, find the first index in the second Array of the maximum value.  */
   def greedyPredict(lattice: Array[Array[Float]]): Array[Int] = {
-    val tagIds = new ArrayBuffer[Int]()
-    for (probs <- lattice) {
-      var max = Float.MinValue
-      var tid = -1
-      for (i <- probs.indices) {
-        if (probs(i) > max) {
-          max = probs(i)
-          tid = i
-        }
-      }
-      assert(tid > -1)
-      tagIds += tid
-    }
-    tagIds.toArray
+    lattice.map { probs =>
+      assert(probs.nonEmpty)
+      ArrayMath.argmax(probs)
+    }.toArray
   }
 
   def srlPredict(lattice: Array[Array[Float]], predPosition: Int, oId: Int): Array[Int] = {
