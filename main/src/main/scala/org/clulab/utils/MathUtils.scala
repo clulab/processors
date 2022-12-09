@@ -66,7 +66,7 @@ object MathUtils {
         else vector
     val logSumStatic = logSum(scoreArray)
 
-    vector.map(math.exp((gamma * _) - logSumStatic)).toArray
+    vector.map { value => math.exp((gamma * value) - logSumStatic) }.toArray
   }
 
   /**
@@ -81,7 +81,7 @@ object MathUtils {
         else vector
     val logSumStatic = logSumFloat(scoreArray)
 
-    vector.map(math.exp((gamma * _) - logSumStatic).toFloat).toArray
+    vector.map { value => math.exp((gamma * value) - logSumStatic).toFloat }.toArray
   }
 
   def logSum(logInputs:IndexedSeq[Double]):Double =
