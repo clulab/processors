@@ -17,6 +17,7 @@ metals.sbt
 # sbt specific
 .bsp
 dist/*
+null/
 target/
 lib_managed/
 src_managed/

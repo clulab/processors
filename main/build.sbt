@@ -38,7 +38,6 @@ libraryDependencies ++= {
     "jline"                       % "jline"                    % "2.12.1",
     "org.json4s"                 %% "json4s-core"              % json4sVersion,
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion,
-    "com.io7m.xom"                % "xom"                      % "1.2.10",
     // for machine learning
     "org.clulab"                 %% "fatdynet"                 % "0.4.4",
     "de.bwaldvogel"               % "liblinear"                % "2.30",
@@ -51,7 +50,7 @@ libraryDependencies ++= {
     // The Scala interface is not used in processors.
     // "com.typesafe.scala-logging" %% "scala-logging"            % "3.9.4",
     // Instead, all code makes use of the Java interface.
-    "org.slf4j"                   % "slf4j-api"                % "1.7.10",
+    "org.slf4j"                   % "slf4j-api"                % "1.7.32",
     // Local logging is provided here but not published.
     "ch.qos.logback" % "logback-classic" % "1.2.8", // up to 1.2.8; less than 1.2 is vulnerable
     // testing
