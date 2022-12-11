@@ -483,7 +483,6 @@ object CommentedStandardKbSource {
     val lines = FileUtils.getCommentedLinesFromSource(source)
 
     lines.foreach { line =>
-      println("LINE " + line)
       val commentStart = line.indexOf(COMMENT)
 
       if (commentStart < 0)

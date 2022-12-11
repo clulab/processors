@@ -32,7 +32,6 @@ class UnitNormalizer(unitNormalizerPath: String) {
 object UnitNormalizer {
   private val normMapper = readNormsFromResource("/org/clulab/numeric/MEASUREMENT-UNIT.tsv")
 
-  println(">>>" + normMapper + "<<<-")
   def readNormsFromResource(path: String): Map[String, NormAndUnitClass] =
       Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
 

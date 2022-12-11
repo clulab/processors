@@ -242,3 +242,9 @@ t m-3                      // t/m3, density
 t / m3                     // t/m3, density
 Mg / m3                    // Mg/m3, density
 Mg m-3                     // Mg/m3, density
+bushel                     // bushel, mass
+bushels                    // bushel, mass
+%                          // percent, proportion
+percent                    // percent, proportion
+kwh                        // kwh, electrical energy
+kilowatt hours             // kwh, electrical energy
