@@ -5,7 +5,7 @@ import de.jollyday.{Holiday, HolidayCalendar, HolidayManager, ManagerParameters}
 import scala.jdk.CollectionConverters._
 
 object HolidayNormalizer {
-  private val normMapper = UnitNormalizer.readNormsFromResource("/org/clulab/numeric/HOLIDAY.tsv")
+  private val normMapper: Map[String, NormAndUnitClass] = UnitNormalizer.readNormsFromResource("/org/clulab/numeric/HOLIDAY.tsv")
 
   private val holidayManager = HolidayManager.getInstance(
     ManagerParameters.create(HolidayCalendar.UNITED_STATES)
@@ -14,8 +14,8 @@ object HolidayNormalizer {
   /** Retrieves date (day and month) for a holiday */
   def norm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
     val holiday = holidaySeq.mkString(" ").toLowerCase()
-    normMapper(holiday).norm match {
-      case holidayCanonical =>
+    normMapper.get(holiday) match {
+      case Some(NormAndUnitClass(holidayCanonical, _)) =>
         // If year is None use current year as default
         val year = yearOpt match {
           case Some(yearSeq) => yearSeq.mkString.toInt
@@ -30,7 +30,7 @@ object HolidayNormalizer {
             Some((date.getDayOfMonth.toString, date.getMonthValue.toString))
           case _ => None
         }
-      case _ => None
+      case None => None
     }
   }
 }
