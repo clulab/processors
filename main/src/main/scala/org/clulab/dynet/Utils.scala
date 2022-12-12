@@ -229,13 +229,7 @@ object Utils {
     total
   }
 
-  def toIds[T](tags: IndexedSeq[T], t2i: Map[T, Int]): IndexedSeq[Int] = {
-    val ids = new ArrayBuffer[Int]()
-    for (tag <- tags) {
-      ids += t2i(tag)
-    }
-    ids
-  }
+  def toIds[T](tags: IndexedSeq[T], t2i: Map[T, Int]): IndexedSeq[Int] = tags.map(t2i)
 
   def printCoNLLOutput(pw: PrintWriter,
                        words: IndexedSeq[String],
