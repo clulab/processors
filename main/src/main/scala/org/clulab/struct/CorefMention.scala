@@ -1,5 +1,8 @@
 package org.clulab.struct
 
+import org.clulab.utils.Unordered
+import org.clulab.utils.Unordered.OrderingOrElseBy
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -94,23 +97,33 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 }
 
 object CorefChains {
-  private def lessThanForMentions(x:CorefMention, y:CorefMention):Boolean = {
+  implicit val ordering = Unordered[CorefMention]
+      .orElseBy(_.sentenceIndex)  // favor smaller sentenceIndex
+      .orElseBy(_.headIndex)      // favor smaller headIndex
+      .orElseBy { corefMention => // favor larger size
+        -(corefMention.endOffset - corefMention.startOffset)
+      }
+      .orElse(-1) { _: CorefMention => 0 }           // favor smaller index in collection
+
+  def lessThanForMentions(x:CorefMention, y:CorefMention):Boolean = {
     if (x.sentenceIndex < y.sentenceIndex) return true
     if (x.sentenceIndex > y.sentenceIndex) return false
 
     if (x.headIndex < y.headIndex) return true
     if (x.headIndex > y.headIndex) return false
 
-    val diffSize = (x.endOffset - x.startOffset) - (y.endOffset - y.startOffset)
-    if (diffSize > 0) return true
-    if (diffSize < 0) return false
+    val diffSizeX = x.endOffset - x.startOffset
+    val diffSizeY = y.endOffset - y.startOffset
+    // These are reversed from the above.
+    if (diffSizeX < diffSizeY) return false
+    if (diffSizeX > diffSizeY) return true
 
     true
   }
 
   private def mkMentions(rawMentions:Iterable[CorefMention]):Map[(Int, Int), CorefMention] = {
     // if multiple mentions with same head exist, keep only the longest
-    val sortedMentions = rawMentions.toList.sortWith(lessThanForMentions)
+    val sortedMentions = rawMentions.toList.sorted // With(lessThanForMentions)
     val mentionMap = new mutable.HashMap[(Int, Int), CorefMention]
     var prevMention:CorefMention = null
     for (m <- sortedMentions) {
