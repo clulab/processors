@@ -105,7 +105,7 @@ object CorefChains {
 
   private def mkMentions(rawMentions:Iterable[CorefMention]):Map[(Int, Int), CorefMention] = {
     // if multiple mentions with same head exist, keep only the longest
-    val sortedMentions = rawMentions.toList.sorted // With(lessThanForMentions)
+    val sortedMentions = rawMentions.toList.sorted // .sortedWith(lessThanForMentions)
     val mentionMap = new mutable.HashMap[(Int, Int), CorefMention]
     var prevMention:CorefMention = null
     for (m <- sortedMentions) {

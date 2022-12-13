@@ -18,7 +18,7 @@ object Unordered {
       }
     }
 
-    def orElse[U](default: Int): Ordering[T] = new Ordering[T] {
+    def orElse(default: Int): Ordering[T] = new Ordering[T] {
       def compare(x: T, y: T): Int = {
         val result = ordering.compare(x, y)
 
