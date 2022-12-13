@@ -18,9 +18,9 @@ object Unordered {
       }
     }
 
-    def orElse[U](default: Int)(f: T => U)(implicit innerOrdering: Ordering[U]): Ordering[T] = new Ordering[T] {
+    def orElse[U](default: Int): Ordering[T] = new Ordering[T] {
       def compare(x: T, y: T): Int = {
-        val result = ordering.compare(x, y) // The previous one from constructor
+        val result = ordering.compare(x, y)
 
         if (result == 0) default
         else result

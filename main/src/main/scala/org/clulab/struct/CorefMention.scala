@@ -98,28 +98,10 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 
 object CorefChains {
   implicit val ordering = Unordered[CorefMention]
-      .orElseBy(_.sentenceIndex)  // favor smaller sentenceIndex
-      .orElseBy(_.headIndex)      // favor smaller headIndex
-      .orElseBy { corefMention => // favor larger size
-        -(corefMention.endOffset - corefMention.startOffset)
-      }
-      .orElse(-1) { _: CorefMention => 0 }           // favor smaller index in collection
-
-  def lessThanForMentions(x:CorefMention, y:CorefMention):Boolean = {
-    if (x.sentenceIndex < y.sentenceIndex) return true
-    if (x.sentenceIndex > y.sentenceIndex) return false
-
-    if (x.headIndex < y.headIndex) return true
-    if (x.headIndex > y.headIndex) return false
-
-    val diffSizeX = x.endOffset - x.startOffset
-    val diffSizeY = y.endOffset - y.startOffset
-    // These are reversed from the above.
-    if (diffSizeX < diffSizeY) return false
-    if (diffSizeX > diffSizeY) return true
-
-    true
-  }
+      .orElseBy(_.sentenceIndex) // favor smaller sentenceIndex
+      .orElseBy(_.headIndex)     // favor smaller headIndex
+      .orElseBy(-_.length)       // favor larger size
+      .orElse(-1)                // favor the left argument
 
   private def mkMentions(rawMentions:Iterable[CorefMention]):Map[(Int, Int), CorefMention] = {
     // if multiple mentions with same head exist, keep only the longest

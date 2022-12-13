@@ -7,6 +7,23 @@ class TestCorefChains extends Test {
 
   behavior of "CorefChains"
 
+  // This is the former code for regression testing.
+  def lessThanForMentions(x: CorefMention, y: CorefMention): Boolean = {
+    if (x.sentenceIndex < y.sentenceIndex) return true
+    if (x.sentenceIndex > y.sentenceIndex) return false
+
+    if (x.headIndex < y.headIndex) return true
+    if (x.headIndex > y.headIndex) return false
+
+    val diffSizeX = x.endOffset - x.startOffset
+    val diffSizeY = y.endOffset - y.startOffset
+    // These are reversed from the above.
+    if (diffSizeX < diffSizeY) return false
+    if (diffSizeX > diffSizeY) return true
+
+    true
+  }
+
   it should "sort on sentenceIndex" in {
     val left = CorefMention(0, 1, 0, 0, 0)
     val right = CorefMention(1, 0, 0, 0, 0)
@@ -14,8 +31,8 @@ class TestCorefChains extends Test {
     List(left, right).sorted.head should be theSameInstanceAs (left)
     List(right, left).sorted.head should be theSameInstanceAs (left)
 
-    List(left, right).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
-    List(right, left).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
+    List(left, right).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
+    List(right, left).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
   }
 
   it should "sort on headIndex" in {
@@ -25,8 +42,8 @@ class TestCorefChains extends Test {
     List(left, right).sorted.head should be theSameInstanceAs (left)
     List(right, left).sorted.head should be theSameInstanceAs (left)
 
-    List(left, right).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
-    List(right, left).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
+    List(left, right).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
+    List(right, left).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
   }
 
   it should "sort on size" in {
@@ -36,8 +53,8 @@ class TestCorefChains extends Test {
     List(left, right).sorted.head should be theSameInstanceAs (left)
     List(right, left).sorted.head should be theSameInstanceAs (left)
 
-    List(left, right).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
-    List(right, left).sortWith(CorefChains.lessThanForMentions).head should be theSameInstanceAs (left)
+    List(left, right).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
+    List(right, left).sortWith(lessThanForMentions).head should be theSameInstanceAs (left)
   }
 
   it should "sort on index" in {
@@ -47,8 +64,8 @@ class TestCorefChains extends Test {
     val leftRight1 = List(left, right).sorted
     val rightLeft1 = List(right, left).sorted
 
-    val leftRight2 = List(left, right).sortWith(CorefChains.lessThanForMentions)
-    val rightLeft2 = List(right, left).sortWith(CorefChains.lessThanForMentions)
+    val leftRight2 = List(left, right).sortWith(lessThanForMentions)
+    val rightLeft2 = List(right, left).sortWith(lessThanForMentions)
 
     leftRight1.head should be theSameInstanceAs (leftRight2.head)
     rightLeft1.head should be theSameInstanceAs (rightLeft2.head)
