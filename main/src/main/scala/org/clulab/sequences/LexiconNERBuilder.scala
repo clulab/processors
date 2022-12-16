@@ -476,21 +476,29 @@ class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder()
 // eventually extend the StandardKbSource to add processing of the comments.
 object CommentedStandardKbSource {
   val COMMENT = "//"
+  val COMMENT_SEP = "::"
   val COMMENT_LENGTH = COMMENT.length
 
-  def read(source: Source)(f: (String, Option[String]) => Unit): Unit = {
+  def read(source: Source)(f: (String, Option[String], Option[String]) => Unit): Unit = {
     val lines = FileUtils.getCommentedLinesFromSource(source)
 
     lines.foreach { line =>
       val commentStart = line.indexOf(COMMENT)
 
       if (commentStart < 0)
-        f(line.trim, None)
+        f(line.trim, None, None)
       else {
         val code = line.substring(0, commentStart).trim
         val comment = line.substring(commentStart + COMMENT_LENGTH).trim
+        val commentSepIndex = comment.indexOf(COMMENT_SEP)
+        val (norm, unitClass) =
+            if (commentSepIndex < 0) (comment, None)
+            else (
+              comment.substring(0, commentSepIndex).trim,
+              Some(comment.substring(commentSepIndex + COMMENT_SEP.length).trim)
+            )
 
-        f(code, Some(comment))
+        f(code, Some(norm), unitClass)
       }
     }
   }
