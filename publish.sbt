@@ -44,7 +44,7 @@ ThisBuild / publishTo := {
       else ""
     val location = artifactory + repository + details
 
-    Some("clulab realm" at location)
+    Some("Artifactory Realm" at location)
   }
   else {
     val nexus = "https://oss.sonatype.org/"
