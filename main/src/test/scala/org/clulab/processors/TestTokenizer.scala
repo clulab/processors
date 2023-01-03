@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.tokenizer.OpenDomainEnglishTokenizer
+import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, SentenceSplitter}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -223,11 +223,24 @@ class TestTokenizer extends FlatSpec with Matchers {
     }
   }
 
-  def tok(s:String):Array[Sentence] = {
+  it should "recognize the control string for sentence breaks" in {
+    val orig = "this is one sentence [SB] this is another"
+    val twoSents = tok(orig, true)
+    twoSents.length should be (2)
+    twoSents(0).words.length should be(4)
+    twoSents(1).words.length should be(3)
+
+    val oneSent = tok(orig, false)
+    oneSent.length should be (1)
+    oneSent(0).words.length should be (8)
+  }
+
+  def tok(s:String, useControlStrings: Boolean = false):Array[Sentence] = synchronized {
+    SentenceSplitter.useControlStrings = useControlStrings
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
     val sents = t.tokenize(s)
-    for(i <- sents.indices) {
+    for (i <- sents.indices) {
       println(s"\tSentence #$i: " + sents(i).words.mkString(" "))
     }
     sents
