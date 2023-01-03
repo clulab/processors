@@ -2,11 +2,11 @@ name := "processors-main"
 description := "processors-main"
 
 pomIncludeRepository := { (repo: MavenRepository) =>
-  repo.root.startsWith("http://artifactory.cs.arizona.edu")
+  repo.root.startsWith("https://artifactory.clulab.org")
 }
 
 // for processors-models
-resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
+resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
 
 libraryDependencies ++= {
   val json4sVersion = "3.5.5" // 3.5.5 is lowest supporting Scala 2.13
@@ -45,7 +45,7 @@ libraryDependencies ++= {
     // testing
     "org.scalatest"              %% "scalatest"                % "3.0.9"  % Test,
     // trained models for local ML models used in both main and corenlp
-    // These are stored in the CLU lab Artifactory not maven!
+    // These are stored in the CLU lab Artifactory instance, not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0",
     "org.clulab"                  % "processors-models"        % "0.2.4",
     "com.esotericsoftware"        % "kryo"                     % "5.1.1",

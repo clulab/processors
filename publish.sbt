@@ -37,14 +37,14 @@ ThisBuild / publishTo := {
   val useArtifactory = true
 
   if (useArtifactory) {
-    val artifactory = "http://artifactory.cs.arizona.edu:8081/artifactory/"
+    val artifactory = "https://artifactory.clulab.org/artifactory/"
     val repository = "sbt-release-local"
     val details =
       if (isSnapshot.value) ";build.timestamp=" + new java.util.Date().getTime
       else ""
     val location = artifactory + repository + details
 
-    Some(("Artifactory Realm" at location).withAllowInsecureProtocol(true))
+    Some("clulab realm" at location)
   }
   else {
     val nexus = "https://oss.sonatype.org/"
