@@ -97,7 +97,7 @@ package object numeric {
         addLabelsAndNorms(mention.asInstanceOf[Norm], mention.sentenceObj, mention.tokenInterval)
       }
     }
-    removeOneEntityBeforeAnother(doc, "B-LOC", "MEASUREMENT")
+    removeOneEntityBeforeAnother(doc, "B-LOC", "MEASUREMENT-LENGTH")
   }
 
   def removeOneEntityBeforeAnother(doc: Document, triggerEntity: String, toBeRemovedShortened: String): Unit = {
