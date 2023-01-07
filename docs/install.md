@@ -29,7 +29,7 @@ Please note that some of the transitive dependencies for this project, including
 </dependency>
 ```
 
-However, some versions of Maven will not fetch dependencies over HTTP connections.  They must be coaxed into doing so by editing [settings.xml](https://maven.apache.org/settings.html).  Specifically, this mirror needs to be added:
+However, some versions of Maven will not fetch dependencies over the HTTP connection that is specified with some older versions of processors.  (Newer versions use HTTPS, so only perform this step if necessary.)  Maven can be coaxed into using HTTP by editing [settings.xml](https://maven.apache.org/settings.html).  Specifically, this mirror needs to be added:
 
 ```xml
 <mirror>
@@ -42,10 +42,13 @@ However, some versions of Maven will not fetch dependencies over HTTP connection
 
 ## Use with `sbt`
 
-`sbt` does not follow transitive dependencies to non-standard repositories, so it does not fetch [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models) without further configuration.  An additional resolver must be provided, but thereafter the procedure is the same.  The equivalent `sbt` dependencies are
+`sbt` does not follow transitive dependencies to non-standard repositories, so it does not fetch processors-models from either their [old location](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models) or even [new location](https://artifactory.clulab.org/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models) without further configuration.  An additional resolver must be provided, but thereafter the specification of the library is the same as with Maven.  The equivalent `sbt` dependencies are
 
 ```scala
-resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
+// Here is the new location using HTTPS.
+resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
+// Here is the old location using HTTP.  This resolver is deprecated and should no longer be used.
+// resolvers += "Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release"
 
 libraryDependencies ++= {
   val procVer = "x.x.x"
@@ -56,7 +59,7 @@ libraryDependencies ++= {
   )
 }
 ```
-Some newer versions of `sbt` do not allow resolvers to use unencrypted HTTP connections.  If `sbt` complains about the download from the Artifactory server, please change the one line to
+Some newer versions of `sbt` do not allow resolvers to use unencrypted HTTP connections.  If `sbt` complains about the download from the old Artifactory server via HTTP, please change the one line to
 ```scala
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 ```
