@@ -59,7 +59,7 @@ libraryDependencies ++= {
   )
 }
 ```
-Some newer versions of `sbt` do not allow resolvers to use unencrypted HTTP connections.  If `sbt` complains about the download from the old Artifactory server via HTTP, please change the one line to
+Some newer versions of `sbt` do not allow resolvers to use unencrypted HTTP connections.  If `sbt` complains about the download from the old Artifactory server via HTTP, please either use the new server or change the one line to
 ```scala
 resolvers += ("Artifactory" at "http://artifactory.cs.arizona.edu:8081/artifactory/sbt-release").withAllowInsecureProtocol(true)
 ```
