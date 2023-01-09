@@ -15,7 +15,7 @@ rules:
       /^[+-]$/?
       /^[+-]?(\d+\.\d*|\.\d+|\d+|\d+\/\d+|\d+(\,\d+)+)$/
       (/\// /^[+-]$/? /^([+-]?\d+)$/)?
-      /^(hundred|thousand|million|billion|trillion|quadrillion)s?$/?
+      /^(hundred|thousand|grand|million|billion|trillion|quadrillion)s?$/?
 
   # special case for number like "twelve hundred thirty four"
   # result must be >1000
@@ -72,7 +72,7 @@ rules:
     priority: 4
     type: token
     pattern: |
-      @WordHundreds /^thousands?$/ | (@WordHundreds /^thousands?$/)? @WordHundreds
+      @WordHundreds /^(thousands?|grand)$/ | (@WordHundreds /^(thousands|grand)?$/)? @WordHundreds
 
   - name: word_hundreds
     label: WordHundreds

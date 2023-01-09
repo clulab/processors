@@ -92,7 +92,7 @@ object NumberParser {
       // accumulate result here
       var totalSum: Double = 0
       var remainingWords = words.toArray
-      for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
+      for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand")) {
         val index = remainingWords.indexOf(w)
         if (index >= 0) {
           val multiplier = numberFormation(remainingWords.slice(0, index))
@@ -156,6 +156,7 @@ object NumberParser {
     "ninety"      -> 90,
     "hundred"     -> 1e2,
     "thousand"    -> 1e3,
+    "grand"       -> 1e3,
     "million"     -> 1e6,
     "billion"     -> 1e9,
     "trillion"    -> 1e12,
