@@ -92,12 +92,7 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
 }
 
 class TextFileFilter extends FileFilter {
-  override def accept(pathname: File): Boolean = {
-    if(pathname.getName.endsWith(".txt")) {
-      return true
-    }
-    false
-  }
+  override def accept(pathname: File): Boolean = pathname.getName.endsWith(".txt")
 }
 
 object TextToCoNLLU {

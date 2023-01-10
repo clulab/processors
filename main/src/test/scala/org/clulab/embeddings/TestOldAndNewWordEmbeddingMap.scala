@@ -7,20 +7,17 @@ import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.clulab.utils.Test
 
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 import scala.collection.mutable
 
-class TestOldAndNewWordEmbeddingMap extends FlatSpec with Matchers {
+class TestOldAndNewWordEmbeddingMap extends Test {
   val unused = false
   val fileName = "../glove.840B.300d.10f"
   val resourceName = "/org/clulab/glove/glove.840B.300d.10f"
-
-  Utils.initializeDyNet()
 
   case class WordEmbeddingConfig(useFileElseResource: Boolean, useTxtElseBin: Boolean,
       useExplicitElseCompact: Boolean, useOldElseNew: Boolean) {

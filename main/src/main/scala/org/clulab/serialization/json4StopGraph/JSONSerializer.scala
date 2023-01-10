@@ -10,7 +10,7 @@ import org.json4s.JsonDSL._
 import java.io.PrintWriter
 
 class JSONSerializer(printWriter: PrintWriter) {
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   def serialize(doc: Document): Unit = printWriter.println(toJson(doc))
 

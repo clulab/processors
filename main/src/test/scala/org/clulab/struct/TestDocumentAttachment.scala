@@ -14,15 +14,12 @@ import org.clulab.struct.test.ObjectNameDocumentAttachment
 import org.clulab.struct.test.NameDocumentAttachment
 import org.clulab.struct.test.TextNameDocumentAttachment
 import org.clulab.utils.Closer.AutoCloser
-
+import org.clulab.utils.Test
 import org.json4s.jackson.parseJson
 import org.json4s.jackson.prettyJson
 import org.json4s.jackson.renderJValue
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
-class TestDocumentAttachment extends FlatSpec with Matchers {
+class TestDocumentAttachment extends Test {
   protected val FIRST_KEY = "first"
   protected val MIDDLE_KEY = "middle"
   protected val LAST_KEY = "last"

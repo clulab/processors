@@ -13,6 +13,7 @@ trait TokenizerLexer {
 
 /** Tokenizer using the OpenDomainLexer.g grammar */
 class OpenDomainEnglishLexer extends TokenizerLexer {
+  @annotation.nowarn("cat=deprecation")
   override def mkLexer(text: String): CommonTokenStream = {
     val lexer = new OpenDomainLexer(new ANTLRInputStream(text))
     new CommonTokenStream(lexer)
@@ -21,6 +22,7 @@ class OpenDomainEnglishLexer extends TokenizerLexer {
 
 /** Tokenizer using the OpenDomainLexer.g grammar */
 class OpenDomainPortugueseTokenizerLexer extends TokenizerLexer {
+  @annotation.nowarn("cat=deprecation")
   override def mkLexer(text: String): CommonTokenStream = {
     val lexer = new OpenDomainPortugueseLexer(new ANTLRInputStream(text))
     new CommonTokenStream(lexer)
@@ -29,6 +31,7 @@ class OpenDomainPortugueseTokenizerLexer extends TokenizerLexer {
 
 /** Tokenizer using the OpenDomainLexer.g grammar */
 class OpenDomainSpanishTokenizerLexer extends TokenizerLexer {
+  @annotation.nowarn("cat=deprecation")
   override def mkLexer(text: String): CommonTokenStream = {
     val lexer = new OpenDomainSpanishLexer(new ANTLRInputStream(text))
     new CommonTokenStream(lexer)

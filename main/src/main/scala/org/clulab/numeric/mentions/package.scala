@@ -49,7 +49,7 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to NumberRangeMention!")
   }
 
-  def toMeasurementMention(mention: Mention): MeasurementMention =  mention match {
+  def toMeasurementMention(unitNormalizer: UnitNormalizer)(mention: Mention): MeasurementMention =  mention match {
     case m:  MeasurementMention => m
 
     case m: RelationMention =>
@@ -63,14 +63,15 @@ package object mentions {
         m.attachments,
         getArgWords("number", m),
         getArgWords("unit", m),
-        false
+        false,
+        unitNormalizer
       )
 
     case m =>
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to MeasurementMention!")
   }
 
-  def toSharedMeasurementMention(mention: Mention): Seq[Mention] =  mention match {
+  def toSharedMeasurementMention(unitNormalizer: UnitNormalizer)(mention: Mention): Seq[Mention] =  mention match {
     case m:  MeasurementMention => Seq(m)
 
     case m: RelationMention =>
@@ -90,7 +91,8 @@ package object mentions {
           m.attachments,
           Some(a.words),
           getArgWords("unit", m),
-          false
+          false,
+          unitNormalizer
         )
       }
 
@@ -119,7 +121,7 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to PercentageMention!")
   }
 
-  def toMeasurementWithRangeMention(mention: Mention): MeasurementMention =  mention match {
+  def toMeasurementWithRangeMention(unitNormalizer: UnitNormalizer)(mention: Mention): MeasurementMention =  mention match {
     case m:  MeasurementMention => m
 
     case m: RelationMention =>
@@ -133,7 +135,8 @@ package object mentions {
         m.attachments,
         Some(Seq(getArgNorm("number", m).get)), // this has already been normalized in NumberRangeMention
         getArgWords("unit", m),
-        true
+        true,
+        unitNormalizer
       )
 
     case m =>

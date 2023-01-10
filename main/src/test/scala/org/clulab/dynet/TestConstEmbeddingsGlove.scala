@@ -1,11 +1,11 @@
 package org.clulab.dynet
 
 import org.clulab.embeddings.WordEmbeddingMapPool
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
 // The obsolete tests that were previously here have been removed.
 // ConstEmbeddingsGlove is an object and is not readily testable.
-class TestConstEmbeddingsGlove extends FlatSpec with Matchers {
+class TestConstEmbeddingsGlove extends Test {
 
   try {
     print("dotClassPath = ")

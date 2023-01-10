@@ -74,14 +74,13 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 
   /** Fetches the coreference chain for the mention with this sentence and head indices; None for singletons */
   def getChain(sentenceIndex:Int, headIndex:Int):Option[Iterable[CorefMention]] = {
-    getMention(sentenceIndex, headIndex).foreach(m => return getChain(m))
-    None
+    getMention(sentenceIndex, headIndex).map(getChain).getOrElse(None)
   }
 
   /** Fetches the coreference chain for this mention; None for singletons */
   def getChain(mention:CorefMention):Option[Iterable[CorefMention]] = {
-    if (mention.chainId == -1) return None
-    chains.get(mention.chainId)
+    if (mention.chainId == -1) None
+    else chains.get(mention.chainId)
   }
 
   /** All recognized chains, without singletons */
@@ -95,17 +94,18 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 
 object CorefChains {
   private def lessThanForMentions(x:CorefMention, y:CorefMention):Boolean = {
-    if (x.sentenceIndex < y.sentenceIndex) return true
-    if (x.sentenceIndex > y.sentenceIndex) return false
+    if (x.sentenceIndex < y.sentenceIndex) true
+    else if (x.sentenceIndex > y.sentenceIndex) false
 
-    if (x.headIndex < y.headIndex) return true
-    if (x.headIndex > y.headIndex) return false
+    else if (x.headIndex < y.headIndex) true
+    else if (x.headIndex > y.headIndex) false
 
-    val diffSize = (x.endOffset - x.startOffset) - (y.endOffset - y.startOffset)
-    if (diffSize > 0) return true
-    if (diffSize < 0) return false
-
-    true
+    else {
+      val diffSize = (x.endOffset - x.startOffset) - (y.endOffset - y.startOffset)
+      if (diffSize > 0) true
+      else if (diffSize < 0) false
+      else true
+    }
   }
 
   private def mkMentions(rawMentions:Iterable[CorefMention]):Map[(Int, Int), CorefMention] = {

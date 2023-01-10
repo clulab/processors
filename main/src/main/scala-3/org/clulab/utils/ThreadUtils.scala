@@ -27,6 +27,8 @@ object ThreadUtils {
     parSeq
   }
 
+  def parallelize[T](seq: Seq[T]): ParSeq[T] = seq.par
+
   def parallelize[T](set: Set[T], threads: Int): ParSet[T] = {
     val parSet = set.par
     parallelize(parSet, threads)

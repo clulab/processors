@@ -1,13 +1,13 @@
 package org.clulab.learning
 
-import org.scalatest._
+import org.clulab.utils.Test
 
 /**
  *
  * User: mihais
  * Date: 12/10/13
  */
-class TestRandomForestClassifier extends FlatSpec with Matchers {
+class TestRandomForestClassifier extends Test {
   "RFClassifier" should "work with BVFDataset" in {
     val classifier = new RFClassifier[String, String](numTrees = 1, trainBagPct = 1.0, howManyFeaturesPerNode = RFClassifier.featuresPerNodeAll)
     val dataset = new BVFDataset[String, String]()

@@ -1,8 +1,7 @@
 package org.clulab.processors.clu
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair, Utils}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import org.clulab.scala.WrappedArray._
@@ -16,7 +15,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.util.regex.Pattern
-
 import CluProcessor._
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
@@ -169,20 +167,24 @@ class CluProcessor protected (
   def mtlSrla: Metal = lazyMtlSrla.value
 
   protected val lazyMtlDepsHead: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+    mtlDepsHeadOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsh", Some("mtl-en-depsh")))
+      }
     }
   }
 
   def mtlDepsHead: Metal = lazyMtlDepsHead.value
 
   protected val lazyMtlDepsLabel: Lazy[Metal] = Lazy {
-    getArgString(s"$prefix.language", Some("EN")) match {
-      case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
-      case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
-      case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+    mtlDepsLabelOpt.getOrElse {
+      getArgString(s"$prefix.language", Some("EN")) match {
+        case "PT" => throw new RuntimeException("PT model not trained yet") // Add PT
+        case "ES" => throw new RuntimeException("ES model not trained yet") // Add ES
+        case _ => Metal(getArgString(s"$prefix.mtl-depsl", Some("mtl-en-depsl")))
+      }
     }
   }
 
@@ -643,7 +645,7 @@ class CluProcessor protected (
   def cheapLemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val lemmas = sent.words.map(_.toLowerCase())
+      val lemmas = sent.words.map(_.toLowerCase()).toArray
       sent.lemmas = Some(lemmas)
     }
   }
@@ -683,39 +685,34 @@ class CluProcessor protected (
   }
 
   private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
-    for(d <- dependencies) {
-      if (d._2 == label) {
-        return true
-      }
-    }
-
-    false
+    dependencies.exists { d => d._2 == label }
   }
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
 
-    if(sentence.universalBasicDependencies.isEmpty) return origPreds
-    if(sentence.tags.isEmpty) return origPreds
+    if (sentence.universalBasicDependencies.isEmpty) origPreds
+    else if (sentence.tags.isEmpty) origPreds
+    else {
+      val preds = origPreds.toSet
+      val newPreds = new mutable.HashSet[Int]()
+      newPreds ++= preds
 
-    val preds = origPreds.toSet
-    val newPreds = new mutable.HashSet[Int]()
-    newPreds ++= preds
+      val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
+      val words = sentence.words
+      val tags = sentence.tags.get
 
-    val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
-    val words = sentence.words
-    val tags = sentence.tags.get
-
-    for(i <- words.indices) {
-      if(! preds.contains(i)) {
-        // -ing NN with a compound outgoing dependency
-        if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
-           outgoing.length > i && hasDep(outgoing(i), "compound")) {
-          newPreds += i
+      for(i <- words.indices) {
+        if(! preds.contains(i)) {
+          // -ing NN with a compound outgoing dependency
+          if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
+            outgoing.length > i && hasDep(outgoing(i), "compound")) {
+            newPreds += i
+          }
         }
       }
-    }
 
-    newPreds.toVector.sorted
+      newPreds.toVector.sorted
+    }
   }
 
   override def srl(doc: Document): Unit = {
@@ -932,6 +929,9 @@ object CluProcessor {
     // period, ), or ] all possibly repeated until the end of the sentence.
     ("""^([ivx\d]+[\.\)\]]?)+$""".r.pattern, "L") // list item indices are often unnecessarily capitalized
   )
+
+  Utils.initializeDyNet() // Assume it will be used if the class is referenced.
+  // If need be, call initializeDyNet() before making reference to CluProcessor.
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization */
   def mkDocument(tokenizer:Tokenizer,
