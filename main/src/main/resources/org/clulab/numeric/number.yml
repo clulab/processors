@@ -25,7 +25,7 @@ rules:
     type: token
     pattern: |
       # numbers 10-19
-      (ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
+      (ten | eleven | twelve | dozen | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
       # or numbers 20-99
       twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
       sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
@@ -89,7 +89,7 @@ rules:
       # could be a single digit
       @WordDigit |
       # numbers 10-19
-      ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
+      ten | eleven | twelve | dozen | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
       # or numbers 20-99
       twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
       sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
