@@ -1,3 +1,4 @@
++ **8.5.3** - Improved number parser with words such as "dozen", "grand"
 + **8.5.2** - Overwrite named entities cleanly
 + **8.5.2** - Avoid year-like values sharing units and generally refine numeric processing
 + **8.5.2** - Processors no longer uses Scala logging nor does it publish its runtime use of logback so that it isn't forced onto clients.  logback is still included in ivy.xml for publishLocal, however.

@@ -75,6 +75,8 @@ class TestNumberParser extends Test {
 	it should "parse words to numbers" in {
 		NumberParser.parse("five hundred million".split(" ")) shouldEqual Some(500000000)
 
+		NumberParser.parse("dozen grand".split(" ")) shouldEqual Some(12000)
+
 		// TODO: we do not parse "half" and "quarter" now
 		//NumberParser.parse("half million".split(" ")) shouldEqual Some(500000)
 		//NumberParser.parse("three quarters million".split(" ")) shouldEqual Some(750000)
