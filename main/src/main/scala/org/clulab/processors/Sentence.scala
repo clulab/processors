@@ -5,7 +5,6 @@ import org.clulab.struct.{DirectedGraph, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
 import org.clulab.utils.SeqUtils
 
-import scala.collection.immutable.Range
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
@@ -178,8 +177,8 @@ class Sentence(
   def offset(offset: Int): Sentence = {
     if (offset == 0) this
     else {
-      val newStartOffsets = startOffsets.map(_ + offset)
-      val newEndOffsets = endOffsets.map(_ + offset)
+      val newStartOffsets = startOffsets.map(_ + offset).toArray
+      val newEndOffsets = endOffsets.map(_ + offset).toArray
       val newSentence = Sentence(raw, newStartOffsets, newEndOffsets, words)
 
       newSentence.tags = tags
