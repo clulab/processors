@@ -3,10 +3,10 @@ package org.clulab.odin
 import scala.io.Source
 
 import org.clulab.TestUtils._
-import org.scalatest.{ Matchers, FlatSpec }
+import org.clulab.utils.Test
 
 
-class TestVariables extends FlatSpec with Matchers {
+class TestVariables extends Test {
 
   def readResource(filename: String): String = {
     val source = Source.fromURL(getClass.getResource(filename))

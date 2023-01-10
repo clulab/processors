@@ -77,14 +77,13 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 
   /** Fetches the coreference chain for the mention with this sentence and head indices; None for singletons */
   def getChain(sentenceIndex:Int, headIndex:Int):Option[Iterable[CorefMention]] = {
-    getMention(sentenceIndex, headIndex).foreach(m => return getChain(m))
-    None
+    getMention(sentenceIndex, headIndex).map(getChain).getOrElse(None)
   }
 
   /** Fetches the coreference chain for this mention; None for singletons */
   def getChain(mention:CorefMention):Option[Iterable[CorefMention]] = {
-    if (mention.chainId == -1) return None
-    chains.get(mention.chainId)
+    if (mention.chainId == -1) None
+    else chains.get(mention.chainId)
   }
 
   /** All recognized chains, without singletons */

@@ -1,7 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.utils.ScienceUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
 /**
   * Tests the preprocessor
@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 8/14/15
   * Last Modified: Add tests for bibliographic reference removal.
  */
-class TestBioPreProcessor extends FlatSpec with Matchers {
+class TestBioPreProcessor extends Test {
 
   val su = new ScienceUtils
 

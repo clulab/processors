@@ -3,10 +3,10 @@ package org.clulab.odin
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.impl.{OdinCompileException, OdinException}
 import org.clulab.struct.Interval
-import org.scalatest._
+import org.clulab.utils.Test
 
 // Tests operating over Universal dependencies
-class TestGraphPattern extends FlatSpec with Matchers {
+class TestGraphPattern extends Test {
 
   "graph range {0,n}" should "not throw an exception" in {
     val rule = """
@@ -588,7 +588,7 @@ class TestGraphPattern extends FlatSpec with Matchers {
 }
 
 // Original tests using Stanford dependencies
-class TestGraphPatternSD extends FlatSpec with Matchers {
+class TestGraphPatternSD extends Test {
 
   "GraphPattern" should "support multiline patterns" in {
 

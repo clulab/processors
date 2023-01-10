@@ -2,11 +2,11 @@ package org.clulab.embeddings
 
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Sourcer
+import org.clulab.utils.Test
+
 import java.io.File
 
-import org.scalatest._
-
-class TestCompactWordEmbeddingMap extends FlatSpec with Matchers {
+class TestCompactWordEmbeddingMap extends Test {
 
   protected def matches(array1: IndexedSeq[Float], array2: IndexedSeq[Double], epsilon: Double): Boolean = {
     array1.zip(array2).forall { case (value1, value2) =>

@@ -78,7 +78,7 @@ class SeparatedLexiconNER(
   protected def findLongestMatch(sentence: Sentence): Array[String] = {
     val tokens = getTokens(sentence)
     // Calculate this just once here for all matchers.
-    val caseInsensitiveTokens = tokens.map(_.toLowerCase)
+    val caseInsensitiveTokens = tokens.map(_.toLowerCase).toArray
     val labels = new Array[String](tokens.length)
     var offset = 0
 

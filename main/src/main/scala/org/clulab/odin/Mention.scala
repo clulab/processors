@@ -9,7 +9,6 @@ import org.clulab.utils.DependencyUtils
 import org.clulab.odin.impl.StringMatcher
 
 
-@SerialVersionUID(1L)
 trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   /** A sequence of labels for this mention.

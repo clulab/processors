@@ -48,7 +48,7 @@ object SeasonNormalizer {
   def readNormsFromSource(source: Source): Map[String, SeasonRange] = {
     val norms = new mutable.HashMap[String, SeasonRange]()
 
-    CommentedStandardKbSource.read(source) { (season, normOpt) =>
+    CommentedStandardKbSource.read(source) { (season, normOpt, unitClassOpt) =>
       assert(normOpt.isDefined) // We're insisting on this.
 
       val norm = normOpt.get.split("--").map(_.trim)

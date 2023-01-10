@@ -28,12 +28,7 @@ class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
   }
 
   def contains(mod: Int, head: Int): Boolean = {
-    for(dep <- dependencies) {
-      if(dep.mod == mod && dep.head == head) {
-        return true
-      }
-    }
-    false
+    dependencies.exists { dep => dep.mod == mod && dep.head == head }
   }
 
   def isEmpty: Boolean = dependencies.isEmpty

@@ -1,9 +1,9 @@
 package org.clulab.numeric
 
 import org.clulab.scala.WrappedArray._
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestNumberParser extends FlatSpec with Matchers {
+class TestNumberParser extends Test {
 
 	"NumberParser" should "parse digits" in {
 		val text = "1200"

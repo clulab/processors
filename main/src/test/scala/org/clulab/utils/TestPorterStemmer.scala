@@ -1,9 +1,8 @@
 package org.clulab.utils
 
-import org.scalatest.{FlatSpec, Matchers}
 import StringUtils.porterStem
 
-class TestPorterStemmer extends FlatSpec with Matchers {
+class TestPorterStemmer extends Test {
   "PorterStemmer" should "stem words properly" in {
     porterStem("houses") should be ("hous")
     porterStem("cement") should be ("cement")

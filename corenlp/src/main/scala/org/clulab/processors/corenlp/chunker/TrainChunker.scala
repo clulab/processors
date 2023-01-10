@@ -76,8 +76,8 @@ object TrainChunker extends App {
         label.setTag(tag)
         label.set(classOf[CoreAnnotations.AnswerAnnotation], chunk)
         label
-      }
-    }
+      }.toArray
+    }.toArray
   }
 
 }

@@ -221,17 +221,13 @@ class CoNLLSRLToMetal {
   val KEEP_LABELS = Set("A0", "A1", "R-A0", "R-A1", "AM-TMP", "AM-LOC", "AM-MOD", "AM-NEG")
   val AX_LABELS = Set("A2", "A3", "A4", "A5")
 
-  def simplifyLabel(label:String): Option[String] = {
-    if(! SIMPLIFY_ARG_LABELS) return Some(label)
-
-    //
+  def simplifyLabel(label: String): Option[String] = {
+    if (!SIMPLIFY_ARG_LABELS) Some(label)
     // Keep: A0, A1, R-A0, R-A1, AM-TMP, AM-MNR, AM-LOC, AM-MOD, AM-ADV, AM-NEG
     // Change: A2-5 => Ax
-    //
-    if(KEEP_LABELS.contains(label)) Some(label)
-    else if(AX_LABELS.contains(label)) Some("Ax")
+    else if (KEEP_LABELS.contains(label)) Some(label)
+    else if (AX_LABELS.contains(label)) Some("Ax")
     else None
-
   }
 
   def mkToken(bits:Array[String]):CoNLLToken = {
@@ -252,33 +248,39 @@ class CoNLLSRLToMetal {
    * Merges tokens that were separated around dashes in CoNLL, to bring tokenization closer to the usual Treebank one
    * We need this because most parsers behave horribly if hyphenated words are tokenized around dashes
    */
-  def collapseHyphens(origSentence:Array[CoNLLToken], verbose:Boolean):Array[CoNLLToken] = {
-    if(USE_CONLL_TOKENIZATION) return origSentence
+  def collapseHyphens(origSentence: Array[CoNLLToken], verbose: Boolean): Array[CoNLLToken] = {
+    if (USE_CONLL_TOKENIZATION) origSentence
+    else {
+      val sent = new ArrayBuffer[CoNLLToken]()
 
-    val sent = new ArrayBuffer[CoNLLToken]()
-
-    var start = 0
-    while(start < origSentence.length) {
-      val end = findEnd(origSentence, start)
-      if(end > start + 1) {
-        val token = mergeTokens(origSentence, start, end, verbose)
-        sent += token
-      } else {
-        sent += origSentence(start)
+      var start = 0
+      while(start < origSentence.length) {
+        val end = findEnd(origSentence, start)
+        if(end > start + 1) {
+          val token = mergeTokens(origSentence, start, end, verbose)
+          sent += token
+        } else {
+          sent += origSentence(start)
+        }
+        start = end
       }
-      start = end
-    }
 
-    sent.toArray
+      sent.toArray
+    }
   }
 
-  def findEnd(sent:Array[CoNLLToken], start:Int):Int = {
-    var end = start + 1
-    while(end < sent.length) {
-      if(sent(end).pos != "HYPH") return end
-      else end = end + 2
+  def findEnd(sent: Array[CoNLLToken], start: Int): Int = {
+    @annotation.tailrec
+    def loop(end: Int): Int = {
+      if (end < sent.length) {
+        if (sent(end).pos != "HYPH") end
+        else loop(end + 2)
+      }
+      else
+        sent.length
     }
-    sent.length
+
+    loop(start + 1)
   }
 
   def mergeTokens(sent:Array[CoNLLToken], start:Int, end:Int, verbose:Boolean):CoNLLToken = {

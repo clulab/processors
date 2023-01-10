@@ -36,35 +36,35 @@ trait GraphPattern {
     // if not all required arguments were found, return Nil
     val reqNames = required.map(_.name)
     val foundAllRequired = reqNames.forall(reqExtractions.contains)
-    if (!foundAllRequired) return Nil
+    if (!foundAllRequired) Nil
+    else {
+      // get the arguments out of the extraction
+      // while preserving the extraction groups
+      val reqArgs: Seq[Seq[(String, Seq[Mention])]] = for {
+        (name, mentionsWithPathsGroups) <- reqExtractions.toSeq
+      } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
-    // get the arguments out of the extraction
-    // while preserving the extraction groups
-    val reqArgs: Seq[Seq[(String, Seq[Mention])]] = for {
-      (name, mentionsWithPathsGroups) <- reqExtractions.toSeq
-    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
+      // get the paths, resulting in an unserializable MapLike
+      val reqPaths = reqExtractions.map { case (k, v) => k -> v.flatten.toMap }
 
-    // get the paths, resulting in an unserializable MapLike
-    val reqPaths = reqExtractions.map { case (k, v) => k -> v.flatten.toMap }
+      // extract optional arguments
+      val optExtractions = extractArguments(optional, tokens, sent, doc, state)
 
-    // extract optional arguments
-    val optExtractions = extractArguments(optional, tokens, sent, doc, state)
+      // get the arguments out of the extraction
+      val optArgs: Seq[Seq[(String, Seq[Mention])]] = for {
+        (name, mentionsWithPathsGroups) <- optExtractions.toSeq
+      } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
 
-    // get the arguments out of the extraction
-    val optArgs: Seq[Seq[(String, Seq[Mention])]] = for {
-      (name, mentionsWithPathsGroups) <- optExtractions.toSeq
-    } yield mentionsWithPathsGroups.map(g => name -> g.map(_._1))
+      // get the paths, resulting in an unserializable MapLike
+      val optPaths = optExtractions.map { case (k, v) => k -> v.flatten.toMap }
 
-    // get the paths, resulting in an unserializable MapLike
-    val optPaths = optExtractions.map { case (k, v) => k -> v.flatten.toMap }
-
-    // group the paths together, ensuring the result is a serializable Map
-    val paths: Paths = Map.empty ++ reqPaths ++ optPaths
-    // group the arguments together
-    val args: Seq[Seq[(String, Seq[Mention])]] = reqArgs ++ optArgs
-    // return cartesian product of arguments
-    product(args).map(a => (a.toMap, paths))
-
+      // group the paths together, ensuring the result is a serializable Map
+      val paths: Paths = Map.empty ++ reqPaths ++ optPaths
+      // group the arguments together
+      val args: Seq[Seq[(String, Seq[Mention])]] = reqArgs ++ optArgs
+      // return cartesian product of arguments
+      product(args).map(a => (a.toMap, paths))
+    }
   }
 
   // Extracts the given arguments from any of the tokens in the interval.
