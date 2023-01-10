@@ -1,10 +1,10 @@
 package org.clulab.processors
 
-import org.clulab.processors.corenlp.{CoreNLPSentimentAnalyzer, CoreNLPProcessor}
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.processors.corenlp.{CoreNLPProcessor, CoreNLPSentimentAnalyzer}
+import org.clulab.utils.Test
 
 
-class TestCoreNLPSentimentAnalyzer extends FlatSpec with Matchers {
+class TestCoreNLPSentimentAnalyzer extends Test {
 
   val proc = new CoreNLPProcessor()
 

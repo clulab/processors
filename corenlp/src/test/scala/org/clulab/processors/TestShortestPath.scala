@@ -1,14 +1,14 @@
 package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.scalatest.{Matchers, FlatSpec}
+import org.clulab.utils.Test
 
 /**
  *
  * User: mihais
  * Date: 9/19/15
  */
-class TestShortestPath extends FlatSpec with Matchers {
+class TestShortestPath extends Test {
   val pp = new FastNLPProcessor()
 
   "FastNLPProcessor" should "find a valid shortest dependency path" in {

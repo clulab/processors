@@ -2,9 +2,9 @@ package org.clulab.openie.filtering
 
 import org.clulab.openie.IETestUtils.jsonStringToDocument
 import org.clulab.struct.Interval
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestStopWordManager extends FlatSpec with Matchers {
+class TestStopWordManager extends Test {
 
   behavior of "StopWordManager"
   val stopManager: StopWordManager = StopWordManager.fromConfig()

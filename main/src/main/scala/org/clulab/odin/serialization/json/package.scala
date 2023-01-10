@@ -35,7 +35,7 @@ package object json {
     case _ => JNothing
   }
 
-  implicit val formats = org.json4s.DefaultFormats
+  implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
   implicit class MentionOps(m: Mention) extends JSONSerialization with Equivalency {
 
@@ -253,7 +253,7 @@ package object json {
   implicit class OdinPathOps(paths: Map[String, Map[Mention, odin.SynPath]]) extends JSONSerialization {
     // simplify paths by ignoring Mentions
     def jsonAST: JValue = {
-      val simplePathMap: Map[String, Map[String, List[JValue]]] = paths.map{ case (key, innermap) =>
+      val simplePathMap: Map[String, Map[String, List[JValue]]] = paths.map { case (key, innermap) =>
         val pairs = for {
           (m: Mention, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)

@@ -114,7 +114,7 @@ case class IntTrieNode(token:String, var completePath: Int, var children: Option
       if (labels.isDefined)
         stringBuilder.append(labels.get(completePath))
     }
-    children.foreach { children: ListBuffer[IntTrieNode] =>
+    children.foreach { (children: ListBuffer[IntTrieNode]) =>
       stringBuilder.append(" (")
       children.zipWithIndex.foreach { case (child: IntTrieNode, index: Int) =>
         if (index > 0)

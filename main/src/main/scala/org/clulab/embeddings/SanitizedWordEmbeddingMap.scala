@@ -68,12 +68,14 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
    * @param w2 The second word
    * @return The cosine similarity of the two corresponding vectors
    */
-  def similarity(w1:String, w2:String):Double = {
+  def similarity(w1: String, w2: String): Double = {
     val v1o = getEmbedding(w1)
-    if(v1o.isEmpty) return -1
-    val v2o = getEmbedding(w2)
-    if(v2o.isEmpty) return -1
-    SanitizedWordEmbeddingMap.dotProduct(v1o.get, v2o.get)
+    if (v1o.isEmpty) -1
+    else {
+      val v2o = getEmbedding(w2)
+      if (v2o.isEmpty) -1
+      else SanitizedWordEmbeddingMap.dotProduct(v1o.get, v2o.get)
+    }
   }
 
   /** Adds the content of src to dest, in place */
@@ -109,9 +111,11 @@ class SanitizedWordEmbeddingMap(matrixConstructor: => Map[String, Array[Double]]
         add(v, vo.get)
       }
     }
-    if(! found) return List()
-    SanitizedWordEmbeddingMap.norm(v)
-    mostSimilarWords(v, howMany, None)
+    if (!found) List()
+    else {
+      SanitizedWordEmbeddingMap.norm(v)
+      mostSimilarWords(v, howMany, None)
+    }
   }
 
   def mostSimilarWords(word: String, howMany: Int, filterPredicate: Option[String => Boolean] = None): List[(String,
@@ -476,16 +480,20 @@ object SanitizedWordEmbeddingMap {
     (m.toMap, dims)
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(filename: String): SanitizedWordEmbeddingMap = fromBinary(new File(filename))
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(file: File): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(FileUtils.readFileToByteArray(file)))
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(inputStream: InputStream): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(IOUtils.toByteArray(inputStream)))
   }
 
+  @annotation.nowarn("cat=deprecation")
   def fromBinary(bytes: Array[Byte]): SanitizedWordEmbeddingMap = {
     new SanitizedWordEmbeddingMap(readBinaryMatrix(bytes))
   }
@@ -547,6 +555,7 @@ object SanitizedWordEmbeddingMap {
     m.toMap
   }
 
+  @annotation.nowarn("cat=deprecation")
   def main(args:Array[String]): Unit = {
     val w2v = new SanitizedWordEmbeddingMap(args(0), None)
 

@@ -1,15 +1,14 @@
 package org.clulab.learning
 
-import org.scalatest._
 import libsvm._
-
 import org.clulab.TestUtils._
+import org.clulab.utils.Test
 
 /**
   * User: mihais, dfried, danebell
   * Date: 11/20/17
   */
-class TestLibSvmRegression extends FlatSpec with Matchers {
+class TestLibSvmRegression extends Test {
   "LibSVMRegression" should "work with RVFDataset" in {
     val regression = new LibSvmRegression[String](kernelType = LinearKernel)
     val dataset = new RVFRegDataset[String]()

@@ -30,10 +30,10 @@ object Counters {
       }
     }
 
-    if (lsq1 != 0.0 && lsq2 != 0.0) {
-      return dotProduct / (math.sqrt(lsq1) * math.sqrt(lsq2))
-    }
-    0.0
+    if (lsq1 != 0.0 && lsq2 != 0.0)
+      dotProduct / (math.sqrt(lsq1) * math.sqrt(lsq2))
+    else
+      0.0
   }
 
   def dotProduct[T](c1:Counter[T], c2:Counter[T]):Double = {

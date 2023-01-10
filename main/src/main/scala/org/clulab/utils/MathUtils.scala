@@ -4,6 +4,7 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 /**
  * Math utility methods useful for stats and ML
@@ -60,15 +61,12 @@ object MathUtils {
    * @return
    */
   def denseSoftmax(vector: Array[Double], gamma: Double = 1.0): Array[Double] = {
-    val scoreArray = if (gamma != 1.0) for{
-      v <- vector
-    } yield gamma * v
-    else vector
-
+    val scoreArray =
+        if (gamma != 1.0) vector.map(gamma * _).toArray
+        else vector
     val logSumStatic = logSum(scoreArray)
-    for {
-      s <- vector
-    } yield math.exp((gamma * s) - logSumStatic)
+
+    vector.map { value => math.exp((gamma * value) - logSumStatic) }.toArray
   }
 
   /**
@@ -78,15 +76,12 @@ object MathUtils {
    * @return
    */
   def denseSoftmaxFloat(vector: Array[Float], gamma: Float = 1.0f): Array[Float] = {
-    val scoreArray = if (gamma != 1.0f) for{
-      v <- vector
-    } yield gamma * v
-    else vector
-
+    val scoreArray =
+        if (gamma != 1.0f) vector.map(gamma * _).toArray
+        else vector
     val logSumStatic = logSumFloat(scoreArray)
-    for {
-      s <- vector
-    } yield math.exp((gamma * s) - logSumStatic).toFloat
+
+    vector.map { value => math.exp((gamma * value) - logSumStatic).toFloat }.toArray
   }
 
   def logSum(logInputs:IndexedSeq[Double]):Double =
@@ -114,62 +109,60 @@ object MathUtils {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 
-    if(fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
-      return Double.NegativeInfinity
-
-    var maxIdx = fromIndex
-    var max = logInputs(fromIndex)
-    for (i <- fromIndex + 1 until toIndex) {
-      if (logInputs(i) > max) {
-        maxIdx = i
-        max = logInputs(i)
+    if (fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
+      Double.NegativeInfinity
+    else {
+      var maxIdx = fromIndex
+      var max = logInputs(fromIndex)
+      for (i <- fromIndex + 1 until toIndex) {
+        if (logInputs(i) > max) {
+          maxIdx = i
+          max = logInputs(i)
+        }
       }
-    }
 
-    var haveTerms = false
-    var intermediate = 0.0
-    var cutoff = max - LogTolerance
-    for (i <- fromIndex until toIndex) {
-      if (i != maxIdx && logInputs(i) > cutoff) {
-        haveTerms = true
-        intermediate += math.exp(logInputs(i) - max)
+      var haveTerms = false
+      var intermediate = 0.0
+      var cutoff = max - LogTolerance
+      for (i <- fromIndex until toIndex) {
+        if (i != maxIdx && logInputs(i) > cutoff) {
+          haveTerms = true
+          intermediate += math.exp(logInputs(i) - max)
+        }
       }
+      if (haveTerms) max + math.log(1.0 + intermediate)
+      else max
     }
-    if (haveTerms) {
-      return max + math.log(1.0 + intermediate)
-    }
-    max
   }
 
   def logSumFloat(logInputs:IndexedSeq[Float], fromIndex:Int, toIndex:Int):Float = {
     if (logInputs.length == 0)
       throw new IllegalArgumentException()
 
-    if(fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
-      return Float.NegativeInfinity
-
-    var maxIdx = fromIndex
-    var max = logInputs(fromIndex)
-    for (i <- fromIndex + 1 until toIndex) {
-      if (logInputs(i) > max) {
-        maxIdx = i
-        max = logInputs(i)
+    if (fromIndex >= 0 && toIndex < logInputs.length && fromIndex >= toIndex)
+      Float.NegativeInfinity
+    else {
+      var maxIdx = fromIndex
+      var max = logInputs(fromIndex)
+      for (i <- fromIndex + 1 until toIndex) {
+        if (logInputs(i) > max) {
+          maxIdx = i
+          max = logInputs(i)
+        }
       }
-    }
 
-    var haveTerms = false
-    var intermediate = 0.0f
-    var cutoff = max - LogTolerance
-    for (i <- fromIndex until toIndex) {
-      if (i != maxIdx && logInputs(i) > cutoff) {
-        haveTerms = true
-        intermediate += math.exp(logInputs(i) - max).toFloat
+      var haveTerms = false
+      var intermediate = 0.0f
+      var cutoff = max - LogTolerance
+      for (i <- fromIndex until toIndex) {
+        if (i != maxIdx && logInputs(i) > cutoff) {
+          haveTerms = true
+          intermediate += math.exp(logInputs(i) - max).toFloat
+        }
       }
+      if (haveTerms) max + math.log(1.0 + intermediate).toFloat
+      else max
     }
-    if (haveTerms) {
-      return max + math.log(1.0 + intermediate).toFloat
-    }
-    max
   }
 
   /**
@@ -191,7 +184,7 @@ object MathUtils {
   }
 
   // Manifest: http://stackoverflow.com/questions/6085085/why-cant-i-create-an-array-of-generic-type
-  def nBest[T: Manifest](scoringFunction: T=>Double)(xs: Iterable[T], howMany:Int): List[
+  def nBest[T: ClassTag](scoringFunction: T=>Double)(xs: Iterable[T], howMany:Int): List[
     (T, Double)] = {
     val bestd = new Array[Double](howMany)
     val bestw = new Array[T](howMany)
@@ -260,21 +253,21 @@ object MathUtils {
    * This is useful to pretty print P/R/F1 scores
    */
   def round(d: Double, decimals: Int): Double = {
-    if(decimals < 0) {
-      return d // do not round when decimals is set to a negative value
-    }
+    if (decimals < 0)
+      d // do not round when decimals is set to a negative value
+    else {
+      var zeros = 1
+      var i = 0
+      while (i < decimals + 2) {
+        zeros *= 10
+        i += 1
+      }
 
-    var zeros = 1
-    var i = 0
-    while (i < decimals + 2) {
-      zeros *= 10
-      i += 1
+      val v = (d * zeros).toInt.toDouble / 100
+      v
     }
-
-    val v = (d * zeros).toInt.toDouble / 100
-    v
   }
-
+  
   /**
    *
    * @param coll                         - the collection on which to call the methods
@@ -283,14 +276,16 @@ object MathUtils {
    *                                     viewed as Seq[T] via an implicit conversion
    * @param numeric                      - implicit param to be able to use the same methods for all number types
    */
-  implicit class EnhancedNumericCollection[T, CT](coll: CT)(implicit collectionToSequenceImplicit: CT => Seq[T], numeric: Numeric[T]) {
+  implicit class EnhancedNumericCollection[T: ClassTag, CT: ClassTag](_coll: CT)(implicit collectionToSequenceImplicit: CT => IndexedSeq[T], numeric: Numeric[T]) {
+    val coll = collectionToSequenceImplicit(_coll)
+
     def mean(): Double = {
       // coll.sum might overflow
       var sum = 0.0
       for (n <- coll) {
         sum += numeric.toDouble(n)
       }
-      sum / (coll.size.toDouble)
+      sum / (coll.length.toDouble)
     }
 
     def variance(): Double = {

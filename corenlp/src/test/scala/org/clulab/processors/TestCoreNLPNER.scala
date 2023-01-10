@@ -1,9 +1,9 @@
 package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestCoreNLPNER extends FlatSpec with Matchers {
+class TestCoreNLPNER extends Test {
   val proc = new FastNLPProcessor()
 
   "CoreNLP" should "recognize NEs correctly in 1 sentence" in {

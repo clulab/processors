@@ -1,13 +1,13 @@
 package org.clulab.odin
 
 import org.clulab.TestUtils._
-import org.scalatest.{ FlatSpec, Matchers }
+import org.clulab.utils.Test
 
 
 /**
   * Tests for taxonomy inclusion in Mention labels.
   */
-class TestTaxonomy extends FlatSpec with Matchers {
+class TestTaxonomy extends Test {
 
   val rules =
     """

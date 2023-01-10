@@ -90,16 +90,17 @@ object RankingClassifier {
    * @return
    */
   def apply[F](properties:Properties):RankingClassifier[F] = {
-    if(! properties.containsKey("classifierClass")) {
-      return new SVMRankingClassifier[F](properties)
-      //return new PerceptronRankingClassifier[F](properties)
+    if (!properties.containsKey("classifierClass")) {
+      new SVMRankingClassifier[F](properties)
+      // new PerceptronRankingClassifier[F](properties)
     }
-
-    properties.getProperty("classifierClass") match {
-      case "SVMRankingClassifier" => new SVMRankingClassifier[F](properties)
-      case "PerceptronRankingClassifier" => new PerceptronRankingClassifier[F](properties)
-      case _ => throw new RuntimeException("ERROR: unknown ranking classifier type: " +
-        properties.getProperty("classifierType") + "!")
+    else {
+      properties.getProperty("classifierClass") match {
+        case "SVMRankingClassifier" => new SVMRankingClassifier[F](properties)
+        case "PerceptronRankingClassifier" => new PerceptronRankingClassifier[F](properties)
+        case _ => throw new RuntimeException("ERROR: unknown ranking classifier type: " +
+          properties.getProperty("classifierType") + "!")
+      }
     }
   }
 }

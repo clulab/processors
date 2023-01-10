@@ -14,14 +14,14 @@ object Closer {
 
     implicit def releasableAutoCloseable[Resource <: AutoCloseable]: Releasable[Resource] = {
       new Releasable[Resource] {
-        def release(resource: Resource): Unit = resource.close()
+        def release(resource: Resource): Unit = Option(resource).foreach(_.close())
       }
     }
 
     // In Scala 2.11, Source does not inherit from Closeable, so one has to tell Closer how to close() it.
     implicit def releasableSource[Resource <: Source]: Releasable[Resource] = {
       new Releasable[Resource] {
-        def release(resource: Resource): Unit = resource.close()
+        def release(resource: Resource): Unit = Option(resource).foreach(_.close())
       }
     }
   }

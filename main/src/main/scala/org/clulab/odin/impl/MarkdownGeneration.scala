@@ -339,7 +339,8 @@ object MarkdownGeneration {
       case i: IntervalPriority => s"`(${i.start}-${i.end})`"
       case l: LowerBoundPriority => s"`${l.start}+`"
       case s: SparsePriority => s"`{${s.values.mkString(", ")}}`"
-      case _ => ???
+      // case _ => ???
+      case null => ??? // Scala 3 wants this instead of _.
     }
   }
 

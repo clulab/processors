@@ -85,27 +85,28 @@ object NumberParser {
 
   def parseWords(words: Seq[String]): Option[Double] = {
     // if single token then return corresponding number
-    if (words.length == 1) {
-      return americanNumberSystem.get(words.head)
-    }
-    try {
-      // accumulate result here
-      var totalSum: Double = 0
-      var remainingWords = words.toArray
-      for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand")) {
-        val index = remainingWords.indexOf(w)
-        if (index >= 0) {
-          val multiplier = numberFormation(remainingWords.slice(0, index))
-          remainingWords = remainingWords.drop(index + 1)
-          totalSum += multiplier * americanNumberSystem(w)
+    if (words.length == 1)
+      americanNumberSystem.get(words.head)
+    else {
+      try {
+        // accumulate result here
+        var totalSum: Double = 0
+        var remainingWords = words.toArray
+        for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand")) {
+          val index = remainingWords.indexOf(w)
+          if (index >= 0) {
+            val multiplier = numberFormation(remainingWords.slice(0, index))
+            remainingWords = remainingWords.drop(index + 1)
+            totalSum += multiplier * americanNumberSystem(w)
+          }
         }
+        // handle hundreds
+        totalSum += numberFormation(remainingWords)
+        // return number
+        Some(totalSum)
+      } catch {
+        case _: Exception => None
       }
-      // handle hundreds
-      totalSum += numberFormation(remainingWords)
-      // return number
-      Some(totalSum)
-    } catch {
-      case _: Exception => None
     }
   }
 

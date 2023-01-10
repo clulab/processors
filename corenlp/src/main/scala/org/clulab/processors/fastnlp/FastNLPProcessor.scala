@@ -46,14 +46,14 @@ class FastNLPProcessor(
   lazy val stanfordDepParser: DependencyParser = fetchStanfordParser()
 
   override def parse(doc:Document): Unit = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
+    basicSanityCheck(doc).foreach { annotation =>
+      if (doc.sentences.head.tags.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the POS tagger before parsing!")
+      if (doc.sentences.head.lemmas.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the lemmatizer before parsing!")
 
-    parseWithStanford(doc, annotation.get)
+      parseWithStanford(doc, annotation)
+    }
   }
 
   private def parseWithStanford(doc:Document, annotation:Annotation): Unit = {

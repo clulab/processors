@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
 /**
   *
@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
   * Date: 3/21/17
   * Last Modified: Modify timing test to try and get the test to pass.
   */
-class TestTokenizers extends FlatSpec with Matchers {
+class TestTokenizers extends Test {
   val shallow = new ShallowNLPProcessor(internStrings = false)
   val clu = new CluProcessor()
 
