@@ -1,10 +1,17 @@
 package org.clulab.utils
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.utils.MathUtils._
-import org.scalatest._
+import org.clulab.utils.MathUtils.EnhancedNumericCollection
 
-class TestMathUtils extends FlatSpec with Matchers {
+import scala.language.implicitConversions
+import scala.reflect.ClassTag
+
+class TestMathUtils extends Test {
+  // These are extra for Scala 3, but they don't seem to hurt Scala 2.
+  implicit final def seqToIndexedSeq[T: ClassTag](seq: Seq[T]): IndexedSeq[T] = seq.toIndexedSeq
+  implicit final def seqToEnhancedNumericCollection[T: ClassTag](seq: Seq[T])(implicit numeric: Numeric[T]): EnhancedNumericCollection[T, Seq[T]] = new EnhancedNumericCollection(seq.toIndexedSeq)
+  implicit final def arrToEnhancedNumericCollection[T: ClassTag](arr: Array[T])(implicit numeric: Numeric[T]): EnhancedNumericCollection[T, Seq[T]] = new EnhancedNumericCollection(arr.toIndexedSeq)
+
   val seq = Seq(0.64819654, 0.31665825, 0.95268787, 0.12137638, 0.12971271)
 
   it should "work with Seq" in {

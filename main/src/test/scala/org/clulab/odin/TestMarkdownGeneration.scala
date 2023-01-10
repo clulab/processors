@@ -2,12 +2,11 @@ package org.clulab.odin
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-
 import org.clulab.odin.impl.RuleReader
 import org.clulab.utils.FileUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestMarkdownGeneration extends FlatSpec with Matchers {
+class TestMarkdownGeneration extends Test {
 
   behavior of "MarkdownGeneration"
 

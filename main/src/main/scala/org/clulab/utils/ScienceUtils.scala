@@ -165,17 +165,17 @@ object ScienceUtils {
     assert(is != null, s"Failed to find resource file $UNICODE_TO_ASCII in the classpath!")
     new BufferedReader(new InputStreamReader(is, charset)).autoClose { reader =>
       var done = false
-      while(! done) {
+      while (!done) {
         var line = normalizeUnicode(reader.readLine())
-      if(line == null) {
+        if (line == null) {
           done = true
         } else {
           line = line.trim
-        if(! line.startsWith("#")) {
+          if (!line.startsWith("#")) {
             val tokens = line.split("\\t")
-          if(tokens.length > 2)
+            if (tokens.length > 2)
               throw new RuntimeException(s"ERROR: invalid line [$line] in resource file $UNICODE_TO_ASCII")
-          if(tokens.length == 1) {
+            if (tokens.length == 1) {
               map += (toUnicodeChar(tokens(0)) -> "")
             } else {
               map += (toUnicodeChar(tokens(0)) -> tokens(1))

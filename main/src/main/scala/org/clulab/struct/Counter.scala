@@ -117,7 +117,7 @@ class Counter[T] (
 
   /** Sorts counts in descending order, if argument is true. */
   def sorted(descending:Boolean):List[(T, Double)] = {
-    val vs:List[(T,Double)] = keySet.toList.map(k => Tuple2(k, getCount(k)))
+    val vs:List[(T,Double)] = keySet.toList.map(k => (k, getCount(k)))
     val sortOrder = if (descending) Ordering[Double].reverse else Ordering[Double]
     vs.sortBy(_._2)(sortOrder)
   }

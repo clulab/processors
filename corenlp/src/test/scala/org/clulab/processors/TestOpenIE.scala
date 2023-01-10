@@ -1,16 +1,16 @@
 package org.clulab.processors
 
-import java.io.{PrintWriter, StringWriter}
-
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.serialization.DocumentSerializer
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
+
+import java.io.{PrintWriter, StringWriter}
 
 import scala.collection.mutable
 
-class TestOpenIE extends FlatSpec with Matchers {
+class TestOpenIE extends Test {
 
   private val text = "Obama was born in Hawaii. He is our president."
   private val fastNLP= new FastNLPProcessor(withRelationExtraction = true)

@@ -140,10 +140,9 @@ object Datasets {
 
   /** The actual scaling formula taken from svm-scale */
   private def scale(value:Double, min:Double, max:Double, lower:Double, upper:Double):Double = {
-    if(min == max) return upper
-
+    if (min == max) upper
     // the result will be a value in [lower, upper]
-    lower + (upper - lower) * (value - min) / (max - min)
+    else lower + (upper - lower) * (value - min) / (max - min)
   }
 
   /**

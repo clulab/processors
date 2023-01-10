@@ -117,26 +117,25 @@ object RnnLayer {
                  paramPrefix: String,
                  parameters: ParameterCollection,
                  inputSize: Int): Option[IntermediateLayer] = {
-    if (!config.contains(paramPrefix)) {
-      return None
+    if (!config.contains(paramPrefix)) None
+    else {
+      val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
+      val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
+      val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
+      val rnnType = config.getArgString(paramPrefix + ".type", Some("lstm"))
+      val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DEFAULT_DROPOUT_PROB))
+
+      val wordFwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
+      val wordBwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
+
+      val layer = new RnnLayer(
+        parameters,
+        inputSize, numLayers, rnnStateSize, useHighwayConnections,
+        rnnType, wordFwRnnBuilder, wordBwRnnBuilder,
+        dropoutProb
+      )
+
+      Some(layer)
     }
-
-    val numLayers = config.getArgInt(paramPrefix + ".numLayers", Some(1))
-    val rnnStateSize = config.getArgInt(paramPrefix + ".rnnStateSize", None)
-    val useHighwayConnections = config.getArgBoolean(paramPrefix + ".useHighwayConnections", Some(false))
-    val rnnType = config.getArgString(paramPrefix + ".type", Some("lstm"))
-    val dropoutProb = config.getArgFloat(paramPrefix + ".dropoutProb", Some(RnnLayer.DEFAULT_DROPOUT_PROB))
-
-    val wordFwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
-    val wordBwRnnBuilder = mkBuilder(rnnType, numLayers, inputSize, rnnStateSize, parameters)
-
-    val layer = new RnnLayer(
-      parameters,
-      inputSize, numLayers, rnnStateSize, useHighwayConnections,
-      rnnType, wordFwRnnBuilder, wordBwRnnBuilder,
-      dropoutProb
-    )
-
-    Some(layer)
   }
 }

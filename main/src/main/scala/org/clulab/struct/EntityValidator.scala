@@ -8,7 +8,6 @@ import org.clulab.sequences.LexiconNER
   * User: mihais
   * Date: 10/24/16
   */
-@SerialVersionUID(1000L)
 trait EntityValidator extends Serializable {
   def validMatch(sentence: Sentence, start:Int, end:Int):Boolean
 

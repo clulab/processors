@@ -1,17 +1,16 @@
 package org.clulab.processors
 
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.scalatest._
-
 import org.clulab.processors.corenlp.CoreNLPProcessor
+import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.CorefMention
+import org.clulab.utils.Test
 
 /**
  * User: mihais
  * Date: 3/3/13
  * Last Modified: Update for Scala 2.12: java converters.
  */
-class TestCoreNLPProcessor extends FlatSpec with Matchers {
+class TestCoreNLPProcessor extends Test {
   val proc = new CoreNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "CoreNLPProcessor" should "extract relations correctly with OpenIE" in {

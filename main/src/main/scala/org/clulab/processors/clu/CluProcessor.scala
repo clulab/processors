@@ -645,7 +645,7 @@ class CluProcessor protected (
   def cheapLemmatize(doc:Document): Unit = {
     basicSanityCheck(doc)
     for(sent <- doc.sentences) {
-      val lemmas = sent.words.map(_.toLowerCase())
+      val lemmas = sent.words.map(_.toLowerCase()).toArray
       sent.lemmas = Some(lemmas)
     }
   }
@@ -685,39 +685,34 @@ class CluProcessor protected (
   }
 
   private def hasDep(dependencies: Array[(Int, String)], label: String): Boolean = {
-    for(d <- dependencies) {
-      if (d._2 == label) {
-        return true
-      }
-    }
-
-    false
+    dependencies.exists { d => d._2 == label }
   }
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
 
-    if(sentence.universalBasicDependencies.isEmpty) return origPreds
-    if(sentence.tags.isEmpty) return origPreds
+    if (sentence.universalBasicDependencies.isEmpty) origPreds
+    else if (sentence.tags.isEmpty) origPreds
+    else {
+      val preds = origPreds.toSet
+      val newPreds = new mutable.HashSet[Int]()
+      newPreds ++= preds
 
-    val preds = origPreds.toSet
-    val newPreds = new mutable.HashSet[Int]()
-    newPreds ++= preds
+      val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
+      val words = sentence.words
+      val tags = sentence.tags.get
 
-    val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
-    val words = sentence.words
-    val tags = sentence.tags.get
-
-    for(i <- words.indices) {
-      if(! preds.contains(i)) {
-        // -ing NN with a compound outgoing dependency
-        if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
-           outgoing.length > i && hasDep(outgoing(i), "compound")) {
-          newPreds += i
+      for(i <- words.indices) {
+        if(! preds.contains(i)) {
+          // -ing NN with a compound outgoing dependency
+          if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
+            outgoing.length > i && hasDep(outgoing(i), "compound")) {
+            newPreds += i
+          }
         }
       }
-    }
 
-    newPreds.toVector.sorted
+      newPreds.toVector.sorted
+    }
   }
 
   override def srl(doc: Document): Unit = {

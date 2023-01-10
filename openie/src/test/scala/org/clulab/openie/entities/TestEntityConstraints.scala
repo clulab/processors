@@ -6,10 +6,10 @@ import org.clulab.struct.Interval
 import org.clulab.serialization.json.JSONSerializer
 import org.json4s.jackson.JsonMethods._
 import org.clulab.openie.IETestUtils._
-import org.scalatest.{ FlatSpec, Matchers }
+import org.clulab.utils.Test
 
 
-class TestEntityConstraints extends FlatSpec with Matchers {
+class TestEntityConstraints extends Test {
 
   "Uneven parentheses" should "be disallowed in entities" in {
 

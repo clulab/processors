@@ -346,7 +346,7 @@ object LexiconNER {
     while (offset < length) {
       val notOutsideCount = countWhile(src, offset, isNotOutside)
       // Check that there is not anything in dst that should not be overwritten.
-      if (!ArrayView(dst, offset, offset + notOutsideCount).exists(isNotOutside))
+      if (!ArrayView(dst, offset, offset + notOutsideCount).exists(isNotOutside(_)))
         Array.copy(src, offset, dst, offset, notOutsideCount)
       offset += notOutsideCount
 

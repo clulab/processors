@@ -2,11 +2,11 @@ package org.clulab.odin.serialization.json
 
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
+import org.clulab.utils.Test
 import org.json4s._
-import org.scalatest._
+import org.json4s.Formats
 
-
-class TestJSONSerializer extends FlatSpec with Matchers {
+class TestJSONSerializer extends Test {
 
   val rules =
     """
