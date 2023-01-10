@@ -173,6 +173,25 @@ class Sentence(
 
     reverted
   }
+
+  def offset(offset: Int): Sentence = {
+    if (offset == 0) this
+    else {
+      val newStartOffsets = startOffsets.map(_ + offset)
+      val newEndOffsets = endOffsets.map(_ + offset)
+      val newSentence = Sentence(raw, newStartOffsets, newEndOffsets, words)
+
+      newSentence.tags = tags
+      newSentence.lemmas = lemmas
+      newSentence.entities = entities
+      newSentence.norms = norms
+      newSentence.chunks = chunks
+      newSentence.syntacticTree = syntacticTree
+      newSentence.graphs = graphs
+      newSentence.relations = relations
+      newSentence
+    }
+  }
 }
 
 object Sentence {

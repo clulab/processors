@@ -12,54 +12,6 @@ trait Processor {
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization. */
   def mkDocument (text:String, keepText:Boolean = false): Document
 
-  protected def offsetSentence(sentence: Sentence, offset: Int): Sentence = {
-    val raw = sentence.raw
-    val startOffsets = sentence.startOffsets.map(_ + offset)
-    val endOffsets = sentence.endOffsets.map(_ + offset)
-    val words = sentence.words
-    val newSentence = Sentence(raw, startOffsets, endOffsets, words)
-
-    newSentence.tags = sentence.tags
-    newSentence.lemmas = sentence.lemmas
-    newSentence.entities = sentence.entities
-    newSentence.norms = sentence.norms
-    newSentence.chunks = sentence.chunks
-    newSentence.syntacticTree = sentence.syntacticTree
-    newSentence.graphs = sentence.graphs
-    newSentence.relations = sentence.relations
-    newSentence
-  }
-
-  protected def offsetDocument(document: Document, offset: Int): Document = {
-    if (offset == 0) document
-    else {
-      val offsetSentences = document.sentences.map(offsetSentence(_, offset))
-      val newDocument = replaceSentences(document, offsetSentences)
-
-      newDocument
-    }
-  }
-
-  protected def replaceSentences(document: Document, sentences: Array[Sentence]): Document = {
-    val newDocument = new Document(sentences)
-
-    newDocument.id = document.id
-    newDocument.text = document.text
-
-    require(newDocument.coreferenceChains.isEmpty)
-    require(document.coreferenceChains.isEmpty)
-
-    document.getAttachmentKeys.foreach { attachmentKey =>
-      require(newDocument.getAttachment(attachmentKey).forall(_ == document.getAttachment(attachmentKey).get))
-      newDocument.addAttachment(attachmentKey, document.getAttachment(attachmentKey).get)
-    }
-
-    val dctOpt = document.getDCT
-    dctOpt.foreach(newDocument.setDCT)
-
-    newDocument
-  }
-
   // The documents here were created with Processor.mkDocument, which could have created a subclassed
   // Document or documents with certain fields already filled in.  This implementation only handles
   // known document fields and then only performs rudimentary requirement checks to make sure that
@@ -106,7 +58,7 @@ trait Processor {
         val documents = texts.map(mkDocument(_, keepText))
         val offsets = texts.zip(trailers).scanLeft(0) { case (offset, (text, trailer)) => offset + text.length + trailer.length }
         val offsetDocuments = documents.zip(offsets).map { case (document, offset) =>
-          offsetDocument(document, offset)
+          document.offset(offset)
         }
         val combinedTextOpt =
             if (keepText) {

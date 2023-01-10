@@ -184,7 +184,36 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         }
       }
     })
+  }
 
+  protected def replaceSentences(sentences: Array[Sentence]): Document = {
+    val newDocument = new Document(sentences)
+
+    newDocument.id = id
+    newDocument.text = text
+
+    require(newDocument.coreferenceChains.isEmpty)
+    require(coreferenceChains.isEmpty)
+
+    getAttachmentKeys.foreach { attachmentKey =>
+      require(newDocument.getAttachment(attachmentKey).forall(_ == getAttachment(attachmentKey).get))
+      newDocument.addAttachment(attachmentKey, getAttachment(attachmentKey).get)
+    }
+
+    val dctOpt = getDCT
+    dctOpt.foreach(newDocument.setDCT)
+
+    newDocument
+  }
+
+  def offset(offset: Int): Document = {
+    if (offset == 0) this
+    else {
+      val offsetSentences = sentences.map(_.offset(offset))
+      val newDocument = replaceSentences(offsetSentences)
+
+      newDocument
+    }
   }
 }
 
