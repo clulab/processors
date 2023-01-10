@@ -96,7 +96,7 @@ case class CorefChains(rawMentions: Iterable[CorefMention]) extends Serializable
 }
 
 object CorefChains {
-  implicit val ordering = Unordered[CorefMention]
+  val ordering = Unordered[CorefMention]
       .orElseBy(_.sentenceIndex) // favor smaller sentenceIndex
       .orElseBy(_.headIndex)     // favor smaller headIndex
       .orElseBy(-_.length)       // favor larger size
@@ -104,7 +104,7 @@ object CorefChains {
 
   private def mkMentions(rawMentions:Iterable[CorefMention]):Map[(Int, Int), CorefMention] = {
     // if multiple mentions with same head exist, keep only the longest
-    val sortedMentions = rawMentions.toList.sorted // .sortedWith(lessThanForMentions)
+    val sortedMentions = rawMentions.toList.sorted(ordering) // .sortedWith(lessThanForMentions)
     val mentionMap = new mutable.HashMap[(Int, Int), CorefMention]
     var prevMention:CorefMention = null
     for (m <- sortedMentions) {
