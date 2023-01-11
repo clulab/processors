@@ -394,7 +394,7 @@ object Utils {
       nonEmptyOuts(nonEmptyOuts.length - 1)
     }
 
-    val charEmbeddings = word.map { c: Char =>
+    val charEmbeddings = word.map { (c: Char) =>
       lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
     val fwOutsLast = safelyTransduceLast1(charEmbeddings, charFwRnnBuilder)
@@ -590,56 +590,62 @@ object Utils {
                            fieldName: Option[String],
                            defaultValue: Option[DefaultValueType]): Unit = {
 
+      def inner(): Unit = {
+        // skip exactly 1 comment line (optional)
+        if (lines.head.nonEmpty && lines.head.startsWith("#")) {
+          lines.next()
+        }
+
+        def nextLine(): Boolean = {
+          val line = lines.next()
+          //println(s"LINE: [$line]")
+
+          if (line.nonEmpty) {
+            addLine(intermediateValue, line)
+            true // Continue on non-blank lines.
+          }
+          else {
+            false // Stop at first blank line.
+          }
+        }
+
+        while (nextLine()) {}
+      }
+
       //
       // sanity check: verify if we are reading the expected field, by checking the string in the comment
       // if we are not seeing the expected field, but we have a default value for this field, use that
       //   this is necessary to make new code backwards compatible with older models that may not have that field
       // if we are not seeing the expected field, and no default value provided, bail
       //
-      if(fieldName.nonEmpty) {
-        val head = if(lines.hasNext) Some(lines.head) else None
+      if (fieldName.nonEmpty) {
+        val head = if (lines.hasNext) Some(lines.head) else None
 
         // if the field name doesn't match, set it to the default value
         if (defaultValue.nonEmpty) {
-          if(head.isEmpty) {
+          if (head.isEmpty) {
             logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing an empty line.")
             logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
             setDefaultValue(intermediateValue, defaultValue.get)
-            return
-          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+          }
+          else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
             logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing this line: [${head.get}].")
             logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
             setDefaultValue(intermediateValue, defaultValue.get)
-            return
           }
-        } else {
-          if(head.isEmpty) {
-            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing an empty line!")
-          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
-            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing this line: [${head.get}]!")
-          }
-        }
-      }
-
-      // skip exactly 1 comment line (optional)
-      if (lines.head.nonEmpty && lines.head.startsWith("#")) {
-        lines.next()
-      }
-
-      def nextLine(): Boolean = {
-        val line = lines.next()
-        //println(s"LINE: [$line]")
-
-        if (line.nonEmpty) {
-          addLine(intermediateValue, line)
-          true // Continue on non-blank lines.
+          else inner()
         }
         else {
-          false // Stop at first blank line.
+          if (head.isEmpty) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing an empty line!")
+          }
+          else if (!head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing this line: [${head.get}]!")
+          }
+          else inner()
         }
       }
-
-      while (nextLine()) {}
+      else inner()
     }
 
     def addLine(intermediateValue: IntermediateValueType, line: String): Unit

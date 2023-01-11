@@ -9,6 +9,7 @@ import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
 import org.clulab.utils.Logging
+import org.json4s.DefaultFormats
 
 /**
   * Saves/loads a Document to/from a stream
@@ -20,8 +21,8 @@ import org.clulab.utils.Logging
   * Last Modified 06/10/18: Add .raw in sentence serialization
   */
 class DocumentSerializer extends Logging {
-
   import DocumentSerializer._
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   /**
    * This is deprecated! Please use load(r:BufferedReader) instead!
@@ -34,104 +35,109 @@ class DocumentSerializer extends Logging {
   }
 
   def load (r:BufferedReader): Document = {
-    var bits:Array[String] = null
-    try {
-      bits = read(r)
-    } catch {
-      case e:NullPointerException => return null // reached the end of stream
-      case e:Exception => throw e // something else bad
-    }
 
-    assert(bits(0) == START_SENTENCES, s"START_SENTENCES expected, found ${bits(0)}")
-    val sentCount = bits(1).toInt
-    val sents = new ArrayBuffer[Sentence]
+    def inner(startBits: Array[String]): Document = {
+      var bits = startBits
 
-    var offset = 0
-    while(offset < sentCount) {
-      sents += loadSentence(r)
-      offset += 1
-    }
+      assert(bits(0) == START_SENTENCES, s"START_SENTENCES expected, found ${bits(0)}")
+      val sentCount = bits(1).toInt
+      val sents = new ArrayBuffer[Sentence]
 
-    var coref:Option[CorefChains] = None
-    do {
-      bits = read(r)
-      if (bits(0) == START_COREF) {
-        coref = Some(loadCoref(r, bits(1).toInt))
-      }
-    } while(bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS)
-
-    var text: Option[String] = None
-    if (bits(0) == START_TEXT) {
-      if (bits.length != 2)
-        throw new RuntimeException(
-          s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
-      val charCount = bits(1).toInt
-      text = Some(loadText(r, charCount))
-      bits = read(r)
-    }
-
-    var namedDocumentAttachmentsOpt: Option[Array[(String, DocumentAttachment)]] = None
-    if (bits(0) == START_ATTACHMENTS) {
-      def unescapeAttachment(text: String): String = {
-        text
-            .replace("\\n", "\n")
-            .replace("\\t", "\t")
-            .replace("\\\\", "\\")
+      var offset = 0
+      while(offset < sentCount) {
+        sents += loadSentence(r)
+        offset += 1
       }
 
-      if (bits.length != 2)
-        throw new RuntimeException(
-          s"ERROR: Missing document attachments size in start attachments line: " + bits.mkString(" "))
-      val attachmentCount = bits(1).toInt
-      if (attachmentCount > 0)
-        namedDocumentAttachmentsOpt = Some(new Array(attachmentCount))
-      0.until(attachmentCount).foreach { index =>
+      var coref:Option[CorefChains] = None
+      while ({
         bits = read(r)
-        val key = unescapeAttachment(bits(0))
-        val documentAttachmentBuilderFromTextClassName = unescapeAttachment(bits(1))
-        // See https://stackoverflow.com/questions/6094575/creating-an-instance-using-the-class-name-and-calling-constructor/6094602
-        val clazz = Class.forName(documentAttachmentBuilderFromTextClassName)
-        val ctor = clazz.getConstructor()
-        val obj = ctor.newInstance()
-        val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromText]
-        val text = unescapeAttachment(bits(2))
-        val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(text)
-        namedDocumentAttachmentsOpt.get(index) = (key, documentAttachment)
+        if (bits(0) == START_COREF) {
+          coref = Some(loadCoref(r, bits(1).toInt))
+        }
+        bits(0) != END_OF_DOCUMENT && bits(0) != START_DISCOURSE && bits(0) != START_TEXT && bits(0) != START_ATTACHMENTS
+      }) ()
+      var text: Option[String] = None
+      if (bits(0) == START_TEXT) {
+        if (bits.length != 2)
+          throw new RuntimeException(
+            s"ERROR: Missing text length in start text line: " + bits.mkString(" "))
+        val charCount = bits(1).toInt
+        text = Some(loadText(r, charCount))
+        bits = read(r)
       }
-      bits = read(r)
+
+      var namedDocumentAttachmentsOpt: Option[Array[(String, DocumentAttachment)]] = None
+      if (bits(0) == START_ATTACHMENTS) {
+        def unescapeAttachment(text: String): String = {
+          text
+              .replace("\\n", "\n")
+              .replace("\\t", "\t")
+              .replace("\\\\", "\\")
+        }
+
+        if (bits.length != 2)
+          throw new RuntimeException(
+            s"ERROR: Missing document attachments size in start attachments line: " + bits.mkString(" "))
+        val attachmentCount = bits(1).toInt
+        if (attachmentCount > 0)
+          namedDocumentAttachmentsOpt = Some(new Array(attachmentCount))
+        0.until(attachmentCount).foreach { index =>
+          bits = read(r)
+          val key = unescapeAttachment(bits(0))
+          val documentAttachmentBuilderFromTextClassName = unescapeAttachment(bits(1))
+          // See https://stackoverflow.com/questions/6094575/creating-an-instance-using-the-class-name-and-calling-constructor/6094602
+          val clazz = Class.forName(documentAttachmentBuilderFromTextClassName)
+          val ctor = clazz.getConstructor()
+          val obj = ctor.newInstance()
+          val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromText]
+          val text = unescapeAttachment(bits(2))
+          val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(text)
+          namedDocumentAttachmentsOpt.get(index) = (key, documentAttachment)
+        }
+        bits = read(r)
+      }
+
+      assert(bits(0) == END_OF_DOCUMENT, s"END_OF_DOCUMENT expected, found ${bits(0)}")
+
+      val doc = Document(sents.toArray)
+      doc.coreferenceChains = coref
+      doc.text = text
+
+
+      // TODO: Hack by Enrique to resolve the document object for the relations
+      for(sen <- doc.sentences){
+        sen.relations match {
+          case Some(relations) =>
+            val newRelations = relations.map(r => RelationTriple(r.confidence, r.subjectInterval, r.relationInterval, r.objectInterval))
+            sen.relations = Some(newRelations)
+          case None => ()
+        }
+      }
+
+      namedDocumentAttachmentsOpt.foreach { namedDocumentAttachments =>
+        namedDocumentAttachments.foreach { case (name: String, documentAttachment: DocumentAttachment) =>
+          doc.addAttachment(name, documentAttachment)
+        }
+      }
+
+      doc
     }
 
-    assert(bits(0) == END_OF_DOCUMENT, s"END_OF_DOCUMENT expected, found ${bits(0)}")
-
-    val doc = Document(sents.toArray)
-    doc.coreferenceChains = coref
-    doc.text = text
-
-
-    // TODO: Hack by Enrique to resolve the document object for the relations
-    for(sen <- doc.sentences){
-      sen.relations match {
-        case Some(relations) =>
-          val newRelations = relations.map(r => RelationTriple(r.confidence, r.subjectInterval, r.relationInterval, r.objectInterval))
-          sen.relations = Some(newRelations)
-        case None => ()
-      }
+    try {
+      inner(read(r))
     }
-
-    namedDocumentAttachmentsOpt.foreach { namedDocumentAttachments =>
-      namedDocumentAttachments.foreach { case (name: String, documentAttachment: DocumentAttachment) =>
-        doc.addAttachment(name, documentAttachment)
-      }
+    catch {
+      case e: NullPointerException => null // reached the end of stream
+      case e: Exception => throw e // something else bad
     }
-
-    doc
   }
 
   private def read(r:BufferedReader, howManyTokens:Int = 0): Array[String] = {
     val line = r.readLine()
     // println("READ LINE: [" + line + "]")
-    if (line.isEmpty) return new Array[String](0)
-    line.split(SEP, howManyTokens)
+    if (line.isEmpty) Array.empty
+    else line.split(SEP, howManyTokens)
   }
 
   def load(s:String, encoding:String = "UTF-8"): Document = {
@@ -143,11 +149,13 @@ class DocumentSerializer extends Logging {
   }
 
   private def loadText (r:BufferedReader, charCount:Int): String = {
-    if (charCount < 1) return ""            // sanity check
-    val buffer = new Array[Char](charCount)
-    r.read(buffer, 0, charCount)
-    r.skip(OS_INDEPENDENT_LINE_SEPARATOR.length) // skip over last line separator
-    new String(buffer)
+    if (charCount < 1) ""            // sanity check
+    else {
+      val buffer = new Array[Char](charCount)
+      r.read(buffer, 0, charCount)
+      r.skip(OS_INDEPENDENT_LINE_SEPARATOR.length) // skip over last line separator
+      new String(buffer)
+    }
   }
 
   private def mkRelationInterval(s: String) = {
@@ -223,7 +231,7 @@ class DocumentSerializer extends Logging {
     var deps = GraphMap()
     var tree:Option[Tree] = None
     var relations:Option[Array[RelationTriple]] = None
-    do {
+    while ({
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
         val dt = bits(1)
@@ -238,7 +246,8 @@ class DocumentSerializer extends Logging {
         val sz = bits(1).toInt
         relations = loadRelations(r, sz)
       }
-    } while(bits(0) != END_OF_SENTENCE)
+      bits(0) != END_OF_SENTENCE
+    }) ()
 
     Sentence(
       rawBuffer.toArray,
@@ -263,23 +272,24 @@ class DocumentSerializer extends Logging {
       roots.add(bits(offset).toInt)
       offset += 1
     }
-    do {
+    while ({
       bits = read(r)
       if (bits(0) != END_OF_DEPENDENCIES) {
         val edge = Edge(source = bits(0).toInt, destination = bits(1).toInt, relation = bits(2))
         //println("adding edge: " + edge)
         edges += edge
       }
-    } while(bits(0) != END_OF_DEPENDENCIES)
+      bits(0) != END_OF_DEPENDENCIES
+    }) ()
     val dg = new DirectedGraph[String](edges.toList, Some(sz))
     //println(dg)
     dg
   }
 
   private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
-    if (b.isEmpty) return None
-    if (allNils) return None
-    Some(b.toArray)
+    if (b.isEmpty) None
+    else if (allNils) None
+    else Some(b.toArray)
   }
 
   def save(doc:Document, os:PrintWriter): Unit = save(doc, os, keepText = false)
@@ -391,20 +401,21 @@ class DocumentSerializer extends Logging {
     if (numChildren == 0) {
       val t = Terminal(value)
       t.setIndex(startOffset)
-      return t
-      // return new Tree[String](value, None, head, startOffset, endOffset)
+      t
+      // new Tree[String](value, None, head, startOffset, endOffset)
     }
+    else {
+      val children = new Array[Tree](numChildren)
+      for (i <- 0 until numChildren) {
+        children(i) = loadTree(bits, position)
+      }
 
-    val children = new Array[Tree](numChildren)
-    for (i <- 0 until numChildren) {
-      children(i) = loadTree(bits, position)
+      val n = NonTerminal(value, children)
+      n.setStartEndIndices(startOffset, endOffset)
+      n.setHead(head)
+      n
+      // new Tree[String](value, Some(children), head, startOffset, endOffset)
     }
-
-    val n = NonTerminal(value, children)
-    n.setStartEndIndices(startOffset, endOffset)
-    n.setHead(head)
-    n
-    // new Tree[String](value, Some(children), head, startOffset, endOffset)
   }
 
   private def saveRelationTriple(t:RelationTriple, os:PrintWriter): Unit = {

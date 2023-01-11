@@ -1,13 +1,12 @@
 package org.clulab.utils
 
-import org.scalatest._
 
 /**
  * 
  * User: mihais
  * Date: 4/3/13
  */
-class TestArgsToProperties extends FlatSpec with Matchers {
+class TestArgsToProperties extends Test {
   // NOTE we are reading from the filesystem on purpose, that is the test
   val props = StringUtils.argsToProperties(List("-props", "main/src/test/resources/org/clulab/utils/test.properties").toArray)
 

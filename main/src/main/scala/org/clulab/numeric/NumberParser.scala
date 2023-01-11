@@ -85,27 +85,28 @@ object NumberParser {
 
   def parseWords(words: Seq[String]): Option[Double] = {
     // if single token then return corresponding number
-    if (words.length == 1) {
-      return americanNumberSystem.get(words.head)
-    }
-    try {
-      // accumulate result here
-      var totalSum: Double = 0
-      var remainingWords = words.toArray
-      for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand")) {
-        val index = remainingWords.indexOf(w)
-        if (index >= 0) {
-          val multiplier = numberFormation(remainingWords.slice(0, index))
-          remainingWords = remainingWords.drop(index + 1)
-          totalSum += multiplier * americanNumberSystem(w)
+    if (words.length == 1)
+      americanNumberSystem.get(words.head)
+    else {
+      try {
+        // accumulate result here
+        var totalSum: Double = 0
+        var remainingWords = words.toArray
+        for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand")) {
+          val index = remainingWords.indexOf(w)
+          if (index >= 0) {
+            val multiplier = numberFormation(remainingWords.slice(0, index))
+            remainingWords = remainingWords.drop(index + 1)
+            totalSum += multiplier * americanNumberSystem(w)
+          }
         }
+        // handle hundreds
+        totalSum += numberFormation(remainingWords)
+        // return number
+        Some(totalSum)
+      } catch {
+        case _: Exception => None
       }
-      // handle hundreds
-      totalSum += numberFormation(remainingWords)
-      // return number
-      Some(totalSum)
-    } catch {
-      case _: Exception => None
     }
   }
 
@@ -139,6 +140,7 @@ object NumberParser {
     "ten"         -> 10,
     "eleven"      -> 11,
     "twelve"      -> 12,
+    "dozen"       -> 12,
     "thirteen"    -> 13,
     "fourteen"    -> 14,
     "fifteen"     -> 15,
@@ -156,6 +158,7 @@ object NumberParser {
     "ninety"      -> 90,
     "hundred"     -> 1e2,
     "thousand"    -> 1e3,
+    "grand"       -> 1e3,
     "million"     -> 1e6,
     "billion"     -> 1e9,
     "trillion"    -> 1e12,

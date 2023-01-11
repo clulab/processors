@@ -2,10 +2,10 @@ package org.clulab.odin.serialization
 
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
-import org.scalatest._
+import org.clulab.utils.Test
 
 // See TestJSONSerializer for the test upon which this is based.
-class TestSerializer extends FlatSpec with Matchers {
+class TestSerializer extends Test {
 
   object Serializer {
     import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream, ObjectStreamClass}

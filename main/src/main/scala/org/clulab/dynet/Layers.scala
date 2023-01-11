@@ -21,19 +21,14 @@ class Layers (val initialLayer: Option[InitialLayer],
               val finalLayer: Option[FinalLayer]) extends Saveable {
 
   def outDim: Option[Int] = {
-    if(finalLayer.nonEmpty) {
-      return Some(finalLayer.get.outDim)
-    }
-
-    if(intermediateLayers.nonEmpty) {
-      return Some(intermediateLayers.last.outDim)
-    }
-
-    if(initialLayer.nonEmpty) {
-      return Some(initialLayer.get.outDim)
-    }
-
-    None
+    if (finalLayer.nonEmpty)
+      Some(finalLayer.get.outDim)
+    else if (intermediateLayers.nonEmpty)
+      Some(intermediateLayers.last.outDim)
+    else if (initialLayer.nonEmpty)
+      Some(initialLayer.get.outDim)
+    else
+      None
   }
 
   override def toString: String = {

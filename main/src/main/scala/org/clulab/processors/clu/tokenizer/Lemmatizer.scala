@@ -31,34 +31,36 @@ class SpanishLemmatizer extends Lemmatizer {
 
 class EnglishLemmatizer extends Lemmatizer {
   override def lemmatizeWord(word: String, pos: Option[String] = None): String = {
-    if(parens.findFirstMatchIn(word).nonEmpty)
-      return word.toLowerCase()
+    if (parens.findFirstMatchIn(word).nonEmpty)
+      word.toLowerCase()
+    else {
+      val norm = normalizeForLemmatization(word).trim
+      if (norm.isEmpty) word.toLowerCase()
+      else {
+        val parts = norm.split(whitespaces)
 
-    val norm = normalizeForLemmatization(word).trim
-    if(norm.isEmpty) return word.toLowerCase()
+        val result = new mutable.StringBuilder()
+        for(part <- parts) {
+          val morpha = new Morpha(new StringReader(part), false)
 
-    val parts = norm.split(whitespaces)
+          var lemma = part
+          try {
+            lemma = morpha.next()
+          } catch {
+            case _:Throwable =>
+          }
 
-    val result = new mutable.StringBuilder()
-    for(part <- parts) {
-      val morpha = new Morpha(new StringReader(part), false)
+          if(result.nonEmpty) result.append(" ")
+          result.append(lemma)
+        }
 
-      var lemma = part
-      try {
-        lemma = morpha.next()
-      } catch {
-        case _:Throwable =>
+        val output = result.toString()
+
+        // in some cases, Morpha returns empty strings
+        if(output.isEmpty) word.toLowerCase()
+        else output
       }
-
-      if(result.nonEmpty) result.append(" ")
-      result.append(lemma)
     }
-
-    val output = result.toString()
-
-    // in some cases, Morpha returns empty strings
-    if(output.isEmpty) word.toLowerCase()
-    else output
   }
 }
 

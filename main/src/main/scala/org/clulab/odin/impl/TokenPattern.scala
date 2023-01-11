@@ -83,12 +83,20 @@ class TokenPattern(val start: Inst) {
   }
 
   def findFirstIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
-    val n = doc.sentences(sent).size
-    for (i <- tok until n) {
-      val r = findPrefixOf(i, sent, doc, state)
-      if (r.nonEmpty) return r
+    val n = doc.sentences(sent).size 
+
+    @annotation.tailrec
+    def loop(i: Int): Seq[Result] = {
+      if (i < n) {
+        val r = findPrefixOf(i, sent, doc, state)
+
+        if (r.nonEmpty) r
+        else loop(i + 1)
+      }
+      else Nil
     }
-    Nil
+
+    loop(tok)
   }
 
   def findAllIn(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {

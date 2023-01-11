@@ -21,18 +21,17 @@ object ModelDiff extends App {
   }
 
   def diff(l1: String, l2: String): Unit = {
-    if(l1.length != l2.length) {
-      println(s"L1 has length ${l1.length} while L2 has length ${l2.length}")
+    val minLen = math.min(l1.length, l2.length)
+    val iOpt = Range(0, minLen).find { i =>
+      l1.charAt(i) != l2.charAt(i)
     }
 
-    val minLen = math.min(l1.length, l2.length)
-    for(i <- 0 until minLen) {
-      if(l1.charAt(i) != l2.charAt(i)) {
-        println("Found different characters at position $i:")
-        println(l1.substring(math.max(0, i - 10), i) + s"[[${l1.charAt(i)}]]" + l1.substring(i + 1, math.min(l1.length, i + 11)))
-        println(l2.substring(math.max(0, i - 10), i) + s"[[${l2.charAt(i)}]]" + l2.substring(i + 1, math.min(l2.length, i + 11)))
-        return
-      }
+    if (l1.length != l2.length)
+      println(s"L1 has length ${l1.length} while L2 has length ${l2.length}")
+    iOpt.foreach { i =>
+      println(s"Found different characters at position $i:")
+      println(l1.substring(math.max(0, i - 10), i) + s"[[${l1.charAt(i)}]]" + l1.substring(i + 1, math.min(l1.length, i + 11)))
+      println(l2.substring(math.max(0, i - 10), i) + s"[[${l2.charAt(i)}]]" + l2.substring(i + 1, math.min(l2.length, i + 11)))
     }
   }
 }

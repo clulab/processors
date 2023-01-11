@@ -74,60 +74,59 @@ class CoreNLPProcessor(
   }
 
   override def parse(doc:Document): Unit = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    basicSanityCheck(doc).foreach { annotation =>
+      val sas = annotation.get(classOf[SentencesAnnotation]).asScala
+      var offset = 0
+      for (sa <- sas) {
+        // run the actual parser here
+        val stanfordTree = stanfordParse(sa)
+        assert(stanfordTree != null) // even when we can't parse, we create a fake tree in stanfordParse()
 
-    val sas = annotation.get.get(classOf[SentencesAnnotation]).asScala
-    var offset = 0
-    for (sa <- sas) {
-      // run the actual parser here
-      val stanfordTree = stanfordParse(sa)
-      assert(stanfordTree != null) // even when we can't parse, we create a fake tree in stanfordParse()
+        // store Stanford annotations; Stanford dependencies are created here!
+        val words = sa.get(classOf[CoreAnnotations.TokensAnnotation])
+        var depFail = false
+        if(words.size() > 1) {
+          //println("SENTENCE WORDS: ")
+          //println(mkSentenceString(words))
 
-      // store Stanford annotations; Stanford dependencies are created here!
-      val words = sa.get(classOf[CoreAnnotations.TokensAnnotation])
-      var depFail = false
-      if(words.size() > 1) {
-        //println("SENTENCE WORDS: ")
-        //println(mkSentenceString(words))
+          // note: this method fails on weird sentences, e.g., sentences that contain only: ")", "."
+          // make sure we don't crash here!
+          try {
+            ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
+              util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
+          } catch {
+            case e:Throwable =>
+              logger.debug("WARNING: CoreNLP failed to extract syntactic dependencies on sentence: " + mkSentenceString(words))
+              depFail = true
+          }
+        } else { // exactly 1 token in the sentence
+          // save the constituent tree
+          sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], stanfordTree)
 
-        // note: this method fails on weird sentences, e.g., sentences that contain only: ")", "."
-        // make sure we don't crash here!
-        try {
-          ParserAnnotatorUtils.fillInParseAnnotations(false, true, gsf, sa,
-            util.Arrays.asList(stanfordTree), GrammaticalStructure.Extras.NONE)
-        } catch {
-          case e:Throwable =>
-            logger.debug("WARNING: CoreNLP failed to extract syntactic dependencies on sentence: " + mkSentenceString(words))
-            depFail = true
+          // create and save a fake dependency graph
+          val head = words.asScala.head
+          val fakeDeps = new SemanticGraph()
+          fakeDeps.addRoot(new IndexedWord(head))
+          sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], fakeDeps)
+          sa.set(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation], fakeDeps)
         }
-      } else { // exactly 1 token in the sentence
-        // save the constituent tree
-        sa.set(classOf[TreeCoreAnnotations.TreeAnnotation], stanfordTree)
 
-        // create and save a fake dependency graph
-        val head = words.asScala.head
-        val fakeDeps = new SemanticGraph()
-        fakeDeps.addRoot(new IndexedWord(head))
-        sa.set(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation], fakeDeps)
-        sa.set(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation], fakeDeps)
+        // save the constituent tree in our doc, including head word information
+        val position = new MutableNumber[Int](0)
+        doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
+
+        // save syntactic dependencies in our doc
+        if(! depFail) {
+          val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
+          val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation])
+
+          val sentenceSize = doc.sentences(offset).size
+          doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in, Some(sentenceSize)))
+          doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in, Some(sentenceSize)))
+        }
+
+        offset += 1
       }
-
-      // save the constituent tree in our doc, including head word information
-      val position = new MutableNumber[Int](0)
-      doc.sentences(offset).syntacticTree = Some(CoreNLPUtils.toTree(stanfordTree, headFinder, position))
-
-      // save syntactic dependencies in our doc
-      if(! depFail) {
-        val basicDeps = sa.get(classOf[SemanticGraphCoreAnnotations.BasicDependenciesAnnotation])
-        val enhancedDeps = sa.get(classOf[SemanticGraphCoreAnnotations.EnhancedPlusPlusDependenciesAnnotation])
-
-        val sentenceSize = doc.sentences(offset).size
-        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_BASIC, CoreNLPUtils.toDirectedGraph(basicDeps, in, Some(sentenceSize)))
-        doc.sentences(offset).setDependencies(GraphMap.UNIVERSAL_ENHANCED, CoreNLPUtils.toDirectedGraph(enhancedDeps, in, Some(sentenceSize)))
-      }
-
-      offset += 1
     }
   }
 
@@ -190,40 +189,39 @@ class CoreNLPProcessor(
   }
 
   override def resolveCoreference(doc:Document): Unit = {
-    val annotation = basicSanityCheck(doc)
-    if (annotation.isEmpty) return
+    basicSanityCheck(doc).foreach { annotation =>
+      if (doc.sentences.head.tags.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the POS tagger before coreference resolution!")
+      if (doc.sentences.head.lemmas.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
+      if (doc.sentences.head.entities.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the NER before coreference resolution!")
+      if(doc.sentences.head.syntacticTree.isEmpty)
+        throw new RuntimeException("ERROR: you have to run the parser before coreference resolution!")
 
-    if (doc.sentences.head.tags.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the POS tagger before coreference resolution!")
-    if (doc.sentences.head.lemmas.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the lemmatizer before coreference resolution!")
-    if (doc.sentences.head.entities.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the NER before coreference resolution!")
-    if(doc.sentences.head.syntacticTree.isEmpty)
-      throw new RuntimeException("ERROR: you have to run the parser before coreference resolution!")
+      coref.annotate(annotation)
 
-    coref.annotate(annotation.get)
+      val chains = annotation.get(classOf[CorefChainAnnotation])
+      if(chains != null) {
+        val mentions = new ListBuffer[CorefMention]
 
-    val chains = annotation.get.get(classOf[CorefChainAnnotation])
-    if(chains != null) {
-      val mentions = new ListBuffer[CorefMention]
-
-      for (cid <- chains.keySet.asScala) {
-       for(mention <- chains.get(cid).getMentionsInTextualOrder.asScala) {
-          //println(s"""start = ${mention.startIndex}, end = ${mention.endIndex}, head = ${mention.headIndex}, sentence = ${mention.sentNum}""")
-          val m = CorefMention(
-           mention.sentNum - 1,
-           mention.headIndex - 1,
-           mention.startIndex - 1,
-           mention.endIndex - 1,
-           mention.corefClusterID
-          )
-          mentions += m
+        for (cid <- chains.keySet.asScala) {
+        for(mention <- chains.get(cid).getMentionsInTextualOrder.asScala) {
+            //println(s"""start = ${mention.startIndex}, end = ${mention.endIndex}, head = ${mention.headIndex}, sentence = ${mention.sentNum}""")
+            val m = CorefMention(
+            mention.sentNum - 1,
+            mention.headIndex - 1,
+            mention.startIndex - 1,
+            mention.endIndex - 1,
+            mention.corefClusterID
+            )
+            mentions += m
+          }
         }
-      }
 
-      //println(s"Mentions contains ${mentions.size} mentions.")
-      doc.coreferenceChains = Some(new CorefChains(mentions.toList))
+        //println(s"Mentions contains ${mentions.size} mentions.")
+        doc.coreferenceChains = Some(new CorefChains(mentions.toList))
+      }
     }
   }
 

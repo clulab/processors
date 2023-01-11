@@ -1,9 +1,8 @@
 package org.clulab.struct
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.clulab.utils.Test
 
-class TestDirectedGraph extends FlatSpec with Matchers {
+class TestDirectedGraph extends Test {
 
   behavior of "DirectedGraph"
 

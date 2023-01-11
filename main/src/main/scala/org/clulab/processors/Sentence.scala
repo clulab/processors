@@ -135,20 +135,21 @@ class Sentence(
 
   def getSentenceFragmentText(start:Int, end:Int):String = {
     // optimize the single token case
-    if(end - start == 1) return raw(start)
-
-    val text = new mutable.StringBuilder()
-    for(i <- start until end) {
-      if(i > start) {
-        // add as many white spaces as recorded between tokens
-        val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
-        for (j <- 0 until numberOfSpaces) {
-          text.append(" ")
+    if (end - start == 1) raw(start)
+    else {
+      val text = new mutable.StringBuilder()
+      for(i <- start until end) {
+        if(i > start) {
+          // add as many white spaces as recorded between tokens
+          val numberOfSpaces = math.max(1, startOffsets(i) - endOffsets(i - 1))
+          for (j <- 0 until numberOfSpaces) {
+            text.append(" ")
+          }
         }
+        text.append(raw(i))
       }
-      text.append(raw(i))
+      text.toString()
     }
-    text.toString()
   }
 
   /** Reverts the current sentence */

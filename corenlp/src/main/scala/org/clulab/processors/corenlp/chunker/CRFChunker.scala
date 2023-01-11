@@ -1,11 +1,13 @@
 package org.clulab.processors.corenlp.chunker
 
-import org.clulab.scala.WrappedArray._
-import java.io.{ File, InputStream }
-import java.util.Properties
-import scala.jdk.CollectionConverters._
 import edu.stanford.nlp.ie.crf.CRFClassifier
 import edu.stanford.nlp.ling.{ CoreLabel, CoreAnnotations }
+import org.clulab.scala.WrappedArray._
+
+import java.io.{ File, InputStream }
+import java.util.Properties
+
+import scala.jdk.CollectionConverters._
 
 class CRFChunker(crf: CRFClassifier[CoreLabel]) {
 
@@ -57,11 +59,11 @@ object CRFChunker {
   }
 
   def mkCoreLabels(words: Array[String], tags: Array[String]): Array[CoreLabel] =
-    words zip tags map { case (word, tag) =>
+    words.zip(tags).map { case (word, tag) =>
       val label = new CoreLabel
       label.setWord(word)
       label.setTag(tag)
       label
-    }
+    }.toArray
 
 }

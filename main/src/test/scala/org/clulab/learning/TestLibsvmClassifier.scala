@@ -1,17 +1,16 @@
 package org.clulab.learning
 
-import org.scalatest._
 import libsvm._
-
 import org.clulab.struct.Counter
 import org.clulab.TestUtils._
+import org.clulab.utils.Test
 
 /**
  *
  * User: mihais, dfried
  * Date: 11/17/13
  */
-class TestLibSVMClassifier extends FlatSpec with Matchers {
+class TestLibSVMClassifier extends Test {
   "LibSVMClassifier" should "work with RVFDataset" in {
     val classifier = new LibSVMClassifier[String, String](LinearKernel)
     val dataset = new RVFDataset[String, String]()

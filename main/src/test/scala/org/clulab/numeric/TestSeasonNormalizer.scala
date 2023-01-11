@@ -5,8 +5,6 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Test
 
 class TestSeasonNormalizer extends Test {
-  Utils.initializeDyNet()
-
   val autumnText = "When the leaves changed color in autumn 2017 they were the prettiest ever."
   val seasonText = "When the leaves changed color in rainy season 2017 they were the prettiest ever."
 

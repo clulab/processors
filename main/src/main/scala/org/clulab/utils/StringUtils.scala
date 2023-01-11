@@ -101,13 +101,14 @@ object StringUtils {
   private def varValue(name:String, props:Properties):String = {
     // check if the Properties contain this variable
     if (props.containsKey(name))
-      return props.getProperty(name)
-
-    // check if the environment contains this variable
-    val env = System.getenv(name)
-    if (env != null) return env
-
-    throw new RuntimeException("ERROR: cannot instantiate variable \"" + name + "\" in properties!")
+      props.getProperty(name)
+    else {
+      // check if the environment contains this variable
+      val env = System.getenv(name)
+      
+      if (env != null) env
+      else throw new RuntimeException("ERROR: cannot instantiate variable \"" + name + "\" in properties!")
+    }
   }
 
   def getStringOption(props: Properties, name: String): Option[String] = {

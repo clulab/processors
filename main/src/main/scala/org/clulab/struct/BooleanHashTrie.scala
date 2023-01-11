@@ -21,8 +21,8 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
   def equalsForSerialization(other: AnyRef): Boolean = {
     other.isInstanceOf[BooleanHashTrie] && {
       val that = other.asInstanceOf[BooleanHashTrie]
-      val thisString = this.toString()
-      val thatString = that.toString()
+      val thisString = this.toString
+      val thatString = that.toString
 
       val result = this.label == that.label &&
       this.caseInsensitive == that.caseInsensitive &&
@@ -107,9 +107,9 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
     stringBuilder.append(token)
     if (completePath) {
       stringBuilder.append("*")
-      label.foreach(stringBuilder.append)
+      label.foreach { (label: String) => stringBuilder.append(label) }
     }
-    children.foreach { children: ListBuffer[BooleanTrieNode] =>
+    children.foreach { (children: ListBuffer[BooleanTrieNode]) =>
       stringBuilder.append(" (")
       children.zipWithIndex.foreach { case (child: BooleanTrieNode, index: Int) =>
         if (index > 0)
