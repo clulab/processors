@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.scala.WrappedArray._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{Sourcer, Test}
@@ -9,7 +10,7 @@ import java.io.{PrintWriter, StringWriter}
 
 class TestMkCombinedDocument extends Test {
   val sentences = Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt").autoClose { source =>
-    source.getLines.toArray
+    source.getLines().toArray
   }
   val manySentenceLengths = Array(
     Array(1, 9),
