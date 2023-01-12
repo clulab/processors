@@ -12,6 +12,69 @@ trait Processor {
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization. */
   def mkDocument (text:String, keepText:Boolean = false): Document
 
+  // The documents here were created with Processor.mkDocument, which could have created a subclassed
+  // Document or documents with certain fields already filled in.  This implementation only handles
+  // known document fields and then only performs rudimentary requirement checks to make sure that
+  // the documents are compatible for combination.  In more complicated situations it would be necessary
+  // to override this method in the Processor subclass.
+  protected def combineDocuments(documents: IndexedSeq[Document], combinedTextOpt: Option[String]): Document = {
+    require(documents.length > 1)
+    val headDocument = documents.head
+    val tailDocuments = documents.tail
+    val combinedSentences = documents.flatMap(_.sentences).toArray
+    val combinedDocument = new Document(combinedSentences)
+
+    val headId = headDocument.id
+    require(tailDocuments.forall(_.id == headId))
+    combinedDocument.id = headId
+
+    require(combinedDocument.text.isEmpty)
+    combinedDocument.text = combinedTextOpt
+
+    // Coreference chains involve Mentions that include references to documents.  The Mentions are being
+    // moved to a new Document and it would be infeasible to move the chains.
+    require(combinedDocument.coreferenceChains.isEmpty)
+    require(documents.forall(_.coreferenceChains.isEmpty))
+
+    documents.foreach { document =>
+      document.getAttachmentKeys.foreach { attachmentKey =>
+        require(combinedDocument.getAttachment(attachmentKey).forall(_ == document.getAttachment(attachmentKey).get))
+        combinedDocument.addAttachment(attachmentKey, document.getAttachment(attachmentKey).get)
+      }
+    }
+
+    val headDctOpt = headDocument.getDCT
+    require(documents.tail.forall(_.getDCT == headDctOpt))
+    headDctOpt.foreach(combinedDocument.setDCT)
+    combinedDocument
+  }
+
+  def mkCombinedDocument(texts: IndexedSeq[String], trailers: IndexedSeq[String], keepText: Boolean = false): Document = {
+    require(texts.length == trailers.length)
+    texts.length match {
+      case 0 => mkDocument("", keepText)
+      case 1 => mkDocument(texts.head, keepText)
+      case _ =>
+        val documents = texts.map(mkDocument(_, keepText))
+        val offsets = texts.zip(trailers).scanLeft(0) { case (offset, (text, trailer)) => offset + text.length + trailer.length }
+        val offsetDocuments = documents.zip(offsets).map { case (document, offset) =>
+          document.offset(offset)
+        }
+        val combinedTextOpt =
+            if (keepText) {
+              val combinedText = texts.zip(trailers).foldLeft(new StringBuilder) { case (stringBuilder, (text, separator)) =>
+                stringBuilder.append(text).append(separator)
+              }.toString
+
+              Some(combinedText)
+            }
+            else None
+        val combinedDocument = combineDocuments(offsetDocuments, combinedTextOpt)
+
+        combinedDocument
+    }
+  }
+
   /** Constructs a document of tokens from an array of untokenized sentences. */
   def mkDocumentFromSentences (sentences:Iterable[String],
                                keepText:Boolean = false,
