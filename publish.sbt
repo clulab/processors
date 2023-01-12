@@ -34,7 +34,7 @@ ThisBuild / pomPostProcess := {
 }
 // ThisBuild / publishMavenStyle := true // no longer applicable in sbt 1.6.2+
 ThisBuild / publishTo := {
-  val useArtifactory = true
+  val useArtifactory = false
 
   if (useArtifactory) {
     val artifactory = "https://artifactory.clulab.org/artifactory/"
