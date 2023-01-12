@@ -393,23 +393,8 @@ class CluProcessor protected (
   }
 
   /** Gets the index of all predicates in this sentence */
-  def getPredicateIndexes(preds: IndexedSeq[String]): IndexedSeq[Int] = {
-    val predsInSent = new ArrayBuffer[Int]()
-    var done = false
-    var offset = 0
-    while(! done) {
-      val idx = preds.indexOf("B-P", offset)
-
-      if(idx >= 0) {
-        predsInSent += idx
-        offset = idx + 1
-      } else {
-        done = true
-      }
-    }
-
-    predsInSent
-  }
+  def getPredicateIndexes(preds: IndexedSeq[String]): IndexedSeq[Int] =
+      preds.indices.filter(preds(_) == "B-P")
 
   /** Dependency parsing: old MTL model. Faster but performs worse */
   /*

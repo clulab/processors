@@ -68,10 +68,7 @@ class TaskManager(config:Config) extends Configured {
   /** Reads all tasks from disk in memory */
   protected def readTasks(): Array[Task] = {
     val numberOfTasks = getArgInt("mtl.numberOfTasks", None)
-    val tasks = new ArrayBuffer[Task]()
-    for(i <- 0 until numberOfTasks) {
-      tasks += readTask(i + 1)
-    }
+    Range(0, numberOfTasks).map { index => readTask(index + 1) }.toArray
     logger.debug(s"Read $numberOfTasks tasks from config file.")
     tasks.toArray
   }
