@@ -11,7 +11,6 @@ val scala32  = "3.2.1"   // up to 3.2.1
 // Scala32: This is for experimentation, as in Scala Next, and not for release.
 ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala31) // , scala32) // , scala30)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
-ThisBuild / versionScheme := None
 
 lazy val root = (project in file("."))
   .aggregate(main, corenlp, openie)
