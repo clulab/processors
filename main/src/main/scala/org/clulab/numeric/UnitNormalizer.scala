@@ -9,10 +9,20 @@ import scala.io.Source
 
 case class NormAndUnitClass(norm: String, unitClassOpt: Option[String])
 
-class UnitNormalizer(unitNormalizerPath: String) {
-  val normMapper: Map[String, NormAndUnitClass] = UnitNormalizer.readNormsFromResource(unitNormalizerPath)
-
+abstract class BaseUnitNormalizer() {
   def mkUnit(text: Seq[String]): String = text.mkString(" ").toLowerCase()
+  def norm(text: Seq[String]): String
+  def unitClassOpt(text: Seq[String]): Option[String]
+}
+
+object NullUnitNormalizer extends BaseUnitNormalizer() {
+  def norm(text: Seq[String]): String = mkUnit(text)
+
+  def unitClassOpt(text: Seq[String]): Option[String] = None
+}
+
+class UnitNormalizer(unitNormalizerPath: String) extends BaseUnitNormalizer() {
+  val normMapper: Map[String, NormAndUnitClass] = UnitNormalizer.readNormsFromResource(unitNormalizerPath)
 
   /** Normalizes measurement units */
   def norm(text: Seq[String]): String = {
