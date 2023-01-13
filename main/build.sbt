@@ -15,6 +15,12 @@ libraryDependencies ++= {
       case _ => "4.0.6"
     }
   }
+  val combinatorsVersion = {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, _)) => "2.1.1" // up to 2.1.1
+      case _ => "1.1.2" // Higher causes problems with libraries.
+    }
+  }
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
   val parallelLibraries = {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -64,7 +70,7 @@ libraryDependencies ++= {
     "org.apache.commons"          % "commons-text"             % "1.1",
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
     "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0", // up to 2.9.0, but match fatdynet
-    "org.scala-lang.modules"     %% "scala-parser-combinators" % "2.1.1", // up to 2.1.1
+    "org.scala-lang.modules"     %% "scala-parser-combinators" % combinatorsVersion,
     "org.yaml"                    % "snakeyaml"                % "1.14",
     // progress bar for training
     "me.tongfei"                  % "progressbar"              % "0.9.3"
