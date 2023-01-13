@@ -11,20 +11,21 @@ resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((3, 0)) => "4.0.3" // This is as close as we can get.
+      case Some((2, minor)) if minor <= 12 => "3.2.11" // Spark is incompatible with newer versions.
+      case Some((3, 0)) => "4.0.3"  // This is as close as we can get.
       case _ => "4.0.6"
     }
   }
   val combinatorsVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((3, _)) => "2.1.1" // up to 2.1.1
-      case _ => "1.1.2" // Higher causes problems with libraries.
+      case Some((2, minor)) if minor <= 12 => "1.1.2" // Higher causes problems with libraries.
+      case _ => "2.1.1" // up to 2.1.1
     }
   }
   // See https://index.scala-lang.org/scala/scala-parallel-collections/scala-parallel-collections.
   val parallelLibraries = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, major)) if major <= 12 => Seq()
+      case Some((2, minor)) if minor <= 12 => Seq()
       case _ => Seq("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4") // up to 1.0.4
     }
   }
