@@ -11,7 +11,7 @@ resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, minor)) if minor <= 12 => "3.2.11" // Spark is incompatible with newer versions.
+      case Some((2, minor)) if minor <= 12 => "3.5.5" // Spark is incompatible with newer versions.
       case Some((3, 0)) => "4.0.3"  // This is as close as we can get.
       case _ => "4.0.6"
     }
