@@ -60,3 +60,4 @@ ThisBuild / scmInfo := Some(
     s"scm:git@github.com:clulab/$publication.git"
   )
 )
+ThisBuild / versionScheme := Some("semver-spec")

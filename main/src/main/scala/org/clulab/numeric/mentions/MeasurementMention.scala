@@ -1,6 +1,6 @@
 package org.clulab.numeric.mentions
 
-import org.clulab.numeric.{NumberParser, UnitNormalizer}
+import org.clulab.numeric.{BaseUnitNormalizer, NullUnitNormalizer, NumberParser, UnitNormalizer}
 import org.clulab.odin.{Attachment, TextBoundMention}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
@@ -15,7 +15,7 @@ class MeasurementMention ( labels: Seq[String],
                            val value: Option[Seq[String]],
                            val unit: Option[Seq[String]],
                            val fromRange: Boolean,
-                           unitNormalizer: UnitNormalizer)
+                           unitNormalizer: BaseUnitNormalizer = NullUnitNormalizer)
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
   override def neNorm: String = {
