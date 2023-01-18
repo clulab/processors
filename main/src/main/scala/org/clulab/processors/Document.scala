@@ -186,6 +186,18 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     })
   }
 
+  def copy(document: Document): Document = {
+    id = document.id
+    coreferenceChains = document.coreferenceChains
+    text = document.text
+    attachments = document.attachments
+    documentCreationTime = document.documentCreationTime
+    this
+  }
+
+  def copy(sentences: Array[Sentence] = sentences): Document =
+      new Document(sentences).copy(this)
+
   protected def replaceSentences(sentences: Array[Sentence]): Document = {
     val newDocument = new Document(sentences)
 

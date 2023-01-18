@@ -44,9 +44,13 @@ class TestRepeatability extends Test {
 
       text.substring(beginIndex, endIndex).trim
     }
-    val result1 = printDocument(processor.annotate(text))
+
+    val doc1 = processor.annotate(text)
+    val result1 = printDocument(doc1)
     val result2 = printDocument(processor.annotate(text))
+    val result3 = printDocument(doc1.copy())
 
     result1 should be (result2)
+    result1 should be (result3)
   }
 }
