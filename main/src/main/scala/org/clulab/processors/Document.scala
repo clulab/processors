@@ -198,34 +198,11 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   def copy(sentences: Array[Sentence] = sentences): Document =
       new Document(sentences).copy(this)
 
-  protected def replaceSentences(sentences: Array[Sentence]): Document = {
-    val newDocument = new Document(sentences)
-
-    newDocument.id = id
-    newDocument.text = text
-
-    require(newDocument.coreferenceChains.isEmpty)
-    require(coreferenceChains.isEmpty)
-
-    getAttachmentKeys.foreach { attachmentKey =>
-      require(newDocument.getAttachment(attachmentKey).forall(_ == getAttachment(attachmentKey).get))
-      newDocument.addAttachment(attachmentKey, getAttachment(attachmentKey).get)
-    }
-
-    val dctOpt = getDCT
-    dctOpt.foreach(newDocument.setDCT)
-
-    newDocument
-  }
-
   def offset(offset: Int): Document = {
+    // If a subclass of Document constructs itself with an attachment or a documentCreationTime that
+    // would be overwritten on the copy(), then it should provide its own copy() method(s).
     if (offset == 0) this
-    else {
-      val offsetSentences = sentences.map(_.offset(offset))
-      val newDocument = replaceSentences(offsetSentences)
-
-      newDocument
-    }
+    else copy(sentences = sentences.map(_.offset(offset)))
   }
 }
 
