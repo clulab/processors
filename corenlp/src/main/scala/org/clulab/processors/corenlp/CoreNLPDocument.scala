@@ -14,6 +14,15 @@ class CoreNLPDocument(sentences: Array[Sentence]) extends Document(sentences) {
 
   var annotation:Option[Annotation] = None
 
+  def copy(document: CoreNLPDocument): CoreNLPDocument = {
+    super.copy(document)
+    annotation = document.annotation
+    this
+  }
+
+  override def copy(sentences: Array[Sentence] = sentences): CoreNLPDocument =
+      new CoreNLPDocument(sentences).copy(this)
+
   override def clear(): Unit = {
     //println("Clearing state from document.")
     annotation = None

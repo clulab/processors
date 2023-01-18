@@ -8,7 +8,6 @@ import org.clulab.utils.SeqUtils
 import scala.collection.mutable
 import scala.util.hashing.MurmurHash3._
 
-
 /** Stores the annotations for a single sentence */
 class Sentence(
   /** Raw tokens in this sentence; these MUST match the original text */
@@ -174,22 +173,28 @@ class Sentence(
     reverted
   }
 
+  def copy(sentence: Sentence): Sentence = {
+    tags = sentence.tags
+    lemmas = sentence.lemmas
+    entities = sentence.entities
+    norms = sentence.norms
+    chunks = sentence.chunks
+    syntacticTree = sentence.syntacticTree
+    graphs = sentence.graphs
+    relations = sentence.relations
+    this
+  }
+
+  def copy(raw: Array[String] = raw, startOffsets: Array[Int] = startOffsets, endOffsets: Array[Int] = endOffsets, words: Array[String] = words): Sentence =
+      new Sentence(raw, startOffsets, endOffsets, words).copy(this)
+
   def offset(offset: Int): Sentence = {
     if (offset == 0) this
     else {
       val newStartOffsets = startOffsets.map(_ + offset).toArray
       val newEndOffsets = endOffsets.map(_ + offset).toArray
-      val newSentence = Sentence(raw, newStartOffsets, newEndOffsets, words)
 
-      newSentence.tags = tags
-      newSentence.lemmas = lemmas
-      newSentence.entities = entities
-      newSentence.norms = norms
-      newSentence.chunks = chunks
-      newSentence.syntacticTree = syntacticTree
-      newSentence.graphs = graphs
-      newSentence.relations = relations
-      newSentence
+      copy(startOffsets = newStartOffsets, endOffsets = newEndOffsets)
     }
   }
 }
