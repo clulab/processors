@@ -285,9 +285,9 @@ class CoNLLSRLToMetal {
 
   def mergeTokens(sent:Array[CoNLLToken], start:Int, end:Int, verbose:Boolean):CoNLLToken = {
     val phrase = sent.slice(start, end)
-    val word = phrase.map(_.word).mkString("")
+    val word = phrase.map(_.word).mkString
     val pos = phrase.last.pos // this one doesn't really matter; we retag the entire data with our Processor anyway...
-    val lemma = phrase.map(_.lemma).mkString("")
+    val lemma = phrase.map(_.lemma).mkString
     val pred = mergePredicates(phrase, verbose)
     val frameBits = mergeFrames(phrase, verbose)
 
