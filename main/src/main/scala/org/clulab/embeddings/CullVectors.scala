@@ -132,7 +132,7 @@ object CullVectors extends App {
   // Word2Vec normalizes all incoming vectors.  Doing it twice will not hurt.
   val normalizedFloats = normalize(badFloats)
   val badStrings = normalizedFloats.map(_.toString)
-  val badLine = " " + badStrings.mkString(" ")
+  val badLine = badStrings.mkString(" ", " ", "")
 
   // The \n is to force LF as eol even on Windows.
   Sinker.printWriterFromFile(outputFile, append = false).autoClose { printWriter =>
