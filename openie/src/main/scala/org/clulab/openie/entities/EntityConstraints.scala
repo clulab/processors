@@ -4,9 +4,6 @@ import org.clulab.odin.Mention
 import org.clulab.openie.utils.TagSet
 import org.clulab.utils.Logging
 
-import scala.annotation.tailrec
-
-
 /**
   * Utilities for validating entities
   */
@@ -36,7 +33,7 @@ object EntityConstraints extends Logging {
 
   def matchingBrackets(words: Seq[String], opening: String, closing: String): Boolean = {
 
-    @tailrec
+    @annotation.tailrec
     def loop(index: Int, extraOpening: Int): Boolean = {
       if (extraOpening < 0)
         false // too many closing without opening

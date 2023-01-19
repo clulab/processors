@@ -6,12 +6,12 @@ import edu.stanford.nlp.util.CoreMap
 import org.clulab.TestUtils
 import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
-class TestCoreCharacterOffsets extends FlatSpec with Matchers {
+class TestCoreCharacterOffsets extends Test {
   val proc = new ShallowNLPProcessor()
 
   "the tokenizer" should "generate correct character offsets in a single sentence" in {

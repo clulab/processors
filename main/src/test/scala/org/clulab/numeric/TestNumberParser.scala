@@ -1,9 +1,9 @@
 package org.clulab.numeric
 
 import org.clulab.scala.WrappedArray._
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestNumberParser extends FlatSpec with Matchers {
+class TestNumberParser extends Test {
 
 	"NumberParser" should "parse digits" in {
 		val text = "1200"
@@ -74,6 +74,8 @@ class TestNumberParser extends FlatSpec with Matchers {
 
 	it should "parse words to numbers" in {
 		NumberParser.parse("five hundred million".split(" ")) shouldEqual Some(500000000)
+
+		NumberParser.parse("dozen grand".split(" ")) shouldEqual Some(12000)
 
 		// TODO: we do not parse "half" and "quarter" now
 		//NumberParser.parse("half million".split(" ")) shouldEqual Some(500000)

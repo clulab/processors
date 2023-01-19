@@ -72,10 +72,12 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     */
   def similarity(w1:String, w2:String):Double = {
     val v1o = getEmbedding(w1)
-    if(v1o.isEmpty) return -1
-    val v2o = getEmbedding(w2)
-    if(v2o.isEmpty) return -1
-    OldWordEmbeddingMap.dotProduct(v1o.get, v2o.get)
+    if(v1o.isEmpty) -1
+    else {
+      val v2o = getEmbedding(w2)
+      if (v2o.isEmpty) -1
+      else OldWordEmbeddingMap.dotProduct(v1o.get, v2o.get)
+    }
   }
 
   /** Adds the content of src to dest, in place */
@@ -111,9 +113,11 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
         add(v, vo.get)
       }
     }
-    if(! found) return List()
-    OldWordEmbeddingMap.norm(v)
-    mostSimilarWords(v, howMany, None)
+    if (!found) List()
+    else {
+      OldWordEmbeddingMap.norm(v)
+      mostSimilarWords(v, howMany, None)
+    }
   }
 
   def mostSimilarWords(word: String, howMany: Int, filterPredicate: Option[String => Boolean] = None): List[(String,
@@ -362,7 +366,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
         x <- matrix(word)
       } yield x * p
       // add it in place to the sum vector
-      add(v, scaled)
+      add(v, scaled.toArray)
     }
     OldWordEmbeddingMap.norm(v)
     v

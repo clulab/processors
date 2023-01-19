@@ -141,9 +141,11 @@ class RuleBasedEntityFinder(
     */
   def expand(entity: Mention, maxHops: Int, avoid: State): Mention = {
     // if you're not expanding, just return the mention
-    if (maxHops == 0) return entity
-    val interval = traverseOutgoing(entity, maxHops, avoid)
-    new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
+    if (maxHops == 0) entity
+    else {
+      val interval = traverseOutgoing(entity, maxHops, avoid)
+      new TextBoundMention(entity.labels, interval, entity.sentence, entity.document, entity.keep, entity.foundBy)
+    }
   }
 
   /** Used by expand to selectively traverse the provided syntactic dependency graph **/

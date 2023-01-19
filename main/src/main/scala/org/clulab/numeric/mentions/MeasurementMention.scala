@@ -1,6 +1,6 @@
 package org.clulab.numeric.mentions
 
-import org.clulab.numeric.{NumberParser, UnitNormalizer}
+import org.clulab.numeric.{BaseUnitNormalizer, NullUnitNormalizer, NumberParser, UnitNormalizer}
 import org.clulab.odin.{Attachment, TextBoundMention}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
@@ -14,7 +14,8 @@ class MeasurementMention ( labels: Seq[String],
                            attachments: Set[Attachment],
                            val value: Option[Seq[String]],
                            val unit: Option[Seq[String]],
-                           val fromRange: Boolean)
+                           val fromRange: Boolean,
+                           unitNormalizer: BaseUnitNormalizer = NullUnitNormalizer)
   extends TextBoundMention(labels, tokenInterval, sentence, document, keep, foundBy, attachments) with Norm {
 
   override def neNorm: String = {
@@ -29,12 +30,16 @@ class MeasurementMention ( labels: Seq[String],
       }
     if(numValueOpt.isEmpty)
       throw new RuntimeException(s"ERROR: could not parse the number [${value.mkString(" ")}] in the measurement ${raw.mkString(" ")}!")
-    val unitNorm = UnitNormalizer.norm(unit.get)
+    val unitNorm = unitNormalizer.norm(unit.get)
 
     s"${numValueOpt.get} $unitNorm"
   }
 
   override def neLabel: String = {
-    "MEASUREMENT"
+    val unitClassOpt = unitNormalizer.unitClassOpt(unit.get)
+
+    unitClassOpt
+        .map { unitClass => s"MEASUREMENT-${unitClass.toUpperCase.replace(" ", "-")}" }
+        .getOrElse("MEASUREMENT")
   }
 }

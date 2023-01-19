@@ -308,7 +308,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
         // try to read file with a list of rules by trying to read a Collection of JMaps
         val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
         val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
-        (jRules, Map.empty)
+        (jRules, Map.empty[String, String])
     }
     // variables specified by the call to `import`
     val importVars = getVars(data)

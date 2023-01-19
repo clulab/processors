@@ -1,12 +1,10 @@
 package org.clulab.utils
 
 import org.clulab.dynet.Utils
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
 
 import java.io.FileNotFoundException
 
-class TestUtils extends FlatSpec with Matchers {
+class TestUtils extends Test {
 
   behavior of "Utils"
 

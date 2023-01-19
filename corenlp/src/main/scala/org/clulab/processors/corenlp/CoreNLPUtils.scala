@@ -49,8 +49,8 @@ object CoreNLPUtils {
       // Using list.distinct instead of Set.toList will preserve the order of edges.
       // Set can be sorted in different ways even on different runs with the same data.
       sg.edgeIterable().asScala.toList.map { edge =>
-        val head: Int = edge.getGovernor.get(classOf[IndexAnnotation])
-        val modifier: Int = edge.getDependent.get(classOf[IndexAnnotation])
+        val head: Int = edge.getGovernor.get[Integer](classOf[IndexAnnotation])
+        val modifier: Int = edge.getDependent.get[Integer](classOf[IndexAnnotation])
         val specOpt = Option(edge.getRelation.getSpecific)
         val label = edge.getRelation.getShortName + specOpt.map("_" + _).getOrElse("")
         if (debug)
@@ -76,32 +76,33 @@ object CoreNLPUtils {
       val tree = Terminal(stanfordTree.label.value())
       tree.setIndex(position.value)
       position.value += 1
-      return tree
+      tree
     }
-
-    // println("Converting tree: " + stanfordTree.toString)
-    val children = new Array[Tree](stanfordTree.numChildren())
-    for (i <- 0 until stanfordTree.numChildren()) {
-      children(i) = toTree(stanfordTree.getChild(i), headFinder, position)
-    }
-    val value = stanfordTree.label.value()
-    val start = children(0).startOffset
-    val end = children(children.length - 1).endOffset
-
-    val headDaughter = headFinder.determineHead(stanfordTree)
-    var head = -1
-    var i = 0
-    while(i < stanfordTree.numChildren() && head == -1) {
-      if (headDaughter == stanfordTree.getChild(i)) {
-        head = i
+    else {
+      // println("Converting tree: " + stanfordTree.toString)
+      val children = new Array[Tree](stanfordTree.numChildren())
+      for (i <- 0 until stanfordTree.numChildren()) {
+        children(i) = toTree(stanfordTree.getChild(i), headFinder, position)
       }
-      i += 1
-    }
+      val value = stanfordTree.label.value()
+      val start = children(0).startOffset
+      val end = children(children.length - 1).endOffset
 
-    val nt = NonTerminal(value, children)
-    nt.setStartEndIndices(start, end)
-    nt.setHead(head)
-    nt
+      val headDaughter = headFinder.determineHead(stanfordTree)
+      var head = -1
+      var i = 0
+      while(i < stanfordTree.numChildren() && head == -1) {
+        if (headDaughter == stanfordTree.getChild(i)) {
+          head = i
+        }
+        i += 1
+      }
+
+      val nt = NonTerminal(value, children)
+      nt.setStartEndIndices(start, end)
+      nt.setHead(head)
+      nt
+    }
   }
 
   /**

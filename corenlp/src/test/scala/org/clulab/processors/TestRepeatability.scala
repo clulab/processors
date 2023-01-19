@@ -6,8 +6,7 @@ import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Sourcer.utf8
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.clulab.utils.Test
 
 import java.io.File
 import java.io.PrintWriter
@@ -15,7 +14,7 @@ import java.io.StringWriter
 import scala.collection.mutable
 import scala.io.Source
 
-class TestRepeatability extends FlatSpec with Matchers {
+class TestRepeatability extends Test {
 
   def printDocument(document: Document): String = {
     val stringWriter = new StringWriter
@@ -45,9 +44,13 @@ class TestRepeatability extends FlatSpec with Matchers {
 
       text.substring(beginIndex, endIndex).trim
     }
-    val result1 = printDocument(processor.annotate(text))
+
+    val doc1 = processor.annotate(text)
+    val result1 = printDocument(doc1)
     val result2 = printDocument(processor.annotate(text))
+    val result3 = printDocument(doc1.copy())
 
     result1 should be (result2)
+    result1 should be (result3)
   }
 }

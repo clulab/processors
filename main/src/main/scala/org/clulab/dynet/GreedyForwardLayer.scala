@@ -49,19 +49,11 @@ class GreedyForwardLayer (parameters:ParameterCollection,
   }
 
   override def inferenceWithScores(emissionScores: Array[Array[Float]]): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    val labelsWithScores = new ArrayBuffer[IndexedSeq[(String, Float)]]
-
-    for(scoresForPosition <- emissionScores) {
-      val labelsAndScores = new ArrayBuffer[(String, Float)]()
-      for(lid <- scoresForPosition.indices) {
-        val label = i2t(lid)
-        val score = scoresForPosition(lid)
-        labelsAndScores += Tuple2(label, score)
-      }
-      labelsWithScores += labelsAndScores.sortBy(- _._2)
+    // For each index of the second Array, pair the value (score) at the index with i2t at the index and then sort
+    // the pairs from highest to lowest by the score.
+    emissionScores.map { scoresForPosition =>
+      i2t.zip(scoresForPosition).sortBy(-_._2).toIndexedSeq
     }
-
-    labelsWithScores
   }
 }
 

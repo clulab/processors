@@ -75,15 +75,9 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   }
 
   /** Retrieves the attachment with the given name */
-  def getAttachment(name: String): Option[DocumentAttachment] = {
-    attachments.flatMap(_.get(name))
-  }
+  def getAttachment(name: String): Option[DocumentAttachment] = attachments.flatMap(_.get(name))
 
-  def removeAttachment(name: String): Unit = {
-    if(attachments.nonEmpty) {
-      attachments.get -= name
-    }
-  }
+  def removeAttachment(name: String): Unit = attachments.foreach(_ -= name)
 
   /** Retrieves keys to all attachments so that the entire collection can be read
     * for purposes including but not limited to serialization.  If there are no
@@ -103,9 +97,7 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
    * The DCT will impacts how Sentence.norms are generated for DATE expressions
    * @param dct Document creation time
    */
-  def setDCT(dct:String): Unit = {
-    documentCreationTime = Some(dct)
-  }
+  def setDCT(dct:String): Unit = documentCreationTime = Some(dct)
 
   def getDCT: Option[String] = documentCreationTime
 
@@ -184,8 +176,24 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         }
       }
     })
-
   }
+
+  def copy(document: Document): Document = {
+    id = document.id
+    coreferenceChains = document.coreferenceChains
+    text = document.text
+    attachments = document.attachments
+    documentCreationTime = document.documentCreationTime
+    this
+  }
+
+  def copy(sentences: Array[Sentence] = sentences): Document = new Document(sentences).copy(this)
+
+  def offset(offset: Int): Document =
+      // If a subclass of Document constructs itself with an attachment or a documentCreationTime that
+      // would be overwritten on the copy(), then it should provide its own copy() method(s).
+      if (offset == 0) this
+      else copy(sentences = sentences.map(_.offset(offset)))
 }
 
 object Document {

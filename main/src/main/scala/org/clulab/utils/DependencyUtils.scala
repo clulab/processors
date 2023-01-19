@@ -21,7 +21,7 @@ object DependencyUtils {
   type Policy = Seq[Int] => Int
 
   // get all the governors of the given token according to the dependency graph
-  def followIncoming(tok: Int, graph: DependencyGraph): Array[Int] = graph.incomingEdges.lift(tok).getOrElse(Array.empty).map(_._1)
+  def followIncoming(tok: Int, graph: DependencyGraph): Array[Int] = graph.incomingEdges.lift(tok).getOrElse(Array.empty[(Int, String)]).map(_._1).toArray
 
   // by default we choose the last element of the sequence
   val defaultPolicy: Policy = _.last
@@ -34,28 +34,29 @@ object DependencyUtils {
    * @return the minimal Interval that contains all the nodes that are children of span's nodes
    */
   def subgraph(span: Interval, sent: Sentence): Option[Interval] = {
-    val graph = sent.dependencies.getOrElse(return None)
+    sent.dependencies.map { graph =>
 
-    val heads = if (span.size < 2) Seq(span.start) else findHeadsStrict(span, sent)
+      @annotation.tailrec
+      def followTrail(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
+        case Nil => results
+        case first +: rest if results contains first => followTrail(rest, results)
+        case first +: rest =>
+          val children: Seq[Int] = try {
+            graph.getOutgoingEdges(first).map(_._1)
+          } catch {
+            case e: Exception =>
+              Nil
+          }
+          followTrail(children ++ rest, first +: results)
+      }
 
-    @annotation.tailrec
-    def followTrail(remaining: Seq[Int], results: Seq[Int]): Seq[Int] = remaining match {
-      case Nil => results
-      case first +: rest if results contains first => followTrail(rest, results)
-      case first +: rest =>
-        val children: Seq[Int] = try {
-          graph.getOutgoingEdges(first).map(_._1)
-        } catch {
-          case e: Exception =>
-            Nil
-        }
-        followTrail(children ++ rest, first +: results)
+      val heads = if (span.size < 2) Seq(span.start) else findHeadsStrict(span, sent)
+      val outgoing = (for (h <- heads) yield followTrail(Seq(h), Nil)).flatten.distinct
+
+      // outgoing may only have a single index
+      if (outgoing.length > 1) Interval(outgoing.min, outgoing.max+1)
+      else Interval(outgoing.min, outgoing.min + 1)
     }
-
-    val outgoing = (for (h <- heads) yield followTrail(Seq(h), Nil)).flatten.distinct
-
-    // outgoing may only have a single index
-    if (outgoing.length > 1) Some(Interval(outgoing.min, outgoing.max+1)) else Some(Interval(outgoing.min, outgoing.min + 1))
   }
 
   /**
@@ -121,12 +122,11 @@ object DependencyUtils {
       countSteps(List((token, 0)), Set.empty)
     }
 
-    // get the distance to root for each token in span
-    val toksWithDist = span.map(t => (t, distToRoot(t)))
-    val dists = toksWithDist.map(_._2)
-    if (dists.isEmpty) {
-      Nil
-    } else {
+    if (span.isEmpty) Nil
+    else {
+      // get the distance to root for each token in span
+      val toksWithDist = span.map(t => (t, distToRoot(t)))
+      val dists = toksWithDist.map(_._2)
       // return all tokens with minimum distance
       val minDist = dists.min
       for ((t, d) <- toksWithDist if d == minDist) yield t
@@ -220,16 +220,12 @@ object DependencyUtils {
    * @return returns true if Interval a contains Interval b or vice versa
    */
   def nested(a: Interval, b: Interval, sentA: Sentence, sentB: Sentence): Boolean = {
-    if (sentA != sentB) return false
+    sentA == sentB && sentA.dependencies.nonEmpty && {
+      val aSubgraphOpt = subgraph(a, sentA)
+      val bSubgraphOpt = subgraph(b, sentB)
 
-    val graph = sentA.dependencies.getOrElse(return false)
-
-    val aSubgraph = subgraph(a, sentA)
-    val bSubgraph = subgraph(b, sentB)
-
-    if((aSubgraph.isDefined && aSubgraph.get.contains(b)) ||
-      (bSubgraph.isDefined && bSubgraph.get.contains(a))) true
-    else false
+      aSubgraphOpt.exists(_.contains(b)) || bSubgraphOpt.exists(_.contains(a))
+    }
   }
 
   def mergeGraphs[T](dg1: DirectedGraph[T], dg2: DirectedGraph[T]): DirectedGraph[T] = {

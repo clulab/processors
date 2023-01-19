@@ -43,15 +43,9 @@ class LiblinearRegression[F](
     val problem = new Problem()
     problem.l = indices.length
     logger.debug(s"Using ${problem.l} datums.")
-    problem.n = bias match {
-      case true => dataset.numFeatures + 1
-      case false => dataset.numFeatures
-    }
+    problem.n = dataset.numFeatures + (if (bias) 1 else 0)
     logger.debug(s"Using ${problem.n} features.")
-    problem.bias = bias match {
-      case true => 1.0
-      case false => -1.0
-    }
+    problem.bias = if (bias) 1.0 else -1.0
     logger.debug(s"Using bias = ${problem.bias}")
     // set the labels
     problem.y = new Array[Double](problem.l)

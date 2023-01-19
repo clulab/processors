@@ -3,12 +3,11 @@ package org.clulab.processors
 import java.io.File
 import org.clulab.processors.examples.ParallelProcessorExample
 import org.clulab.utils.FileUtils
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.clulab.utils.Test
 
 import scala.collection.mutable
 
-class TestParallel extends FlatSpec with Matchers {
+class TestParallel extends Test {
 
   def save(map: mutable.HashMap[String, String], file: File, value: String): Unit = {
     println(s" Completed ${file.getName}.")

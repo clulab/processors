@@ -1,3 +1,9 @@
++ **8.5.3** - Allow document construction from text fragments containing multiple sentences
++ **8.5.3** - Build for Scala 3, use artifactory.clulab.org, streamline buffers
++ **8.5.3** - Improve number parser with words such as "dozen", "grand"
++ **8.5.3** - Add unit classes to measurements
++ **8.5.3** - Initialize DyNet automatically
++ **8.5.3** - Build for Scala 2.13
 + **8.5.2** - Overwrite named entities cleanly
 + **8.5.2** - Avoid year-like values sharing units and generally refine numeric processing
 + **8.5.2** - Processors no longer uses Scala logging nor does it publish its runtime use of logback so that it isn't forced onto clients.  logback is still included in ivy.xml for publishLocal, however.

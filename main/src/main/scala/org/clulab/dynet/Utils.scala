@@ -229,13 +229,7 @@ object Utils {
     total
   }
 
-  def toIds[T](tags: IndexedSeq[T], t2i: Map[T, Int]): IndexedSeq[Int] = {
-    val ids = new ArrayBuffer[Int]()
-    for (tag <- tags) {
-      ids += t2i(tag)
-    }
-    ids
-  }
+  def toIds[T](tags: IndexedSeq[T], t2i: Map[T, Int]): IndexedSeq[Int] = tags.map(t2i)
 
   def printCoNLLOutput(pw: PrintWriter,
                        words: IndexedSeq[String],
@@ -251,22 +245,13 @@ object Utils {
     pw.println()
   }
 
-  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores */
+  /** Runs a greedy algorithm to generate the sequence of tag ids, ignoring transition scores.
+    * For each element of the first Array, find the first index in the second Array of the maximum value.  */
   def greedyPredict(lattice: Array[Array[Float]]): Array[Int] = {
-    val tagIds = new ArrayBuffer[Int]()
-    for (probs <- lattice) {
-      var max = Float.MinValue
-      var tid = -1
-      for (i <- probs.indices) {
-        if (probs(i) > max) {
-          max = probs(i)
-          tid = i
-        }
-      }
-      assert(tid > -1)
-      tagIds += tid
-    }
-    tagIds.toArray
+    lattice.map { probs =>
+      assert(probs.nonEmpty)
+      ArrayMath.argmax(probs)
+    }.toArray
   }
 
   def srlPredict(lattice: Array[Array[Float]], predPosition: Int, oId: Int): Array[Int] = {
@@ -394,7 +379,7 @@ object Utils {
       nonEmptyOuts(nonEmptyOuts.length - 1)
     }
 
-    val charEmbeddings = word.map { c: Char =>
+    val charEmbeddings = word.map { (c: Char) =>
       lookup(charLookupParameters, c2i.getOrElse(c, UNK_EMBEDDING))
     }
     val fwOutsLast = safelyTransduceLast1(charEmbeddings, charFwRnnBuilder)
@@ -590,56 +575,62 @@ object Utils {
                            fieldName: Option[String],
                            defaultValue: Option[DefaultValueType]): Unit = {
 
+      def inner(): Unit = {
+        // skip exactly 1 comment line (optional)
+        if (lines.head.nonEmpty && lines.head.startsWith("#")) {
+          lines.next()
+        }
+
+        def nextLine(): Boolean = {
+          val line = lines.next()
+          //println(s"LINE: [$line]")
+
+          if (line.nonEmpty) {
+            addLine(intermediateValue, line)
+            true // Continue on non-blank lines.
+          }
+          else {
+            false // Stop at first blank line.
+          }
+        }
+
+        while (nextLine()) {}
+      }
+
       //
       // sanity check: verify if we are reading the expected field, by checking the string in the comment
       // if we are not seeing the expected field, but we have a default value for this field, use that
       //   this is necessary to make new code backwards compatible with older models that may not have that field
       // if we are not seeing the expected field, and no default value provided, bail
       //
-      if(fieldName.nonEmpty) {
-        val head = if(lines.hasNext) Some(lines.head) else None
+      if (fieldName.nonEmpty) {
+        val head = if (lines.hasNext) Some(lines.head) else None
 
         // if the field name doesn't match, set it to the default value
         if (defaultValue.nonEmpty) {
-          if(head.isEmpty) {
+          if (head.isEmpty) {
             logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing an empty line.")
             logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
             setDefaultValue(intermediateValue, defaultValue.get)
-            return
-          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+          }
+          else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
             logger.warn(s"Did not see the expected field [${fieldName.get}] in the model; instead I am seeing this line: [${head.get}].")
             logger.warn(s"Attempting to recover by using default value of [${defaultValue.get}].")
             setDefaultValue(intermediateValue, defaultValue.get)
-            return
           }
-        } else {
-          if(head.isEmpty) {
-            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing an empty line!")
-          } else if (! head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
-            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing this line: [${head.get}]!")
-          }
-        }
-      }
-
-      // skip exactly 1 comment line (optional)
-      if (lines.head.nonEmpty && lines.head.startsWith("#")) {
-        lines.next()
-      }
-
-      def nextLine(): Boolean = {
-        val line = lines.next()
-        //println(s"LINE: [$line]")
-
-        if (line.nonEmpty) {
-          addLine(intermediateValue, line)
-          true // Continue on non-blank lines.
+          else inner()
         }
         else {
-          false // Stop at first blank line.
+          if (head.isEmpty) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing an empty line!")
+          }
+          else if (!head.get.startsWith("#") || getComment(head.get) != fieldName.get) {
+            throw new RuntimeException(s"ERROR: expecting field name ${fieldName.get}; instead I am seeing this line: [${head.get}]!")
+          }
+          else inner()
         }
       }
-
-      while (nextLine()) {}
+      else inner()
     }
 
     def addLine(intermediateValue: IntermediateValueType, line: String): Unit

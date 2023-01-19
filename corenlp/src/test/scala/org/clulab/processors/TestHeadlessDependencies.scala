@@ -3,9 +3,9 @@ package org.clulab.processors
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.struct.Interval
 import org.clulab.utils.DependencyUtils
-import org.scalatest.{FlatSpec, Matchers}
+import org.clulab.utils.Test
 
-class TestHeadlessDependencies extends FlatSpec with Matchers {
+class TestHeadlessDependencies extends Test {
   var proc:Processor = new CoreNLPProcessor()
 
   "CoreNLPProcessor" should "not produce a dependency graph without a head" in {

@@ -48,7 +48,7 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
     map.get(word).map { row =>
       val offset = row * columns
 
-      array.slice(offset, offset + columns)
+      array.slice(offset, offset + columns).toArray
     }
   }
 
