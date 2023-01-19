@@ -122,12 +122,11 @@ object DependencyUtils {
       countSteps(List((token, 0)), Set.empty)
     }
 
-    // get the distance to root for each token in span
-    val toksWithDist = span.map(t => (t, distToRoot(t)))
-    val dists = toksWithDist.map(_._2)
-    if (dists.isEmpty) {
-      Nil
-    } else {
+    if (span.isEmpty) Nil
+    else {
+      // get the distance to root for each token in span
+      val toksWithDist = span.map(t => (t, distToRoot(t)))
+      val dists = toksWithDist.map(_._2)
       // return all tokens with minimum distance
       val minDist = dists.min
       for ((t, d) <- toksWithDist if d == minDist) yield t
