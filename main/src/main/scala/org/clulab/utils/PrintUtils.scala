@@ -27,7 +27,7 @@ object PrintUtils {
     def println(): Unit = printStream.println()
   }
 
-  implicit class PrintintWriter(printWriter: PrintWriter) extends Printing {
+  implicit class PrintingWriter(printWriter: PrintWriter) extends Printing {
 
     def print(any: Any): Unit = printWriter.print(any)
 
