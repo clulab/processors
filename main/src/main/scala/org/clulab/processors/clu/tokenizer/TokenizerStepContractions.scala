@@ -76,7 +76,8 @@ class TokenizerStepContractions extends TokenizerStep {
             tokens += RawToken(input.raw.substring(0, input.raw.length - 3), input.beginPosition)
             tokens += RawToken(input.raw.substring(input.raw.length - 3), input.beginPosition + input.raw.length - 3, "will")
           } else {
-            tokens += RawToken("will", input.beginPosition, input.endPosition)
+            tokens += RawToken(input.raw, input.beginPosition, "will")
+            // tokens += RawToken("will", input.beginPosition, input.endPosition)
           }
         }
 
