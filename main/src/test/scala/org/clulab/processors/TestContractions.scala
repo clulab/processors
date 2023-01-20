@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.processors.clu.tokenizer.{EnglishSentenceSplitter, OpenDomainEnglishLexer, RawToken, Tokenizer, TokenizerStepContractions}
 import org.clulab.utils.PrintUtils._
-import org.clulab.utils.Test
+import org.clulab.utils.{Test, Timers}
 
 import scala.util.Random
 
@@ -183,5 +183,26 @@ class TestContractions extends Test {
       outputs.last.endPosition - outputs.head.beginPosition should be(shortSpecification.contraction.length)
       wordString should be(shortSpecification.contractionString)
     }
+  }
+
+  it should "run quickly" in {
+    // With old code
+    // 0:00:00:10.567
+    // 0:00:00:11.223
+    // 0:00:00:10.438
+    // 0:00:00:11.267
+    // 0:00:00:11.555
+    val timer = Timers.getOrNew("run")
+    val inputs = specifications.flatMap { specification =>
+      Array(RawToken(specification.contraction, 0))
+    }
+
+    timer.time {
+      1.to(100000).foreach { index =>
+        val outputs = tokenizerStepContractions.process(inputs)
+        // outputs.map(_.word).println(", ")
+      }
+    }
+    println(timer.elapsedToString)
   }
 }
