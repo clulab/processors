@@ -28,7 +28,7 @@ class TestPrintUtils extends Test {
 
     def test(any: Any, expectedResult: String): Unit = {
       val standardResult = withPrintWriter(_.print(any))
-      val customResult = withPrintWriter(any.print)
+      val customResult = withPrintWriter { printWriter => any.print(printWriter) }
 
       println(standardResult)
       println(customResult)
@@ -51,7 +51,7 @@ class TestPrintUtils extends Test {
     val end = ">"
 
     def test(any: Any, expectedResult: String): Unit = {
-      val customResult = withPrintWriter(any.print(_, start, sep, end))
+      val customResult = withPrintWriter { printWriter => any.print(printWriter, start, sep, end) }
 
       println(customResult)
       customResult should be (expectedResult)

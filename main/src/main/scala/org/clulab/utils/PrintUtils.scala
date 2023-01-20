@@ -8,92 +8,84 @@ object PrintUtils {
   val arraySep = ", "
   val arrayEnd = ")"
 
+  abstract class Printing {
+
+    def print(any: Any): Unit
+
+    def println(any: Any): Unit = {
+      print(any)
+      println()
+    }
+
+    def println(): Unit
+  }
+
+  implicit class PrintingStream(printStream: PrintStream) extends Printing {
+
+    def print(any: Any): Unit = printStream.print(any)
+
+    def println(): Unit = printStream.println()
+  }
+
+  implicit class PrintintWriter(printWriter: PrintWriter) extends Printing {
+
+    def print(any: Any): Unit = printWriter.print(any)
+
+    def println(): Unit = printWriter.println()
+  }
+
   implicit class Printer(any: Any) {
 
-    protected abstract class Printable {
-
-      def print(any: Any): Unit
-
-      def println(): Unit
+    protected def asArrayOpt(any: Any): Option[Array[_]] = any match {
+      case array: Array[_] => Some(array)
+      case _ => None
     }
 
-    case class PrintableStream(printStream: PrintStream) extends Printable {
-
-      def print(any: Any): Unit = printStream.print(any)
-
-      def println(): Unit = printStream.println()
-    }
-
-    case class PrintableWriter(printWriter: PrintWriter) extends Printable {
-
-      def print(any: Any): Unit = printWriter.print(any)
-
-      def println(): Unit = printWriter.println()
-    }
-
-    protected def asArrayOpt(any: Any): Option[Array[_]] =
-        if (any.isInstanceOf[Array[_]]) Some(any.asInstanceOf[Array[_]])
-        else None
-
-    def print: Unit = asArrayOpt(any)
+    def print(): Unit = asArrayOpt(any)
         .map(_.toIterable.print(arrayStart, arraySep, arrayEnd))
         .getOrElse(System.out.print(any))
     def print(sep: String): Unit = print(empty, sep, empty)
     def print(start: String, sep: String, end: String): Unit =
         print(System.out, start, sep, end)
 
-    def print(printStream: PrintStream): Unit = asArrayOpt(any)
-        .map(_.toIterable.print(printStream, arrayStart, arraySep, arrayEnd))
-        .getOrElse(printStream.print(any))
-    def print(printStream: PrintStream, sep: String): Unit = print(printStream, empty, sep, empty)
-    def print(printStream: PrintStream, start: String, sep: String, end: String): Unit =
-        execute(PrintableStream(printStream), start, sep, end, false)
+    def print(printing: Printing): Unit = asArrayOpt(any)
+        .map(_.toIterable.print(printing, arrayStart, arraySep, arrayEnd))
+        .getOrElse(printing.print(any))
+    def print(printing: Printing, sep: String): Unit = print(printing, empty, sep, empty)
+    def print(printing: Printing, start: String, sep: String, end: String): Unit =
+        execute(printing, start, sep, end, newline = false)
 
-    def print(printWriter: PrintWriter): Unit = asArrayOpt(any)
-        .map(_.toIterable.print(printWriter, arrayStart, arraySep, arrayEnd))
-        .getOrElse(printWriter.print(any))
-    def print(printWriter: PrintWriter, sep: String): Unit = print(printWriter, empty, sep, empty)
-    def print(printWriter: PrintWriter, start: String, sep: String, end: String): Unit =
-        execute(PrintableWriter(printWriter), start, sep, end, false)
-
-    def println: Unit = asArrayOpt(any)
+    def println(): Unit = asArrayOpt(any)
         .map(_.toIterable.println(arrayStart, arraySep, arrayEnd))
         .getOrElse(System.out.println(any))
     def println(sep: String): Unit = println(empty, sep, empty)
     def println(start: String, sep: String, end: String): Unit =
         println(System.out, start, sep, end)
 
-    def println(printStream: PrintStream): Unit = asArrayOpt(any)
-        .map(_.toIterable.println(printStream, arrayStart, arraySep, arrayEnd))
-        .getOrElse(printStream.println(any))
-    def println(printStream: PrintStream, sep: String): Unit = println(printStream, empty, sep, empty)
-    def println(printStream: PrintStream, start: String, sep: String, end: String): Unit =
-        execute(PrintableStream(printStream), start, sep, end, true)
+    def println(printing: Printing): Unit = asArrayOpt(any)
+        .map(_.toIterable.println(printing, arrayStart, arraySep, arrayEnd))
+        .getOrElse(printing.println(any))
+    def println(printing: Printing, sep: String): Unit = println(printing, empty, sep, empty)
+    def println(printing: Printing, start: String, sep: String, end: String): Unit =
+        execute(printing, start, sep, end, newline = true)
 
-    def println(printWriter: PrintWriter): Unit = asArrayOpt(any)
-        .map(_.toIterable.println(printWriter, arrayStart, arraySep, arrayEnd))
-        .getOrElse(printWriter.println(any))
-    def println(printWriter: PrintWriter, sep: String): Unit = println(printWriter, empty, sep, empty)
-    def println(printWriter: PrintWriter, start: String, sep: String, end: String): Unit =
-        execute(PrintableWriter(printWriter), start, sep, end, true)
-
-    protected def execute(printable: Printable, start: String, sep: String, end: String, newline: Boolean): Unit = {
+    protected def execute(printing: Printing, start: String, sep: String, end: String, newline: Boolean): Unit = {
       val patchedAny = asArrayOpt(any).map(_.toIterable).getOrElse(any)
 
-      if (start.nonEmpty) printable.print(start)
+      if (start.nonEmpty) printing.print(start)
       patchedAny match {
         case iterable: Iterable[_] =>
           var started = false
           iterable.foreach { each =>
-            if (started) printable.print(sep)
+            if (started) printing.print(sep)
             else started = true
 
-            printable.print(each)
+            printing.print(each)
           }
-        case other => printable.print(other)
+        case other => printing.print(other)
       }
-      if (end.nonEmpty) printable.print(end)
-      if (newline) printable.println()
+      if (end.nonEmpty) printing.print(end)
+      if (newline) printing.println()
     }
   }
 }
