@@ -1,13 +1,21 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.tokenizer.{EnglishSentenceSplitter, OpenDomainEnglishLexer, Tokenizer, TokenizerStepContractions}
+import org.clulab.processors.clu.tokenizer.{EnglishSentenceSplitter, OpenDomainEnglishLexer, RawToken, Tokenizer, TokenizerStepContractions}
 import org.clulab.utils.PrintUtils._
 import org.clulab.utils.Test
 
 class TestContractions extends Test {
 
-  case class Specification(contraction: String, words: String*) {
-    val string = words.mkString(" ")
+  case class Specification(contraction: String, words: Array[String], raws: Array[String]) {
+
+    def wordString(tokenizer: Boolean): String =
+        // If the tokenizer splits it up, ignore the words.
+        if (tokenizer && contraction.startsWith("'")) "' " + contraction.substring(1)
+        else words.mkString(" ")
+
+    def rawString(tokenizer: Boolean): String =
+        if (tokenizer && contraction.startsWith("'")) "' " + contraction.substring(1)
+        else raws.mkString(" ")
   }
 
   // TODO avoid double contractions or take off 've and then work on the next part
@@ -15,42 +23,42 @@ class TestContractions extends Test {
   // 'til, 'tis, 'twas
 
   val specifications = Array(
-    Specification("'s", "'", "s"),
-    Specification("let's", "let", "'s"), //
-    Specification("here's", "here", "'s"), //  -> not possessive, is
-    Specification("that's", "that", "'s"), //  -> possibly possessive, is or maybe has, it's that's thing, not your thing
-    Specification("there's", "there", "'s"), //  -> not possessive (their), is or has
-    Specification("what's", "what", "'s"), //  -> is or has
-    Specification("how's", "how", "'s"), //  -> not possessive, is or has
-    Specification("he's", "he", "'s"), //  -> otherwise his, is or has
-    Specification("it's", "it", "'s"), //  -> otherwise its, is or has
-    Specification("she's", "she", "'s"), //  -> otherwise her, is or has
-    Specification("who's", "who", "'s"), //  -> otherwise whose, is or has
-    Specification("this's", "this", "'s"), //  -> not possessive, is or has
-    Specification("when's", "when", "'s"), //  -> not possessive, is or has
-    Specification("where's", "where", "'s"), //  -> not possessive
-    Specification("which's", "which", "'s"), //  -> not possessive
-    Specification("why's", "why", "'s"), //  -> not possessive
-    Specification("somebody's", "somebody", "'s"), // , is or has, can it be possessive?
-    Specification("someone's", "someone", "'s"), //  can be possessive
-    Specification("something's", "something", "'s"), //
-    Specification("one's", "one", "'s"), //  can be possessive
+    Specification("'s",          Array("'s"),              Array("")),
+    Specification("let's",       Array("let", "'s"),       Array("")), //
+    Specification("here's",      Array("here", "'s"),      Array("")), //  -> not possessive, is
+    Specification("that's",      Array("that", "'s"),      Array("")), //  -> possibly possessive, is or maybe has, it's that's thing, not your thing
+    Specification("there's",     Array("there", "'s"),     Array("")), //  -> not possessive (their), is or has
+    Specification("what's",      Array("what", "'s"),      Array("")), //  -> is or has
+    Specification("how's",       Array("how", "'s"),       Array("")), //  -> not possessive, is or has
+    Specification("he's",        Array("he", "'s"),        Array("")), //  -> otherwise his, is or has
+    Specification("it's",        Array("it", "'s"),        Array("")), //  -> otherwise its, is or has
+    Specification("she's",       Array("she", "'s"),       Array("")), //  -> otherwise her, is or has
+    Specification("who's",       Array("who", "'s"),       Array("")), //  -> otherwise whose, is or has
+    Specification("this's",      Array("this", "'s"),      Array("")), //  -> not possessive, is or has
+    Specification("when's",      Array("when", "'s"),      Array("")), //  -> not possessive, is or has
+    Specification("where's",     Array("where", "'s"),     Array("")), //  -> not possessive
+    Specification("which's",     Array("which", "'s"),     Array("")), //  -> not possessive
+    Specification("why's",       Array("why", "'s"),       Array("")), //  -> not possessive
+    Specification("somebody's",  Array("somebody", "'s"),  Array("")), // , is or has, can it be possessive?
+    Specification("someone's",   Array("someone", "'s"),   Array("")), //  can be possessive
+    Specification("something's", Array("something", "'s"), Array("")), //
+    Specification("one's",       Array("one", "'s"),       Array("")), //  can be possessive
 
-    Specification("n't", "not"),
-    Specification("ain't", "ai", "not"), //  -> multiple, wrong
-    Specification("didn't", "did", "not"), //
-    Specification("don't", "do", "not"), //
-    Specification("doesn't", "does", "not"), //
-    Specification("can't", "ca", "not"), //  -> can not, wrong!
-    Specification("isn't", "is", "not"), //
-    Specification("aren't", "are", "not"), //
-    Specification("shouldn't", "should", "not"), //
-    Specification("couldn't", "could", "not"), //
-    Specification("wouldn't", "would", "not"), //
-    Specification("hasn't", "has", "not"), //
-    Specification("wasn't", "was", "not"), //
-    Specification("won't", "will", "not"), //  -> will not
-    Specification("weren't", "were", "not"), //
+    Specification("n't",       Array("not"),           Array("")),
+    Specification("ain't",     Array("ai", "not"),     Array("")), //  -> multiple, wrong
+    Specification("didn't",    Array("did", "not"),    Array("")), //
+    Specification("don't",     Array("do", "not"),     Array("")), //
+    Specification("doesn't",   Array("does", "not"),   Array("")), //
+    Specification("can't",     Array("ca", "not"),     Array("")), //  -> can not, wrong!
+    Specification("isn't",     Array("is", "not"),     Array("")), //
+    Specification("aren't",    Array("are", "not"),    Array("")), //
+    Specification("shouldn't", Array("should", "not"), Array("")), //
+    Specification("couldn't",  Array("could", "not"),  Array("")), //
+    Specification("wouldn't",  Array("would", "not"),  Array("")), //
+    Specification("hasn't",    Array("has", "not"),    Array("")), //
+    Specification("wasn't",    Array("was", "not"),    Array("")), //
+    Specification("won't",     Array("will", "not"),   Array("")), //  -> will not
+    Specification("weren't",   Array("were", "not"),   Array("")), //
     // Add shan't -> shall not
 
     Specification("'m", "'", "m"),
@@ -91,19 +99,43 @@ class TestContractions extends Test {
     // where'd did
   )
 
-  val tokenizer = new Tokenizer(new OpenDomainEnglishLexer, Seq(new TokenizerStepContractions), new EnglishSentenceSplitter)
+  val tokenizerStepContractions = new TokenizerStepContractions
+  val tokenizer = new Tokenizer(new OpenDomainEnglishLexer, Seq(tokenizerStepContractions), new EnglishSentenceSplitter)
 
   behavior of "TokenizerStepContractions"
 
-  it should "run" in {
+  it should "work with tokenizer" in {
     specifications.foreach { specification =>
       val sentence = tokenizer.tokenize(specification.contraction, sentenceSplit = false).head
+      val wordString = sentence.words.mkString(" ")
+      val rawString = sentence.raw.mkString(" ")
 
       specification.contraction.print("", "", ": ")
       sentence.words.println(", ")
 
-      sentence.words.mkString(" ") should be (specification.string)
+       should be (specification.tokenString)
     }
+  }
+
+  it should "work on its own" in {
+    specifications.foreach { specification =>
+      val inputs = Array(RawToken(specification.contraction, 0))
+      val outputs = tokenizerStepContractions.process(inputs)
+
+      specification.contraction.println("", "", ": ")
+      outputs.map(_.word).println("words: ", ", ", "")
+      outputs.map(_.raw).println("raws: ", ", ", "")
+
+      val wordString = outputs.map(_.word).mkString(" ")
+      val rawString = outputs.map(_.raw).mkString(" ")
+
+      wordString should be (specification.wordString)
+      rawString should be (specification.rawString)
+    }
+  }
+
+  it should "work quickly" in {
+
   }
 
   /*
