@@ -1,93 +1,112 @@
 package org.clulab.processors.clu.tokenizer
 
-import java.util.regex.Pattern
-import scala.collection.mutable.ArrayBuffer
+abstract class Contraction(letters: String) {
+  val letterGroups = Contraction.toLetterGroups(letters)
+  val length = letters.length
+
+  def expand(rawToken: RawToken): Array[RawToken]
+
+  def splitRight(string: String, n: Int): (String, String) = {
+    val split = string.length - n
+
+    (string.substring(0, split), string.substring(split))
+  }
+
+  def matches(rawToken: RawToken): Boolean = {
+    val raw = rawToken.raw
+    val rawLength = raw.length
+
+    length <= rawLength && letterGroups.indices.forall { index =>
+      // This takes care of case.
+      letterGroups(length - 1 - index).indexOf(raw.charAt(rawLength - 1 - index)) >= 0
+    }
+  }
+}
+
+object Contraction {
+  type LetterGroups = Array[String]
+
+  def toLetterGroups(template: String): LetterGroups = template.toArray.map { letter =>
+    if (letter.toLower == letter.toUpper) letter.toString
+    else letter.toLower.toString + letter.toUpper
+  }
+}
+
+// Match from the right but expand neither left nor right side while still separating them.
+class NeitherContraction(letters: String) extends Contraction(letters) {
+
+  override def expand(rawToken: RawToken): Array[RawToken] = {
+    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+    val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length)
+
+    if (leftRaw.nonEmpty)
+      Array(RawToken(leftRaw, rawToken.beginPosition), rightToken)
+    else
+      Array(rightToken)
+  }
+}
+
+// Perform a full match and use the left and right words.  This is mostly for exceptions to
+// other rules so that they should come first.
+class BothContraction(letters: String, leftWord: String, rightWord: String) extends Contraction(letters) {
+
+  override def expand(rawToken: RawToken): Array[RawToken] = {
+    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+
+    Array(
+      RawToken(leftRaw, rawToken.beginPosition, leftWord),
+      RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
+    )
+  }
+
+  override def matches(rawToken: RawToken): Boolean = {
+    // Since it is a full match, the length needs to be exact.
+    length == rawToken.raw.length && super.matches(rawToken)
+  }
+}
+
+// Match again from the right and expand only the right side, using the remainder (if any) for the left.
+class RightContraction(letters: String, rightWord: String) extends Contraction(letters) {
+
+  override def expand(rawToken: RawToken): Array[RawToken] = {
+    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+    val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
+
+    if (leftRaw.nonEmpty)
+      Array(RawToken(leftRaw, rawToken.beginPosition), rightToken)
+    else
+      Array(rightToken)
+  }
+}
 
 class TokenizerStepContractions extends TokenizerStep {
-
-  abstract class Contraction(pattern: Pattern, length: Int) {
-
-    def split(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit
-
-    def splitRight(string: String, n: Int): (String, String) = {
-      val split = string.length - n
-
-      (string.substring(0, split), string.substring(split))
-    }
-
-    def matches(rawToken: RawToken): Boolean =
-        // Check the length before the expensive match.
-        length <= rawToken.raw.length && pattern.matcher(rawToken.raw).find
-
-    def expand(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit =
-        split(rawToken, tokens)
-  }
-
-  // Match from the right but expand neither left nor right side while still separating them.
-  class NeitherContraction(pattern: Pattern, length: Int) extends Contraction(pattern, length) {
-
-    override def split(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit = {
-      val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
-
-      if (leftRaw.nonEmpty)
-        tokens += RawToken(leftRaw, rawToken.beginPosition)
-      tokens += RawToken(rightRaw, rawToken.beginPosition + leftRaw.length)
-    }
-  }
-
-  // Perform a full match and use the left and right words.  This is mostly for exceptions to
-  // other rules so that they should come first.
-  class BothContraction(pattern: Pattern, length: Int, leftWord: String, rightWord: String) extends Contraction(pattern, length) {
-
-    override def split(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit = {
-      val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
-
-      tokens += RawToken(leftRaw, rawToken.beginPosition, leftWord)
-      tokens += RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
-    }
-  }
-
-  // Match again from the right and expand only the right side, using the remainder (if any) for the left.
-  class RightContraction(pattern: Pattern, length: Int, rightWord: String) extends Contraction(pattern, length) {
-
-    override def split(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit = {
-      val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
-
-      if (leftRaw.nonEmpty)
-        tokens += RawToken(leftRaw, rawToken.beginPosition)
-      tokens += RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
-    }
-  }
-
-  def toPattern(template: String): Pattern = template.r.pattern
-
-  val contractions = Array(
-    new    BothContraction(toPattern("^[wW][oO][nN]'[tT]$"), 5, "will", "not"), // won't -> will not
-    new NeitherContraction(toPattern("'[sS]$"),              2),                // person's -> person 's
-    new   RightContraction(toPattern("[nN]'[tT]$"),          3, "not"),         // don't -> do not
-    new   RightContraction(toPattern("'[mM]$"),              2, "am"),          // I'm -> I am
-    new NeitherContraction(toPattern("'[dD]$"),              2),                // he'd -> he 'd
-    new   RightContraction(toPattern("'[lL][lL]$"),          3, "will")         // she'll -> she will
-  )
+  import TokenizerStepContractions.contractions
 
   // Unlike CoreNLP, we allow single quotes inside words
   // We must separate important linguistic constructs here
   override def process(inputs: Array[RawToken]): Array[RawToken] = {
-    val output = new ArrayBuffer[RawToken]()
-
-    inputs.foreach { input =>
+    inputs.flatMap { input =>
       // An apostrophe heralds all contractions, so resort to expensive
-      // regular expressions only after the cheap apostrophe detector sounds.
+      // matching only after the cheap apostrophe detector sounds.
       val heralded = input.raw.contains('\'')
       val contractionOpt =
           if (heralded) contractions.lift(contractions.indexWhere(_.matches(input)))
           else None
 
-      if (contractionOpt.isDefined)
-        contractionOpt.foreach(_.expand(input, output))
-      else
-        output += input
+      contractionOpt
+          .map(_.expand(input)) // if exception, then add exception back?
+          .getOrElse(Array(input))
     }
-    output.toArray
   }
+}
+
+object TokenizerStepContractions {
+  val contractions = Array(
+    new    BothContraction("won't", "will", "not"), // won't -> will not
+    new NeitherContraction("'s"),                   // person's -> person 's
+    new   RightContraction("n't", "not"),           // don't -> do not
+    new   RightContraction("'m", "am"),             // I'm -> I am
+    new NeitherContraction("'d"),                   // he'd -> he 'd
+    new   RightContraction("'ll", "will")           // she'll -> she will
+  )
 }
