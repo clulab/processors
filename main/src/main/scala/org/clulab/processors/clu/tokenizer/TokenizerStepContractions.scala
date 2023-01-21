@@ -60,10 +60,9 @@ class BothContraction(letters: String, leftWord: String, rightWord: String, exce
     )
   }
 
-  override def matches(rawToken: RawToken): Boolean = {
-    // Since it is a full match, the length needs to be exact.
-    length == rawToken.raw.length && super.matches(rawToken)
-  }
+  override def matches(rawToken: RawToken): Boolean =
+      // Since it is a full match, the length needs to be exact.
+      length == rawToken.raw.length && super.matches(rawToken)
 }
 
 // Match again from the right and expand only the right side, using the remainder (if any) for the left.
