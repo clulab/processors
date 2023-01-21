@@ -1,10 +1,22 @@
 package org.clulab.processors.clu.tokenizer
 
-abstract class Contraction(letters: String) {
+abstract class Contraction(letters: String, exceptions: Seq[String]) {
   val letterGroups = Contraction.toLetterGroups(letters)
   val length = letters.length
 
-  def expand(rawToken: RawToken): Array[RawToken]
+  def expandWithoutException(rawToken: RawToken): Array[RawToken]
+
+  def isException(string: String): Boolean = {
+    val lowerRaw = string.toLowerCase
+
+    exceptions.exists(_ == lowerRaw)
+  }
+
+  def expand(rawToken: RawToken): Array[RawToken] = {
+    // Try not to lowercase unless necessary.
+    if (exceptions.nonEmpty && isException(rawToken.raw)) Array(rawToken)
+    else expandWithoutException(rawToken)
+  }
 
   def splitRight(string: String, n: Int): (String, String) = {
     val split = string.length - n
@@ -33,9 +45,9 @@ object Contraction {
 }
 
 // Match from the right but expand neither left nor right side while still separating them.
-class NeitherContraction(letters: String) extends Contraction(letters) {
+class NeitherContraction(letters: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
-  override def expand(rawToken: RawToken): Array[RawToken] = {
+  override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
     val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
     val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length)
 
@@ -48,9 +60,9 @@ class NeitherContraction(letters: String) extends Contraction(letters) {
 
 // Perform a full match and use the left and right words.  This is mostly for exceptions to
 // other rules so that they should come first.
-class BothContraction(letters: String, leftWord: String, rightWord: String) extends Contraction(letters) {
+class BothContraction(letters: String, leftWord: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
-  override def expand(rawToken: RawToken): Array[RawToken] = {
+  override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
     val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
 
     Array(
@@ -66,9 +78,9 @@ class BothContraction(letters: String, leftWord: String, rightWord: String) exte
 }
 
 // Match again from the right and expand only the right side, using the remainder (if any) for the left.
-class RightContraction(letters: String, rightWord: String) extends Contraction(letters) {
+class RightContraction(letters: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
-  override def expand(rawToken: RawToken): Array[RawToken] = {
+  override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
     val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
     val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
 
@@ -94,7 +106,7 @@ class TokenizerStepContractions extends TokenizerStep {
           else None
 
       contractionOpt
-          .map(_.expand(input)) // if exception, then add exception back?
+          .map(_.expand(input))
           .getOrElse(Array(input))
     }
   }
@@ -106,7 +118,7 @@ object TokenizerStepContractions {
     new NeitherContraction("'s"),                   // person's -> person 's
     new   RightContraction("n't", "not"),           // don't -> do not
     new   RightContraction("'m", "am"),             // I'm -> I am
-    new NeitherContraction("'d"),                   // he'd -> he 'd
+    new NeitherContraction("'d", "cont'd"),         // he'd -> he 'd, with one exception
     new   RightContraction("'ll", "will")           // she'll -> she will
   )
 }
