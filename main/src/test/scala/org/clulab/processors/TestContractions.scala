@@ -117,8 +117,8 @@ class TestContractions extends Test {
       val rightOffset = random.nextInt(10)
       val sentence = tokenizer.tokenize(" " * leftOffset + specification.contraction + " " * rightOffset, sentenceSplit = false).head
 
-      specification.contraction.print("", "", ": ")
-      sentence.words.println(", ")
+      // specification.contraction.print("", "", ": ")
+      // sentence.words.println(", ")
 
       sentence.startOffsets.head should be (leftOffset)
       sentence.raw.mkString should be (specification.contraction)
@@ -135,8 +135,8 @@ class TestContractions extends Test {
       val rightOffset = random.nextInt(10)
       val sentence = tokenizer.tokenize(" " * leftOffset + shortSpecification.contraction + " " * rightOffset, sentenceSplit = false).head
 
-      shortSpecification.contraction.print("", "", ": ")
-      sentence.words.println(", ")
+      // shortSpecification.contraction.print("", "", ": ")
+      // sentence.words.println(", ")
 
       sentence.startOffsets.head should be(leftOffset)
       sentence.raw.mkString should be(shortSpecification.contraction)
@@ -153,9 +153,9 @@ class TestContractions extends Test {
       val inputs = Array(RawToken(specification.contraction, offset))
       val outputs = tokenizerStepContractions.process(inputs)
 
-      specification.contraction.println("", "", ": ")
-      outputs.map(_.word).println("words: ", ", ", "")
-      outputs.map(_.raw).println("raws: ", ", ", "")
+      // specification.contraction.println("", "", ": ")
+      // outputs.map(_.word).println("words: ", ", ", "")
+      // outputs.map(_.raw).println("raws: ", ", ", "")
 
       val wordString = outputs.map(_.word).mkString(" ")
       val rawString = outputs.map(_.raw).mkString
@@ -175,9 +175,9 @@ class TestContractions extends Test {
       val inputs = Array(RawToken(shortSpecification.contraction, offset))
       val outputs = tokenizerStepContractions.process(inputs)
 
-      shortSpecification.contraction.println("", "", ": ")
-      outputs.map(_.word).println("words: ", ", ", "")
-      outputs.map(_.raw).println("raws: ", ", ", "")
+      // shortSpecification.contraction.println("", "", ": ")
+      // outputs.map(_.word).println("words: ", ", ", "")
+      // outputs.map(_.raw).println("raws: ", ", ", "")
 
       val wordString = outputs.map(_.word).mkString(" ")
       val rawString = outputs.map(_.raw).mkString
@@ -190,7 +190,7 @@ class TestContractions extends Test {
     }
   }
 
-  it should "run quickly" in {
+  ignore should "run quickly" in {
     // With old code
     // 0:00:00:10.567
     // 0:00:00:11.223

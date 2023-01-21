@@ -1,22 +1,15 @@
 package org.clulab.processors.clu.tokenizer
 
-abstract class Contraction(letters: String, exceptions: Seq[String]) {
+abstract class Contraction(letters: String, val exceptions: Seq[String]) {
   val letterGroups = Contraction.toLetterGroups(letters)
   val length = letters.length
 
   def expandWithoutException(rawToken: RawToken): Array[RawToken]
 
-  def isException(string: String): Boolean = {
-    val lowerRaw = string.toLowerCase
-
-    exceptions.exists(_ == lowerRaw)
-  }
-
-  def expand(rawToken: RawToken): Array[RawToken] = {
-    // Try not to lowercase unless necessary.
-    if (exceptions.nonEmpty && isException(rawToken.raw)) Array(rawToken)
-    else expandWithoutException(rawToken)
-  }
+  def expand(rawToken: RawToken): Array[RawToken] =
+      // Try not to lowercase unless necessary.
+      if (exceptions.nonEmpty && exceptions.contains(rawToken.raw.toLowerCase)) Array(rawToken)
+      else expandWithoutException(rawToken)
 
   def splitRight(string: String, n: Int): (String, String) = {
     val split = string.length - n
@@ -29,8 +22,8 @@ abstract class Contraction(letters: String, exceptions: Seq[String]) {
     val rawLength = raw.length
 
     length <= rawLength && letterGroups.indices.forall { index =>
-      // This takes care of case.
-      letterGroups(length - 1 - index).indexOf(raw.charAt(rawLength - 1 - index)) >= 0
+      // This takes care of case and searching from the right.
+      letterGroups(length - 1 - index).contains(raw.charAt(rawLength - 1 - index))
     }
   }
 }
@@ -92,22 +85,18 @@ class RightContraction(letters: String, rightWord: String, exceptions: String*) 
 }
 
 class TokenizerStepContractions extends TokenizerStep {
-  import TokenizerStepContractions.contractions
 
   // Unlike CoreNLP, we allow single quotes inside words
   // We must separate important linguistic constructs here
-  override def process(inputs: Array[RawToken]): Array[RawToken] = {
-    inputs.flatMap { input =>
+  override def process(rawTokens: Array[RawToken]): Array[RawToken] = {
+    rawTokens.flatMap { rawToken =>
       // An apostrophe heralds all contractions, so resort to expensive
       // matching only after the cheap apostrophe detector sounds.
-      val heralded = input.raw.contains('\'')
-      val contractionOpt =
-          if (heralded) contractions.find(_.matches(input))
-          else None
-
-      contractionOpt
-          .map(_.expand(input))
-          .getOrElse(Array(input))
+      // Option.when works nicely in Scala 3.
+      (if (rawToken.raw.contains('\'')) Some(true) else None)
+          .flatMap(_ => TokenizerStepContractions.contractions.find(_.matches(rawToken)))
+          .map(_.expand(rawToken))
+          .getOrElse(Array(rawToken))
     }
   }
 }
