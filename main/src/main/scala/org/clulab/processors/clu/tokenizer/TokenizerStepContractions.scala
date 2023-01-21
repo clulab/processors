@@ -11,11 +11,7 @@ abstract class Contraction(letters: String, val exceptions: Seq[String]) {
       if (exceptions.nonEmpty && exceptions.contains(rawToken.raw.toLowerCase)) Array(rawToken)
       else expandWithoutException(rawToken)
 
-  def splitRight(string: String, n: Int): (String, String) = {
-    val split = string.length - n
-
-    (string.substring(0, split), string.substring(split))
-  }
+  def split(rawToken: RawToken): (String, String) = rawToken.raw.splitAt(rawToken.raw.length - length)
 
   def matches(rawToken: RawToken): Boolean = {
     val raw = rawToken.raw
@@ -41,7 +37,7 @@ object Contraction {
 class NeitherContraction(letters: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
-    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+    val (leftRaw, rightRaw) = split(rawToken)
     val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length)
 
     if (leftRaw.nonEmpty)
@@ -56,7 +52,7 @@ class NeitherContraction(letters: String, exceptions: String*) extends Contracti
 class BothContraction(letters: String, leftWord: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
-    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+    val (leftRaw, rightRaw) = split(rawToken)
 
     Array(
       RawToken(leftRaw, rawToken.beginPosition, leftWord),
@@ -74,7 +70,7 @@ class BothContraction(letters: String, leftWord: String, rightWord: String, exce
 class RightContraction(letters: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
-    val (leftRaw, rightRaw) = splitRight(rawToken.raw, length)
+    val (leftRaw, rightRaw) = split(rawToken)
     val rightToken = RawToken(rightRaw, rawToken.beginPosition + leftRaw.length, rightWord)
 
     if (leftRaw.nonEmpty)

@@ -1,7 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.processors.clu.tokenizer.{EnglishSentenceSplitter, OpenDomainEnglishLexer, RawToken, Tokenizer, TokenizerStepContractions}
-import org.clulab.utils.PrintUtils._
+// import org.clulab.utils.PrintUtils._
 import org.clulab.utils.{Test, Timers}
 
 import scala.util.Random
@@ -214,6 +214,6 @@ class TestContractions extends Test {
         // outputs.map(_.word).println(", ")
       }
     }
-    println(timer.elapsedToString)
+    println(timer.elapsedToString())
   }
 }
