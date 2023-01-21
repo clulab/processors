@@ -13,7 +13,8 @@ class TestContractions extends Test {
   }
 
   val specifications = Array(
-    Specification("let's", "let", "'s"), //
+    // Specification("let's", "let", "'s"), // exception
+    Specification("let's", "let's"), // exception
     Specification("here's", "here", "'s"), //  -> not possessive, is
     Specification("that's", "that", "'s"), //  -> possibly possessive, is or maybe has, it's that's thing, not your thing
     Specification("there's", "there", "'s"), //  -> not possessive (their), is or has
@@ -34,11 +35,13 @@ class TestContractions extends Test {
     Specification("one's", "one", "'s"), //  can be possessive
 
     Specification("n't", "not"),
-    Specification("ain't", "ai", "not"), //  -> multiple, wrong
+    // Specification("ain't", "ai", "not"), //  -> multiple, wrong
+    Specification("ain't", "ain't"), //  -> multiple, wrong
     Specification("didn't", "did", "not"),
     Specification("don't", "do", "not"),
     Specification("doesn't", "does", "not"),
-    Specification("can't", "ca", "not"), //  -> can not, wrong!
+    // Specification("can't", "ca", "not"), //  -> can not, wrong!
+    Specification("can't", "can", "not"), //  -> can not, wrong!
     Specification("isn't", "is", "not"),
     Specification("aren't", "are", "not"),
     Specification("shouldn't", "should", "not"),
@@ -48,7 +51,8 @@ class TestContractions extends Test {
     Specification("wasn't", "was", "not"),
     Specification("won't", "will", "not"),
     Specification("weren't", "were", "not"),
-    Specification("shan't", "sha", "not"), // shall not, wrong!
+    // Specification("shan't", "sha", "not"), // shall not, wrong!
+    Specification("shan't", "shall", "not"), // shall not, wrong!
 
     Specification("I'm", "I", "am"),
 

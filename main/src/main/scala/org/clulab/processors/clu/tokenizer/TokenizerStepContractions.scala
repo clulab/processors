@@ -102,7 +102,7 @@ class TokenizerStepContractions extends TokenizerStep {
       // matching only after the cheap apostrophe detector sounds.
       val heralded = input.raw.contains('\'')
       val contractionOpt =
-          if (heralded) contractions.lift(contractions.indexWhere(_.matches(input)))
+          if (heralded) contractions.find(_.matches(input))
           else None
 
       contractionOpt
@@ -114,11 +114,13 @@ class TokenizerStepContractions extends TokenizerStep {
 
 object TokenizerStepContractions {
   val contractions = Array(
-    new    BothContraction("won't", "will", "not"), // won't -> will not
-    new NeitherContraction("'s"),                   // person's -> person 's
-    new   RightContraction("n't", "not"),           // don't -> do not
-    new   RightContraction("'m", "am"),             // I'm -> I am
-    new NeitherContraction("'d", "cont'd"),         // he'd -> he 'd, with one exception
-    new   RightContraction("'ll", "will")           // she'll -> she will
+    new    BothContraction("won't", "will", "not"),
+    new    BothContraction("can't", "can", "not"),
+    new    BothContraction("shan't", "shall", "not"),
+    new NeitherContraction("'s", "let's"),         // person's -> person 's
+    new   RightContraction("n't", "not", "ain't"), // don't -> do not
+    new   RightContraction("'m", "am"),            // I'm -> I am
+    new NeitherContraction("'d", "cont'd"),        // he'd -> he 'd, with one exception
+    new   RightContraction("'ll", "will")          // she'll -> she will
   )
 }
