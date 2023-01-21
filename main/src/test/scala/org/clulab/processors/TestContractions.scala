@@ -192,6 +192,9 @@ class TestContractions extends Test {
     // 0:00:00:10.438
     // 0:00:00:11.267
     // 0:00:00:11.555
+    // With new code 1
+    // 0:00:00:13.312
+    // 0:00:00:12.742
     val timer = Timers.getOrNew("run")
     val inputs = specifications.flatMap { specification =>
       Array(RawToken(specification.contraction, 0))

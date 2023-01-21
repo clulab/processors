@@ -1,94 +1,77 @@
 package org.clulab.processors.clu.tokenizer
 
+import java.util.regex.Pattern
 import scala.collection.mutable.ArrayBuffer
 
-/**
-  * Resolves English contractions
-  * Author: mihais
-  * Date: 3/21/17
-  */
 class TokenizerStepContractions extends TokenizerStep {
-  private val genitive = """'[sS]$""".r // Regex.pattern is a val stored inside this class, so accessing it is cheap
-  private val wont = """^[wW][oO][nN]'[tT]$""".r
-  private val nt = """[nN]'[tT]$""".r
-  private val appm = """'[mM]$""".r
-  private val appd = """'[dD]$""".r
-  private val appl = """'[lL][lL]$""".r
+  // Regex.pattern is a val stored inside this class, so accessing it is cheap.
+  def toPattern(string: String): Pattern = string.r.pattern
 
-  override def process(inputs:Array[RawToken]): Array[RawToken] = {
-    //
-    // Unlike CoreNLP, we allow single quotes inside words
-    // We must separate important linguistic constructs here
-    // TODO: this is slow. This should be handled in the Antlr grammar
-    //
+  // TODO: Pre-calculate length of string needed to match it.
+  private val WON_T = toPattern("""^[wW][oO][nN]'[tT]$""") // won't -> will not
+  private val    _S = toPattern("""'[sS]$""")              // person's -> he is
+  private val   N_T = toPattern("""[nN]'[tT]$""")          // don't -> do not
+  private val    _M = toPattern("""'[mM]$""")              // I'm -> I am
+  private val    _D = toPattern("""'[dD]$""")              // he'd -> he would or he had
+  private val   _LL = toPattern("""'[lL][lL]$""")          // he'll -> he will
 
-    val tokens = new ArrayBuffer[RawToken]()
+  override def process(inputs: Array[RawToken]): Array[RawToken] = {
+    val output = new ArrayBuffer[RawToken]()
 
-    for(input <- inputs) {
+    inputs.foreach { input =>
       // An apostrophe heralds all contractions, so resort to expensive
       // regular expressions only after the cheap apostrophe detector sounds.
       if (!input.raw.contains('\''))
-        tokens += input
-      else {
-        // genitive
-        if (genitive.findFirstIn(input.raw).isDefined && input.raw.length > 2) {
-          tokens += RawToken(input.raw.substring(0, input.raw.length - 2), input.beginPosition)
-          // TODO: can we detect if genitive or "is" here?
-          tokens += RawToken(input.raw.substring(input.raw.length - 2), input.beginPosition + input.raw.length - 2)
-        }
+        output += input
+      else process(input, output)
+    }
+    output.toArray
+  }
 
-        // "won't"
-        else if (wont.findFirstIn(input.raw).isDefined) {
-          tokens += RawToken(input.raw.substring(0, 2), input.beginPosition, "will")
-          tokens += RawToken(input.raw.substring(2), input.beginPosition + 2, "not")
-        }
+  // Unlike CoreNLP, we allow single quotes inside words
+  // We must separate important linguistic constructs here
+  protected def process(input: RawToken, tokens: ArrayBuffer[RawToken]): Unit = {
+    val raw = input.raw
+    val rawLength = raw.length
 
-        // other words ending with "n't"
-        else if (nt.findFirstIn(input.raw).isDefined) {
-          if (input.raw.length > 3) {
-            tokens += RawToken(input.raw.substring(0, input.raw.length - 3), input.beginPosition, input.raw.substring(0, input.raw.length - 3))
-            tokens += RawToken(input.raw.substring(input.raw.length - 3), input.beginPosition + input.raw.length - 3, "not")
-          } else {
-            tokens += RawToken(input.raw, input.beginPosition, input.endPosition, "not")
-          }
-        }
+    def splitRight(n: Int, leftWordOpt: Option[String] = None, rightWordOpt: Option[String] = None): Unit = {
+      val leftRaw = raw.substring(0, rawLength - n)
+      val rightRaw = raw.substring(rawLength - n)
 
-        // words ending with "'m"
-        else if (appm.findFirstIn(input.raw).isDefined) {
-          if (input.raw.length > 2) {
-            tokens += RawToken(input.raw.substring(0, input.raw.length - 2), input.beginPosition)
-            tokens += RawToken(input.raw.substring(input.raw.length - 2), input.beginPosition + input.raw.length - 2, "am")
-          } else {
-            tokens += RawToken(input.raw, input.beginPosition, "am")
-          }
-        }
+      val leftWord = leftWordOpt.getOrElse(leftRaw)
+      val rightWord = rightWordOpt.getOrElse(rightRaw)
 
-        // words ending with "'d"
-        else if (appd.findFirstIn(input.raw).isDefined && input.raw.length > 2 && !(input.raw.toLowerCase == "cont'd")) {
-          tokens += RawToken(input.raw.substring(0, input.raw.length - 2), input.beginPosition)
-          // TODO: can we detect if "would" or "had" here?
-          tokens += RawToken(input.raw.substring(input.raw.length - 2), input.beginPosition + input.raw.length - 2)
-        }
-
-        // words ending with "'ll"
-        else if (appl.findFirstIn(input.raw).isDefined) {
-          if (input.raw.length > 3) {
-            tokens += RawToken(input.raw.substring(0, input.raw.length - 3), input.beginPosition)
-            tokens += RawToken(input.raw.substring(input.raw.length - 3), input.beginPosition + input.raw.length - 3, "will")
-          } else {
-            tokens += RawToken(input.raw, input.beginPosition, "will")
-            // tokens += RawToken("will", input.beginPosition, input.endPosition)
-          }
-        }
-
-        // any other token
-        else {
-          tokens += input
-        }
-      }
+      if (leftRaw.nonEmpty)
+        tokens += RawToken(leftRaw, input.beginPosition, leftWord)
+      tokens += RawToken(rightRaw, input.beginPosition + rawLength - n, rightWord)
     }
 
-    tokens.toArray
+    // genitive
+    if (_S.matcher(raw).find) {
+      // TODO: can we detect if genitive or "is" here?
+      if (rawLength > 2) splitRight(2)
+      else tokens += input
+    }
+    else if (WON_T.matcher(raw).find) {
+      splitRight(2, Some("will"), Some("not"))
+    }
+    else if (N_T.matcher(raw).find) {
+      if (rawLength > 3) splitRight(3, None, Some("not"))
+      else tokens += RawToken(raw, input.beginPosition, "not") // n't -> not
+    }
+    else if (_M.matcher(raw).find) {
+      if (rawLength > 2) splitRight(2, None, Some("am"))
+      else tokens += RawToken(raw, input.beginPosition, "am") // 'm -> am
+    }
+    else if (_D.matcher(raw).find) {
+      // TODO: can we detect if "would" or "had" here?
+      if (rawLength > 2 && raw.toLowerCase != "cont'd") splitRight(2)
+      else tokens += input // 'd -> 'd
+    }
+    else if (_LL.matcher(raw).find) {
+      if (rawLength > 3) splitRight(3, None, Some("will"))
+      else tokens += RawToken(raw, input.beginPosition, "will") // 'll -> will
+    }
+    else tokens += input
   }
 }
-
