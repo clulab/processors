@@ -29,7 +29,7 @@ class TokenizerStepContractions extends TokenizerStep {
       tokens += RawToken(rightRaw, rawToken.beginPosition + rawLength - length, rightWord)
     }
 
-    def expand(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Boolean = {
+    def expand(rawToken: RawToken, tokens: ArrayBuffer[RawToken]): Unit = {
       val raw = rawToken.raw
 
       if (length == raw.length && raw != "won't")
@@ -40,46 +40,40 @@ class TokenizerStepContractions extends TokenizerStep {
     }
   }
 
-  object Contraction {
+  // Both has both sides, matches from start to end of word
+  // Neither has no sides, matches from right
+  // Right, matches from right
+  // add exceptions, matches but don't apply
 
-    def apply(template: String, length: Int, leftOpt: Option[String], rightOpt: Option[String]): Contraction =
-      new Contraction(template.r.pattern, length, leftOpt, rightOpt)
-  }
+  def toPattern(template: String): Pattern = template.r.pattern
 
-  // TODO: Pre-calculate length of string needed to match it.
-  private val WON_T = Contraction("""^[wW][oO][nN]'[tT]$""", 5, Some("will"), Some("not"))  // won't -> will not
-  private val    _S = Contraction("""'[sS]$""",              2, None,         None)         // person's -> he is
-  private val   N_T = Contraction("""[nN]'[tT]$""",          3, None,         Some("not"))  // don't -> do not
-  private val    _M = Contraction("""'[mM]$""",              2, None,         Some("am"))   // I'm -> I am
-  private val    _D = Contraction("""'[dD]$""",              2, None,         None)         // he'd -> he would or he had
-  private val   _LL = Contraction("""'[lL][lL]$""",          3, None,         Some("will")) // he'll -> he will
+  val contractions = Array(
+    new Contraction(toPattern("^[wW][oO][nN]'[tT]$"), 5, Some("will"), Some("not")), // won't -> will not
+    new Contraction(toPattern("'[sS]$"),              2, None,         None),        // person's -> person 's
+    new Contraction(toPattern("[nN]'[tT]$"),          3, None,         Some("not")), // don't -> do not
+    new Contraction(toPattern("'[mM]$"),              2, None,         Some("am")),  // I'm -> I am
+    new Contraction(toPattern("'[dD]$"),              2, None,         None),        // he'd -> he 'd
+    new Contraction(toPattern("'[lL][lL]$"),          3, None,         Some("will")) // she'll -> she will
+  )
 
+  // Unlike CoreNLP, we allow single quotes inside words
+  // We must separate important linguistic constructs here
   override def process(inputs: Array[RawToken]): Array[RawToken] = {
     val output = new ArrayBuffer[RawToken]()
-    // TODO: Add the output to function so that don't have to pass it?
 
     inputs.foreach { input =>
       // An apostrophe heralds all contractions, so resort to expensive
       // regular expressions only after the cheap apostrophe detector sounds.
-      if (!input.raw.contains('\'') || !process(input, output))
+      val heralded = input.raw.contains('\'')
+      val contractionOpt =
+          if (heralded) contractions.lift(contractions.indexWhere(_.matches(input)))
+          else None
+
+      if (contractionOpt.isDefined)
+        contractionOpt.foreach(_.expand(input, output))
+      else
         output += input
     }
     output.toArray
-  }
-
-  // Unlike CoreNLP, we allow single quotes inside words
-  // We must separate important linguistic constructs here
-  protected def process(input: RawToken, tokens: ArrayBuffer[RawToken]): Boolean = {
-    if (false) true
-    else if (_S.matches(input)) _S.expand(input, tokens)
-    else if (WON_T.matches(input)) WON_T.expand(input, tokens)
-    else if (N_T.matches(input)) N_T.expand(input, tokens)
-    else if (_M.matches(input)) _M.expand(input, tokens)
-    else if (_D.matches(input)) {
-      if (input.raw.toLowerCase != "cont'd") _D.expand(input, tokens)
-      else false
-    }
-    else if (_LL.matches(input)) _LL.expand(input, tokens)
-    else false
   }
 }
