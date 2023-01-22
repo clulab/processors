@@ -11,7 +11,7 @@ abstract class Contraction(letters: String, val exceptions: Seq[String]) {
       if (exceptions.nonEmpty && exceptions.contains(rawToken.raw.toLowerCase)) Array(rawToken)
       else expandWithoutException(rawToken)
 
-  def split(rawToken: RawToken): (String, String) = rawToken.raw.splitAt(rawToken.raw.length - length)
+  def split(rawToken: RawToken, n: Int = length): (String, String) = rawToken.raw.splitAt(rawToken.raw.length - n)
 
   def matches(rawToken: RawToken): Boolean = {
     val raw = rawToken.raw
@@ -49,10 +49,10 @@ class NeitherContraction(letters: String, exceptions: String*) extends Contracti
 
 // Perform a full match and use the left and right words.  This is mostly for exceptions to
 // other rules so that they should come first.
-class BothContraction(letters: String, leftWord: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
+class BothContraction(letters: String, contractionLength: Int, leftWord: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
-    val (leftRaw, rightRaw) = split(rawToken)
+    val (leftRaw, rightRaw) = split(rawToken, contractionLength)
 
     Array(
       RawToken(leftRaw, rawToken.beginPosition, leftWord),
@@ -98,9 +98,9 @@ class TokenizerStepContractions extends TokenizerStep {
 
 object TokenizerStepContractions {
   val contractions = Array(
-    new    BothContraction("won't", "will", "not"),
-    new    BothContraction("can't", "can", "not"),
-    new    BothContraction("shan't", "shall", "not"),
+    new    BothContraction("won't", 3, "will", "not"),
+    new    BothContraction("can't", 3, "can", "not"),
+    new    BothContraction("shan't", 3, "shall", "not"),
     new NeitherContraction("'s", "let's"),         // person's -> person 's
     new   RightContraction("n't", "not", "ain't"), // don't -> do not
     new   RightContraction("'m", "am"),            // I'm -> I am

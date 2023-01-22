@@ -85,7 +85,9 @@ class TestContractions extends Test {
     Specification("what'd", "what", "'d"), //  would only? what'd you done?
     Specification("who'd", "who", "'d"),
     Specification("where'd", "where", "'d"), // did
-    Specification("cont'd", "cont'd") // exception
+    Specification("cont'd", "cont'd"), // exception
+
+    Specification("elephant", "elephant")
   )
 
   // These are different because the tokenizer takes them apart
