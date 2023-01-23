@@ -3,6 +3,7 @@ package org.clulab.processors.clu.tokenizer
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.Token
 import org.clulab.processors.Sentence
+import org.clulab.utils.ArrayMaker
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -53,20 +54,21 @@ class Tokenizer(
 
   protected def readTokens(text: String): Array[RawToken] = {
     val tokens: CommonTokenStream = lexer.mkLexer(text)
-    val rawTokenBuffer = new ArrayBuffer[RawToken]()
-
-    def processToken(token: Token): Boolean = {
-      if (token.getType == -1) // EOF
-        false
-      else {
-        rawTokenBuffer += newRawToken(token)
-        true
+    val rawTokens = ArrayMaker.buffer[RawToken] { rawTokenBuffer =>
+      def processToken(token: Token): Boolean = {
+        if (token.getType == -1) // EOF
+          false
+        else {
+          rawTokenBuffer += newRawToken(token)
+          true
+        }
       }
+
+      while (processToken(tokens.LT(1)))
+        tokens.consume()
     }
 
-    while (processToken(tokens.LT(1)))
-      tokens.consume()
-    rawTokenBuffer.toArray
+    rawTokens
   }
 
   /** Tokenization and sentence splitting */
