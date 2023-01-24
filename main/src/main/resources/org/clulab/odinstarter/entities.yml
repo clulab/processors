@@ -1,0 +1,14 @@
+
+- name: foods-from-lexicon
+  priority: ${rulepriority}
+  label: Food
+  type: token
+  pattern: |
+    [entity='B-FOOD'] [entity='I-FOOD']*
+
+- name: person-from-lexicon
+  priority: ${rulepriority}
+  label: Person
+  type: token
+  pattern: |
+    [entity='B-PER'] [entity='I-PER']*
