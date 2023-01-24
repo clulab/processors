@@ -105,6 +105,7 @@ object TokenizerStepContractions {
     new   RightContraction("n't", "not", "ain't"), // don't -> do not
     new   RightContraction("'m", "am"),            // I'm -> I am
     new NeitherContraction("'d", "cont'd"),        // he'd -> he 'd, with one exception
-    new   RightContraction("'ll", "will")          // she'll -> she will
+    new   RightContraction("'ll", "will"),         // she'll -> she will
+    new   RightContraction("'ve", "have")          // they've -> they have
   )
 }

@@ -67,12 +67,12 @@ class TestContractions extends Test {
     Specification("it'll", "it", "will"),
     Specification("she'll", "she", "will"),
 
-    Specification("I've", "I've"),
-    Specification("should've", "should've"),
-    Specification("you've", "you've"),
-    Specification("could've", "could've"),
-    Specification("they've", "they've"),
-    Specification("we've", "we've"),
+    Specification("I've", "I", "have"),
+    Specification("should've", "should", "have"),
+    Specification("you've", "you", "have"),
+    Specification("could've", "could", "have"),
+    Specification("they've", "they", "have"),
+    Specification("we've", "we", "have"),
 
     Specification("I'd", "I", "'d"),
     Specification("they'd", "they", "'d"),
@@ -102,7 +102,7 @@ class TestContractions extends Test {
     ShortSpecification("'m", "am"),
     ShortSpecification("'re", "'re"),
     ShortSpecification("'ll", "will"), // wrong because raw turned to will
-    ShortSpecification("'ve", "'ve"),
+    ShortSpecification("'ve", "have"),
     ShortSpecification("'d", "'d")
   )
 
