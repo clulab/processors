@@ -25,7 +25,7 @@ class TestCoreCharacterOffsets extends Test {
       for(token <- tokens) {
         val word = token.word()
         val wordFromOffsets = text.substring(token.beginPosition(), token.endPosition())
-        if(! isPostProcessed(word)) {
+        if(! isPostProcessed(word, wordFromOffsets)) {
           withClue(s"beginPosition: ${token.beginPosition()} endPosition: ${token.endPosition()}") {
             word should equal(wordFromOffsets)
           }
@@ -45,7 +45,7 @@ class TestCoreCharacterOffsets extends Test {
       for(token <- tokens) {
         val word = token.word()
         val wordFromOffsets = text.substring(token.beginPosition(), token.endPosition())
-        if(! isPostProcessed(word)) {
+        if(! isPostProcessed(word, wordFromOffsets)) {
           word should equal(wordFromOffsets)
         }
       }
@@ -65,7 +65,7 @@ class TestCoreCharacterOffsets extends Test {
         val word = token.word()
         val wordFromOffsets = text.substring(token.beginPosition(), token.endPosition())
 
-        if(! isPostProcessed(word)) {
+        if(! isPostProcessed(word, wordFromOffsets)) {
           word should equal(wordFromOffsets)
           //if(! word.equals(wordFromOffsets)) println(s"Expected $word, found $wordFromOffsets")
         }
@@ -73,8 +73,13 @@ class TestCoreCharacterOffsets extends Test {
     }
   }
 
+  val postProcessedWords = Set("-LRB-", "-RRB-", "``", "''")
+  // The sample text has some contractions, all with 've.
+  val postProcessedWordsFromOffsets = Set("n't", "'ll", "'ve", "'re")
+
   /**
     * CoreLabel.word() stores the postprocessed .word from Sentence, where the tokens below do not match the text anymore
     */
-  private def isPostProcessed(w:String):Boolean = Set("-LRB-", "-RRB-", "not", "will", "``", "''").contains(w)
+  private def isPostProcessed(word: String, wordFromOffsets: String): Boolean =
+      postProcessedWords(word) || postProcessedWordsFromOffsets(wordFromOffsets)
 }
