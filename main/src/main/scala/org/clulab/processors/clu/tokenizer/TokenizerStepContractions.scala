@@ -33,7 +33,16 @@ object Contraction {
   }
 }
 
-// Match from the right but expand neither left nor right side while still separating them.
+/**
+ * For this kind of contraction, neither the left nor right side is expanded even though the two
+ * halves will be separated (unless the word is an exception).  For example, "we'd" with "we" on
+ * the left and "'d" on the right, is converted only to "we 'd" because the "'d" is ambiguous and
+ * could mean either "would" or "had".
+ *
+ * @constructor create a new contraction
+ * @param letters the contraction, e.g., "'d" or "n't"
+ * @param exceptions entire words which match the letters but shouldn't be expanded, e.g., "cont'd"
+ */
 class NeitherContraction(letters: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
@@ -47,9 +56,20 @@ class NeitherContraction(letters: String, exceptions: String*) extends Contracti
   }
 }
 
-// Perform a full match and use the left and right words.  This is mostly for exceptions to
-// other rules so that they should come first.
-class BothContraction(letters: String, contractionLength: Int, leftWord: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
+/**
+ * For this kind of contraction, the left and right sides are expanded to pre-determined words, usually
+ * because the left side is an exception and the right side is a contraction.  For example, "can't" gets
+ * expanded to "can" rather than "ca" and "n't" becomes "not", resulting in "can not".  All the letters
+ * must match, so there is no room for exceptions.  This is mostly for special cases of other contraction
+ * conventions so that this kind should come first.
+ *
+ * @constructor create a new contraction
+ * @param letters all the letters needed for a match including the contraction, e.g., "can't"
+ * @param contractionLength the number of letters in the contraction, e.g., 3 for "n't"
+ * @param leftWord the left side after expansion, e.g, "can"
+ * @param rightWord the right side after expansion, e.g., "not"
+ */
+class BothContraction(letters: String, contractionLength: Int, leftWord: String, rightWord: String) extends Contraction(letters, Seq.empty) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
     val (leftRaw, rightRaw) = split(rawToken, contractionLength)
@@ -65,7 +85,17 @@ class BothContraction(letters: String, contractionLength: Int, leftWord: String,
       length == rawToken.raw.length && super.matches(rawToken)
 }
 
-// Match again from the right and expand only the right side, using the remainder (if any) for the left.
+/**
+ * For this kind of contraction, only the right side is expanded.  The left side can be deduced from the
+ * contracted word.  For example "we've" expands to "we", already part of the word, and "have", which is
+ * supplied as an argument.  "We've" becomes thus "We have".  Exceptions can be provided for cases in
+ * which there is a "'ve" but the left side should not be reused verbatim.
+ *
+ * @constructor create a new contraction
+ * @param letters the contraction, e.g., "'ve"
+ * @param rightWord the right side after expansion, e.g., "have"
+ * @param exceptions entire words which match the letters but shouldn't be expanded
+ */
 class RightContraction(letters: String, rightWord: String, exceptions: String*) extends Contraction(letters, exceptions) {
 
   override def expandWithoutException(rawToken: RawToken): Array[RawToken] = {
