@@ -8,7 +8,6 @@ import org.clulab.utils.{Files, MathUtils, StringUtils}
 import org.clulab.struct.Lexicon
 import org.clulab.struct.Counters._
 import PerceptronClassifier.logger
-import scala.collection.mutable.ArrayBuffer
 import scala.Serializable
 import scala.util.Random
 
@@ -97,13 +96,11 @@ class PerceptronClassifier[L, F] (
     */
   }
 
-  private def update(goldLabel:Int, datum:Counter[Int]): Unit = {
+  private def update(goldLabel: Int, datum:Counter[Int]): Unit = {
     // compute the scores for all class labels
-    val predictions = new ArrayBuffer[(Int, Double)](labelLexicon.size)
-    for(i <- 0 until labelLexicon.size) {
-      predictions += new Tuple2(i, dotProduct(weights(i), datum))
+    val predictions = 0.until(labelLexicon.size).map { i =>
+      (i, dotProduct(weights(i), datum)
     }
-
     // sort predictions in descending order of scores
     val sortedPredictions = predictions.sortBy(- _._2).toArray
 
