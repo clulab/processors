@@ -35,13 +35,13 @@ class TestContractions extends Test {
     Specification("one's", "one", "'s"), //  can be possessive
 
     Specification("n't", "not"),
-    // Specification("ain't", "ai", "not"), //  -> multiple, wrong
-    Specification("ain't", "ain't"), //  -> multiple, wrong
+    // Specification("ain't", "ai", "not"), // multiple, wrong
+    Specification("ain't", "ain't"),
     Specification("didn't", "did", "not"),
     Specification("don't", "do", "not"),
     Specification("doesn't", "does", "not"),
-    // Specification("can't", "ca", "not"), //  -> can not, wrong!
-    Specification("can't", "can", "not"), //  -> can not, wrong!
+    // Specification("can't", "ca", "not"), // can not, wrong!
+    Specification("can't", "can", "not"),
     Specification("isn't", "is", "not"),
     Specification("aren't", "are", "not"),
     Specification("shouldn't", "should", "not"),
@@ -52,14 +52,14 @@ class TestContractions extends Test {
     Specification("won't", "will", "not"),
     Specification("weren't", "were", "not"),
     // Specification("shan't", "sha", "not"), // shall not, wrong!
-    Specification("shan't", "shall", "not"), // shall not, wrong!
+    Specification("shan't", "shall", "not"),
 
     Specification("I'm", "I", "am"),
 
-    Specification("you're", "you're"),
-    Specification("we're", "we're"),
-    Specification("they're", "they're"),
-    Specification("who're", "who're"),
+    Specification("you're", "you", "are"),
+    Specification("we're", "we", "are"),
+    Specification("they're", "they", "are"),
+    Specification("who're", "who", "are"),
 
     Specification("I'll", "I", "will"),
     Specification("we'll", "we", "will"),
@@ -98,12 +98,12 @@ class TestContractions extends Test {
   }
 
   val shortSpecifications = Array(
-    ShortSpecification("'s", "'s"),
+    ShortSpecification("'s", "'s"),    // ambiguous
     ShortSpecification("'m", "am"),
-    ShortSpecification("'re", "'re"),
-    ShortSpecification("'ll", "will"), // wrong because raw turned to will
+    ShortSpecification("'re", "are"),
+    ShortSpecification("'ll", "will"), // previously wrong because raw turned to will
     ShortSpecification("'ve", "have"),
-    ShortSpecification("'d", "'d")
+    ShortSpecification("'d", "'d")     // ambiguous
   )
 
   val tokenizerStepContractions = new TokenizerStepContractions

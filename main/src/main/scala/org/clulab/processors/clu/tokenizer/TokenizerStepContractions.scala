@@ -101,11 +101,12 @@ object TokenizerStepContractions {
     new    BothContraction("won't", 3, "will", "not"),
     new    BothContraction("can't", 3, "can", "not"),
     new    BothContraction("shan't", 3, "shall", "not"),
-    new NeitherContraction("'s", "let's"),         // person's -> person 's
+    new NeitherContraction("'s", "let's"),         // person's -> person 's, with one exception
+    new NeitherContraction("'d", "cont'd"),        // he'd -> he 'd, with one exception
     new   RightContraction("n't", "not", "ain't"), // don't -> do not
     new   RightContraction("'m", "am"),            // I'm -> I am
-    new NeitherContraction("'d", "cont'd"),        // he'd -> he 'd, with one exception
     new   RightContraction("'ll", "will"),         // she'll -> she will
-    new   RightContraction("'ve", "have")          // they've -> they have
+    new   RightContraction("'ve", "have"),         // we've -> we have
+    new   RightContraction("'re", "are")           // they're -> they are
   )
 }
