@@ -1,15 +1,14 @@
 package org.clulab.processors
 
-import java.util.Properties
-
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotation
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.struct.{Interval, RelationTriple}
 
+import java.util.Properties
+
 import scala.jdk.CollectionConverters._
-import scala.collection.mutable.ArrayBuffer
 
 trait OpenIEAnnotator {
 
@@ -58,9 +57,8 @@ trait OpenIEAnnotator {
       val sas = annotation.get(classOf[SentencesAnnotation]).asScala
       var offset = 0
       for (sa <- sas) {
-        val relationInstances = new ArrayBuffer[RelationTriple]
         val triplets = sa.get(classOf[RelationTriplesAnnotation]).asScala
-        for (triplet <- triplets) {
+        val relationInstances = triplets.map { triplet =>
           val confidence = triplet.confidence
           val canonicalSubject = triplet.canonicalSubject.asScala
           val subjectStart = canonicalSubject.head.index - 1
@@ -78,9 +76,9 @@ trait OpenIEAnnotator {
           val canonicalObject = triplet.canonicalObject.asScala
           val objectStart = canonicalObject.head.index - 1
           val objectEnd= objectStart + canonicalObject.length
-
           val relation = RelationTriple(confidence.toFloat, Interval(subjectStart, subjectEnd),relationInterval , Interval(objectStart, objectEnd))
-          relationInstances += relation
+
+          relation
         }
 
         doc.sentences(offset).relations = Some(relationInstances.toArray)

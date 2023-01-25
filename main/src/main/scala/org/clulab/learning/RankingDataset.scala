@@ -1,16 +1,14 @@
 package org.clulab.learning
 
-import java.util.zip.GZIPInputStream
-import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
-
-import org.slf4j.LoggerFactory
-
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.io.{BufferedSource, Source}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-import org.clulab.utils.Files
-import org.clulab.utils.Serializer
+import org.clulab.utils.{ArrayMaker, Files, Serializer}
+import org.slf4j.LoggerFactory
+
+import java.util.zip.GZIPInputStream
+import java.io.{FileWriter, PrintWriter}
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -58,17 +56,18 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
     features += fvs.map(fv => fv._2)
   }
 
-  private def queryToArray(queryDatums:Iterable[Datum[Int, F]]):Array[(Int, Array[Int])] = {
-    val b = new ListBuffer[(Int, Array[Int])]
-    for(d <- queryDatums) {
-      d match {
-        case bd:BVFDatum[Int, F] => {
-          b += new Tuple2[Int, Array[Int]](bd.label, featuresToArray(bd.features))
+  private def queryToArray(queryDatums: Iterable[Datum[Int, F]]): Array[(Int, Array[Int])] = {
+    // Because we just have an iterable, buffer to avoid potential extra conversions.
+    val b = ArrayMaker.buffer[(Int, Array[Int])] { b =>
+      for (d <- queryDatums) {
+        d match {
+          case bd: BVFDatum[Int, F] => b += (bd.label, featuresToArray(bd.features))
+          case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFRankingDataset!")
         }
-        case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFRankingDataset!")
       }
     }
-    b.toArray
+
+    b
   }
 
   private def featuresToArray(fs:Iterable[F]):Array[Int] = {

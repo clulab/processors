@@ -5,8 +5,6 @@ import org.antlr.v4.runtime.Token
 import org.clulab.processors.Sentence
 import org.clulab.utils.ArrayMaker
 
-import scala.collection.mutable.ArrayBuffer
-
 /** English open domain tokenizer */
 class OpenDomainEnglishTokenizer(postProcessor:Option[TokenizerStep] = None) extends Tokenizer(
   lexer = new OpenDomainEnglishLexer,
