@@ -1,0 +1,19 @@
+
+taxonomy:
+  - Entity:
+    - Food
+    - Person
+  - Event:
+    - Eating
+
+rules:
+  - import: org/clulab/odinstarter/entities.yml
+    vars:
+      # We need our entities before we can match events
+      # Here we make use of the ${rulepriority} variable
+      # used in the entities.yml rules
+      rulepriority: "1"
+
+  - import: org/clulab/odinstarter/events.yml
+    vars:
+      rulepriority: "2"
