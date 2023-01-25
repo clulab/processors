@@ -27,7 +27,7 @@ object OdinStarter extends App {
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
   val extractorEngine = {
-    val masterResource = "/org/clulab/odinstarter/master.yml"
+    val masterResource = "/org/clulab/odinstarter/main.yml"
     // We usually want to reload rules during development,
     // so we try to load them from the filesystem first, then jar.
     // The resource must start with /, but the file probably shouldn't.
