@@ -10,6 +10,7 @@ import java.io.File
 
 object OdinStarter3:
 
+  // From sbt use "runMain org.clulab.odinstarter.main".
   @main def main() =
     // When using an IDE rather than sbt, make sure the working directory for the run
     // configuration is the subproject directory so that this location is accessible.
@@ -45,8 +46,8 @@ object OdinStarter3:
     val document = processor.annotate("John eats cake.")
     val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
-    for (mention <- mentions)
-      printMention(mention)
+    for mention <- mentions
+    do printMention(mention)
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit =
     val indent = "    " * depth
@@ -61,8 +62,6 @@ object OdinStarter3:
     println(indent + "   Tokens: " + tokens.mkString(" "))
     if mention.arguments.nonEmpty then
       println(indent + "Arguments:")
-      for
-        (name, mentions) <- mention.arguments
-        mention <- mentions
+      for (name, mentions) <- mention.arguments; mention <- mentions
       do printMention(mention, Some(name), depth + 1)
     println()

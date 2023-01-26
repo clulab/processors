@@ -63,10 +63,8 @@ object OdinStarter extends App {
     println(indent + "   Tokens: " + tokens.mkString(" "))
     if (mention.arguments.nonEmpty) {
       println(indent + "Arguments:")
-      for {
-        (name, mentions) <- mention.arguments
-        mention <- mentions
-      } printMention(mention, Some(name), depth + 1)
+      for ((name, mentions) <- mention.arguments; mention <- mentions)
+        printMention(mention, Some(name), depth + 1)
     }
     println()
   }
