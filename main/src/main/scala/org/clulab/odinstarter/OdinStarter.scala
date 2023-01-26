@@ -10,7 +10,7 @@ import java.io.File
 
 object OdinStarter extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
-  // configuration is the subproject directory so that this location is accessible.
+  // configuration is the subproject directory so that this resourceDir is accessible.
   val resourceDir: File = new File("./src/main/resources")
   val customLexiconNer = { // i.e., Named Entity Recognizer
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(

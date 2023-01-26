@@ -13,7 +13,7 @@ object OdinStarter3:
   // From sbt use "runMain org.clulab.odinstarter.main".
   @main def main() =
     // When using an IDE rather than sbt, make sure the working directory for the run
-    // configuration is the subproject directory so that this location is accessible.
+    // configuration is the subproject directory so that this resourceDir is accessible.
     val resourceDir: File = new File("./src/main/resources")
     val customLexiconNer = // i.e., Named Entity Recognizer
       val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
