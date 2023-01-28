@@ -1,0 +1,64 @@
+openapi: 3.0.2
+info:
+  title: eidos
+  version: v1
+servers:
+  - url: 'http://localhost:9000'
+    description: Localhost
+
+components:
+  schemas:
+    regroundRequest:
+      type: object
+      required:
+      - ontologyYaml
+      - texts
+      properties:
+        name:
+          type: string
+          default: "Custom"
+        ontologyYaml:
+          type: string
+        texts:
+          type: array
+          items:
+            type: string
+        filter:
+          type: boolean
+          default: true
+        topk:
+          type: integer
+          format: int32
+          default: 10
+        isAlreadyCanonicalized:
+          type: boolean
+          default: true
+          
+    regroundResponse:
+      type: array
+      items:
+        type: array
+        items:
+          type: object
+          properties:
+            grounding:
+              type: string
+            score:
+              type: number
+            
+paths:
+  /reground:
+    post:
+      summary: Reground using yaml ontology and options provided
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/regroundRequest'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/regroundResponse"
