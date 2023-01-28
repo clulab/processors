@@ -2,7 +2,8 @@ package controllers
 
 import org.clulab.odin.ExtractorEngine
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.sequences.LexiconNER
+import org.clulab.sequences.{LexiconNER, MemoryStandardKbSource, NoLexicalVariations}
+import org.clulab.struct.TrueEntityValidator
 import play.api.mvc._
 import play.api.mvc.Action
 
@@ -13,7 +14,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   println("[processors] Initializing the processor ...")
 
   val webSerializer = new WebSerializer()
-  val customLexiconNer = LexiconNER(Seq.empty, Seq.empty, None)
+  val foodKbSource = {
+    val lines = Array(
+      "cake",
+      "pizza",
+      "burger",
+      "pain au chocolat"
+    )
+    new MemoryStandardKbSource("FOOD", lines, caseInsensitiveMatching = true)
+  }
+  val customLexiconNer = LexiconNER(Seq(foodKbSource), None, new NoLexicalVariations, new TrueEntityValidator,
+      useLemmasForMatching = false, defaultCaseInsensitive = false)
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
   val rules = """
     |taxonomy:
@@ -38,7 +49,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     |    pattern: |
     |      [entity='B-PER'] [entity='I-PER']*
     |
-  """.stripMargin
+    |  - name: people-eat-food
+    |    priority: "2"
+    |    label: Eating
+    |    example: "John eats cake"
+    |    graph: "hybrid"
+    |    pattern: |
+    |      trigger = [lemma=/eat/ & tag=/^V/]
+    |      food:Food = dobj
+    |      person:Person = nsubj
+    |
+    |""".stripMargin
   val extractorEngine: ExtractorEngine = ExtractorEngine(rules)
 
   {
