@@ -16,12 +16,14 @@ class WebSerializer() {
     val sentence = document.sentences.head
 
     val syntaxJson = new SyntaxObj(document, text).mkJson
-    val mentionsJson = new MentionsObj(text, sentence, mentions).mkJson
+    val odinJson = new OdinObj(text, sentence, mentions).mkJson
+//    val mentionJson = new MentionObj(mentions).mkJson
     val parseHtml = new ParseObj(document).mkHtml
 
     Json.obj(fields =
       "syntax" -> syntaxJson,
-      "mentions" -> mentionsJson,
+      "odin" -> odinJson,
+      "mention" -> "",
       "parse" -> parseHtml
     )
   }

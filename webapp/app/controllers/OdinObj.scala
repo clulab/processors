@@ -8,7 +8,7 @@ import org.clulab.odin.TextBoundMention
 import org.clulab.processors.Sentence
 import play.api.libs.json.Json
 
-class MentionsObj(sentenceText: String, sentence: Sentence, mentions: Seq[Mention]) {
+class OdinObj(sentenceText: String, sentence: Sentence, mentions: Seq[Mention]) {
 
   def mkJson: Json.JsValueWrapper = {
     val topLevelTBM = mentions.collect { case m: TextBoundMention => m }

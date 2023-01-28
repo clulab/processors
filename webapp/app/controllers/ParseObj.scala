@@ -24,7 +24,7 @@ class ParseObj(doc: Document) {
     def edgesToString(to: Int): String = {
       val edges = sentence.dependencies.get.incomingEdges(to)
 
-      edges.map(edge => sentence.words(edge._1) + "==" + edge._2 + "=>" + sentence.words(to)).mkString(", ")
+      edges.map(edge => sentence.words(edge._1) + "\u291c" + edge._2 + "\u2192" + sentence.words(to)).mkString(", ")
     }
 
     sentence.words.indices.foreach { i =>
