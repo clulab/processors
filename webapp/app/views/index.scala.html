@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>World Modelers Visualizer</title>
+        <title>processors visualizer</title>
         <link rel="stylesheet" type="text/css" href="assets/stylesheets/main.css"/>
         <link rel="stylesheet" type="text/css" href="assets/brat/static/style-vis.css"/>
         <script type="text/javascript" src="assets/brat/client/lib/head.load.min.js"></script>
@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <h1> World Modelers &ndash; Eidos Visualizer </h1>
+        <h1>processors visualizer</h1>
 
         <div id="overlay">
             <div id="loading">
@@ -20,21 +20,29 @@
             </div>
         </div>
 
+        <h2>Input</h2>
         <form>
             <textarea id="text" name="text" rows="5" cols="120"></textarea>
             <br />
             <input id="submit" type="submit">
-            <input id="cagRelevantOnly" type="checkbox" name="cagRelevantOnly" value="cagRelevantOnly">Show CAG relevant only<br>
         </form>
 
-        <div id="eidosMentions"></div>
+        <h2>Output</h2>
 
+        <h3>Syntax</h3>
+        <div id="syntax"></div>
         <br>
 
-        <div id="syntax"></div>
+        <h3>Odin</h3>
+        <div id="odin"></div>
+        <br>
 
-        <div id="groundedAdj" class="add-info"></div>
+        <h3>Mentions</h3>
+        <div id="mentions"></div>
+        <br>
 
+        <h3>Parse</h3>
         <table id="parse"></table>
+        <br>
     </body>
 </html>

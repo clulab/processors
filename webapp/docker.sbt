@@ -2,12 +2,12 @@ import NativePackagerHelper._
 import com.typesafe.sbt.packager.MappingsHelper.directory
 import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerChmodType, DockerPermissionStrategy}
 
-val topDir = "/eidos/webapp"
+val topDir = "/processors/webapp"
 val appDir = topDir + "/app"
 val binDir = appDir + "/bin/" // The second half is determined by the plug-in.  Don't change.
-val app = binDir + "eidos-webapp"
+val app = binDir + "processors-webapp"
 val port = 9000
-val tag = "1.7.1"
+val tag = "1.7.0"
 
 Docker / defaultLinuxInstallLocation := appDir
 Docker / dockerBaseImage := "openjdk:8"
@@ -19,7 +19,7 @@ Docker / mappings := (Docker / mappings).value.filter { case (_, string) =>
   // might be automatically discovered are to be excluded.
   !string.startsWith(binDir) || string == app
 }
-Docker / packageName := "eidos-webapp"
+Docker / packageName := "processors-webapp"
 Docker / version := tag
 
 dockerAdditionalPermissions += (DockerChmodType.UserGroupPlusExecute, app)

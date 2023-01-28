@@ -436,15 +436,13 @@ var docData = {};
 // These two values and function are now global so that they can be called from other js files.
 var syntaxLiveDispatcher = null;
 
-var eidosMentionsLiveDispatcher = null;
+var mentionsLiveDispatcher = null;
 
 function formDone(data) {
     console.log(data);
     syntaxLiveDispatcher.post('requestRenderData', [$.extend({}, data.syntax)]);
-    eidosMentionsLiveDispatcher.post('requestRenderData', [$.extend({}, data.eidosMentions)]);
-    document.getElementById("groundedAdj").innerHTML = data.groundedAdj;
+    odinLiveDispatcher.post('requestRenderData', [$.extend({}, data.mentions)]);
     document.getElementById("parse").innerHTML = data.parse;
-    // hide spinner
     document.getElementById("overlay").style.display = "none";
 }
 
@@ -455,12 +453,11 @@ head.ready(function() {
         $.extend({}, docData),
         webFontURLs
     );
-    eidosMentionsLiveDispatcher = Util.embed('eidosMentions',
+    odinLiveDispatcher = Util.embed('odin',
         $.extend({'collection': null}, collData),
         $.extend({}, docData),
         webFontURLs
     );
-
 
     $('form').submit(function (event) {
 
@@ -469,8 +466,7 @@ head.ready(function() {
 
         // collect form data
         var formData = {
-            'text': $('textarea[name=text]').val(),
-            'cagRelevantOnly': $('input[name=cagRelevantOnly]').is(':checked')
+            'text': $('textarea[name=text]').val()
         }
 
         if (!formData.text.trim()) {
