@@ -104,24 +104,28 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val chunks = sentence.chunks.map(tokenInterval.map(_)).getOrElse(Seq.empty)
     val raws = tokenInterval.map(sentence.raw)
 
-    println(indent + "       Name: " + name)
-    println(indent + "       Type: " + mention.getClass.getSimpleName)
-    println(indent + "    FoundBy: " + mention.foundBy)
-    println(indent + "   Sentence: " + mention.sentenceObj.getSentenceText)
-    println(indent + "     Labels: " + labels.mkString(" "))
-    println(indent + "      Words: " + words.mkString(" "))
-    println(indent + "       Tags: " + tags.mkString(" "))
-    println(indent + "     Lemmas: " + lemmas.mkString(" "))
-    println(indent + "   Entities: " + entities.mkString(" "))
-    println(indent + "      Norms: " + norms.mkString(" "))
-    println(indent + "     Chunks: " + chunks.mkString(" "))
-    println(indent + "        Raw: " + raws.mkString(" "))
-    println(indent + "Attachments: " + mention.attachments.map(_.toString).mkString(" "))
+    def toRow(field: String, text: String): String = s"$indent$field: $text"
+
+    def toRows(field: String, texts: Seq[String]): String = toRow(field, texts.mkString(" "))
+
+    toRow ("       Name", name)
+    toRow ("       Type", mention.getClass.getSimpleName)
+    toRow ("    FoundBy", mention.foundBy)
+    toRow ("   Sentence", mention.sentenceObj.getSentenceText)
+    toRows("     Labels", labels)
+    toRows("      Words", words)
+    toRows("       Tags", tags)
+    toRows("     Lemmas", lemmas)
+    toRows("   Entities", entities)
+    toRows("      Norms", norms)
+    toRows("     Chunks", chunks)
+    toRows("        Raw", raws)
+    toRows("Attachments", mention.attachments.toSeq.map(_.toString).sorted)
 
     mention match {
       case textBoundMention: TextBoundMention =>
       case eventMention: EventMention =>
-        println(indent + "    Trigger:")
+        toRow("    Trigger", "")
         printMention(eventMention.trigger, None, depth + 1)
       case relationMention: RelationMention =>
       case crossSentenceMention: CrossSentenceMention =>
@@ -129,7 +133,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     }
 
     if (mention.arguments.nonEmpty) {
-      println(indent + "  Arguments:")
+      toRow("  Arguments", "")
       for (name <- mention.arguments.keys.toSeq.sorted; mention <- mention.arguments(name).sorted)
         printMention(mention, Some(name), depth + 1)
     }

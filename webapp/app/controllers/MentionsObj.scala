@@ -1,64 +1,82 @@
 package controllers
 
-import org.clulab.odin.Mention
+import org.clulab.odin.{CrossSentenceMention, EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.{Document, Sentence}
 
 class MentionsObj(mentions: Seq[Mention]) {
 
-  def mkParseObj(mention: Mention, sb: StringBuilder): Unit = {
+  def mkMentionsObj(mention: Mention, sb: StringBuilder, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val sentence = mention.sentenceObj
+    val tokenInterval = mention.tokenInterval
+    val indent = "&nbsp;&nbsp;&nbsp;&nbsp;" * depth
+    val name = nameOpt.getOrElse("<none>")
+    val labels = mention.labels
+    val words = tokenInterval.map(sentence.words)
+    val tags = sentence.tags.map(tokenInterval.map(_)).getOrElse(Seq.empty)
+    val lemmas = sentence.lemmas.map(tokenInterval.map(_)).getOrElse(Seq.empty)
+    val entities = sentence.entities.map(tokenInterval.map(_)).getOrElse(Seq.empty)
+    val norms = sentence.norms.map(tokenInterval.map(_)).getOrElse(Seq.empty)
+    val chunks = sentence.chunks.map(tokenInterval.map(_)).getOrElse(Seq.empty)
+    val raws = tokenInterval.map(sentence.raw)
 
-    def getTd(text: String): String = "<td>" + xml.Utility.escape(text) + "</td>"
+    def getTd(field: String, text: String): String = s"""
+      |<tr>
+      |  <td align="right">
+      |    ${xml.Utility.escape(field)}:&nbsp;
+      |  </td>
+      |  <td>
+      |    $indent${xml.Utility.escape(text)}
+      |  </td>
+      |</tr>
+      |""".stripMargin
 
-    def getTdAtOptString(option: Option[Array[String]], n: Int): String = {
-      val text =
-        if (option.isEmpty) ""
-        else option.get(n)
+    def getTds(field: String, strings: Seq[String]): String =
+        getTd(field, strings.mkString(", "))
 
-      getTd(text)
+    sb
+        .append(getTd ("Name", name))
+        .append(getTd ("Type", mention.getClass.getSimpleName))
+        .append(getTd ("FoundBy", mention.foundBy))
+        .append(getTd ("Sentence", mention.sentenceObj.getSentenceText))
+        .append(getTds("Labels", labels))
+        .append(getTds("Words", words))
+        .append(getTds("Tags", tags))
+        .append(getTds("Lemmas", lemmas))
+        .append(getTds("Entities", entities))
+        .append(getTds("Norms", norms))
+        .append(getTds("Chunks", chunks))
+        .append(getTds("Raw", raws))
+        .append(getTds("Attachments", mention.attachments.toSeq.map(_.toString).sorted))
+
+    mention match {
+      case textBoundMention: TextBoundMention =>
+      case eventMention: EventMention =>
+        sb.append(getTd("Trigger", ""))
+        mkMentionsObj(eventMention.trigger, sb, None, depth + 1)
+      case relationMention: RelationMention =>
+      case crossSentenceMention: CrossSentenceMention =>
+      case _ =>
     }
 
-    def getTdAtString(values: Array[String], n: Int): String = getTd(values(n))
-
-    def getTdAtInt(values: Array[Int], n: Int): String = getTd(values(n).toString)
-
-    def edgesToString(to: Int): String = {
-      val edges = sentence.dependencies.get.incomingEdges(to)
-
-      edges.map(edge => sentence.words(edge._1) + "\u291c" + edge._2 + "\u2192" + sentence.words(to)).mkString(", ")
+    if (mention.arguments.nonEmpty) {
+      sb.append(getTd("Arguments", ""))
+      for (name <- mention.arguments.keys.toSeq.sorted; mention <- mention.arguments(name).sorted)
+        mkMentionsObj(mention, sb, Some(name), depth + 1)
     }
-
-    sentence.words.indices.foreach { i =>
-      sb
-          .append("<th></th>")
-          .append("<tr>")
-          .append(getTdAtString(sentence.raw, i))
-          .append(getTdAtInt(sentence.startOffsets, i))
-          .append(getTdAtInt(sentence.endOffsets, i))
-          .append(getTdAtString(sentence.words, i))
-          .append(getTdAtOptString(sentence.tags, i))
-          .append(getTdAtOptString(sentence.lemmas, i))
-          .append(getTdAtOptString(sentence.entities, i))
-          .append(getTdAtOptString(sentence.norms, i))
-          .append(getTdAtOptString(sentence.chunks, i))
-          .append(getTdAtString(sentence.raw, i))
-          .append(getTd(edgesToString(i)))
-          .append("</tr>")
-    }
+    sb.append("<th></th>")
   }
 
   def mkHtml: String = {
-    val header =
-      """
-        |  <tr>
-        |    <th>Field</th>
-        |    <th>Value</th>
-        |  </tr>
-      """.stripMargin
+    val header = """
+      |  <tr>
+      |    <th>Field</th>
+      |    <th>Value</th>
+      |  </tr>
+      |""".stripMargin
     val sb = new StringBuilder(header)
 
     mentions.foreach{ mention =>
-      mkParseObj(mention, sb)
+      mkMentionsObj(mention, sb)
     }
     sb.toString
   }
