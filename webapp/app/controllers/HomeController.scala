@@ -14,15 +14,15 @@ import javax.inject._
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
   implicit val mentionOrder = {
-    val mentionRank: Map[String, Int] = Map(
-      classOf[TextBoundMention].getClass.getName -> 0,
-      classOf[EventMention].getClass.getName -> 1,
-      classOf[RelationMention].getClass.getName -> 2,
-      classOf[CrossSentenceMention].getClass.getName -> 3
-    ).withDefaultValue(4)
+    val mentionRank: Map[Class[_], Int] = Map(
+      classOf[TextBoundMention] -> 0,
+      classOf[EventMention] -> 1,
+      classOf[RelationMention] -> 2,
+      classOf[CrossSentenceMention] -> 3
+    )
 
     Unordered[Mention]
-      .orElseBy { mention => mentionRank(mention.getClass.getName) }
+      .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
       .orElseBy(_.getClass.getName)
       .orElseBy(_.arguments.size)
       .orElseBy(_.tokenInterval)
