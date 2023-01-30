@@ -4,6 +4,8 @@ import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Men
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.{LexiconNER, MemoryStandardKbSource, NoLexicalVariations}
 import org.clulab.struct.TrueEntityValidator
+import org.clulab.utils.Unordered
+import org.clulab.utils.Unordered.OrderingOrElseBy
 import play.api.mvc._
 import play.api.mvc.Action
 
@@ -11,6 +13,22 @@ import javax.inject._
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+  implicit val mentionOrder = {
+    val mentionRank: Map[String, Int] = Map(
+      classOf[TextBoundMention].getClass.getName -> 0,
+      classOf[EventMention].getClass.getName -> 1,
+      classOf[RelationMention].getClass.getName -> 2,
+      classOf[CrossSentenceMention].getClass.getName -> 3
+    ).withDefaultValue(4)
+
+    Unordered[Mention]
+      .orElseBy { mention => mentionRank(mention.getClass.getName) }
+      .orElseBy(_.getClass.getName)
+      .orElseBy(_.arguments.size)
+      .orElseBy(_.tokenInterval)
+      .orElse(-1)
+  }
+
   println("[processors] Initializing the processor ...")
 
   val webSerializer = new WebSerializer()
@@ -112,7 +130,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     if (mention.arguments.nonEmpty) {
       println(indent + "  Arguments:")
-      for ((name, mentions) <- mention.arguments; mention <- mentions)
+      for (name <- mention.arguments.keys.toSeq.sorted; mention <- mention.arguments(name).sorted)
         printMention(mention, Some(name), depth + 1)
     }
     println()
@@ -124,7 +142,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println()
 
     val document = processor.annotate(text)
-    val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
+    val mentions = extractorEngine.extractFrom(document).sorted
 
     println("Tokenized sentences:")
     document.sentences.zipWithIndex.foreach { case (sentence, index) =>
