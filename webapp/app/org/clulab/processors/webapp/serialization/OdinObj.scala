@@ -1,4 +1,4 @@
-package controllers
+package org.clulab.processors.webapp.serialization
 
 import org.clulab.odin.CrossSentenceMention
 import org.clulab.odin.EventMention

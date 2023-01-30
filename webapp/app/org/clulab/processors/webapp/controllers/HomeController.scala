@@ -1,8 +1,9 @@
-package controllers
+package org.clulab.processors.webapp.controllers
 
 import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.webapp.serialization.WebSerializer
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Unordered}
 import org.clulab.utils.Unordered.OrderingOrElseBy

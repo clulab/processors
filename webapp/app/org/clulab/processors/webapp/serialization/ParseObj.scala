@@ -1,4 +1,4 @@
-package controllers
+package org.clulab.processors.webapp.serialization
 
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
