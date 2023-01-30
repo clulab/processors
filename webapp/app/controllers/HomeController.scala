@@ -1,10 +1,10 @@
 package controllers
 
 import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention, RelationMention, TextBoundMention}
+import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.sequences.{LexiconNER, MemoryStandardKbSource, NoLexicalVariations}
-import org.clulab.struct.TrueEntityValidator
-import org.clulab.utils.Unordered
+import org.clulab.sequences.LexiconNER
+import org.clulab.utils.{FileUtils, Unordered}
 import org.clulab.utils.Unordered.OrderingOrElseBy
 import play.api.mvc._
 import play.api.mvc.Action
@@ -13,6 +13,36 @@ import javax.inject._
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
+
+  def initialize(): (Processor, ExtractorEngine) = {
+    println("[processors] Initializing the processor ...")
+
+    val processor = {
+      val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
+        ("org/clulab/odinstarter/FOOD.tsv", true)
+      )
+      val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
+      val caseInsensitiveMatchings = kbsAndCaseInsensitiveMatchings.map(_._2)
+      val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
+      val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+
+      processor
+    }
+    val extractorEngine: ExtractorEngine = {
+      val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
+      val extractorEngine = ExtractorEngine(rules)
+
+      extractorEngine
+    }
+
+    {
+      val document = processor.annotate("John eats cake.")
+      extractorEngine.extractFrom(document)
+    }
+    println("[processors] Completed Initialization ...")
+    (processor, extractorEngine)
+  }
+
   implicit val mentionOrder = {
     val mentionRank: Map[Class[_], Int] = Map(
       classOf[TextBoundMention] -> 0,
@@ -30,67 +60,6 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       .orElse(-1)
   }
 
-  println("[processors] Initializing the processor ...")
-
-  val webSerializer = new WebSerializer()
-  val foodKbSource = {
-    val lines = Array(
-      "cake",
-      "pizza",
-      "burger",
-      "pain au chocolat"
-    )
-    new MemoryStandardKbSource("FOOD", lines, caseInsensitiveMatching = true)
-  }
-  val customLexiconNer = LexiconNER(Seq(foodKbSource), None, new NoLexicalVariations, new TrueEntityValidator,
-      useLemmasForMatching = false, defaultCaseInsensitive = false)
-  val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
-  val rules = """
-    |taxonomy:
-    |  - Entity:
-    |    - Food
-    |    - Person
-    |  - Event:
-    |    - Eating
-    |
-    |rules:
-    |  - name: foods-from-lexicon
-    |    priority: "1"
-    |    label: Food
-    |    type: token
-    |    pattern: |
-    |      [entity='B-FOOD'] [entity='I-FOOD']*
-    |
-    |  - name: person-from-lexicon
-    |    priority: "1"
-    |    label: Person
-    |    type: token
-    |    pattern: |
-    |      [entity='B-PER'] [entity='I-PER']*
-    |
-    |  - name: people-eat-food
-    |    priority: "2"
-    |    label: Eating
-    |    example: "John eats cake"
-    |    graph: "hybrid"
-    |    pattern: |
-    |      trigger = [lemma=/eat/ & tag=/^V/]
-    |      food:Food = dobj
-    |      person:Person = nsubj
-    |
-    |""".stripMargin
-  val extractorEngine: ExtractorEngine = ExtractorEngine(rules)
-
-  {
-    val document = processor.annotate("John eats cake.")
-    extractorEngine.extractFrom(document)
-  }
-  println("[processors] Completed Initialization ...")
-
-  def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.index())
-  }
-
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val sentence = mention.sentenceObj
     val tokenInterval = mention.tokenInterval
@@ -105,9 +74,9 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val chunks = sentence.chunks.map(tokenInterval.map(_)).getOrElse(Seq.empty)
     val raws = tokenInterval.map(sentence.raw)
 
-    def toRow(field: String, text: String): String = s"$indent$field: $text"
+    def toRow(field: String, text: String): Unit = println(s"$indent$field: $text")
 
-    def toRows(field: String, texts: Seq[String]): String = toRow(field, texts.mkString(" "))
+    def toRows(field: String, texts: Seq[String]): Unit = toRow(field, texts.mkString(" "))
 
     toRow ("       Name", name)
     toRow ("       Type", mention.getClass.getSimpleName)
@@ -139,6 +108,13 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
         printMention(mention, Some(name), depth + 1)
     }
     println()
+  }
+
+  val webSerializer = new WebSerializer()
+  val (processor, extractorEngine) = initialize()
+
+  def index(): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.index())
   }
 
   def parseText(text: String): Action[AnyContent] = Action {
