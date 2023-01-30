@@ -46,30 +46,32 @@ class ParseObj(doc: Document) {
   }
 
   def mkHtml: String = {
-    val header =
-      """
-        |  <tr>
-        |    <th>Text</th>
-        |    <th>Start</th>
-        |    <th>End</th>
-        |    <th>Word</th>
-        |    <th>Tags</th>
-        |    <th>Lemmas</th>
-        |    <th>Entities</th>
-        |    <th>Norms</th>
-        |    <th>Chunks</th>
-        |    <th>Raw</th>
-        |    <th>Dependencies</th>
-        |  </tr>
-      """.stripMargin
+    val header = """
+      |<table style="margin-top: 0;">
+      |  <tr>
+      |    <th>Text</th>
+      |    <th>Start</th>
+      |    <th>End</th>
+      |    <th>Word</th>
+      |    <th>Tags</th>
+      |    <th>Lemmas</th>
+      |    <th>Entities</th>
+      |    <th>Norms</th>
+      |    <th>Chunks</th>
+      |    <th>Raw</th>
+      |    <th>Dependencies</th>
+      |  </tr>
+      |""".stripMargin
+    val trailer = "</table>"
     val sb = new StringBuilder(header)
 
     doc.sentences.indices.foreach{ i =>
       val sentence = doc.sentences(i)
 
-      sb.append(s"<tr><td colspan='10' align='center'>Sentence ${i + 1}, sentence.equivalenceHash = ${sentence.equivalenceHash}, dependencies.equivalenceHash = ${sentence.dependencies.get.equivalenceHash}</td></tr>")
+      sb.append(s"<tr><td colspan='11' align='center'>Sentence ${i + 1}, sentence.equivalenceHash = ${sentence.equivalenceHash}, dependencies.equivalenceHash = ${sentence.dependencies.get.equivalenceHash}</td></tr>")
       mkParseObj(sentence, sb)
     }
+    sb.append(trailer)
     sb.toString
   }
 }

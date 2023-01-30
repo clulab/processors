@@ -22,6 +22,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     )
 
     Unordered[Mention]
+      .orElseBy(_.sentence)
       .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
       .orElseBy(_.getClass.getName)
       .orElseBy(_.arguments.size)
@@ -149,7 +150,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     val mentions = extractorEngine.extractFrom(document).sorted
 
     println("Tokenized sentences:")
-    document.sentences.zipWithIndex.foreach { case (sentence, index) =>
+    document.sentences.foreach { sentence =>
       println(sentence.getSentenceText)
     }
     println()
