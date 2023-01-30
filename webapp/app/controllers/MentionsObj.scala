@@ -1,10 +1,12 @@
 package controllers
 
+import org.clulab.odin.Mention
 import org.clulab.processors.{Document, Sentence}
 
-class MentionObj(doc: Document) {
+class MentionsObj(mentions: Seq[Mention]) {
 
-  def mkParseObj(sentence: Sentence, sb: StringBuilder): Unit = {
+  def mkParseObj(mention: Mention, sb: StringBuilder): Unit = {
+    val sentence = mention.sentenceObj
 
     def getTd(text: String): String = "<td>" + xml.Utility.escape(text) + "</td>"
 
@@ -39,6 +41,7 @@ class MentionObj(doc: Document) {
           .append(getTdAtOptString(sentence.entities, i))
           .append(getTdAtOptString(sentence.norms, i))
           .append(getTdAtOptString(sentence.chunks, i))
+          .append(getTdAtString(sentence.raw, i))
           .append(getTd(edgesToString(i)))
           .append("</tr>")
     }
@@ -48,25 +51,14 @@ class MentionObj(doc: Document) {
     val header =
       """
         |  <tr>
-        |    <th>Text</th>
-        |    <th>Start</th>
-        |    <th>End</th>
-        |    <th>Word</th>
-        |    <th>Tags</th>
-        |    <th>Lemmas</th>
-        |    <th>Entities</th>
-        |    <th>Norms</th>
-        |    <th>Chunks</th>
-        |    <th>Dependencies</th>
+        |    <th>Field</th>
+        |    <th>Value</th>
         |  </tr>
       """.stripMargin
     val sb = new StringBuilder(header)
 
-    doc.sentences.indices.foreach{ i =>
-      val sentence = doc.sentences(i)
-
-      sb.append(s"<tr><td colspan='10' align='center'>Sentence ${i + 1}, sentence.equivalenceHash = ${sentence.equivalenceHash}, dependencies.equivalenceHash = ${sentence.dependencies.get.equivalenceHash}</td></tr>")
-      mkParseObj(sentence, sb)
+    mentions.foreach{ mention =>
+      mkParseObj(mention, sb)
     }
     sb.toString
   }

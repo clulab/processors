@@ -39,6 +39,7 @@ class ParseObj(doc: Document) {
           .append(getTdAtOptString(sentence.entities, i))
           .append(getTdAtOptString(sentence.norms, i))
           .append(getTdAtOptString(sentence.chunks, i))
+          .append(getTdAtString(sentence.raw, i))
           .append(getTd(edgesToString(i)))
           .append("</tr>")
     }
@@ -57,6 +58,7 @@ class ParseObj(doc: Document) {
         |    <th>Entities</th>
         |    <th>Norms</th>
         |    <th>Chunks</th>
+        |    <th>Raw</th>
         |    <th>Dependencies</th>
         |  </tr>
       """.stripMargin

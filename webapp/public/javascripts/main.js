@@ -442,7 +442,7 @@ function formDone(data) {
     console.log(data);
     syntaxLiveDispatcher.post('requestRenderData', [$.extend({}, data.syntax)]);
     odinLiveDispatcher.post('requestRenderData', [$.extend({}, data.odin)]);
-    document.getElementById("mentions").innerHTML = "Keith was here!";
+    document.getElementById("mentions").innerHTML = data.mentions;
     document.getElementById("parse").innerHTML = data.parse;
     document.getElementById("overlay").style.display = "none";
 }
