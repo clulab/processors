@@ -31,7 +31,10 @@ lazy val webapp = project
   .enablePlugins(PlayScala)
   .dependsOn(main % "compile -> compile; test -> test")
   .settings(
-    // scala3 is ruled out completely and scala211 isn't cooperating.
-    crossScalaVersions := Seq(scala212, scala213)
+    // scala3 doesn't have play and is ruled out completely.
+    // scala213 dies at runtime thinking it needs something from scala11.
+    // scala212 works!
+    // scala211 isn't compiling and complains on twirlCompileTemplates.
+    crossScalaVersions := Seq(scala212)
   )
   
