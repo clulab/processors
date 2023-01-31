@@ -30,3 +30,7 @@ lazy val openie = project
 lazy val webapp = project
   .enablePlugins(PlayScala)
   .dependsOn(main)
+  .settings(
+    // scala3 is ruled out completely and scala213 isn't cooperating.
+    crossScalaVersions := Seq(scala212, scala211)
+  )
