@@ -19,7 +19,7 @@ libraryDependencies ++= {
   }
   val combinatorsVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, minor)) if minor <= 12 => "1.1.2" // Higher causes problems with libraries.
+      case Some((2, minor)) if minor <= 13 => "1.1.2" // Higher causes problems with libraries.
       case _ => "2.1.1" // up to 2.1.1
     }
   }
