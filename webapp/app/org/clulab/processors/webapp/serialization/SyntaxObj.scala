@@ -22,7 +22,7 @@ class SyntaxObj(val doc: Document, val text: String) {
       val tokens = sent.words.indices.map(i => mkJsonFromToken(sent, offset, i))
       offset += sent.words.length
       tokens
-    }
+    }.toIndexedSeq
     Json.arr(tokens: _*)
   }
 
@@ -50,7 +50,7 @@ class SyntaxObj(val doc: Document, val text: String) {
       }
       offset += sent.words.length
       rels
-    }
+    }.toIndexedSeq
     Json.arr(rels: _*)
   }
 

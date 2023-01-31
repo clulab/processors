@@ -4,7 +4,7 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           org.clulab.processors.webapp.controllers.HomeController.index
+GET     /                           org.clulab.processors.webapp.controllers.HomeController.index()
 GET     /parseText                  org.clulab.processors.webapp.controllers.HomeController.parseText(text: String)
 
 # Map static resources from the /public folder to the /assets URL path
