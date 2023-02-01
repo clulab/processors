@@ -99,13 +99,6 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     cluDocToCoreDoc(doc, keepText)
   }
 
-  /* // TODO: remove me
-  def arrayOrNone[T: ClassTag](b:ArrayBuffer[T]): Option[Array[T]] = {
-    if (b.nonEmpty) new Some[Array[T]](b.toArray)
-    else None
-  }
-  */
-
   def mkDocumentFromSentences(sentences:Iterable[String],
                               keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document = {
