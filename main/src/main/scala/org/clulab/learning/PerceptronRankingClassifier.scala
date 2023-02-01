@@ -1,20 +1,18 @@
 package org.clulab.learning
 
-import java.io._
-
+import org.clulab.struct.Counter
+import org.clulab.struct.Counters
+import org.clulab.struct.Lexicon
+import org.clulab.utils.{MathUtils, Serializer, StringUtils}
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable.ArrayBuffer
-import org.clulab.struct.Counter
-import org.clulab.struct.Counters.dotProduct
-import org.clulab.struct.Lexicon
-import org.clulab.utils.{MathUtils, StringUtils}
+import java.io._
 import java.util.Properties
 
 import scala.Serializable
 import scala.util.Random
+
 import Datasets._
-import org.clulab.utils.Serializer
 
 /**
  * Perceptron classifier for ranking, in primal mode
@@ -89,7 +87,7 @@ class PerceptronRankingClassifier[F] (
       val labels = dataset.labels(qi)
       for(di <- 0 until labels.length) {
         val d = dataset.featuresCounter(qi, di)
-        sum += math.sqrt(dotProduct(d, d))
+        sum += math.sqrt(Counters.dotProduct(d, d))
         count += 1
       }
     }
@@ -97,7 +95,7 @@ class PerceptronRankingClassifier[F] (
   }
 
   def update(better:Counter[Int], worse:Counter[Int]): Unit = {
-    if(dotProduct(weights, better) - dotProduct(weights, worse) <= margin) {
+    if(Counters.dotProduct(weights, better) - Counters.dotProduct(weights, worse) <= margin) {
       addToAvg()
 
       updateWeights(better, 1.0)
@@ -126,15 +124,8 @@ class PerceptronRankingClassifier[F] (
     }
   }
 
-  override def scoresOf(queryDatums:Iterable[Datum[Int, F]]):Iterable[Double] = {
-    val scores = new ArrayBuffer[Double]()
-    for(d <- queryDatums) {
-      val c = d.featuresCounter
-      val s = datumDotProduct(c)
-      scores += s
-    }
-    scores.toArray
-  }
+  override def scoresOf(queryDatums: Iterable[Datum[Int, F]]): Iterable[Double] =
+      queryDatums.map(d => datumDotProduct(d.featuresCounter))
 
   def datumDotProduct(c:Counter[F]):Double = {
     var sum = 0.0
