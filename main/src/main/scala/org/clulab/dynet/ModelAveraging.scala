@@ -5,8 +5,6 @@ import java.text.DecimalFormat
 
 import org.apache.commons.io.FileUtils
 
-import scala.collection.mutable.ArrayBuffer
-
 /**
  * Averages the parameter weights from multiple DyNet model files
  */
@@ -105,12 +103,5 @@ object ModelAveraging extends App {
     b.toString()
   }
 
-  def toDoubleArray(line: String): Array[Double] = {
-    val tokens = line.split("\\s+")
-    val v = new ArrayBuffer[Double]
-    for(token <- tokens) {
-      v += token.toDouble
-    }
-    v.toArray
-  }
+  def toDoubleArray(line: String): Array[Double] = line.split("\\s+").map(_.toDouble)
 }
