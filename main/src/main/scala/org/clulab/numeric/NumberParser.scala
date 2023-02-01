@@ -1,7 +1,5 @@
 package org.clulab.numeric
 
-import scala.collection.mutable.ArrayBuffer
-
 /**
   * Parses textual numbers, e.g., "twelve hundred", into numbers, e.g., "1200"
   */
@@ -111,10 +109,8 @@ object NumberParser {
   }
 
   def numberFormation(words: Array[String]): Double = {
-    val numbers = ArrayBuffer.empty[Double]
-    for (w <- words) {
-       numbers += americanNumberSystem(w)
-    }
+    val numbers = words.map(americanNumberSystem)
+
     numbers.size match {
       case 4 => numbers(0) * numbers(1) + numbers(2) + numbers(3)
       case 3 => numbers(0) * numbers(1) + numbers(2)
