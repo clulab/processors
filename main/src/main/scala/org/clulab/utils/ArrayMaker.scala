@@ -19,6 +19,13 @@ object ArrayMaker {
     arrayBuffer.toArray
   }
 
+  def bufferLen[T](len: Int)(f: (ArrayBuffer[T]) => Unit): Array[T] = {
+    val arrayBuffer = new ArrayBuffer[T](len)
+
+    f(arrayBuffer)
+    arrayBuffer.toArray
+  }
+
   def build[T](f: (ArrayBuilder[T]) => Unit): Array[T] = {
     val arrayBuilder = ArrayBuilder.make[T]
 

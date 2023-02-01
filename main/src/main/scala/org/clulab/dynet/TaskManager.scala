@@ -3,10 +3,9 @@ package org.clulab.dynet
 import com.typesafe.config.Config
 import org.clulab.dynet.TaskManager._
 import org.clulab.sequences.{ColumnReader, Row}
-import org.clulab.utils.{Configured, MathUtils}
+import org.clulab.utils.{ArrayMaker, Configured, MathUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -34,21 +33,18 @@ class TaskManager(config:Config) extends Configured {
   def indices: Range = tasks.indices
 
   /** Construct training shards by interleaving shards from all tasks */
-  private def mkShards():Array[Shard] = {
-    val shardsByTasks = new Array[Array[Shard]](tasks.length)
+  private def mkShards(): Array[Shard] = {
+    val shardsByTasks = tasks.map { task =>
+      val shards = task.mkShards()
 
-    // construct the shards for each task
-    for(i <- tasks.indices) {
-      shardsByTasks(i) = tasks(i).mkShards()
-      assert(shardsByTasks(i).length == shardsPerEpoch)
+      assert(shards.length == shardsPerEpoch)
+      shards
     }
-
     // now interleave the tasks
-    val interleavedShards = new ArrayBuffer[Shard]()
-    for(i <- 0 until shardsPerEpoch) {
-      for(j <- tasks.indices) {
-        val crtShard = shardsByTasks(j)(i)
-        interleavedShards += crtShard
+    val interleavedShards = ArrayMaker.bufferLen[Shard](shardsPerEpoch * taskCount) { interleavedShards =>
+      for (shardIndex <- 0 until shardsPerEpoch) {
+        for (shards <- shardsByTasks)
+          interleavedShards += shards(shardIndex)
       }
     }
 
@@ -58,8 +54,7 @@ class TaskManager(config:Config) extends Configured {
       logger.debug(s"${interleavedShards(i)}")
     }
     */
-
-    interleavedShards.toArray
+    interleavedShards
   }
 
   /** Iterator over all sentences coming from all interleaved shards */
@@ -125,8 +120,8 @@ class TaskManager(config:Config) extends Configured {
   }
 }
 
-class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val random:Random)
-  extends Iterator[(Int, Array[Row])] {
+class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val random: Random)
+    extends Iterator[(Int, Array[Row])] {
   /** Offset in randomizedSentencePositions array */
   private var sentenceOffset:Int = 0
 
@@ -138,16 +133,18 @@ class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val rando
   private def randomizeSentences(): Array[Sentence] = {
     // first, randomize the shards
     val randomizedShards = MathUtils.randomize(shards, random)
-    val randomizedSents = new ArrayBuffer[Sentence]()
-    for(shard <- randomizedShards) {
-      // second, randomize the sentences inside each shard
-      val sents = MathUtils.randomize((shard.startPosition until shard.endPosition).toArray, random)
-      for(sent <- sents) {
-        // store the randomized sentences
-        randomizedSents += Sentence(shard.taskId, sent)
+    val randomizedSents = ArrayMaker.buffer[Sentence] { randomizedSents => // avoid flatMap
+      for (shard <- randomizedShards) {
+        // second, randomize the sentences inside each shard
+        val sents = MathUtils.randomize((shard.startPosition until shard.endPosition).toArray, random)
+        for (sent <- sents) {
+          // store the randomized sentences
+          randomizedSents += Sentence(shard.taskId, sent)
+        }
       }
     }
-    randomizedSents.toArray
+
+    randomizedSents
   }
 
   override def hasNext: Boolean = sentenceOffset < randomizedSentencePositions.length
@@ -215,15 +212,16 @@ class Task(
   logger.debug(s"============ completed task $taskNumber ============")
 
   /** Construct the shards from all training sentences in this task */
-  def mkShards():Array[Shard] = {
-    val shards = new ArrayBuffer[Shard]()
+  def mkShards(): Array[Shard] = {
     var crtPos = 0
-    while(crtPos < trainSentences.length) {
-      val endPos = math.min(crtPos + shardSize, trainSentences.length)
-      shards += Shard(taskId, crtPos, endPos)
-      crtPos = endPos
+    val shards = ArrayMaker.buffer[Shard] { shards =>
+      while (crtPos < trainSentences.length) {
+        val endPos = math.min(crtPos + shardSize, trainSentences.length)
+        shards += Shard(taskId, crtPos, endPos)
+        crtPos = endPos
+      }
     }
-    shards.toArray
+    shards
   }
 
   def taskNumber:Int = taskId + 1
