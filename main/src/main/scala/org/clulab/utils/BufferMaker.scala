@@ -10,4 +10,11 @@ object BufferMaker {
     f(arrayBuffer)
     arrayBuffer
   }
+
+  def fill[T](elems: T*)(f: (ArrayBuffer[T]) => Unit): ArrayBuffer[T] = {
+    val arrayBuffer = ArrayBuffer[T](elems: _*)
+
+    f(arrayBuffer)
+    arrayBuffer
+  }
 }
