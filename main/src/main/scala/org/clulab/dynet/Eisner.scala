@@ -1,12 +1,12 @@
 package org.clulab.dynet
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
-import org.clulab.scala.WrappedListBuffer._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import Eisner._
+import org.clulab.utils.{ArrayMaker, BufferMaker}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
+
+import Eisner._
 
 /** 
   * Stores one dependency for the Eisner algorithm 
@@ -40,24 +40,22 @@ object Span {
     val score = left.score + right.score + (if(dep != null) math.log(dep.score).toFloat else 0f)
 
     // aggregate all dependencies for this span
-    val deps = new ListBuffer[Dependency]
     val allNodes = new mutable.HashSet[Int]
     val modNodes = new mutable.HashSet[Int]
-    if(dep != null) {
-      addDep(dep, deps, allNodes, modNodes)
-    }
-    for(dep <- left.dependencies) {
-      addDep(dep, deps, allNodes, modNodes)
-    }
-    for(dep <- right.dependencies) {
-      addDep(dep, deps, allNodes, modNodes)
+    val deps = BufferMaker.fill[Dependency] { deps =>
+      if (dep != null)
+        addDep(dep, deps, allNodes, modNodes)
+      for (dep <- left.dependencies)
+        addDep(dep, deps, allNodes, modNodes)
+      for (dep <- right.dependencies)
+        addDep(dep, deps, allNodes, modNodes)
     }
       
     new Span(deps, head, score)
   }
 
   private def addDep(dep: Dependency,
-                     deps: ListBuffer[Dependency],
+                     deps: ArrayBuffer[Dependency],
                      allNodes: mutable.HashSet[Int],
                      modNodes: mutable.HashSet[Int]): Unit = {
     deps += dep
@@ -323,14 +321,9 @@ class Eisner {
     //
     if(mtlLabels.nonEmpty) {
       // prepare the (modifier, head) pairs for which we will get label scores
-      val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
-      for(i <- startingDependencies.indices) {
-        for(j <- startingDependencies(i).indices) {
-          val dep = startingDependencies(i)(j)
-          if(dep != null) {
-            modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
-          }
-        }
+      val modHeadPairs = BufferMaker.fill[ModifierHeadPair] { modHeadPairs =>
+        for (deps <- startingDependencies; dep <- deps; if dep != null)
+          modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
       }
 
       // generate label probabilities using the label classifier
