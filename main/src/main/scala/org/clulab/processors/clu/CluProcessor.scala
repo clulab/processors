@@ -2,25 +2,17 @@ package org.clulab.processors.clu
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair, Utils}
+import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
 import org.clulab.utils.ThreadUtils
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import java.util.regex.Pattern
-import CluProcessor._
-import org.clulab.dynet.{AnnotatedSentence, ConstEmbeddingParameters, ConstEmbeddingsGlove, Eisner, Metal, ModifierHeadPair}
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.scala.WrappedArrayBuffer._
-import org.clulab.sequences.{LexiconNER, NamedEntity}
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 
 /**
   * Processor that uses only tools that are under Apache License
@@ -43,6 +35,7 @@ class CluProcessor protected (
   mtlDepsHeadOpt: Option[Metal],
   mtlDepsLabelOpt: Option[Metal]
 ) extends Processor with Configured {
+  import CluProcessor._
 
   // standard, abbreviated constructor
   def this(
@@ -429,15 +422,12 @@ class CluProcessor protected (
   */
 
   private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
-    val heads = new ArrayBuffer[Int]()
-    for(i <- relativeHeads.indices) {
-      if(relativeHeads(i) == 0) {
-        heads += -1
-      } else {
-        heads += i + relativeHeads(i)
-      }
+    val absoluteHeads = relativeHeads.zipWithIndex.map { case (relativeHead, index) =>
+      if (relativeHead == 0) -1
+      else index + relativeHead
     }
-    heads
+
+    absoluteHeads
   }
 
   /** Dependency parsing with the Eisner algorithm */
@@ -535,16 +525,13 @@ class CluProcessor protected (
   }
 
   def removeNumericLabels(allLabels: Array[String]): Array[String] = {
-    val labels = new ArrayBuffer[String]
-    for(l <- allLabels) {
-      if(NAMED_LABELS_FOR_SRL.contains(l)) {
-        labels += l
-      } else {
-        labels += OUTSIDE
-      }
+    val labels = allLabels.map { label =>
+      if (NAMED_LABELS_FOR_SRL(label)) label
+      else OUTSIDE
     }
+
     // println("Using labels for SRL: " + labels.mkString(", "))
-    labels.toArray
+    labels
   }
 
   /** Produces semantic role frames for one sentence */
@@ -555,8 +542,7 @@ class CluProcessor protected (
                   embeddings: ConstEmbeddingParameters): DirectedGraph[String] = {
     val edges = predicateIndexes.flatMap { pred =>
       // SRL needs POS tags and NEs, as well as the position of the predicate
-      val headPositions = new ArrayBuffer[ModifierHeadPair]()
-      for(i <- words.indices) headPositions += ModifierHeadPair(i, pred)
+      val headPositions = words.indices.map(ModifierHeadPair(_, pred))
       val annotatedSentence = AnnotatedSentence(words, Some(posTags), Some(nerLabels))
       val argLabels = mtlSrla.predict(0, annotatedSentence, Some(headPositions), embeddings)
 
@@ -575,13 +561,12 @@ class CluProcessor protected (
     basicSanityCheck(doc)
 
     val embeddings = getEmbeddings(doc)
-    val predsForAllSents = new ArrayBuffer[IndexedSeq[Int]]()
-
-    for(sent <- doc.sentences) {
+    val predsForAllSents = doc.sentences.map { sent =>
       val (tags, chunks, preds) = tagSentence(sent.words, embeddings)
       sent.tags = Some(postprocessPartOfSpeechTags(sent.words, tags.toArray))
       sent.chunks = Some(chunks.toArray)
-      predsForAllSents += getPredicateIndexes(preds)
+
+      getPredicateIndexes(preds)
     }
 
     // store the index of all predicates as a doc attachment
@@ -674,29 +659,21 @@ class CluProcessor protected (
   }
 
   private def predicateCorrections(origPreds: IndexedSeq[Int], sentence: Sentence): IndexedSeq[Int] = {
-
     if (sentence.universalBasicDependencies.isEmpty) origPreds
     else if (sentence.tags.isEmpty) origPreds
     else {
-      val preds = origPreds.toSet
-      val newPreds = new mutable.HashSet[Int]()
-      newPreds ++= preds
-
       val outgoing = sentence.universalBasicDependencies.get.outgoingEdges
       val words = sentence.words
       val tags = sentence.tags.get
-
-      for(i <- words.indices) {
-        if(! preds.contains(i)) {
-          // -ing NN with a compound outgoing dependency
-          if(words(i).endsWith("ing") && tags(i).startsWith("NN") &&
-            outgoing.length > i && hasDep(outgoing(i), "compound")) {
-            newPreds += i
-          }
-        }
+      val preds = origPreds.toSet
+      val newPreds = words.indices.filter { index =>
+        preds(index) || // It was already in preds.
+        // -ing NN with a compound outgoing dependency
+        (words(index).endsWith("ing") && tags(index).startsWith("NN") &&
+            outgoing.length > index && hasDep(outgoing(index), "compound"))
       }
 
-      newPreds.toVector.sorted
+      newPreds // Indices are already sorted.
     }
   }
 
@@ -763,20 +740,16 @@ class CluProcessor protected (
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
     val embeddings = getEmbeddings(doc)
 
-    for(sent <- doc.sentences) {
+    for (sent <- doc.sentences) {
       val headsWithLabels = parseSentenceWithEisner(sent.words, sent.tags.get, sent.entities.get, embeddings)
       parserPostProcessing(sent, headsWithLabels)
 
-      val edges = new ListBuffer[Edge[String]]()
-      val roots = new mutable.HashSet[Int]()
-      for(i <- headsWithLabels.indices) {
-        if(headsWithLabels(i)._1 != -1) {
-          val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
-          edges.append(edge)
-        } else {
-          roots += i
-        }
+      val groups = headsWithLabels.indices.groupBy { index => headsWithLabels(index)._1 == -1 }
+      val roots = groups(true)
+      val edges = groups(false).map { index =>
+        Edge[String](headsWithLabels(index)._1, index, headsWithLabels(index)._2)
       }
+
       val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
@@ -867,7 +840,7 @@ class PortugueseCluProcessor extends CluProcessor(config = ConfigFactory.load("c
 
           // a lemma may be empty in some weird Unicode situations
           if(lemmas(i).isEmpty) {
-            logger.debug(s"""WARNING: Found empty lemma for word #$i "${sent.words(i)}" in sentence: ${sent.words.mkString(" ")}""")
+            CluProcessor.logger.debug(s"""WARNING: Found empty lemma for word #$i "${sent.words(i)}" in sentence: ${sent.words.mkString(" ")}""")
             lemmas(i) = sent.words(i).toLowerCase()
           }
         }
@@ -933,27 +906,26 @@ object CluProcessor {
                               sentences:Iterable[String],
                               keepText:Boolean,
                               charactersBetweenSentences:Int): Document = {
-    val sents = new ArrayBuffer[Sentence]()
-    var characterOffset = 0
-    for(text <- sentences) {
-      val sent = tokenizer.tokenize(text, sentenceSplit = false).head // we produce a single sentence here!
+    val newSentences = sentences.map { sentence =>
+      tokenizer.tokenize(sentence, sentenceSplit = false).head // we produce a single sentence here!
+    }.toArray
 
-      // update character offsets between sentences
-      for(i <- 0 until sent.size) {
-        sent.startOffsets(i) += characterOffset
-        sent.endOffsets(i) += characterOffset
+    newSentences.foldLeft(0) { case (characterOffset, newSentence) =>
+      newSentence.indices.foreach { index =>
+        newSentence.startOffsets(index) += characterOffset
+        newSentence.endOffsets(index) += characterOffset
       }
-
       // move the character offset after the current sentence
-      characterOffset = sent.endOffsets.last + charactersBetweenSentences
+      newSentence.endOffsets.last + charactersBetweenSentences
 
       //println("SENTENCE: " + sent.words.mkString(", "))
       //println("Start offsets: " + sent.startOffsets.mkString(", "))
       //println("End offsets: " + sent.endOffsets.mkString(", "))
-      sents += sent
     }
-    val doc = new Document(sents.toArray)
-    if(keepText) doc.text = Some(sentences.mkString(mkSep(charactersBetweenSentences)))
+
+
+    val doc = new Document(newSentences)
+    if (keepText) doc.text = Some(sentences.mkString(mkSep(charactersBetweenSentences)))
     doc
   }
 
@@ -963,36 +935,35 @@ object CluProcessor {
                            charactersBetweenSentences:Int,
                            charactersBetweenTokens:Int): Document = {
     var charOffset = 0
-    var sents = new ArrayBuffer[Sentence]()
     val text = new StringBuilder
-    for(sentence <- sentences) {
-      val startOffsets = new ArrayBuffer[Int]()
-      val endOffsets = new ArrayBuffer[Int]()
-      for(word <- sentence) {
-        startOffsets += charOffset
-        charOffset += word.length
-        endOffsets += charOffset
+    val newSentences = sentences.map { sentence =>
+      val words = sentence.toArray
+      val startOffsets = new Array[Int](words.length)
+      val endOffsets = new Array[Int](words.length)
+
+      words.indices.foreach { index =>
+        startOffsets(index) += charOffset
+        charOffset += words(index).length
+        endOffsets(index) += charOffset
         charOffset += charactersBetweenTokens
       }
       // note: NO postprocessing happens in this case, so use it carefully!
-      sents += new Sentence(sentence.toArray, startOffsets.toArray, endOffsets.toArray, sentence.toArray)
+      val newSentence = new Sentence(words, startOffsets, endOffsets, sentence.toArray)
+
       charOffset += charactersBetweenSentences - charactersBetweenTokens
-      if(keepText) {
+      if (keepText) {
         text.append(sentence.mkString(mkSep(charactersBetweenTokens)))
         text.append(mkSep(charactersBetweenSentences))
       }
-    }
+      newSentence
+    }.toArray
 
-    val doc = new Document(sents.toArray)
-    if(keepText) doc.text = Some(text.toString)
+    val doc = new Document(newSentences)
+    if (keepText) doc.text = Some(text.toString)
     doc
   }
 
-  private def mkSep(size:Int):String = {
-    val os = new mutable.StringBuilder
-    for (_ <- 0 until size) os.append(" ")
-    os.toString()
-  }
+  private def mkSep(size: Int): String = " " * size
 
   def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] = {
     seasonPathOpt.map(NumericEntityRecognizer(_))
@@ -1007,8 +978,8 @@ class GivenConstEmbeddingsAttachment(doc: Document, lowerCase: Boolean) extends 
   def before(): Unit = GivenConstEmbeddingsAttachment.mkConstEmbeddings(doc, lowerCase)
 
   def after(): Unit = {
-    val attachment = doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
-    doc.removeAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME)
+    val attachment = doc.getAttachment(CluProcessor.CONST_EMBEDDINGS_ATTACHMENT_NAME).get.asInstanceOf[EmbeddingsAttachment]
+    doc.removeAttachment(CluProcessor.CONST_EMBEDDINGS_ATTACHMENT_NAME)
 
     // This is a memory management optimization.
     val embeddings = attachment.embeddings
@@ -1028,6 +999,6 @@ object GivenConstEmbeddingsAttachment {
     val attachment = EmbeddingsAttachment(embeddings)
 
     // Now set them as an attachment, so they are available to all downstream methods wo/ changing the API.
-    doc.addAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME, attachment)
+    doc.addAttachment(CluProcessor.CONST_EMBEDDINGS_ATTACHMENT_NAME, attachment)
   }
 }
