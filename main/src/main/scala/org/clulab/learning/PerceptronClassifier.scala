@@ -99,7 +99,7 @@ class PerceptronClassifier[L, F] (
   private def update(goldLabel: Int, datum:Counter[Int]): Unit = {
     // compute the scores for all class labels
     val predictions = 0.until(labelLexicon.size).map { i =>
-      (i, dotProduct(weights(i), datum)
+      (i, dotProduct(weights(i), datum))
     }
     // sort predictions in descending order of scores
     val sortedPredictions = predictions.sortBy(- _._2).toArray
