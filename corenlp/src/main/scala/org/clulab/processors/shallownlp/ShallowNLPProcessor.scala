@@ -16,7 +16,6 @@ import java.util
 import java.util.Properties
 import java.util.zip.GZIPInputStream
 
-import scala.collection.mutable.ArrayBuffer
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
@@ -186,20 +185,16 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
   def tagPartsOfSpeech(doc:Document): Unit = {
     basicSanityCheck(doc).foreach { annotation =>
       posTagger.annotate(annotation)
-
       postprocessTags(annotation)
 
       // convert CoreNLP Annotations to our data structures
       val sas = annotation.get(classOf[SentencesAnnotation]).asScala
-      var offset = 0
-      for (sa <- sas) {
-        val tb = new ArrayBuffer[String]
+
+      sas.zip(doc.sentences).foreach { case (sa, sentence) =>
         val tas = sa.get(classOf[TokensAnnotation]).asScala
-        for (ta <- tas) {
-          tb += in(ta.tag())
-        }
-        doc.sentences(offset).tags = Some(tb.toArray)
-        offset += 1
+        val tags = tas.map(ta => in(ta.tag())).toArray
+
+        sentence.tags = Some(tags)
       }
     }
   }
@@ -208,19 +203,15 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
     basicSanityCheck(doc).foreach { annotation =>
       if (doc.sentences.head.tags.isEmpty)
         throw new RuntimeException("ERROR: you have to run the POS tagger before lemmatization!")
-
       lemmatizer.annotate(annotation)
 
       val sas = annotation.get(classOf[SentencesAnnotation]).asScala
-      var offset = 0
-      for (sa <- sas) {
-        val tb = new ArrayBuffer[String]
+
+      sas.zip(doc.sentences).foreach { case (sa, sentence) =>
         val tas = sa.get(classOf[TokensAnnotation]).asScala
-        for (ta <- tas) {
-          tb += in(ta.lemma())
-        }
-        doc.sentences(offset).lemmas = Some(tb.toArray)
-        offset += 1
+        val lemmas = tas.map(ta => in(ta.lemma())).toArray
+
+        sentence.lemmas = Some(lemmas)
       }
     }
   }
@@ -250,25 +241,20 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
       }
 
       // convert CoreNLP Annotations to our data structures
-      val sas = annotation.get(classOf[SentencesAnnotation]).asScala
-      var offset = 0
-      for (sa <- sas) {
-        val tb = new ArrayBuffer[String]
-        val nb = new ArrayBuffer[String]
-        val tas = sa.get(classOf[TokensAnnotation]).asScala
-        for (ta <- tas) {
-          tb += in(ta.ner())
-          val n = ta.get(classOf[NormalizedNamedEntityTagAnnotation])
-          //println(s"NORM: $n")
-          if (n != null) nb += in(n)
-          else nb += in("O")
+      val sentencesAnnotations = annotation.get(classOf[SentencesAnnotation]).asScala
+
+      sentencesAnnotations.zip(doc.sentences).foreach { case (sentencesAnnotation, sentence) =>
+        val tokensAnnotations = sentencesAnnotation.get(classOf[TokensAnnotation]).asScala.toArray
+        val entities = tokensAnnotations.map { tokensAnnotation => in(tokensAnnotation.ner()) }
+        val norms = tokensAnnotations.map { tokensAnnotation =>
+          val normalizedNamedEntityTag = Option(tokensAnnotation.get(classOf[NormalizedNamedEntityTagAnnotation])).getOrElse("O")
+
+          in(normalizedNamedEntityTag)
         }
 
-        //println("NORMS: " + nb.mkString(", "))
-
-        doc.sentences(offset).entities = Some(tb.toArray)
-        doc.sentences(offset).norms = Some(nb.toArray)
-        offset += 1
+        //println("NORMS: " + nbs.mkString(", "))
+        sentence.entities = Some(entities)
+        sentence.norms = Some(norms)
       }
     }
   }
