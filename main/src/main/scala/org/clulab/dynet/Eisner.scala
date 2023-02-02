@@ -1,7 +1,8 @@
 package org.clulab.dynet
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.utils.{ArrayMaker, BufferMaker}
+import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.utils.Buffer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
@@ -42,7 +43,7 @@ object Span {
     // aggregate all dependencies for this span
     val allNodes = new mutable.HashSet[Int]
     val modNodes = new mutable.HashSet[Int]
-    val deps = BufferMaker.fill[Dependency] { deps =>
+    val deps = Buffer.makeArray[Dependency] { deps =>
       if (dep != null)
         addDep(dep, deps, allNodes, modNodes)
       for (dep <- left.dependencies)
@@ -321,7 +322,7 @@ class Eisner {
     //
     if(mtlLabels.nonEmpty) {
       // prepare the (modifier, head) pairs for which we will get label scores
-      val modHeadPairs = BufferMaker.fill[ModifierHeadPair] { modHeadPairs =>
+      val modHeadPairs = Buffer.makeArray[ModifierHeadPair] { modHeadPairs =>
         for (deps <- startingDependencies; dep <- deps; if dep != null)
           modHeadPairs += ModifierHeadPair(dep.mod - 1, dep.head - 1) // out offsets start at 0 not at 1 as in Dependency
       }
