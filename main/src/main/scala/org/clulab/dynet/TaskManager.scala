@@ -6,6 +6,7 @@ import org.clulab.sequences.{ColumnReader, Row}
 import org.clulab.utils.{ArrayMaker, Configured, MathUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 /**
@@ -133,13 +134,13 @@ class SentenceIterator(val tasks:Array[Task], val shards:Array[Shard], val rando
   private def randomizeSentences(): Array[Sentence] = {
     // first, randomize the shards
     val randomizedShards = MathUtils.randomize(shards, random)
-    val randomizedSents = ArrayMaker.buffer[Sentence] { randomizedSents => // avoid flatMap
+    val randomizedSents = ArrayMaker.buffer[Sentence] { randomizedSentsBuffer => // avoid flatMap
       for (shard <- randomizedShards) {
         // second, randomize the sentences inside each shard
         val sents = MathUtils.randomize((shard.startPosition until shard.endPosition).toArray, random)
         for (sent <- sents) {
           // store the randomized sentences
-          randomizedSents += Sentence(shard.taskId, sent)
+          randomizedSentsBuffer += Sentence(shard.taskId, sent)
         }
       }
     }
@@ -214,10 +215,10 @@ class Task(
   /** Construct the shards from all training sentences in this task */
   def mkShards(): Array[Shard] = {
     var crtPos = 0
-    val shards = ArrayMaker.buffer[Shard] { shards =>
+    val shards = ArrayMaker.buffer[Shard] { shardsBuffer =>
       while (crtPos < trainSentences.length) {
         val endPos = math.min(crtPos + shardSize, trainSentences.length)
-        shards += Shard(taskId, crtPos, endPos)
+        shardsBuffer += Shard(taskId, crtPos, endPos)
         crtPos = endPos
       }
     }
