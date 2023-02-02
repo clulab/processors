@@ -1,16 +1,14 @@
 package org.clulab.sequences
 
 import java.io._
-
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
-import org.clulab.utils.SeqUtils
+import org.clulab.utils.{ArrayMaker, SeqUtils}
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /**
@@ -68,19 +66,21 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
   }
 
   override def classesOf(origSentence: Sentence):Array[L] = {
-    val sentence = if(leftToRight) origSentence else origSentence.revert()
+    val sentence = if (leftToRight) origSentence else origSentence.revert()
 
-    val history = new ArrayBuffer[L]()
-    for(i <- 0 until sentence.size) {
-      val feats = new Counter[F]
-      featureExtractor(feats, sentence, i)
-      addHistoryFeatures(feats, order, history, i)
-      val d = mkDatum(null.asInstanceOf[L], feats)
-      val label = model.get.classOf(d)
-      history += label
+    val history = ArrayMaker.buffer[L] { historyBuffer =>
+      for (i <- sentence.indices) {
+        val feats = new Counter[F]
+        featureExtractor(feats, sentence, i)
+        addHistoryFeatures(feats, order, historyBuffer, i)
+        val d = mkDatum(null.asInstanceOf[L], feats)
+        val label = model.get.classOf(d)
+
+        historyBuffer += label
+      }
     }
 
-    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
+    if (leftToRight) history else SeqUtils.revert(history).toArray
   }
 
   override def save(fn:File): Unit = {

@@ -3,13 +3,12 @@ package org.clulab.numeric
 import org.clulab.numeric.actions.NumericActions
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.Document
-import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.scala.WrappedArray._
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.FileUtils
 
 import java.io.File
-import scala.collection.mutable.ArrayBuffer
 
 class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions: NumericActions,
     val extractor: ExtractorEngine) {
@@ -21,15 +20,14 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
 
   /** Matches the lexicon NER on this document, setting the `entities` field */
   def matchLexiconNer(document: Document): Seq[Option[Array[String]]] = {
-    val originalEntities = new ArrayBuffer[Option[Array[String]]]()
+    val originalEntities = document.sentences.map { sent =>
+      val oldEntities = sent.entities
+      val newEntities = lexiconNer.find(sent)
 
-    for(sent <- document.sentences) {
-      originalEntities += sent.entities
-
-      val labels = lexiconNer.find(sent)
       // this needs to happen in place, otherwise Odin does not see these labels
       // we will restore the original Sentence.entities at the end in `extractFrom`
-      sent.entities = Some(labels)
+      sent.entities = Some(newEntities)
+      oldEntities
     }
 
     originalEntities

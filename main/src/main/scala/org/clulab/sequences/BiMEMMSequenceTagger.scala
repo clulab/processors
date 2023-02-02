@@ -1,15 +1,14 @@
 package org.clulab.sequences
 
-import java.io._
-
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
-import org.clulab.utils.SeqUtils
+import org.clulab.utils.{ArrayMaker, Buffer, SeqUtils}
 
+import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -32,9 +31,10 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
   var secondPassModel:Option[Classifier[L, F]] = None
 
   override def train(docs:Iterator[Document]): Unit = {
-    val sentences = new ArrayBuffer[Sentence]()
-    for(doc <- docs; sent <- doc.sentences) {
-      sentences += sent
+    val sentences = Buffer.makeArray[Sentence] { sentencesBuffer =>
+      for (doc <- docs; sent <- doc.sentences) {
+        sentencesBuffer += sent
+      }
     }
     logger.info(s"Training on ${sentences.size} sentences using order $order.")
 
@@ -221,16 +221,18 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
         None
       }
 
-    val history = new ArrayBuffer[L]()
-    for(i <- 0 until sentence.size) {
-      val feats = new Counter[F]
-      mkFeatures(feats, sentence, i, history, firstPass)
-      val d = mkDatum(null.asInstanceOf[L], feats)
-      val label = classifier.classOf(d)
-      history += label
+    val history = ArrayMaker.buffer[L] { historyBuffer =>
+      for (i <- sentence.indices) {
+        val feats = new Counter[F]
+        mkFeatures(feats, sentence, i, historyBuffer, firstPass)
+        val d = mkDatum(null.asInstanceOf[L], feats)
+        val label = classifier.classOf(d)
+
+        historyBuffer += label
+      }
     }
 
-    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
+    if (leftToRight) history else SeqUtils.revert(history).toArray
   }
 
   override def classesOf(sentence: Sentence):Array[L] = {

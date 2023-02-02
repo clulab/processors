@@ -5,10 +5,14 @@ import org.slf4j.LoggerFactory
 import de.bwaldvogel.liblinear._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-import scala.collection.mutable.ArrayBuffer
-import LiblinearClassifier.logger
-import scala.collection.mutable
+import org.clulab.utils.ArrayMaker
+
 import java.io._
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
+import LiblinearClassifier.logger
 
 /**
  * Wrapper for liblinear classifiers, which includes LR and linear SVM
@@ -256,13 +260,14 @@ class LiblinearClassifier[L, F](
         }
         rvfDataToFeatures(fs.toArray, vs.toArray, sorted = false)
       }
-      case bvf:BVFDatum[L, F] => {
-        val fs = new ArrayBuffer[Int]
-        for(f <- bvf.features){
-          val of = featureLexicon.get.get(f)
-          if(of.isDefined) fs += of.get
+      case bvf: BVFDatum[L, F] => {
+        val fs = ArrayMaker.buffer[Int] { fsBuffer =>
+          for (f <- bvf.features) {
+            val of = featureLexicon.get.get(f)
+            if (of.isDefined) fsBuffer += of.get
+          }
         }
-        bvfDataToFeatures(fs.sorted.toArray)
+        bvfDataToFeatures(fs.sorted)
       }
       case _ => {
         throw new RuntimeException("ERROR: do not know how to process this datum type!")

@@ -1,6 +1,5 @@
 package org.clulab.dynet
 
-import java.io._
 import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
 import org.clulab.embeddings.SanitizedWordEmbeddingMap
@@ -10,14 +9,15 @@ import org.clulab.scala.BufferedIterator
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, MutableNumber}
-import org.clulab.utils.Serializer
+import org.clulab.utils.{ArrayMaker, Buffer, Serializer}
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.util.concurrent.atomic.AtomicBoolean
-import scala.jdk.CollectionConverters._
+import java.io._
+
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 /**
  * Utility methods used by DyNet applications
@@ -121,7 +121,7 @@ object Utils {
     var forwardVar = initScores
 
     // backpointers for the entire lattice
-    val backPointers = new ArrayBuffer[Array[Int]]()
+    val backPointers = new Array[Array[Int]](emissionScores.length)
 
     // iterate over all the words in this sentence
     for (t <- emissionScores.indices) {
@@ -153,7 +153,7 @@ object Utils {
       forwardVar = ArrayMath.sum(scoresAtT, emissionScores(t))
 
       // keep track of the backpointers at this time step
-      backPointers += backPointersAtT
+      backPointers(t) = backPointersAtT
     }
 
     assert(emissionScores.length == backPointers.length)
@@ -260,10 +260,11 @@ object Utils {
       tagIds(i) = oId
     }
 
-    val tags = new ArrayBuffer[(Int, Int, Float)]()
-    for (i <- lattice.indices) {
-      for (j <- lattice(i).indices) {
-        tags += Tuple3(i, j, lattice(i)(j))
+    val tags = Buffer.makeArray[(Int, Int, Float)] { tagsBuffer =>
+      for (i <- lattice.indices) {
+        for (j <- lattice(i).indices) {
+          tagsBuffer += ((i, j, lattice(i)(j)))
+        }
       }
     }
     val sortedTags = tags.sortBy(0f - _._3)
@@ -471,35 +472,35 @@ object Utils {
   }
 
   def emissionScoresToArrays(expressions: Iterable[Expression]): Array[Array[Float]] = {
-    val lattice = new ArrayBuffer[Array[Float]]()
-    for (expression <- expressions) {
+    val lattice = expressions.map { expression =>
       val probs = expression.value().toVector().toArray
-      lattice += probs
+
+      probs
     }
+
     lattice.toArray
   }
 
   def emissionScoresToArraysAllTasks(expressions: Array[ExpressionVector]): Array[Array[Array[Float]]] = {
-    val latticesAllTasks = new Array[Array[Array[Float]]](expressions.length)
-
-    for (tid <- latticesAllTasks.indices) {
-      val lattice = new ArrayBuffer[Array[Float]]()
-      for (expression <- expressions(tid)) {
+    val latticesAllTasks = expressions.map { expressionVector =>
+      val lattice = expressionVector.map { expression =>
         val probs = expression.value().toVector().toArray
-        lattice += probs
+
+        probs
       }
-      latticesAllTasks(tid) = lattice.toArray
-    }
+
+      lattice.toArray
+    }.toArray
 
     latticesAllTasks
   }
 
   def transitionMatrixToArrays(trans: LookupParameter, size: Int): Array[Array[Float]] = {
-    val transitionMatrix = new ArrayBuffer[Array[Float]]()
-    for (i <- 0 until size) {
-      transitionMatrix += lookup(trans, i).value().toVector().toArray
+    val transitionMatrix = Array.tabulate(size) { index =>
+      lookup(trans, index).value().toVector().toArray
     }
-    transitionMatrix.toArray
+
+    transitionMatrix
   }
 
   // This <% seems to be called an "implicit conversion declaration".
@@ -733,10 +734,9 @@ object Utils {
     override protected def build(lines: BufferedIterator[String],
                                  fieldName: Option[String],
                                  defaultValue: Option[IndexedSeq[String]]): Array[String] = {
-      val arrayBuffer: ArrayBuffer[String] = ArrayBuffer.empty
-
-      addLines(arrayBuffer, lines, fieldName, defaultValue)
-      arrayBuffer.toArray
+      ArrayMaker.buffer[String] { arrayBuffer =>
+        addLines(arrayBuffer, lines, fieldName, defaultValue)
+      }
     }
 
     override protected def setDefaultValue(intermediateValue: ArrayBuffer[String],

@@ -228,50 +228,32 @@ object DirectedGraph {
     //println("EDGES:")
     //for(e <- edges) println(e._1 + " " + e._2 + " " + e._3)
     //println("size = " + size)
-
-    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
-    var offset = 0
-    while(offset < nodes.length) {
-      nodes(offset) = new ArrayBuffer[(Int, E)]
-      offset += 1
-    }
+    val nodes = Array.fill(size)(new ArrayBuffer[(Int, E)])
 
     for (edge <- edges) {
       //logger.debug("storing edge: " + edge)
-      nodes(edge.source).+=((edge.destination, edge.relation))
+      nodes(edge.source) += ((edge.destination, edge.relation))
     }
 
-    val outgoing = new Array[Array[(Int, E)]](size)
-    offset = 0
-    while(offset < nodes.length) {
-      outgoing(offset) = nodes(offset).sortBy(e => e._1).toArray
-      offset += 1
-    }
+    val outgoing = nodes.map { node =>
+      node.sortBy(e => e._1).toArray
+    }.toArray
 
     outgoing
   }
 
   protected def mkIncoming[E](edges:List[Edge[E]], size: Int): Array[Array[(Int, E)]] = {
     //println("size = " + size)
-
-    val nodes = new Array[ArrayBuffer[(Int, E)]](size)
-    var offset = 0
-    while(offset < nodes.length) {
-      nodes(offset) = new ArrayBuffer[(Int, E)]
-      offset += 1
-    }
+    val nodes = Array.fill(size)(new ArrayBuffer[(Int, E)])
 
     for (edge <- edges) {
       //logger.debug("storing edge: " + edge)
-      nodes(edge.destination).+=((edge.source, edge.relation))
+      nodes(edge.destination) += ((edge.source, edge.relation))
     }
 
-    val incoming = new Array[Array[(Int, E)]](size)
-    offset = 0
-    while(offset < nodes.length) {
-      incoming(offset) = nodes(offset).sortBy(e => e._1).toArray
-      offset += 1
-    }
+    val incoming = nodes.map { node =>
+      node.sortBy(e => e._1).toArray
+    }.toArray
 
     incoming
   }

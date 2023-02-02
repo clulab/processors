@@ -1,18 +1,16 @@
 package org.clulab.learning
 
-import org.clulab.struct.Counter
 import libsvm._
-
-import scala.collection.mutable.ArrayBuffer
+import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
+import org.clulab.utils.{ArrayMaker, Serializer}
 import org.slf4j.LoggerFactory
-import LibSVMClassifier.logger
+
 import java.io._
 
-import org.clulab.learning._
-import org.clulab.utils.Serializer
+import scala.collection.mutable.ArrayBuffer
 
-
+import LibSVMClassifier.logger
 
 /**
   * Modified from mihais's Liblinear wrapper by dfried on 5/2/14
@@ -242,12 +240,13 @@ class LibSVMClassifier[L, F](val parameters: svm_parameter) extends Classifier[L
         rvfDataToNodes(fs.toArray, vs.toArray, sorted = false)
       }
       case bvf:BVFDatum[L, F] => {
-        val fs = new ArrayBuffer[Int]
-        for(f <- bvf.features){
-          val of = featureLexicon.get.get(f)
-          if(of.isDefined) fs += of.get
+        val fs = ArrayMaker.buffer[Int] { fsBuffer =>
+          for (f <- bvf.features) {
+            val of = featureLexicon.get.get(f)
+            if (of.isDefined) fsBuffer += of.get
+          }
         }
-        bvfDataToNodes(fs.sorted.toArray)
+        bvfDataToNodes(fs.sorted)
       }
       case _ => {
         throw new RuntimeException("ERROR: do not know how to process this datum type!")

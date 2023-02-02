@@ -5,15 +5,13 @@ import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
-import org.clulab.utils.{ProgressBar, Serializer, StringUtils}
+import org.clulab.utils.{Buffer, ProgressBar, Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.fatdynet.utils.CloseableModelSaver
 import org.clulab.fatdynet.utils.Closer.AutoCloser
 
-import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import Metal._
 
@@ -122,123 +120,123 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     var maxAvgAcc = 0.0
     var maxAvgF1 = 0.0
     var bestEpoch = 0
-    val allEpochScores = new ArrayBuffer[(Int, Double)]() // tuples of epoch number and overall score per epoch
     var epochPatience = taskManager.epochPatience
-    for(epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
-      // This logger info is in the title of the next ProgressBar.
-      // logger.info(s"Started epoch $epoch.")
-      // this fetches randomized training sentences from all tasks
-      val sentenceIterator = taskManager.getSentences(rand)
-      var sentCount = 0
+    val allEpochScores = Buffer.makeArray[(Int, Double)] { allEpochScoresBuffer =>
+      for (epoch <- 0 until taskManager.maxEpochs if epochPatience > 0) {
+        // This logger info is in the title of the next ProgressBar.
+        // logger.info(s"Started epoch $epoch.")
+        // this fetches randomized training sentences from all tasks
+        val sentenceIterator = taskManager.getSentences(rand)
+        var sentCount = 0
 
-      ComputationGraph.renew()
-      var batchLosses: ExpressionVector = new ExpressionVector()
+        ComputationGraph.renew()
+        var batchLosses: ExpressionVector = new ExpressionVector()
 
-      //
-      // traverse all training sentences
-      //
+        //
+        // traverse all training sentences
+        //
 
-      val progressBar = ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)
-      for(metaSentence <- progressBar) {
-        val taskId = metaSentence._1
-        val sentence = metaSentence._2
-        val insertNegatives = taskManager.tasks(taskId).insertNegatives
+        val progressBar = ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)
+        for (metaSentence <- progressBar) {
+          val taskId = metaSentence._1
+          val sentence = metaSentence._2
+          val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
-        sentCount += 1
+          sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
-        assert(annotatedSentences.nonEmpty)
+          val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
+          assert(annotatedSentences.nonEmpty)
 
-        val unweightedLoss = {
-          val lossSum = new ExpressionVector()
-          for (as <- annotatedSentences) {
-            val annotatedSentence = as._1
-            val sentenceLabels = as._2
-            val sentenceLoss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
-            lossSum.add(sentenceLoss)
+          val unweightedLoss = {
+            val lossSum = new ExpressionVector()
+            for (as <- annotatedSentences) {
+              val annotatedSentence = as._1
+              val sentenceLabels = as._2
+              val sentenceLoss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
+              lossSum.add(sentenceLoss)
+            }
+            Expression.sum(lossSum)
           }
-          Expression.sum(lossSum)
+
+          // task weighting
+          val loss = {
+            if (taskManager.tasks(taskId).taskWeight != 1.0) {
+              unweightedLoss * Expression.input(taskManager.tasks(taskId).taskWeight)
+            } else {
+              unweightedLoss
+            }
+          }
+
+          batchLosses.add(loss)
+
+          if (batchLosses.size >= batchSize) {
+            // backprop
+            cummulativeLoss += batchBackprop(batchLosses, trainer)
+
+            // start a new batch
+            ComputationGraph.renew()
+            batchLosses = new ExpressionVector()
+          }
+
+          numTagged += sentence.length
+
+          if (sentCount % 1000 == 0) {
+            val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
+            progressBar.setExtraMessage(message)
+            // logger.info(message) // This would likely mess up the progressBar.
+            cummulativeLoss = 0.0
+            numTagged = 0
+          }
         }
 
-        // task weighting
-        val loss = {
-          if (taskManager.tasks(taskId).taskWeight != 1.0) {
-            unweightedLoss * Expression.input(taskManager.tasks(taskId).taskWeight)
-          } else {
-            unweightedLoss
-          }
-        }
-
-        batchLosses.add(loss)
-
-        if(batchLosses.size >= batchSize) {
+        // we may have an incomplete batch here
+        if (batchLosses.nonEmpty) {
           // backprop
           cummulativeLoss += batchBackprop(batchLosses, trainer)
-
-          // start a new batch
-          ComputationGraph.renew()
-          batchLosses = new ExpressionVector()
         }
 
-        numTagged += sentence.length
-
-        if(sentCount % 1000 == 0) {
-          val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
-          progressBar.setExtraMessage(message)
-          // logger.info(message) // This would likely mess up the progressBar.
-          cummulativeLoss = 0.0
-          numTagged = 0
+        //
+        // check dev performance in this epoch, for all tasks
+        //
+        var totalAcc = 0.0
+        var totalPrec = 0.0
+        var totalRec = 0.0
+        var totalF1 = 0.0
+        for (taskId <- 0 until taskManager.taskCount) {
+          val taskName = taskManager.tasks(taskId).taskName
+          val devSentences = taskManager.tasks(taskId).devSentences
+          if (devSentences.nonEmpty) {
+            val (acc, prec, rec, f1) = evaluate(taskId, taskName, devSentences.get, epoch)
+            totalAcc += acc
+            totalPrec += prec
+            totalRec += rec
+            totalF1 += f1
+          }
         }
-      }
+        val avgAcc = totalAcc / taskManager.taskCount
+        val avgPrec = totalPrec / taskManager.taskCount
+        val avgRec = totalRec / taskManager.taskCount
+        val avgF1 = totalF1 / taskManager.taskCount
+        logger.info(s"Average accuracy across ${taskManager.taskCount} tasks in epoch $epoch: $avgAcc")
+        logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks in epoch $epoch: $avgPrec / $avgRec / $avgF1")
+        allEpochScoresBuffer += ((epoch, avgF1))
 
-      // we may have an incomplete batch here
-      if(batchLosses.nonEmpty) {
-        // backprop
-        cummulativeLoss += batchBackprop(batchLosses, trainer)
-      }
-
-      //
-      // check dev performance in this epoch, for all tasks
-      //
-      var totalAcc = 0.0
-      var totalPrec = 0.0
-      var totalRec = 0.0
-      var totalF1 = 0.0
-      for(taskId <- 0 until taskManager.taskCount) {
-        val taskName = taskManager.tasks(taskId).taskName
-        val devSentences = taskManager.tasks(taskId).devSentences
-        if(devSentences.nonEmpty) {
-          val (acc, prec, rec, f1) = evaluate(taskId, taskName, devSentences.get, epoch)
-          totalAcc += acc
-          totalPrec += prec
-          totalRec += rec
-          totalF1 += f1
+        if (avgF1 > maxAvgF1) {
+          maxAvgF1 = avgF1
+          maxAvgAcc = avgAcc
+          bestEpoch = epoch
+          epochPatience = taskManager.epochPatience
+        } else {
+          epochPatience -= 1
         }
-      }
-      val avgAcc = totalAcc / taskManager.taskCount
-      val avgPrec = totalPrec / taskManager.taskCount
-      val avgRec = totalRec / taskManager.taskCount
-      val avgF1 = totalF1 / taskManager.taskCount
-      logger.info(s"Average accuracy across ${taskManager.taskCount} tasks in epoch $epoch: $avgAcc")
-      logger.info(s"Average P/R/F1 across ${taskManager.taskCount} tasks in epoch $epoch: $avgPrec / $avgRec / $avgF1")
-      allEpochScores += Tuple2(epoch, avgF1)
+        logger.info(s"Best epoch so far is epoch $bestEpoch with an average F1 of $maxAvgF1, and average accuracy of $maxAvgAcc.")
+        if (epochPatience < taskManager.epochPatience) {
+          logger.info(s"Epoch patience is at $epochPatience.")
+        }
 
-      if(avgF1 > maxAvgF1) {
-        maxAvgF1 = avgF1
-        maxAvgAcc = avgAcc
-        bestEpoch = epoch
-        epochPatience = taskManager.epochPatience
-      } else {
-        epochPatience -= 1
+        save(s"$modelNamePrefix-epoch$epoch")
       }
-      logger.info(s"Best epoch so far is epoch $bestEpoch with an average F1 of $maxAvgF1, and average accuracy of $maxAvgAcc.")
-      if(epochPatience < taskManager.epochPatience) {
-        logger.info(s"Epoch patience is at $epochPatience.")
-      }
-
-      save(s"$modelNamePrefix-epoch$epoch")
     }
-
     // sort epochs in descending order of scores
     val sortedEpochs = allEpochScores.sortBy(- _._2)
     logger.info("Epochs in descending order of scores:")
@@ -272,18 +270,15 @@ class Metal(val taskManagerOpt: Option[TaskManager],
   /** Ceiling method that chooses the gold dependency for each modifier from the top K predictions */
   def chooseOptimalPreds(predsWithScores: IndexedSeq[IndexedSeq[(String, Float)]], goldLabels: IndexedSeq[String], topK:Int): IndexedSeq[String] = {
     assert(predsWithScores.length == goldLabels.length)
-    val preds = new ArrayBuffer[String]()
-    for(i <- predsWithScores.indices) {
-      val sortedPreds = predsWithScores(i).sortBy(- _._2)
-      val gold = goldLabels(i)
-      var bestPred = sortedPreds.head._1
-      for(j <- 1 until topK) {
-        if(sortedPreds(j)._1 == gold) {
-          bestPred = sortedPreds(j)._1
-        }
-      }
-      preds += bestPred
+    val preds = predsWithScores.zip(goldLabels).map { case (predWithScores, gold) =>
+      val sortedPreds = predWithScores.sortBy(- _._2)
+      val bestPred =
+          if (Range(0, topK).exists { index => sortedPreds(index)._1 == gold }) gold
+          else sortedPreds.head._1
+
+      bestPred
     }
+
     preds
   }
 
@@ -449,16 +444,16 @@ object Metal {
     //
     //println(s"Opening $x2iFilename")
     val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
-      val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
       val layersCount = new Utils.ByLineIntBuilder().build(lines)
-      for(i <- 0 until layersCount) {
+      val layersSeq = Array.fill(layersCount) {
         val layers = Layers.loadX2i(parameters, lines)
         //println("loadX2i done!")
-        layersSeq += layers
+
+        layers
       }
 
-      layersSeq.toIndexedSeq
+      layersSeq
     }
 
     //

@@ -12,7 +12,10 @@ object Buffer {
   }
 
   def makeList[T](f: (ListBuffer[T]) => Unit): ListBuffer[T] = {
-    null
+    val listBuffer = new ListBuffer[T]()
+
+    f(listBuffer)
+    listBuffer
   }
 
   def fillArray[T](elems: T*)(f: (ArrayBuffer[T]) => Unit): ArrayBuffer[T] = {
@@ -23,6 +26,9 @@ object Buffer {
   }
 
   def fillList[T](elems: T*)(f: (ListBuffer[T]) => Unit): ListBuffer[T] = {
-    null
+    val listBuffer = ListBuffer[T](elems: _*)
+
+    f(listBuffer)
+    listBuffer
   }
 }

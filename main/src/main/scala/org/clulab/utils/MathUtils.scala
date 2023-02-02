@@ -1,9 +1,7 @@
 package org.clulab.utils
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /**
@@ -19,15 +17,15 @@ object MathUtils {
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def softmax(scores:Iterable[Double], gamma:Double = 1.0):IndexedSeq[Double] = {
-    val scoreArray = new ArrayBuffer[Double]
-    for(s <- scores) scoreArray += s * gamma
-    val softmaxes = new ArrayBuffer[Double]
+  def softmax(scores: Iterable[Double], gamma: Double = 1.0): IndexedSeq[Double] = {
+    val gammaScores =
+        if (gamma != 1.0) scores.map(_ * gamma).toArray
+        else scores.toArray
+    val logSumStatic = logSum(gammaScores)
+    val softmaxes = gammaScores.map { gammaScore =>
+      val logSoftmax = gammaScore - logSumStatic
 
-    val logSumStatic = logSum(scoreArray)
-    for(s <- scores) {
-      val logSoftmax = (gamma * s) - logSumStatic
-      softmaxes += math.exp(logSoftmax)
+      math.exp(logSoftmax)
     }
 
     softmaxes
@@ -39,49 +37,56 @@ object MathUtils {
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def softmaxFloat(scores:Iterable[Float], gamma:Float = 1.0f):IndexedSeq[Float] = {
-    val scoreArrayBuffer = new ArrayBuffer[Float]
-    for(s <- scores) scoreArrayBuffer += s * gamma
-    val scoreArray = scoreArrayBuffer.toArray
-    val softmaxes = new ArrayBuffer[Float]
+  def softmaxFloat(scores: Iterable[Float], gamma: Float = 1.0f): IndexedSeq[Float] = {
+    val gammaScores =
+        if (gamma != 1.0f) scores.map(_ * gamma).toArray
+        else scores.toArray
+    val logSumStatic = logSumFloat(gammaScores)
+    val softmaxes = gammaScores.map { gammaScore =>
+      val logSoftmax = gammaScore - logSumStatic
 
-    val logSumStatic = logSumFloat(scoreArray)
-    for(s <- scores) {
-      val logSoftmax = (gamma * s) - logSumStatic
-      softmaxes += math.exp(logSoftmax).toFloat
+      math.exp(logSoftmax).toFloat
     }
 
-    softmaxes.toIndexedSeq
+    softmaxes
   }
 
   /**
    * Puts a softmax layer over a collection of scores, so they look like probabilities
-   * @param vector A collection of unnormalized scores
+   * @param scores A collection of unnormalized scores
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def denseSoftmax(vector: Array[Double], gamma: Double = 1.0): Array[Double] = {
-    val scoreArray =
-        if (gamma != 1.0) vector.map(gamma * _).toArray
-        else vector
-    val logSumStatic = logSum(scoreArray)
+  def denseSoftmax(scores: Array[Double], gamma: Double = 1.0): Array[Double] = {
+    val gammaScores =
+        if (gamma != 1.0) scores.map(gamma * _).toArray
+        else scores
+    val logSumStatic = logSum(gammaScores)
 
-    vector.map { value => math.exp((gamma * value) - logSumStatic) }.toArray
+    gammaScores.map { gammaScore =>
+      val logSoftmax = gammaScore - logSumStatic
+
+      math.exp(logSoftmax)
+    }.toArray
   }
 
   /**
    * Puts a softmax layer over a collection of scores, so they look like probabilities
-   * @param vector A collection of unnormalized scores
+   * @param scores A collection of unnormalized scores
    * @param gamma Indicates how spiked the probability distribution should be
    * @return
    */
-  def denseSoftmaxFloat(vector: Array[Float], gamma: Float = 1.0f): Array[Float] = {
-    val scoreArray =
-        if (gamma != 1.0f) vector.map(gamma * _).toArray
-        else vector
-    val logSumStatic = logSumFloat(scoreArray)
+  def denseSoftmaxFloat(scores: Array[Float], gamma: Float = 1.0f): Array[Float] = {
+    val gammaScores =
+        if (gamma != 1.0f) scores.map(gamma * _).toArray
+        else scores
+    val logSumStatic = logSumFloat(gammaScores)
 
-    vector.map { value => math.exp((gamma * value) - logSumStatic).toFloat }.toArray
+    gammaScores.map { gammaScore =>
+      val logSoftmax = gammaScore - logSumStatic
+
+      math.exp(logSoftmax).toFloat
+    }.toArray
   }
 
   def logSum(logInputs:IndexedSeq[Double]):Double =

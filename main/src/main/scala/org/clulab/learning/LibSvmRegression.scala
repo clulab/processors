@@ -1,12 +1,15 @@
 package org.clulab.learning
 
 import libsvm._
+import org.clulab.struct.Lexicon
+import org.clulab.utils.ArrayMaker
+import org.slf4j.LoggerFactory
+
+import java.io._
 
 import scala.collection.mutable.ArrayBuffer
-import org.clulab.struct.Lexicon
-import org.slf4j.LoggerFactory
+
 import LibSvmRegression.logger
-import java.io._
 
 import org.clulab.utils.Serializer
 
@@ -208,12 +211,13 @@ class LibSvmRegression[F](val parameters: svm_parameter) extends Regression[F] w
         rvfDataToNodes(fs.toArray, vs.toArray, sorted = false)
 
       case bvf:BVFDatum[Double, F] =>
-        val fs = new ArrayBuffer[Int]
-        for(f <- bvf.features){
-          val of = featureLexicon.get.get(f)
-          if(of.isDefined) fs += of.get
+        val fs = ArrayMaker.buffer[Int] { fsBuffer =>
+          for (f <- bvf.features) {
+            val of = featureLexicon.get.get(f)
+            if (of.isDefined) fsBuffer += of.get
+          }
         }
-        bvfDataToNodes(fs.sorted.toArray)
+        bvfDataToNodes(fs.sorted)
 
       case _ =>
         throw new RuntimeException("ERROR: do not know how to process this datum type!")

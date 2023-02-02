@@ -5,13 +5,10 @@ import edu.cmu.dynet.{Expression, ExpressionVector, ParameterCollection}
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.Synchronizer
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.Counter
-import org.clulab.utils.{Configured, MathUtils}
-import org.clulab.dynet.Utils._
-import org.clulab.fatdynet.utils.Synchronizer
-
-import scala.collection.mutable.ArrayBuffer
+import org.clulab.utils.{Buffer, Configured, MathUtils}
 
 /**
  * A sequence of layers that implements a complete NN architecture for sequence modeling
@@ -135,18 +132,19 @@ object Layers {
         None
       }
 
-    val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
-    var done = false
-    for(i <- 1 to MAX_INTERMEDIATE_LAYERS if ! done) {
-      if(inputSize.isEmpty) {
-        throw new RuntimeException("ERROR: trying to construct an intermediate layer without a known input size!")
-      }
-      val intermediateLayer = RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
-      if(intermediateLayer.nonEmpty) {
-        intermediateLayers += intermediateLayer.get
-        inputSize = Some(intermediateLayer.get.outDim)
-      } else {
-        done = true
+    val intermediateLayers = Buffer.makeArray[IntermediateLayer] { intermediateLayersBuffer =>
+      var done = false
+      for (i <- 1 to MAX_INTERMEDIATE_LAYERS if !done) {
+        if (inputSize.isEmpty) {
+          throw new RuntimeException("ERROR: trying to construct an intermediate layer without a known input size!")
+        }
+        val intermediateLayer = RnnLayer.initialize(config, paramPrefix + s".intermediate$i", parameters, inputSize.get)
+        if (intermediateLayer.nonEmpty) {
+          intermediateLayersBuffer += intermediateLayer.get
+          inputSize = Some(intermediateLayer.get.outDim)
+        } else {
+          done = true
+        }
       }
     }
 
@@ -180,12 +178,11 @@ object Layers {
         None
       }
 
-    val intermediateLayers = new ArrayBuffer[IntermediateLayer]()
     val intermCount = byLineIntBuilder.build(lines, "intermediateCount")
-    for(_ <- 0 until intermCount) {
+    val intermediateLayers = Array.fill(intermCount) {
       val il = RnnLayer.load(parameters, lines)
       //println("loaded one intermediate layer!")
-      intermediateLayers += il
+      il
     }
 
     val hasFinal = byLineIntBuilder.build(lines, "hasFinal")
@@ -205,32 +202,31 @@ object Layers {
                      sentence: AnnotatedSentence,
                      modHeadPairsOpt: Option[IndexedSeq[ModifierHeadPair]],
                      constEmbeddings: ConstEmbeddingParameters): IndexedSeq[IndexedSeq[String]] = {
-    val labelsPerTask = new ArrayBuffer[IndexedSeq[String]]()
+    val labelsPerTask = Buffer.makeArray[IndexedSeq[String]] { labelsPerTaskBuffer =>
+      // DyNet's computation graph is a static variable, so this block must be synchronized
+      Synchronizer.withComputationGraph("Layers.predictJointly()") {
+        // layers(0) contains the shared layers
+        if (layers(0).nonEmpty) {
+          val sharedStates = layers(0).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
 
-    // DyNet's computation graph is a static variable, so this block must be synchronized
-    Synchronizer.withComputationGraph("Layers.predictJointly()") {
-      // layers(0) contains the shared layers
-      if (layers(0).nonEmpty) {
-        val sharedStates = layers(0).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
-
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forwardFrom(sharedStates, modHeadPairsOpt, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
+          for (i <- 1 until layers.length) {
+            val states = layers(i).forwardFrom(sharedStates, modHeadPairsOpt, doDropout = false)
+            val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+            val labels = layers(i).finalLayer.get.inference(emissionScores)
+            labelsPerTaskBuffer += labels
+          }
         }
-      }
-      // no shared layer
-      else {
-        for (i <- 1 until layers.length) {
-          val states = layers(i).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
-          val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
-          val labels = layers(i).finalLayer.get.inference(emissionScores)
-          labelsPerTask += labels
+        // no shared layer
+        else {
+          for (i <- 1 until layers.length) {
+            val states = layers(i).forward(sentence, modHeadPairsOpt, constEmbeddings, doDropout = false)
+            val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(states)
+            val labels = layers(i).finalLayer.get.inference(emissionScores)
+            labelsPerTaskBuffer += labels
+          }
         }
       }
     }
-
     labelsPerTask
   }
 
@@ -300,13 +296,12 @@ object Layers {
   }
 
   def softmax(rawScores: IndexedSeq[IndexedSeq[(String, Float)]]): IndexedSeq[IndexedSeq[(String, Float)]] = {
-    val probScores = new ArrayBuffer[IndexedSeq[(String, Float)]]()
-
-    for(predictions <- rawScores) {
+    val probScores = rawScores.map { predictions =>
       val justScores = predictions.map(_._2)
       val probs = MathUtils.softmaxFloat(justScores)
       val justLabels = predictions.map(_._1)
-      probScores += justLabels.zip(probs)
+
+      justLabels.zip(probs)
     }
 
     probScores
@@ -333,43 +328,42 @@ object Layers {
         val headScores = layers(1).finalLayer.get.inferenceWithScores(headEmissionScores)
 
         // store the head values here
-        val heads = new ArrayBuffer[Int]()
-        for(wi <- headScores.indices) {
-          val predictionsForThisWord = headScores(wi)
+        val heads = Buffer.makeArray[Int] { headsBuffer =>
+          for (wi <- headScores.indices) {
+            val predictionsForThisWord = headScores(wi)
 
-          // pick the prediction with the highest score, which is within the boundaries of the current sentence
-          var done = false
-          for(hi <- predictionsForThisWord.indices if ! done) {
-            try {
-              val relativeHead = predictionsForThisWord(hi)._1.toInt
-              if (relativeHead == 0) { // this is the root
-                heads += -1
-                done = true
-              } else {
-                val headPosition = wi + relativeHead
-                if (headPosition >= 0 && headPosition < sentence.size) {
-                  heads += headPosition
+            // pick the prediction with the highest score, which is within the boundaries of the current sentence
+            var done = false
+            for (hi <- predictionsForThisWord.indices if !done) {
+              try {
+                val relativeHead = predictionsForThisWord(hi)._1.toInt
+                if (relativeHead == 0) { // this is the root
+                  headsBuffer += -1
                   done = true
+                } else {
+                  val headPosition = wi + relativeHead
+                  if (headPosition >= 0 && headPosition < sentence.size) {
+                    headsBuffer += headPosition
+                    done = true
+                  }
                 }
+              } catch {
+                // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
+                case e: NumberFormatException => done = false
               }
-            } catch {
-              // some valid predictions may not be integers, e.g., "<STOP>" may be predicted by the sequence model
-              case e: NumberFormatException => done = false
+            }
+            if (!done) {
+              // we should not be here, but let's be safe
+              // if nothing good was found, assume root
+              headsBuffer += -1
             }
           }
-          if(! done) {
-            // we should not be here, but let's be safe
-            // if nothing good was found, assume root
-            heads += -1
-          }
         }
-
         //
         // next, predict the labels using the predicted heads
         //
-        val modHeadPairs = new ArrayBuffer[ModifierHeadPair]()
-        for(i <- heads.indices) {
-          modHeadPairs += ModifierHeadPair(i, heads(i))
+        val modHeadPairs = heads.zipWithIndex.map { case (head, index) =>
+          ModifierHeadPair(index, head)
         }
         val labelStates = layers(2).forwardFrom(sharedStates, Some(modHeadPairs), doDropout = false)
         val emissionScores: Array[Array[Float]] = Utils.emissionScoresToArrays(labelStates)

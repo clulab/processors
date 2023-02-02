@@ -745,8 +745,8 @@ class CluProcessor protected (
       parserPostProcessing(sent, headsWithLabels)
 
       val groups = headsWithLabels.indices.groupBy { index => headsWithLabels(index)._1 == -1 }
-      val roots = groups(true)
-      val edges = groups(false).map { index =>
+      val roots = groups.getOrElse(true, IndexedSeq.empty)
+      val edges = groups.getOrElse(false, IndexedSeq.empty).map { index =>
         Edge[String](headsWithLabels(index)._1, index, headsWithLabels(index)._2)
       }
 

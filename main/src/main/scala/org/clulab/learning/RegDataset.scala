@@ -4,16 +4,17 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
+import org.clulab.utils.{ArrayMaker, Buffer}
+import org.clulab.utils.Files
+import org.slf4j.LoggerFactory
 
-import scala.io.{BufferedSource, Source}
 import java.util.zip.GZIPInputStream
 import java.io.{BufferedInputStream, FileInputStream, FileWriter, PrintWriter}
 
-import org.slf4j.LoggerFactory
-import RVFRegDataset._
-import org.clulab.utils.Files
-
+import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
+
+import RVFRegDataset._
 
 /**
   * Parent class for regression datasets. For classification, see [[Dataset]].
@@ -181,22 +182,20 @@ class BVFRegDataset[F: ClassTag] (
     }
 
     // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    for(row <- features.indices) {
-      val nfs = keepOnlyRow(features(row), featureIndexMap)
-      newFeatures += nfs
+    val newFeatures = features.map { feature =>
+      keepOnlyRow(feature, featureIndexMap)
     }
 
     new BVFRegDataset[F](featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
   }
 
   def keepOnlyRow(feats:Array[Int], featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
-    val newFeats = new ArrayBuffer[Int]()
-
-    for(i <- feats.indices) {
-      val f = feats(i)
-      if(featureIndexMap.contains(f)) {
-        newFeats += featureIndexMap.get(f).get
+    val newFeats = ArrayMaker.buffer[Int] { newFeatsBuffer =>
+      for (i <- feats.indices) {
+        val f = feats(i)
+        if (featureIndexMap.contains(f)) {
+          newFeatsBuffer += featureIndexMap.get(f).get
+        }
       }
     }
 
@@ -204,13 +203,12 @@ class BVFRegDataset[F: ClassTag] (
   }
 
   override def toCounterRegDataset:CounterRegDataset[F] = {
-    val cfs = new ArrayBuffer[Counter[Int]]()
-    for(d <- features.indices) {
+    val cfs = features.map { feature =>
       val cf = new Counter[Int]
-      for(i <- features(d).indices) {
-        cf.incrementCount(features(d)(i))
-      }
-      cfs += cf
+
+      for (feat <- feature)
+        cf.incrementCount(feat)
+      cf
     }
     new CounterRegDataset[F](featureLexicon, labels, cfs)
   }
@@ -342,13 +340,13 @@ class RVFRegDataset[F: ClassTag] (
   }
 
   override def toCounterRegDataset:CounterRegDataset[F] = {
-    val cfs = new ArrayBuffer[Counter[Int]]()
-    for(d <- features.indices) {
+    val cfs = features.zip(values).map { case (feature, value) =>
       val cf = new Counter[Int]
-      for(i <- features(d).indices) {
-        cf.incrementCount(features(d)(i), values(d)(i))
+
+      feature.zip(value).foreach { case (feat, v) =>
+        cf.incrementCount(feat, v)
       }
-      cfs += cf
+      cf
     }
     new CounterRegDataset[F](featureLexicon, labels, cfs)
   }
@@ -493,42 +491,40 @@ object RVFRegDataset {
   }
 
   def mkDatumsFromSvmLightFormat(source: BufferedSource): Iterable[Datum[Double, String]] = {
-    val datums = new ArrayBuffer[Datum[Double, String]]()
-    var datumCount = 0
-
-    for(line <- source.getLines()) {
-      // strip comments following #
-      val pound = line.indexOf("#")
-      var content = line
-      if(pound >= 0) {
-        content = line.substring(0, pound)
-      }
-      content = content.trim
-      //logger.debug("Parsing line: " + content)
-
-      if(content.length > 0) {
-        val bits = content.split("\\s+")
-
-        var label = bits(0)
-        if(label.startsWith("+")) label = label.substring(1)
-        val features = new Counter[String]
-        for(i <- 1 until bits.length) {
-          val fbits = bits(i).split(":")
-          if(fbits.length != 2) {
-            throw new RuntimeException("ERROR: invalid feature format: " + bits(i))
-          }
-          val f = fbits(0)
-          val v = fbits(1).toDouble
-          features.incrementCount(f, v)
+    val datums = Buffer.makeArray[Datum[Double, String]] { datumsBuffer =>
+      for (line <- source.getLines()) {
+        // strip comments following #
+        val pound = line.indexOf("#")
+        var content = line
+        if (pound >= 0) {
+          content = line.substring(0, pound)
         }
-        val datum = new RVFDatum[Double, String](label.toDouble, features)
-        datums += datum
-        datumCount += 1
+        content = content.trim
+        //logger.debug("Parsing line: " + content)
+
+        if (content.length > 0) {
+          val bits = content.split("\\s+")
+
+          var label = bits(0)
+          if (label.startsWith("+")) label = label.substring(1)
+          val features = new Counter[String]
+          for (i <- 1 until bits.length) {
+            val fbits = bits(i).split(":")
+            if (fbits.length != 2) {
+              throw new RuntimeException("ERROR: invalid feature format: " + bits(i))
+            }
+            val f = fbits(0)
+            val v = fbits(1).toDouble
+            features.incrementCount(f, v)
+          }
+          val datum = new RVFDatum[Double, String](label.toDouble, features)
+          datumsBuffer += datum
+        }
       }
     }
+
     datums
   }
-
 }
 
 /**

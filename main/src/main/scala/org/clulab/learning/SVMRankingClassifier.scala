@@ -1,18 +1,19 @@
 package org.clulab.learning
 
+import org.clulab.struct.{Counter, Counters, Lexicon}
+import org.clulab.utils.Buffer
+import org.clulab.utils.StringUtils
+import org.clulab.utils.Serializer
+import org.slf4j.LoggerFactory
+
 import java.io._
 import java.util.Properties
 
-import org.slf4j.LoggerFactory
-
 import scala.Serializable
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.sys.process._
-import org.clulab.struct.{Counter, Counters, Lexicon}
-import org.clulab.utils.StringUtils
+
 import SVMRankingClassifier.logger
-import org.clulab.utils.Serializer
 
 /**
  * Wrapper for SVMrank: trains using svm_rank_learn but predicts using native Scala code
@@ -310,11 +311,8 @@ class SVMRankingClassifier[F] (
     if(featureLexicon.isEmpty) {
       throw new RuntimeException("ERROR: cannot call scoresOf without a feature lexicon!")
     }
-    val scores = new ArrayBuffer[Double]
-
-    for(datum <- queryDatums) {
+    val scores = queryDatums.map { datum =>
       val datumVector = mkDatumVector(datum)
-
       //## Debug
       //      val w = weights.get
       //      println ("scoresOf: weights = " + w.toList)
@@ -324,9 +322,9 @@ class SVMRankingClassifier[F] (
       // TEST###
       //      println ("scoresOf: score: = " + score)
       //val score = Counters.dotProductOnlyPositive(weights.get, datumVector)
-      scores += score
+      score
     }
-    scores.toArray
+    scores
   }
 
   def saveTo(fileName:String): Unit = {
@@ -336,23 +334,23 @@ class SVMRankingClassifier[F] (
   /** Saves important info to this file for debug purposes */
   def debug(): Unit = {
     if (debugFile.nonEmpty) {
-      var features = new ArrayBuffer[(String, Int, Double)]
-
       val pw = new PrintWriter(debugFile)
-      for(f <- featureLexicon.get.keySet)  {
-        val idx = featureLexicon.get.get(f)
-        idx match {
-          case Some(x) => if (x < weights.get.size) { features.append ( (f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)) ) }
-          case _ =>
+      val features = Buffer.makeArray[(String, Int, Double)] { featuresBuffer =>
+        for (f <- featureLexicon.get.keySet) {
+          val idx = featureLexicon.get.get(f)
+          idx match {
+            case Some(x) => if (x < weights.get.size) {
+              featuresBuffer.append((f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)))
+            }
+            case _ =>
+          }
         }
       }
-
       // Sort features
-      features = features.sortBy(- _._3)
+      val sortedFeatures = features.sortBy(- _._3)
 
       // Output features
-      for (i <- 0 until features.size) {
-        val feature = features(i)
+      sortedFeatures.foreach { feature =>
         var featureString = feature._1
         for (j <- 0 until (20 - featureString.size)) featureString += " "       // Make featureString a constant length for formatting
         pw.println (featureString + " \t weight: " + feature._3)

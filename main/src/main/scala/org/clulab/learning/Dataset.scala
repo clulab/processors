@@ -1,18 +1,20 @@
 package org.clulab.learning
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
+import org.clulab.utils.{ArrayMaker, Files}
+import org.slf4j.{Logger, LoggerFactory}
 
-import scala.io.{BufferedSource, Source}
 import java.util.zip.GZIPInputStream
 import java.io.{FileWriter, PrintWriter}
-import org.slf4j.{Logger, LoggerFactory}
-import RVFDataset._
-import org.clulab.utils.Files
 
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
+
+import RVFDataset._
+
 
 /**
  * Parent class for classification datasets
@@ -185,37 +187,31 @@ class BVFDataset[L, F: ClassTag] (
     }
 
     // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    for(row <- features.indices) {
-      val nfs = keepOnlyRow(features(row), featureIndexMap)
-      newFeatures += nfs
+    val newFeatures = features.map { feature =>
+      keepOnlyRow(feature, featureIndexMap)
     }
 
     new BVFDataset[L, F](labelLexicon, featureLexicon.mapIndicesTo(featureIndexMap.toMap), labels, newFeatures)
   }
 
-  def keepOnlyRow(feats:Array[Int], featureIndexMap:mutable.HashMap[Int, Int]):Array[Int] = {
-    val newFeats = new ArrayBuffer[Int]()
-
-    for(i <- feats.indices) {
-      val f = feats(i)
-      if(featureIndexMap.contains(f)) {
-        newFeats += featureIndexMap(f)
-      }
+  def keepOnlyRow(feats: Array[Int], featureIndexMap: mutable.HashMap[Int, Int]): Array[Int] = {
+    val newFeats = ArrayMaker.buffer[Int] { newFeatsBuffer =>
+      for (feat <- feats if featureIndexMap.contains(feat))
+        newFeatsBuffer += featureIndexMap(feat)
     }
 
-    newFeats.toArray
+    newFeats
   }
 
-  override def toCounterDataset:CounterDataset[L, F] = {
-    val cfs = new ArrayBuffer[Counter[Int]]()
-    for(d <- features.indices) {
+  override def toCounterDataset: CounterDataset[L, F] = {
+    val cfs = features.map { feature =>
       val cf = new Counter[Int]
-      for(i <- features(d).indices) {
-        cf.incrementCount(features(d)(i))
-      }
-      cfs += cf
+
+      for (feat <- feature)
+        cf.incrementCount(feat)
+      cf
     }
+
     new CounterDataset[L, F](labelLexicon, featureLexicon, labels, cfs)
   }
 }
@@ -319,9 +315,9 @@ class RVFDataset[L: ClassTag, F: ClassTag] (
     }
 
     // construct the new dataset with the filtered features
-    val newFeatures = new ArrayBuffer[Array[Int]]
-    val newValues = new ArrayBuffer[Array[Double]]
-    for(row <- features.indices) {
+    val newFeatures = new ArrayBuffer[Array[Int]](features.length)
+    val newValues = new ArrayBuffer[Array[Double]](features.length)
+    for (row <- features.indices) {
       val (nfs, nvs) = keepOnlyRow(features(row), values(row), featureIndexMap)
       newFeatures += nfs
       newValues += nvs

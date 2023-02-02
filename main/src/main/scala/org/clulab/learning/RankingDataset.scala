@@ -2,11 +2,12 @@ package org.clulab.learning
 
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-import org.clulab.utils.{ArrayMaker, Files, Serializer}
+import org.clulab.utils.{ArrayMaker, Buffer, Files, Serializer}
 import org.slf4j.LoggerFactory
 
 import java.util.zip.GZIPInputStream
 import java.io.{FileWriter, PrintWriter}
+
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.{BufferedSource, Source}
 
@@ -84,23 +85,22 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
     c
   }
 
-  def mkQueryDatums(queryOffset:Int):Array[Datum[Int, F]] = {
-    val datums = new ArrayBuffer[Datum[Int, F]]
-    for(i <- 0 until querySize(queryOffset)) {
+  def mkQueryDatums(queryOffset: Int): Array[Datum[Int, F]] = {
+    val datums = Array.tabulate[Datum[Int, F]](querySize(queryOffset)) { i =>
       val feats = new ListBuffer[F]
+
       features(queryOffset)(i).foreach(f => feats += featureLexicon.get(f))
-      datums += new BVFDatum[Int, F](labels(queryOffset)(i), feats.toList)
+      new BVFDatum[Int, F](labels(queryOffset)(i), feats.toList)
     }
-    datums.toArray
+
+    datums
   }
 
   def shuffle():(RankingDataset[F], Array[Int]) = {
     val datasetShuffled = new BVFRankingDataset[F]
 
     // Step 1: Create new order map
-    var indicies = new ArrayBuffer[Int]()
-    for (i <- 0 until labels.size) indicies.append(i)
-    val orderMap = util.Random.shuffle(indicies).toArray
+    val orderMap = util.Random.shuffle(Range(0, labels.size).toIndexedSeq).toArray
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon
@@ -122,8 +122,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
     val datasetSize:Int = this.size
 
     // Step 1: Create new order map
-    var orderMap = new Array[Int](n)
-    for (i <- 0 until n) orderMap(i) = util.Random.nextInt(datasetSize)
+    var orderMap = Array.fill(n)(util.Random.nextInt(datasetSize))
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon, to maintain feature indicies from parent dataset
@@ -186,27 +185,26 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
     c
   }
 
-  override def mkQueryDatums(queryOffset:Int):Array[Datum[Int, F]] = {
-    val datums = new ArrayBuffer[Datum[Int, F]]
-    for(i <- 0 until querySize(queryOffset)) {
+  override def mkQueryDatums(queryOffset: Int): Array[Datum[Int, F]] = {
+    val datums = Array.tabulate[Datum[Int, F]](querySize(queryOffset)) { i =>
       val feats = new Counter[F]
       val fs = features(queryOffset)(i)
       val vs = values(queryOffset)(i)
-      for(j <- 0 until fs.length) {
+
+      for (j <- 0 until fs.length) {
         feats.incrementCount(featureLexicon.get(fs(j)), vs(j))
       }
-      datums += new RVFDatum[Int, F](labels(queryOffset)(i), feats)
+      new RVFDatum[Int, F](labels(queryOffset)(i), feats)
     }
-    datums.toArray
+
+    datums
   }
 
   override def shuffle():(RankingDataset[F], Array[Int]) = {
     val datasetShuffled = new RVFRankingDataset[F]
 
     // Step 1: Create new order map
-    var indicies = new ArrayBuffer[Int]()
-    for (i <- 0 until labels.size) indicies.append(i)
-    val orderMap = util.Random.shuffle(indicies).toArray
+    val orderMap = util.Random.shuffle(Range(0,labels.size).toIndexedSeq).toArray
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon
@@ -229,8 +227,7 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
     val datasetSize:Int = this.size
 
     // Step 1: Create new order map
-    var orderMap = new Array[Int](n)
-    for (i <- 0 until n) orderMap(i) = util.Random.nextInt(datasetSize)
+    var orderMap = Array.fill(n)(util.Random.nextInt(datasetSize))
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon, to maintain feature indicies from parent dataset
@@ -391,7 +388,14 @@ object RVFRankingDataset {
   }
 
   def mkDatumsFromSvmRankFormat(source: BufferedSource): Iterable[Iterable[Datum[Int, String]]] = {
-    val queries = new ArrayBuffer[Iterable[Datum[Int, String]]]()
+    val queries = Buffer.makeArray[Iterable[Datum[Int, String]]] { queriesBuffer =>
+      mkDatumsFromSvmRankFormat(source, queriesBuffer)
+    }
+
+    queries
+  }
+
+  protected def mkDatumsFromSvmRankFormat(source: BufferedSource, queries: ArrayBuffer[Iterable[Datum[Int, String]]]): Iterable[Iterable[Datum[Int, String]]] = {
     var crtQid = ""
     var crtBlock:ArrayBuffer[Datum[Int, String]] = null
     var blockCount = 0
@@ -513,27 +517,26 @@ class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
   }
 
   override def mkQueryDatums(queryOffset:Int):Array[Datum[Int, F]] = {
-    val datums = new ArrayBuffer[Datum[Int, F]]
-    for(i <- 0 until querySize(queryOffset)) {
+    val datums = Array.tabulate[Datum[Int, F]](querySize(queryOffset)) { i =>
       val feats = new Counter[F]
       val fs = features(queryOffset)(i)
       val vs = values(queryOffset)(i)
-      for(j <- 0 until fs.length) {
+
+      for (j <- 0 until fs.length) {
         feats.incrementCount(featureLexicon.get(fs(j)), vs(j))
       }
       val k = kernels(queryOffset)(i)
-      datums += new RVFKDatum[Int, F](labels(queryOffset)(i), feats, k)
+
+      new RVFKDatum[Int, F](labels(queryOffset)(i), feats, k)
     }
-    datums.toArray
+    datums
   }
 
   override def shuffle():(RankingDataset[F], Array[Int]) = {
     val datasetShuffled = new RVFKRankingDataset[F]
 
     // Step 1: Create new order map
-    var indicies = new ArrayBuffer[Int]()
-    for (i <- 0 until labels.size) indicies.append(i)
-    val orderMap = util.Random.shuffle(indicies).toArray
+    val orderMap = util.Random.shuffle(Range(0, labels.size).toIndexedSeq).toArray
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon
@@ -557,8 +560,7 @@ class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
     val datasetSize:Int = this.size
 
     // Step 1: Create new order map
-    var orderMap = new Array[Int](n)
-    for (i <- 0 until n) orderMap(i) = util.Random.nextInt(datasetSize)
+    var orderMap = Array.fill(n)(util.Random.nextInt(datasetSize))
 
     // Step 2: Copy member variables
     // Step 2A: Copy over feature lexicon, to maintain feature indicies from parent dataset

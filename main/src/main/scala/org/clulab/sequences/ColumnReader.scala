@@ -1,5 +1,6 @@
 package org.clulab.sequences
 
+import org.clulab.utils.ArrayMaker
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
@@ -19,28 +20,30 @@ object ColumnReader {
 
   def readColumns(source: Source): Array[Array[Row]] = {
     var sentence = new ArrayBuffer[Row]()
-    val sentences = new ArrayBuffer[Array[Row]]()
-    for (line <- source.getLines()) {
-      val l = line.trim
-      if (l.isEmpty) {
-        // end of sentence
-        if (sentence.nonEmpty) {
-          sentences += sentence.toArray
-          sentence = new ArrayBuffer[Row]
+    val sentences = ArrayMaker.buffer[Array[Row]] { sentencesBuffer =>
+      for (line <- source.getLines()) {
+        val l = line.trim
+        if (l.isEmpty) {
+          // end of sentence
+          if (sentence.nonEmpty) {
+            sentencesBuffer += sentence.toArray
+            sentence = new ArrayBuffer[Row]
+          }
+        } else {
+          // within the same sentence
+          val bits = l.split("\\s+")
+          if (bits.length < 2)
+            throw new RuntimeException(s"ERROR: invalid line [$l]!")
+          sentence += Row(bits)
         }
-      } else {
-        // within the same sentence
-        val bits = l.split("\\s+")
-        if (bits.length < 2)
-          throw new RuntimeException(s"ERROR: invalid line [$l]!")
-        sentence += Row(bits)
+      }
+
+      if (sentence.nonEmpty) {
+        sentencesBuffer += sentence.toArray
       }
     }
 
-    if (sentence.nonEmpty) {
-      sentences += sentence.toArray
-    }
-    sentences.toArray
+    sentences
   }
 }
 

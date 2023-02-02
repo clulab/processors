@@ -41,13 +41,7 @@ class DocumentSerializer extends Logging {
 
       assert(bits(0) == START_SENTENCES, s"START_SENTENCES expected, found ${bits(0)}")
       val sentCount = bits(1).toInt
-      val sents = new ArrayBuffer[Sentence]
-
-      var offset = 0
-      while(offset < sentCount) {
-        sents += loadSentence(r)
-        offset += 1
-      }
+      val sents = Array.fill(sentCount)(loadSentence(r))
 
       var coref:Option[CorefChains] = None
       while ({

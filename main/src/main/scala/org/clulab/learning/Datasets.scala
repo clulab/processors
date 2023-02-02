@@ -1,12 +1,13 @@
 package org.clulab.learning
 
-import java.io.{Reader, Writer}
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
-import org.clulab.utils.ThreadUtils
+import org.clulab.utils.{ArrayMaker, ThreadUtils}
+import org.slf4j.{Logger, LoggerFactory}
+
+import java.io.{Reader, Writer}
 
 import scala.collection.mutable
-import org.slf4j.{Logger, LoggerFactory}
+import scala.collection.mutable.ListBuffer
 
 /**
   * Operations on datasets
@@ -21,35 +22,36 @@ object Datasets {
   val logger: Logger = LoggerFactory.getLogger(classOf[Datasets])
 
   /** Creates dataset folds to be used for cross validation */
-  def mkFolds(numFolds:Int, size:Int):Iterable[DatasetFold] = {
-    val foldSize:Int = size / numFolds
-    val folds = new ArrayBuffer[DatasetFold]
-    for(i <- 0 until numFolds) {
+  def mkFolds(numFolds: Int, size: Int): Iterable[DatasetFold] = {
+    val foldSize: Int = size / numFolds
+    val folds = List.tabulate(numFolds) { i =>
       val startTest = i * foldSize
       var endTest = (i + 1) * foldSize
-      if(i == numFolds - 1)
+      if (i == numFolds - 1)
         endTest = math.max(size, endTest)
 
-      val trainFolds = new ArrayBuffer[(Int, Int)]
-      if(startTest > 0)
+      val trainFolds = new ListBuffer[(Int, Int)]
+      if (startTest > 0)
         trainFolds += Tuple2(0, startTest)
-      if(endTest < size)
+      if (endTest < size)
         trainFolds += Tuple2(endTest, size)
 
-      folds += new DatasetFold(Tuple2(startTest, endTest), trainFolds.toList)
+      new DatasetFold(Tuple2(startTest, endTest), trainFolds.toList)
     }
-    folds.toList
+
+    folds
   }
 
   def mkTrainIndices[F](datasetSize:Int, spans:Option[Iterable[(Int, Int)]]):Array[Int] = {
-    val indices = new ArrayBuffer[Int]()
     val trainFolds = spans.getOrElse(mkFullFold(datasetSize))
-    for(fold <- trainFolds) {
-      for(i <- fold._1 until fold._2) {
-        indices += i
+    val indices = ArrayMaker.buffer[Int] { indicesBuffer =>
+      for (fold <- trainFolds) {
+        for (i <- fold._1 until fold._2)
+          indicesBuffer += i
       }
     }
-    indices.toArray
+
+    indices
   }
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {

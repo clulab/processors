@@ -34,12 +34,11 @@ object RankerEvaluator {
    * @return The P@1 score
    */
   def scoreSVMRank(goldFile:String, outputFile:String):Double = {
-    var scoresBuffer = new ArrayBuffer[Double]()
-    for(line <- Source.fromFile(outputFile).getLines()) {
+    val scores = Source.fromFile(outputFile).getLines().map { line =>
       val bits = line.split("\\s+")
-      scoresBuffer += bits(0).toDouble
-    }
-    var scores = scoresBuffer.toArray
+
+      bits(0).toDouble
+    }.toArray
 
     var crtQid = ""
     val qidsBuffer = new ArrayBuffer[Qid]()

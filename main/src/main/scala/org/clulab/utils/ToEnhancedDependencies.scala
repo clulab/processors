@@ -5,7 +5,7 @@ import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.scala.WrappedListBuffer._
 import org.clulab.struct.{DirectedGraph, DirectedGraphIndex, Edge}
 
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 
 /**
   * Converts Stanford basic dependencies to collapsed ones
@@ -144,19 +144,20 @@ object ToEnhancedDependencies {
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversal(sentence:Sentence, dgi:DirectedGraphIndex[String]): Seq[(Int, Int, String)] = {
-    val collapsedNmods = new ArrayBuffer[(Int, Int, String)]()
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("nmod")
-    for(prep <- preps) {
-      toRemove += prep
-      for(c <- dgi.findByName("case").filter(_.source == prep.destination)) {
-        val word = sentence.words(c.destination).toLowerCase()
-        // find multi-word prepositions such as "such as"
-        val mwe = findMultiWord(word, c.destination, sentence, dgi)
+    val collapsedNmods = Buffer.makeArray[(Int, Int, String)] { collapsedNmodsBuffer =>
+      for (prep <- preps) {
+        toRemove += prep
+        for (c <- dgi.findByName("case").filter(_.source == prep.destination)) {
+          val word = sentence.words(c.destination).toLowerCase()
+          // find multi-word prepositions such as "such as"
+          val mwe = findMultiWord(word, c.destination, sentence, dgi)
 
-        // TODO: add nmod:agent (if word == "by") and passive voice here?
-        dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
-        collapsedNmods += Tuple3(prep.source, prep.destination, s"nmod_$mwe")
+          // TODO: add nmod:agent (if word == "by") and passive voice here?
+          dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
+          collapsedNmodsBuffer += ((prep.source, prep.destination, s"nmod_$mwe"))
+        }
       }
     }
     remove(toRemove, dgi)

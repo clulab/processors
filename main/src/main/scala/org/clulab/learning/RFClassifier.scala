@@ -1,18 +1,19 @@
 package org.clulab.learning
 
-import java.io.{Serializable, Writer}
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, Lexicon}
+import org.clulab.utils.{ArrayMaker, Buffer}
 import org.clulab.utils.MathUtils
 import org.clulab.utils.ThreadUtils
 import org.slf4j.LoggerFactory
 
+import java.io.{Serializable, Writer}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-import RFClassifier._
-import org.clulab.utils.ThreadUtils
-
 import scala.util.Random
+
+import RFClassifier._
 
 /**
   * An in-house implementation of random forests
@@ -67,12 +68,13 @@ class RFClassifier[L, F](numTrees:Int = 100,
     //
     // construct the bags, one per tree
     //
-    val bags = new ArrayBuffer[RFJob[L, F]]()
     val bagSize = math.ceil(trainBagPct * indices.length).toInt
     val randomSeed = new Random(RANDOM_SEED)
-    for(i <- 0 until numTrees) {
-      bags += mkBag(dataset, indices, thresholds, bagSize,
-        RFClassifier.entropy(RFClassifier.labelCounts(indices, dataset)), randomSeed, i)
+    val bags = Buffer.makeArray[RFJob[L, F]] { bagsBuffer =>
+      for (i <- 0 until numTrees) {
+        bagsBuffer += mkBag(dataset, indices, thresholds, bagSize,
+          RFClassifier.entropy(RFClassifier.labelCounts(indices, dataset)), randomSeed, i)
+      }
     }
     logger.debug(s"Constructed ${bags.size} bag(s), each containing $bagSize datums")
     /*
@@ -135,32 +137,31 @@ class RFClassifier[L, F](numTrees:Int = 100,
       featureValues(f).incrementCount(0)
 
     // compute thresholds
-    val thresholds = new Array[Array[Double]](featureValues.length)
     var thresholdCount = 0
-    for(f <- featureValues.indices) {
-      val featThresholds = new ArrayBuffer[Double]()
+    val thresholds = Array.tabulate(featureValues.length) { f =>
+      val featThresholds = ArrayMaker.buffer[Double] { featThresholdsBuffer =>
+        if (featureValues(f).size > RFClassifier.QUANTILE_THRESHOLD) {
+          // too many feature values; use quantiles instead
+          val quantileValues = quantiles(featureValues(f), RFClassifier.QUANTILE_THRESHOLD)
+          featThresholdsBuffer ++= quantileValues
+          thresholdCount += quantileValues.length
 
-      if(featureValues(f).size > RFClassifier.QUANTILE_THRESHOLD) {
-        // too many feature values; use quantiles instead
-        val quantileValues = quantiles(featureValues(f), RFClassifier.QUANTILE_THRESHOLD)
-        featThresholds ++= quantileValues
-        thresholdCount += quantileValues.length
-
-      } else {
-        val sortedValues = featureValues(f).sorted(descending = false).map(_._1)
-        if(sortedValues.length > 1) {
-          for (i <- 0 until sortedValues.length - 1) {
-            featThresholds += (sortedValues(i) + sortedValues(i + 1)) / 2.0
-            thresholdCount += 1
-          }
         } else {
-          // this happens when a feature only appears with a value of 0 in the dataset
-          // that means we can't use it for any decision making...
-          // So the corresponding array of thresholds will have a size of 0
+          val sortedValues = featureValues(f).sorted(descending = false).map(_._1)
+          if (sortedValues.length > 1) {
+            for (i <- 0 until sortedValues.length - 1) {
+              featThresholdsBuffer += (sortedValues(i) + sortedValues(i + 1)) / 2.0
+              thresholdCount += 1
+            }
+          } else {
+            // this happens when a feature only appears with a value of 0 in the dataset
+            // that means we can't use it for any decision making...
+            // So the corresponding array of thresholds will have a size of 0
+          }
         }
-     }
+      }
 
-      thresholds(f) = featThresholds.toArray
+      featThresholds
     }
 
     /*
@@ -207,10 +208,11 @@ class RFClassifier[L, F](numTrees:Int = 100,
   /** Computes binCount-1 quantile values, such that the sequence of values is split into binCount bins */
   def quantiles(values:Counter[Double], binCount:Int):Array[Double] = {
     val sortedUniq = values.sorted(descending = false)
-    val sorted = new ArrayBuffer[Double]()
-    for(su <- sortedUniq) {
-      for(i <- 0 until su._2.toInt) {
-        sorted += su._1
+    val sorted = Buffer.makeArray[Double] { sortedBuffer =>
+      for (su <- sortedUniq) {
+        for (i <- 0 until su._2.toInt) {
+          sortedBuffer += su._1
+        }
       }
     }
 

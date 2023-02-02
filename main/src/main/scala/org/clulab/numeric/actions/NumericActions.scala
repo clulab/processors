@@ -4,8 +4,7 @@ import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer}
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 import org.clulab.scala.WrappedArrayBuffer._
-
-import scala.collection.mutable.ArrayBuffer
+import org.clulab.utils.Buffer
 
 class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer) extends Actions {
   //
@@ -14,16 +13,17 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
 
   /** Converts a sequence of mentions to new types given the converter function */
   private def convert(mentions: Seq[Mention], converter: Mention => Mention, converterName: String): Seq[Mention] = {
-    val convertedMentions = new ArrayBuffer[Mention]()
-    for(m <- mentions) {
-      try {
-        convertedMentions += converter(m )
-      } catch {
-        case e: Exception =>
-          // sometimes these conversions fail, mainly on broken texts
-          // let's be robust here: report the error and move on
-          System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
-          e.printStackTrace()
+    val convertedMentions = Buffer.makeArray[Mention] { convertedMentionsBuffer =>
+      for (m <- mentions) {
+        try {
+          convertedMentionsBuffer += converter(m)
+        } catch {
+          case e: Exception =>
+            // sometimes these conversions fail, mainly on broken texts
+            // let's be robust here: report the error and move on
+            System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
+            e.printStackTrace()
+        }
       }
     }
     convertedMentions
@@ -31,16 +31,17 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
 
   /** Converts a sequence of mentions to new types given the converter function */
   private def convertWithOneToManyConverter(mentions: Seq[Mention], converter: Mention => Seq[Mention], converterName: String): Seq[Mention] = {
-    val convertedMentions = new ArrayBuffer[Mention]()
-    for(m <- mentions) {
-      try {
-        convertedMentions ++= converter(m )
-      } catch {
-        case e: Exception =>
-          // sometimes these conversions fail, mainly on broken texts
-          // let's be robust here: report the error and move on
-          System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
-          e.printStackTrace()
+    val convertedMentions = Buffer.makeArray[Mention] { convertedMentionsBuffer =>
+      for (m <- mentions) {
+        try {
+          convertedMentionsBuffer ++= converter(m)
+        } catch {
+          case e: Exception =>
+            // sometimes these conversions fail, mainly on broken texts
+            // let's be robust here: report the error and move on
+            System.err.println(s"WARNING: $converterName conversion failed! Recovering and continuing...")
+            e.printStackTrace()
+        }
       }
     }
     convertedMentions

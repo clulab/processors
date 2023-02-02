@@ -1,12 +1,13 @@
 package org.clulab.dynet
 
-import java.io.{BufferedReader, File, FileReader, PrintWriter}
-
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
+import org.clulab.utils.ArrayMaker
 import org.slf4j.{Logger, LoggerFactory}
+
+import java.io.{BufferedReader, File, FileReader, PrintWriter}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -60,36 +61,37 @@ class CoNLLSRLToMetal {
            proc:Processor = null,
            verbose:Boolean = false):Document = {
     val source = Source.fromFile(file)
-    val sentences = new ArrayBuffer[Array[CoNLLToken]]
-    var sentence = new ArrayBuffer[CoNLLToken]
-
-    argConflictCount = 0
-    multiPredCount = 0
-    argCount = 0
-    predCount = 0
     var tokenCount = 0
     var sentCount = 0
     var hyphCount = 0
+    val sentences = ArrayMaker.buffer[Array[CoNLLToken]] { sentencesBuffer =>
+      var sentence = new ArrayBuffer[CoNLLToken]
 
-    //
-    // read all sentences
-    // also, collapse hyphenated phrases, which were brutally tokenized in CoNLL
-    //
-    for(l <- source.getLines()) {
-      val line = l.trim
-      if(line.length > 0) {
-        val bits = l.split("\\t")
-        // e println(s"LINE: $line")
-        assert(bits.size >= 14)
-        val token = mkToken(bits)
-        sentence += token
-        tokenCount += 1
-        if(token.pos == "HYPH") hyphCount += 1
-      } else {
-        // end of sentence
-        sentences += collapseHyphens(sentence.toArray, verbose)
-        sentence = new ArrayBuffer[CoNLLToken]()
-        sentCount += 1
+      argConflictCount = 0
+      multiPredCount = 0
+      argCount = 0
+      predCount = 0
+
+      //
+      // read all sentences
+      // also, collapse hyphenated phrases, which were brutally tokenized in CoNLL
+      //
+      for (l <- source.getLines()) {
+        val line = l.trim
+        if (line.length > 0) {
+          val bits = l.split("\\t")
+          // e println(s"LINE: $line")
+          assert(bits.size >= 14)
+          val token = mkToken(bits)
+          sentence += token
+          tokenCount += 1
+          if (token.pos == "HYPH") hyphCount += 1
+        } else {
+          // end of sentence
+          sentencesBuffer += collapseHyphens(sentence.toArray, verbose)
+          sentence = new ArrayBuffer[CoNLLToken]()
+          sentCount += 1
+        }
       }
     }
     source.close()
@@ -100,22 +102,19 @@ class CoNLLSRLToMetal {
     //
     // construct the semantic roles from CoNLL tokens
     //
-    val semDependencies = new ArrayBuffer[DirectedGraph[String]]()
-    for(sent <- sentences) {
-      semDependencies += mkSemanticDependencies(sent)
-    }
+    val semDependencies = sentences.map(mkSemanticDependencies)
 
     //
     // construct one Document for the entire corpus and annotate it
     //
-    val document = mkDocument(sentences.toArray, proc)
+    val document = mkDocument(sentences, proc)
 
     //
     // assign the semantic roles to sentences in the created Document
     //
     assert(document.sentences.length == semDependencies.size)
-    for(i <- document.sentences.indices) {
-      document.sentences(i).setDependencies(GraphMap.SEMANTIC_ROLES, semDependencies(i))
+    document.sentences.zip(semDependencies).foreach { case (sentence, semDependency) =>
+      sentence.setDependencies(GraphMap.SEMANTIC_ROLES, semDependency)
     }
 
     logger.debug(s"Found a total of $predCount predicates with $argCount arguments.")
@@ -251,21 +250,21 @@ class CoNLLSRLToMetal {
   def collapseHyphens(origSentence: Array[CoNLLToken], verbose: Boolean): Array[CoNLLToken] = {
     if (USE_CONLL_TOKENIZATION) origSentence
     else {
-      val sent = new ArrayBuffer[CoNLLToken]()
-
-      var start = 0
-      while(start < origSentence.length) {
-        val end = findEnd(origSentence, start)
-        if(end > start + 1) {
-          val token = mergeTokens(origSentence, start, end, verbose)
-          sent += token
-        } else {
-          sent += origSentence(start)
+      val sent = ArrayMaker.buffer[CoNLLToken] { sentBuffer =>
+        var start = 0
+        while (start < origSentence.length) {
+          val end = findEnd(origSentence, start)
+          if (end > start + 1) {
+            val token = mergeTokens(origSentence, start, end, verbose)
+            sentBuffer += token
+          } else {
+            sentBuffer += origSentence(start)
+          }
+          start = end
         }
-        start = end
       }
 
-      sent.toArray
+      sent
     }
   }
 

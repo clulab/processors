@@ -5,13 +5,13 @@
 
 package org.clulab.sequences
 
-import java.util.function.Consumer
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.BooleanHashTrie
 import org.clulab.struct.DebugBooleanHashTrie
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
+import org.clulab.utils.Buffer
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Files
 import org.clulab.utils.Serializer
@@ -19,8 +19,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import java.io.File
+import java.util.function.Consumer
+
 import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
@@ -346,24 +347,22 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
   private def getOverrideMatchers(overrideKbSourcesOpt: Option[Seq[OverrideKbSource]], buildState: SlowBuildState,
       caseInsensitiveMap: Map[String, Boolean], orderMap: MutableMap[String, Int]): Seq[BooleanHashTrie] = {
     overrideKbSourcesOpt.map { overrideKbSources =>
-      val matchersArray = new ArrayBuffer[BooleanHashTrie]
-      overrideKbSources.foreach { overrideKbSource =>
-        // Each overrideKB gets its own copies of these now.
-        val matchersMap = new MutableHashMap[String, BooleanHashTrie]()
-        val tmpMatchersArray = new ArrayBuffer[BooleanHashTrie]
+      val matchersArray = Buffer.makeArray[BooleanHashTrie] { matchersArrayBuffer =>
+        overrideKbSources.foreach { overrideKbSource =>
+          // Each overrideKB gets its own copies of these now.
+          val matchersMap = new MutableHashMap[String, BooleanHashTrie]()
 
-        overrideKbSource.withLabelAndTokens { case (label, tokens) =>
-          val matcher = matchersMap.getOrElseUpdate(label, {
-            orderMap.getOrElseUpdate(label, orderMap.size)
-            val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
-            matchersArray += matcher
-            matcher
-          })
+          overrideKbSource.withLabelAndTokens { case (label, tokens) =>
+            val matcher = matchersMap.getOrElseUpdate(label, {
+              orderMap.getOrElseUpdate(label, orderMap.size)
+              val matcher = new BooleanHashTrie(label, caseInsensitiveMap(label))
+              matchersArrayBuffer += matcher // These are no longer sorted alphabetically.
+              matcher
+            })
 
-          buildState.addWithLexicalVariations(matcher, tokens)
+            buildState.addWithLexicalVariations(matcher, tokens)
+          }
         }
-        // These are no longer sorted alphabetically.
-        matchersArray ++= tmpMatchersArray
       }
 
       matchersArray.foreach { matcher =>

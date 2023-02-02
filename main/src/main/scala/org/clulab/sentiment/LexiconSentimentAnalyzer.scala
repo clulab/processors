@@ -58,9 +58,10 @@ class LexiconSentimentAnalyzer {
       distribution.setCount(POSITIVE_LABEL, 0.0)
       distribution.setCount(NEGATIVE_LABEL, 1.0)
     } else {
-      val in = new ArrayBuffer[Double]()
-      in += counts.getCount(POSITIVE_LABEL)
-      in += counts.getCount(NEGATIVE_LABEL)
+      val in = Array(
+        counts.getCount(POSITIVE_LABEL),
+        counts.getCount(NEGATIVE_LABEL)
+      )
       val dist = MathUtils.softmax(in)
       distribution.setCount(POSITIVE_LABEL, dist.head)
       distribution.setCount(NEGATIVE_LABEL, dist.last)
