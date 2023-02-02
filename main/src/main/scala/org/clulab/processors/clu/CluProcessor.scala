@@ -528,7 +528,7 @@ class CluProcessor protected (
     val labels = allLabels.map { label =>
       if (NAMED_LABELS_FOR_SRL(label)) label
       else OUTSIDE
-    }
+    }.toArray
 
     // println("Using labels for SRL: " + labels.mkString(", "))
     labels
