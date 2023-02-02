@@ -58,10 +58,12 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
 
   private def queryToArray(queryDatums: Iterable[Datum[Int, F]]): Array[(Int, Array[Int])] = {
     // Because we just have an iterable, buffer to avoid potential extra conversions.
-    val b = ArrayMaker.buffer[(Int, Array[Int])] { b =>
+    val b = ArrayMaker.buffer[(Int, Array[Int])] { bBuffer =>
       for (d <- queryDatums) {
         d match {
-          case bd: BVFDatum[Int, F] => b += (bd.label, featuresToArray(bd.features))
+          case bd: BVFDatum[Int, F] =>
+            val value: (Int, Array[Int]) = (bd.label, featuresToArray(bd.features))
+            bBuffer += value
           case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFRankingDataset!")
         }
       }
