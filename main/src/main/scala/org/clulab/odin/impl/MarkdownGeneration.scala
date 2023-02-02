@@ -2,8 +2,7 @@ package org.clulab.odin.impl
 
 import org.clulab.odin.impl.MarkdownGeneration._
 import org.clulab.odin.impl.RuleReader.{DefaultAction, Rule}
-
-import scala.collection.mutable.ArrayBuffer
+import org.clulab.utils.Buffer
 
 case class RuleSchema(
   name: String,
@@ -25,18 +24,18 @@ case class RuleSchema(
       "-----  |   ---- "
     )
 
-    val table = ArrayBuffer[String](
+    val table = Buffer.fillArray(
       s"type |  ${extractorType}",
       s"labels    | ${labelsString(labels)}",
       s"priority  | ${priority}",
       s"keep      | ${booleanString(keep)}"
-    )
-    if (action.isDefined) table.append(s"action | `Action` | `${action}` ")
-
-    // additional -- these are for cross-sentence rules
-    additional.foreach{ case (key, value) => table.append(s"$key  | $value") }
-
-    table.append("")
+    ) { table =>
+      if (action.isDefined)
+        table.append(s"action | `Action` | `${action}` ")
+      // additional -- these are for cross-sentence rules
+      additional.foreach { case (key, value) => table.append(s"$key  | $value") }
+      table.append("")
+    }
 
     // args
     val argumentLines = if (arguments.isEmpty) {
@@ -70,8 +69,7 @@ case class ExtractionSchema(
   val aggregatedArgs = aggregateArgs()
 
   def toMarkdown(minimal: Boolean = false): String = {
-
-    val table = ArrayBuffer[String](
+    val table = Buffer.fillArray(
       "----------------------------------",
       "",
       s"###  ${name}",
@@ -79,35 +77,38 @@ case class ExtractionSchema(
       s"|Attribute        |  Value | ",
       s"| :--------       | :---- |",
       s"|label hierarchy  | ${labelsString(labels)} "
-    )
-    if (!minimal) {
-      table.append(s"|rules            | ${listString(rules.map(r => s"""_${r}_"""))} ")
-      table.append(s"|priorities       | ${listString(priorities)}")
-    }
-    table.append(s"|keep             | ${booleanString(keep)} ")
+    ) { table =>
+      if (!minimal) {
+        table.append(s"|rules            | ${listString(rules.map(r => s"""_${r}_"""))} ")
+        table.append(s"|priorities       | ${listString(priorities)}")
+      }
+      table.append(s"|keep             | ${booleanString(keep)} ")
 
-    if (actions.nonEmpty && !minimal) table.append(s"|actions | ${backtickedString(actions)}")
+      if (actions.nonEmpty && !minimal)
+        table.append(s"|actions | ${backtickedString(actions)}")
 
-    // arguments
-    if (argsByName.nonEmpty) {
-      table.appendAll(
-        List(
-          "",
-          "_Arguments_",
-          "",
-          "|name        | **label(s)**  | **quantifier(s)** | **required?**|",
-          "| :--------  | :----         | :----             | :---- "
+      // arguments
+      if (argsByName.nonEmpty) {
+        table.appendAll(
+          List(
+            "",
+            "_Arguments_",
+            "",
+            "|name        | **label(s)**  | **quantifier(s)** | **required?**|",
+            "| :--------  | :----         | :----             | :---- "
+          )
         )
-      )
-      val argLines = for {
-        (name, (labels, possibleQuantifiers, optionalities)) <- aggregatedArgs
-      } yield s"| _${name}_ | ${labels} | ${possibleQuantifiers} | ${optionalities}"
-      table.appendAll(argLines)
+        val argLines = for {
+          (name, (labels, possibleQuantifiers, optionalities)) <- aggregatedArgs
+        } yield s"| _${name}_ | ${labels} | ${possibleQuantifiers} | ${optionalities}"
+        table.appendAll(argLines)
+      }
+      else {
+        table.appendAll(List("", "_No arguments_"))
+      }
+      table.append("")
     }
-    else {
-      table.appendAll(List("", "_No arguments_"))
-    }
-    table.append("")
+
     table.mkString("\n")
   }
 
