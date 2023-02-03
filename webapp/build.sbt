@@ -6,7 +6,7 @@ libraryDependencies ++= Seq(
   guice,
   // Newer than 4.0.3 does not work for Scala 2.11.  There is no Scala 3 version.
   "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test // up to 5.1.0
-) // .map(_.cross(CrossVersion.for3Use2_13))
+)
 
 Compile / packageBin / mappings := {
   val filtered = (Compile / packageBin / mappings).value.filter {

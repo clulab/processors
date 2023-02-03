@@ -37,4 +37,5 @@ lazy val webapp = project
     // scala211 isn't compiling and complains on twirlCompileTemplates.
     crossScalaVersions := Seq(scala212)
   )
-  
+
+addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")

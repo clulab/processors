@@ -60,7 +60,7 @@ libraryDependencies ++= {
     // Instead, all code makes use of the Java interface.
     "org.slf4j"                   % "slf4j-api"                % "1.7.32", // MIT
     // Local logging is provided here but not published.
-    "ch.qos.logback" % "logback-classic" % "1.2.8", // up to 1.2.8; less than 1.2 is vulnerable
+    "ch.qos.logback"              % "logback-classic"          % "1.2.8", // up to 1.2.8; less than 1.2 is vulnerable
     // testing
     "org.scalatest"              %% "scalatest"                % "3.2.10"  % Test, // Apache-2.0
     // trained models for local ML models used in both main and corenlp

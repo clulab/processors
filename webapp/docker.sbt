@@ -1,5 +1,4 @@
 import NativePackagerHelper._
-import com.typesafe.sbt.packager.MappingsHelper.directory
 import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerChmodType, DockerPermissionStrategy}
 
 val topDir = "/processors/webapp"
@@ -46,20 +45,5 @@ dockerCommands := dockerCommands.value.flatMap { dockerCommand: CmdLike =>
       Seq(dockerCommand)
   }
 }
-
-def moveDir(dirname: String): Seq[(File, String)] = {
-  val dir = file(dirname)
-  val result = dir
-    .**(AllPassFilter)
-    .pair(relativeTo(dir.getParentFile))
-    .map { case (file, _) => (file, file.getPath) }
-
-//  result.foreach { case (file, string) =>
-//    println(s"$file -> $string")
-//  }
-  result
-}
-
-Universal / mappings ++= moveDir("./cache/geonames")
 
 Global / excludeLintKeys += Docker / dockerBaseImage
