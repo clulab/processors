@@ -2,9 +2,8 @@
 
 This subproject of processors houses code that implements a web page that displays
 output from processors in HTML format.  There are diagrams, text, and tables.
-The main [../README.md#webapp](../README.md#webapp) file explains more.
 
-![Webapp window with text](../doc/webapp_full.png?raw=True")
+![Webapp window with text](../docs/webapp_full.png?raw=True")
 
 ## Execution
 

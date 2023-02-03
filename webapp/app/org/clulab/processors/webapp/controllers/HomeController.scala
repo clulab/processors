@@ -126,18 +126,19 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def parseText(text: String): Action[AnyContent] = Action {
-    println("Processing text:")
+    println("Text:")
     println(text)
     println()
 
     val document = processor.annotate(text)
-    val mentions = extractorEngine.extractFrom(document).sorted
 
-    println("Tokenized sentences:")
+    println("Sentences:")
     document.sentences.foreach { sentence =>
       println(sentence.getSentenceText)
     }
     println()
+
+    val mentions = extractorEngine.extractFrom(document).sorted
 
     println("Mentions:")
     mentions.foreach { mention =>
