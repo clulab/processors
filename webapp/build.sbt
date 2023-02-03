@@ -8,8 +8,8 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test // up to 5.1.0
 ) // .map(_.cross(CrossVersion.for3Use2_13))
 
-mappings in (Compile, packageBin) := {
-  val filtered = (mappings in (Compile, packageBin)).value.filter {
+Compile / packageBin / mappings := {
+  val filtered = (Compile / packageBin / mappings).value.filter {
     case (file, name) =>
       val filter = false ||
           name == "routes" ||
