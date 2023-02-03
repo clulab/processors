@@ -7,10 +7,14 @@ import org.clulab.processors.webapp.serialization.WebSerializer
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Unordered}
 import org.clulab.utils.Unordered.OrderingOrElseBy
+import com.typesafe.config.{ConfigBeanFactory, ConfigFactory}
 import play.api.mvc._
 import play.api.mvc.Action
 
 import javax.inject._
+
+import scala.beans.BeanProperty
+import scala.jdk.CollectionConverters._
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
@@ -18,19 +22,22 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   def initialize(): (Processor, ExtractorEngine) = {
     println("[processors] Initializing the processor ...")
 
+    val config = ConfigFactory.load("application")
+    val customLexiconNerConfigs = config.getConfigList("customLexiconNer").asScala.map { config =>
+      ConfigBeanFactory.create(config, classOf[CustomLexiconNerConfig])
+    }
+    val extractorEngineConfig = ConfigBeanFactory.create(config.getConfig("extractorEngine"), classOf[ExtractorEngineConfig])
+
     val processor = {
-      val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
-        ("org/clulab/odinstarter/FOOD.tsv", true)
-      )
-      val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
-      val caseInsensitiveMatchings = kbsAndCaseInsensitiveMatchings.map(_._2)
+      val kbs = customLexiconNerConfigs.map(_.kb)
+      val caseInsensitiveMatchings = customLexiconNerConfigs.map(_.caseInsensitiveMatching)
       val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
       val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
 
       processor
     }
     val extractorEngine: ExtractorEngine = {
-      val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
+      val rules = FileUtils.getTextFromResource(extractorEngineConfig.rules)
       val extractorEngine = ExtractorEngine(rules)
 
       extractorEngine
@@ -142,4 +149,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
 
     Ok(json)
   }
+}
+
+case class CustomLexiconNerConfig(@BeanProperty var kb: String, @BeanProperty var caseInsensitiveMatching: Boolean) {
+  def this() = this("", false)
+}
+
+case class ExtractorEngineConfig(@BeanProperty var rules: String) {
+  def this() = this("")
 }
