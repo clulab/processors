@@ -12,9 +12,9 @@ import play.api.mvc._
 import play.api.mvc.Action
 
 import javax.inject._
-
 import scala.beans.BeanProperty
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 @Singleton
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
@@ -23,6 +23,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println("[processors] Initializing the processor ...")
 
     val config = ConfigFactory.load("application")
+        .withFallback(ConfigFactory.load("processors"))
     val customLexiconNerConfigs = config.getConfigList("customLexiconNer").asScala.map { config =>
       ConfigBeanFactory.create(config, classOf[CustomLexiconNerConfig])
     }
