@@ -8,12 +8,13 @@ libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % Test // up to 5.1.0
 )
 
-// In general, we do not want to include application.conf in something
-// like the published jar file.  This is just a reminder.
+// In general, we do not want to include routes or application.conf in
+// something like the published jar file.  This is just a reminder.
 Compile / packageBin / mappings := {
   val filtered = (Compile / packageBin / mappings).value.filter {
     case (file, name) =>
-      name != "application.conf"
+      name != "application.conf" &&
+      name != "routes"
   }
 
   filtered
