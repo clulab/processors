@@ -26,7 +26,7 @@ dockerChmodType := DockerChmodType.UserGroupWriteExecute
 // dockerCmd := Seq(s"-Dhttp.port=$port")
 dockerEntrypoint := Seq(app)
 dockerEnvVars := Map(
-  "_JAVA_OPTIONS" -> "-Xmx10g -Xms10g -Dfile.encoding=UTF-8"
+  "_JAVA_OPTIONS" -> "-Xmx10g -Xms10g -Dfile.encoding=UTF-8 -Dconfig.resource=processors.conf"
 )
 dockerPermissionStrategy := DockerPermissionStrategy.MultiStage
 dockerUpdateLatest := true
