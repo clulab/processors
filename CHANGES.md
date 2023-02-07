@@ -1,3 +1,4 @@
++ **8.5.4** - Add a webapp subproject
 + **8.5.3** - Allow document construction from text fragments containing multiple sentences
 + **8.5.3** - Build for Scala 3, use artifactory.clulab.org, streamline buffers
 + **8.5.3** - Improve number parser with words such as "dozen", "grand"

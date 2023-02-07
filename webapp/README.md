@@ -11,12 +11,12 @@ One can start the webapp directly from within `sbt` in development mode with the
 
 ## Configuration
 
-The configuration for Odin used in the `HomeController` is based on the OdinStarter (`org.clulab.odinstarter.OdinStarter`) App.  The NER and rules files for the App are configured in code.  For the webapp, the same files are instead specified in a configuration file `processors.conf` under the keys `customLexiconNer` and `extractorEngine`.  You would change filenames there or change the contents of the Odin files in the directory `main/src/main/resources/org/clulab/odinstarter`.
+The configuration for Odin used in the `HomeController` is based on the OdinStarter (`org.clulab.odinstarter.OdinStarter`) App.  The NER and rule files for the App are configured in code.  For the webapp, the same files are instead specified in the configuration file `processors.conf` under keys `customLexiconNer` and `extractorEngine`.  You would change filenames there or change the contents of the Odin files in the directory `main/src/main/resources/org/clulab/odinstarter`.
 
 
 ## Dockerization
 
-There is also a `docker.sbt` file which allows one to build an image from within `sbt`.  A command alias `dockerizeWebapp` has been set up for it.
+In this subproject there is also a `docker.sbt` file which allows one to build an image from within `sbt`.  A command alias `dockerizeWebapp` has been set up for it.
 
 To run the resulting image, use a command like
 ```bash
@@ -27,4 +27,4 @@ The secret is the value for `play.http.secret.key` used in
 
 ## Limitations
 
-The webapp presently only works for Scala 2.12 because of some library and plug-in conflicts.  The Play framework itself is not ready for Scala 3.  Scala 2.12 is the default version for processors, so things should just work for the most part.  Because of this limitation, however, the webapp is not "aggregated" and will not be published or released with the other projects.  To publish, make sure the version is set as desired and perform a `webapp/publish` for Artifactory or `webapp/publishSigned` and `webapp/sonatypeRelease` for maven.
+The webapp presently only works for Scala 2.12 because of library and plug-in conflicts.  The Play framework itself is not ready for Scala 3.  Scala 2.12 is the default version for processors, so things should just work for the most part.  Because of this limitation, however, the webapp is not "aggregated" and will not be published or released with the other projects.  To publish, make sure the version is set as desired and perform a `webapp/publish` for Artifactory or `webapp/publishSigned` and `webapp/sonatypeRelease` for maven.  The files `application.conf` and `routes` are reused in a [template repo](https://github.com/clulab/sbt-processors-small.g8), so changes should be propagated there.
