@@ -27,4 +27,4 @@ The secret is the value for `play.http.secret.key` used in
 
 ## Limitations
 
-The webapp presently only works for Scala 2.12 because of some library and plug-in conflicts.  The Play framework itself is not ready for Scala 3.  Scala 2.12 is the default version for processors, so things should just work for the most part.  Because of this limitation, however, the webapp is not "aggregated" and will not be published or released with the other projects.  To publish, make sure the version is set as desired and perform a `webapp/publish`.
+The webapp presently only works for Scala 2.12 because of some library and plug-in conflicts.  The Play framework itself is not ready for Scala 3.  Scala 2.12 is the default version for processors, so things should just work for the most part.  Because of this limitation, however, the webapp is not "aggregated" and will not be published or released with the other projects.  To publish, make sure the version is set as desired and perform a `webapp/publish` for Artifactory or `webapp/publishSigned` and `webapp/sonatypeRelease` for maven.
