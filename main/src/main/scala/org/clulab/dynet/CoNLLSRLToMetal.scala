@@ -183,7 +183,7 @@ class CoNLLSRLToMetal {
     for(modifier <- tokens.indices) {
       val head = tokens(modifier).dep._1
       if(head >= 0)
-        edges += Tuple3(head, modifier, tokens(modifier).dep._2)
+        edges += ((head, modifier, tokens(modifier).dep._2))
       ()                                    // workaround for bug #10151
     }
     DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges.toList))
@@ -206,7 +206,7 @@ class CoNLLSRLToMetal {
             val modifier = i
             val label = simplifyLabel(sentence(i).frameBits(columnOffset))
             if(label.isDefined) {
-              edges += Tuple3(head, modifier, label.get)
+              edges += ((head, modifier, label.get))
               modifiers += modifier
               argCount += 1
             }
@@ -241,7 +241,7 @@ class CoNLLSRLToMetal {
       case _ => 1
     }
     val frameBits =  bits.slice(14, bits.length)
-    new CoNLLToken(word, pos, lemma, Tuple2(head, depLabel), isPred, frameBits)
+    new CoNLLToken(word, pos, lemma, (head, depLabel), isPred, frameBits)
   }
 
   /**

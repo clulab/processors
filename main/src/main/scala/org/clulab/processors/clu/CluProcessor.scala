@@ -796,7 +796,7 @@ class CluProcessor protected (
         sentence.tags.get(i + 1) == "TO" &&
         headsWithLabels(i + 1)._1 != i &&
         headsWithLabels(i + 1)._2 != "mwe") {
-        headsWithLabels(i + 1) = Tuple2(i, "mwe")
+        headsWithLabels(i + 1) = (i, "mwe")
       }
     }
   }

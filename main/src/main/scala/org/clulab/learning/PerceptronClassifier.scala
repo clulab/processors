@@ -101,7 +101,7 @@ class PerceptronClassifier[L, F] (
     // compute the scores for all class labels
     val predictions = new ArrayBuffer[(Int, Double)](labelLexicon.size)
     for(i <- 0 until labelLexicon.size) {
-      predictions += new Tuple2(i, dotProduct(weights(i), datum))
+      predictions += ((i, dotProduct(weights(i), datum)))
     }
 
     // sort predictions in descending order of scores

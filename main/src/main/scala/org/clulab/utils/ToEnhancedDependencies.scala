@@ -156,7 +156,7 @@ object ToEnhancedDependencies {
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
-        collapsedNmods += Tuple3(prep.source, prep.destination, s"nmod_$mwe")
+        collapsedNmods += ((prep.source, prep.destination, s"nmod_$mwe"))
       }
     }
     remove(toRemove, dgi)

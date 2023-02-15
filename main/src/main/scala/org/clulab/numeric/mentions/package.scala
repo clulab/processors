@@ -816,7 +816,7 @@ package object mentions {
       val month = m.group(2)
       val day = m.group(3)
 
-      Tuple3(year, month, day)
+      (year, month, day)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
@@ -829,7 +829,7 @@ package object mentions {
       val month = m.group(2)
       val day = m.group(3)
 
-      Tuple3(year, month, day)
+      (year, month, day)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
@@ -842,7 +842,7 @@ package object mentions {
       val month = m.group(2)
       val year = m.group(3)
 
-      Tuple3(year, month, day)
+      (year, month, day)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
@@ -854,7 +854,7 @@ package object mentions {
       val month = m.group(1)
       val year = m.group(2)
 
-      Tuple2(year, month)
+      (year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
@@ -867,7 +867,7 @@ package object mentions {
       val year = m.group(1)
       val month = m.group(2)
 
-      Tuple2(year, month)
+      (year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }
@@ -879,7 +879,7 @@ package object mentions {
       val year = m.group(1)
       val month = m.group(2)
 
-      Tuple2(year, month)
+      (year, month)
     } else {
       throw new RuntimeException(s"ERROR: cannot extract year/month/day from date $v!")
     }

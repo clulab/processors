@@ -302,7 +302,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
     for(f <- features) {
       contingencyTables(f) = new Array[(Counter[Int], Counter[Int])](job.featureThresholds(f).length)
       for(i <- contingencyTables(f).indices) {
-        contingencyTables(f)(i) = new Tuple2(new Counter[Int], new Counter[Int])
+        contingencyTables(f)(i) = (new Counter[Int], new Counter[Int])
       }
     }
 
@@ -417,7 +417,7 @@ class RFClassifier[L, F](numTrees:Int = 100,
 
         val newActiveNodes = new mutable.HashSet[(Int, Double)]()
         newActiveNodes ++= job.activeNodes
-        newActiveNodes += new Tuple2(best.get.feature, best.get.threshold)
+        newActiveNodes += ((best.get.feature, best.get.threshold))
         val newActiveNodesSet = newActiveNodes.toSet
         new RFNonTerminal(best.get.feature, best.get.threshold,
           buildTree(mkLeftJob(job, best.get.feature, best.get.threshold, best.get.leftChildValue, newActiveNodesSet)),
@@ -724,7 +724,7 @@ class RFJob[L, F](
     val labels = new ArrayBuffer[(Int, Int)] // gold, pred
     for(i <- oobIndices.indices) {
       val prediction = tree.apply(dataset.featuresCounter(oobIndices(i))).sorted.head._1
-      labels += new Tuple2(dataset.labels(oobIndices(i)), prediction)
+      labels += ((dataset.labels(oobIndices(i)), prediction))
     }
 
     if(nilLabel.isEmpty) accuracy(labels)

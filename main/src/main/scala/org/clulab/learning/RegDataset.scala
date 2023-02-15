@@ -122,7 +122,7 @@ class BVFRegDataset[F: ClassTag] (
 
     // sort all features in descending order of their IG
     val fb = new ListBuffer[(Int, Double)]
-    for(f <- igs.keySet) fb += new Tuple2(f, igs.get(f).get.ig(total))
+    for(f <- igs.keySet) fb += ((f, igs.get(f).get.ig(total)))
     val sortedFeats = fb.sortBy(- _._2).toArray
 
     // keep the top pctToKeep
@@ -245,7 +245,7 @@ class RVFRegDataset[F: ClassTag] (
   private def featuresCounterToArray(fs:Counter[F]):Array[(Int, Double)] = {
     val fb = new ListBuffer[(Int, Double)]
     for(f <- fs.keySet) {
-      fb += new Tuple2[Int, Double](featureLexicon.add(f), fs.getCount(f))
+      fb += ((featureLexicon.add(f), fs.getCount(f)))
     }
     fb.sortBy(_._1).toArray
   }
@@ -459,7 +459,7 @@ object RVFRegDataset {
         val fi = featureLexicon.get(k)
         if(fi.isDefined) {
           // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-          fs += new Tuple2(fi.get + 1, c.getCount(k))
+          fs += ((fi.get + 1, c.getCount(k)))
         }
       }
       val fss = fs.toList.sortBy(_._1)
