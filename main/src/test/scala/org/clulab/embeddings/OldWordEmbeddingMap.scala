@@ -102,7 +102,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     * Finds the words most similar to this set of inputs
     * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
     */
-  def mostSimilarWords(words:Set[String], howMany:Int):List[(String, Double)] = {
+  override def mostSimilarWords(words:Set[String], howMany:Int):List[(String, Double)] = {
     val v = new Array[Double](dimensions)
     var found = false
     for(w1 <- words) {
