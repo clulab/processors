@@ -245,7 +245,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
   private def mkDatum(label:L, features:Counter[F]): Datum[L, F] = new RVFDatum[L, F](label, features)
   private def mkClassifier: Classifier[L, F] = new L1LogisticRegressionClassifier[L, F]() // TODO: add all classifiers
   private def mkFullFold(size:Int): DatasetFold =
-    new DatasetFold(testFold = Tuple2(-1, -1), trainFolds = List(Tuple2(0, size)))
+    new DatasetFold(testFold = (-1, -1), trainFolds = List((0, size)))
 
   override def save(fn:File): Unit = {
     // save meta data

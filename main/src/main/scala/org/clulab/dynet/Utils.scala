@@ -263,7 +263,7 @@ object Utils {
     val tags = new ArrayBuffer[(Int, Int, Float)]()
     for (i <- lattice.indices) {
       for (j <- lattice(i).indices) {
-        tags += Tuple3(i, j, lattice(i)(j))
+        tags += ((i, j, lattice(i)(j)))
       }
     }
     val sortedTags = tags.sortBy(0f - _._3)

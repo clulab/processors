@@ -63,7 +63,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
     for(d <- queryDatums) {
       d match {
         case bd:BVFDatum[Int, F] => {
-          b += new Tuple2[Int, Array[Int]](bd.label, featuresToArray(bd.features))
+          b += ((bd.label, featuresToArray(bd.features)))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFRankingDataset!")
       }
@@ -155,10 +155,10 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
       d match {
         case rd:RVFDatum[Int, F] => {
           val fvs = featuresCounterToArray(d.featuresCounter)
-          b += new Tuple3[Int, Array[Int], Array[Double]](
+          b += ((
             rd.label,
             fvs.map(fv => fv._1),
-            fvs.map(fv => fv._2))
+            fvs.map(fv => fv._2)))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non RVFDatum to a RVFRankingDataset!")
       }
@@ -169,7 +169,7 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
   protected def featuresCounterToArray(fs:Counter[F]):Array[(Int, Double)] = {
     val fb = new ListBuffer[(Int, Double)]
     for(f <- fs.keySet) {
-      fb += new Tuple2[Int, Double](featureLexicon.add(f), fs.getCount(f))
+      fb += ((featureLexicon.add(f), fs.getCount(f)))
     }
     fb.sortBy(_._1).toArray
   }
@@ -463,7 +463,7 @@ object RVFRankingDataset {
           val fi = featureLexicon.get(k)
           if(fi.isDefined) {
             // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-            fs += new Tuple2(fi.get + 1, c.getCount(k))
+            fs += ((fi.get + 1, c.getCount(k)))
           }
         }
         val fss = fs.toList.sortBy(_._1)
@@ -499,11 +499,11 @@ class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
       d match {
         case rd:RVFKDatum[Int, F] => {
           val fvs = featuresCounterToArray(d.featuresCounter)
-          b += new Tuple4[Int, Array[Int], Array[Double], String](
+          b += ((
             rd.label,
             fvs.map(fv => fv._1),
             fvs.map(fv => fv._2),
-            rd.kernel)
+            rd.kernel))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non RVFKDatum to a RVFKRankingDataset!")
       }

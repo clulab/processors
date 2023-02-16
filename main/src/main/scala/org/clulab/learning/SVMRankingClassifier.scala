@@ -230,7 +230,7 @@ class SVMRankingClassifier[F] (
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {
     val folds = new Array[(Int, Int)](1)
-    folds(0) = new Tuple2(0, size)
+    folds(0) = (0, size)
     folds
   }
 

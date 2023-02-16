@@ -26,18 +26,18 @@ class DirectedGraphIndex[E](
   }
 
   def addEdge(head:Int, modifier:Int, label:E): Unit = {
-    outgoingEdges(head) += Tuple2(modifier, label)
-    incomingEdges(modifier) += Tuple2(head, label)
+    outgoingEdges(head) += ((modifier, label))
+    incomingEdges(modifier) += ((head, label))
     val byLabel = edgesByName.getOrElseUpdate(label, new mutable.HashSet[(Int, Int)]())
-    byLabel += Tuple2(head, modifier)
+    byLabel += ((head, modifier))
   }
 
   def removeEdge(head:Int, modifier:Int, label:E): Unit = {
-    outgoingEdges(head).remove(Tuple2(modifier, label))
-    incomingEdges(modifier).remove(Tuple2(head, label))
+    outgoingEdges(head).remove((modifier, label))
+    incomingEdges(modifier).remove((head, label))
     val byLabel = edgesByName.get(label)
     if(byLabel.nonEmpty) {
-      byLabel.get.remove(Tuple2(head, modifier))
+      byLabel.get.remove((head, modifier))
     }
   }
 

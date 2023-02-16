@@ -54,7 +54,7 @@ class MetalRowReader extends RowReader {
       labels += PrimalLabel(row.get(WORD_POSITION + 1))
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words), labels))
+    IndexedSeq((AnnotatedSentence(words), labels))
   }
 
   /** Parser for the simple extended format: word, POS tag, NE label, label */
@@ -73,7 +73,7 @@ class MetalRowReader extends RowReader {
       labels += PrimalLabel(row.get(LABEL_START_OFFSET))
     }
 
-    IndexedSeq(Tuple2(AnnotatedSentence(words, Some(posTags), Some(neLabels)), labels))
+    IndexedSeq((AnnotatedSentence(words, Some(posTags), Some(neLabels)), labels))
   }
 
   /** Parser for the full format: word, POS tag, NE label, (label head)+ */
@@ -128,7 +128,7 @@ class MetalRowReader extends RowReader {
           }
         }
       }
-      sentences += Tuple2(annotatedSent, sentLabels)
+      sentences += ((annotatedSent, sentLabels))
     }
 
     sentences
