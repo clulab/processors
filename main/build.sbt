@@ -62,7 +62,7 @@ libraryDependencies ++= {
     // Local logging is provided here but not published.
     "ch.qos.logback"              % "logback-classic"          % "1.2.8", // up to 1.2.8; less than 1.2 is vulnerable
     // testing
-    "org.scalatest"              %% "scalatest"                % "3.2.10"  % Test, // Apache-2.0
+    "org.scalatest"              %% "scalatest"                % "3.2.15"  % Test, // Apache-2.0
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory instance, not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0", // Apache-2.0
