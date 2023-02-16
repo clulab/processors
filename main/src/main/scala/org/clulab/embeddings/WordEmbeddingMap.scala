@@ -1,5 +1,6 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.MathUtils
 
 import scala.collection.mutable.{IndexedSeq => MutableIndexedSeq}
@@ -45,7 +46,7 @@ trait WordEmbeddingMap {
   def save(filename: String): Unit
 
   /** filterPredicate: if passed, only returns words that match the predicate */
-  def mostSimilarWords(vector: Array[Float], howMany: Int, filterPredicateOpt: Option[String => Boolean] = None): Seq[(String, Double)] = {
+  def mostSimilarWords(vector: Array[Float], howMany: Int, filterPredicateOpt: Option[String => Boolean]): Seq[(String, Double)] = {
     val unfilteredKeys = keys
     val filteredKeys = filterPredicateOpt.map(unfilteredKeys.filter).getOrElse(unfilteredKeys)
     val resultList = MathUtils.nBest[String](word => WordEmbeddingMap.dotProduct(vector, getOrElseUnknown(word)).toDouble)(filteredKeys, howMany)
@@ -65,7 +66,7 @@ trait WordEmbeddingMap {
     */
   def mostSimilarWords(words: Set[String], howMany: Int): Seq[(String, Double)] = {
     val compositeVector = makeCompositeVector(words)
-    mostSimilarWords(compositeVector, howMany)
+    mostSimilarWords(compositeVector, howMany, None)
   }
 }
 
