@@ -1,5 +1,8 @@
 package org.clulab.embeddings
 
+import org.clulab.scala.WrappedArray._
+import org.clulab.utils.MathUtils
+
 import scala.collection.mutable.{IndexedSeq => MutableIndexedSeq}
 
 /**
@@ -41,6 +44,30 @@ trait WordEmbeddingMap {
 
   /** Save this object in binary format. */
   def save(filename: String): Unit
+
+  /** filterPredicate: if passed, only returns words that match the predicate */
+  def mostSimilarWords(vector: Array[Float], howMany: Int, filterPredicateOpt: Option[String => Boolean]): Seq[(String, Double)] = {
+    val unfilteredKeys = keys
+    val filteredKeys = filterPredicateOpt.map(unfilteredKeys.filter).getOrElse(unfilteredKeys)
+    val result = MathUtils.nBest[String](word => WordEmbeddingMap.dotProduct(vector, getOrElseUnknown(word)).toDouble)(filteredKeys, howMany)
+
+    result
+  }
+
+  /**
+    * Finds the words most similar to this set of inputs
+    *
+    * IMPORTANT: Words here must already be normalized to match how they are stored in the map.
+    *
+    * This method is included to support the interface of the deprecated [[org.clulab.embeddings.SanitizedWordEmbeddingMap SanitizedWordEmbeddingMap]].
+    * Unknown words may be skipped in calculating the composite or the unknown vector might be
+    * used.  That is decided by the subclass.  This method calls only public member functions,
+    * so reimplement or subclass for alternative behavior.
+    */
+  def mostSimilarWords(words: Set[String], howMany: Int): Seq[(String, Double)] = {
+    val compositeVector = makeCompositeVector(words)
+    mostSimilarWords(compositeVector, howMany, None)
+  }
 }
 
 object WordEmbeddingMap {
