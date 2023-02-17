@@ -1,20 +1,21 @@
 package org.clulab.dynet
 
-import java.io.{FileWriter, PrintWriter}
 import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
+import org.clulab.fatdynet.utils.CloseableModelSaver
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
 import org.clulab.utils.{ProgressBar, Serializer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.fatdynet.utils.CloseableModelSaver
-import org.clulab.fatdynet.utils.Closer.AutoCloser
 
+import java.io.{FileWriter, PrintWriter}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+
 import Metal._
 
 /**
@@ -420,12 +421,12 @@ class Metal(val taskManagerOpt: Option[TaskManager],
     val x2iFilename = mkX2iFilename(baseFilename)
 
     // save the DyNet parameters
-    new CloseableModelSaver(dynetFilename).autoClose { modelSaver =>
+    Using.resource(new CloseableModelSaver(dynetFilename)) { modelSaver =>
       modelSaver.addModel(parameters, "/all")
     }
 
     // save all the other meta data
-    Serializer.using(Utils.newPrintWriter(x2iFilename)) { printWriter =>
+    Using.resource(Utils.newPrintWriter(x2iFilename)) { printWriter =>
       Utils.save(printWriter, model.length, "layerCount")
       for(i <- model.indices) {
         model(i).saveX2i(printWriter)
@@ -448,7 +449,7 @@ object Metal {
     // load the x2i meta data
     //
     //println(s"Opening $x2iFilename")
-    val layersSeq = Serializer.using(Utils.newSource(x2iFilename)) { source =>
+    val layersSeq = Using.resource(Utils.newSource(x2iFilename)) { source =>
       val layersSeq = new ArrayBuffer[Layers]()
       val lines = source.getLines().buffered
       val layersCount = new Utils.ByLineIntBuilder().build(lines)

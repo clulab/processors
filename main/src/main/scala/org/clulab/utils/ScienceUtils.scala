@@ -1,12 +1,12 @@
 package org.clulab.utils
 
-import java.io.{BufferedReader, InputStreamReader}
-import java.nio.charset.StandardCharsets
-import java.util.regex.Pattern
-import java.text.Normalizer
-import org.clulab.utils.Closer.AutoCloser
+import org.clulab.scala.Using._
 import org.clulab.utils.ScienceUtils._
 
+import java.io.{BufferedReader, InputStreamReader}
+import java.nio.charset.StandardCharsets
+import java.text.Normalizer
+import java.util.regex.Pattern
 import scala.collection.mutable
 
 class ScienceUtils {
@@ -144,7 +144,7 @@ object ScienceUtils {
   private def loadAccents:Set[Char] = {
     val acf = getClass.getClassLoader.getResourceAsStream(ACCENTED_CHARACTERS)
     assert(acf != null, s"Failed to find resource file $ACCENTED_CHARACTERS in the classpath!")
-    new BufferedReader(new InputStreamReader(acf, charset)).autoClose { reader =>
+    Using.resource(new BufferedReader(new InputStreamReader(acf, charset))) { reader =>
       val accents = new mutable.ArrayBuffer[Char]()
       var done = false
       while(! done) {
@@ -163,7 +163,7 @@ object ScienceUtils {
     val map = new mutable.HashMap[Char, String]()
     val is = getClass.getClassLoader.getResourceAsStream(UNICODE_TO_ASCII)
     assert(is != null, s"Failed to find resource file $UNICODE_TO_ASCII in the classpath!")
-    new BufferedReader(new InputStreamReader(is, charset)).autoClose { reader =>
+    Using.resource(new BufferedReader(new InputStreamReader(is, charset))) { reader =>
       var done = false
       while (!done) {
         var line = normalizeUnicode(reader.readLine())

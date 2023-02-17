@@ -2,9 +2,9 @@ package org.clulab.embeddings
 
 import org.clulab.dynet.ConstEmbeddingsGlove
 import org.clulab.dynet.Utils
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.SeqOdometer
 import org.clulab.utils.Test
@@ -95,7 +95,7 @@ class TestOldAndNewWordEmbeddingMap extends Test {
       // useFileElseResource, useTxtElseBin, useExplicitElseCompact, useOldElseNew
       case WordEmbeddingConfig(_, _, true, true) =>
         val wordEmbeddingMap = new OldWordEmbeddingMap(fileName + InputStreamer.txtExtension)
-        new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(wordEmbeddingConfig.locationName))).autoClose { objectOutputStream =>
+        Using.resource(new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(wordEmbeddingConfig.locationName)))) { objectOutputStream =>
           objectOutputStream.writeObject(wordEmbeddingMap)
         }
         // This just does output in text again, so favor the above version.
@@ -134,7 +134,7 @@ class TestOldAndNewWordEmbeddingMap extends Test {
           case WordEmbeddingConfig(true /* file */ , false /* bin */ , true /* explicit */ , _) =>
             val inputStreamer = new InputStreamer()
             val inputStream = inputStreamer.getFileAsStream(locationName)
-            inputStream.autoClose { inputStream =>
+            Using.resource(inputStream) { inputStream =>
               val objectInputStream = new ClassLoaderObjectInputStream(this.getClass.getClassLoader, inputStream)
               objectInputStream.readObject().asInstanceOf[OldWordEmbeddingMap]
             }
@@ -142,7 +142,7 @@ class TestOldAndNewWordEmbeddingMap extends Test {
           case WordEmbeddingConfig(false /* resource */ , true /* txt */ , true /* explicit */ , _) =>
             val inputStreamer = new InputStreamer()
             val inputStream = inputStreamer.getResourceAsStream(locationName)
-            inputStream.autoClose { inputStream =>
+            Using.resource(inputStream) { inputStream =>
               new OldWordEmbeddingMap(inputStream, None, false)
             }
           case WordEmbeddingConfig(false /* resource */ , false /* bin */ , true /* explicit */ , _) =>
@@ -157,7 +157,7 @@ class TestOldAndNewWordEmbeddingMap extends Test {
           if (wordEmbeddingConfig.useFileElseResource) inputStreamer.getFileAsStream(locationName)
           else inputStreamer.getResourceAsStream(locationName)
 
-        inputStream.autoClose { inputStream =>
+        Using.resource(inputStream) { inputStream =>
           if (wordEmbeddingConfig.useExplicitElseCompact)
             ExplicitWordEmbeddingMap(inputStream, wordEmbeddingConfig.useBin)
           else

@@ -1,23 +1,23 @@
 package org.clulab.dynet
 
-import java.io._
-import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import edu.cmu.dynet._
+import edu.cmu.dynet.Expression.{concatenate, input, logSumExp, lookup, pick, pickNegLogSoftmax, sum}
 import org.clulab.embeddings.SanitizedWordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, MutableNumber}
-import org.clulab.utils.Serializer
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io._
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 /**
  * Utility methods used by DyNet applications
@@ -843,7 +843,7 @@ object Utils {
   }
 
   def readString2Ids(s2iFilename: String): Map[String, Int] = {
-    val s2i = Serializer.using(Utils.newSource(s2iFilename)) { source =>
+    val s2i = Using.resource(Utils.newSource(s2iFilename)) { source =>
       val byLineStringMapBuilder = new Utils.ByLineStringMapBuilder()
       val lines = source.getLines().buffered
       val s2i = byLineStringMapBuilder.build(lines)

@@ -1,6 +1,6 @@
 package org.clulab.embeddings
 
-import org.clulab.utils.Closer.AutoCloser
+import org.clulab.scala.Using._
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.InputStreamer.StreamResult
 import org.clulab.utils.NamedFuture
@@ -72,7 +72,7 @@ object WordEmbeddingMapPool {
   def loadEmbedding(name: String, fileLocation: String, resourceLocation: String, compact: Boolean): WordEmbeddingMap = {
     val StreamResult(inputStream, _, format) = inputStreamer.stream(name, fileLocation, resourceLocation)
         .getOrElse(throw new RuntimeException(s"WordEmbeddingMap $name could not be opened."))
-    val wordEmbeddingMap = inputStream.autoClose { inputStream =>
+    val wordEmbeddingMap = Using.resource(inputStream) { inputStream =>
       val binary = format == InputStreamer.Format.Bin
 
       if (compact) CompactWordEmbeddingMap(inputStream, binary)

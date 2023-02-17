@@ -4,8 +4,8 @@ import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
 import org.clulab.utils.ThreadUtils
 import org.clulab.utils.Timer
@@ -53,7 +53,7 @@ object InfiniteParallelProcessorExample {
         val printedDocument = {
           val stringWriter = new StringWriter
 
-          new PrintWriter(stringWriter).autoClose { printWriter =>
+          Using.resource(new PrintWriter(stringWriter)) { printWriter =>
             printDocument(document, printWriter)
           }
 
@@ -87,7 +87,7 @@ object InfiniteParallelProcessorExample {
   def run(args: Array[String]): Unit = {
 
     mainWithCallback(args) { case (file: File, contents: String) =>
-      new PrintWriter(new BufferedOutputStream(new FileOutputStream(file))).autoClose { printWriter =>
+      Using.resource(new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)))) { printWriter =>
         printWriter.println(contents)
       }
     }

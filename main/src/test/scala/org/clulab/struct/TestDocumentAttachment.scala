@@ -1,23 +1,23 @@
 package org.clulab.struct
 
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
+import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.serialization.json._
 import org.clulab.struct.test.CaseClass
 import org.clulab.struct.test.ObjectNameDocumentAttachment
 import org.clulab.struct.test.NameDocumentAttachment
 import org.clulab.struct.test.TextNameDocumentAttachment
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Test
 import org.json4s.jackson.parseJson
 import org.json4s.jackson.prettyJson
 import org.json4s.jackson.renderJValue
+
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 class TestDocumentAttachment extends Test {
   protected val FIRST_KEY = "first"
@@ -31,8 +31,8 @@ class TestDocumentAttachment extends Test {
   protected val ALIAS_NAME = "Alias"
 
   def serialize(any: Any): Array[Byte] = {
-    new ByteArrayOutputStream().autoClose { byteArrayOutputStream =>
-      new ObjectOutputStream(byteArrayOutputStream).autoClose { objectOutputStream =>
+    Using.resource(new ByteArrayOutputStream()) { byteArrayOutputStream =>
+      Using.resource(new ObjectOutputStream(byteArrayOutputStream)) { objectOutputStream =>
         try {
           objectOutputStream.writeObject(any)
         }
@@ -47,8 +47,8 @@ class TestDocumentAttachment extends Test {
   }
 
   def deserialize[T](byteArray: Array[Byte]): T = {
-    new ByteArrayInputStream(byteArray).autoClose { byteArrayInputStream =>
-      new ObjectInputStream(byteArrayInputStream).autoClose { objectInputStream =>
+    Using.resource(new ByteArrayInputStream(byteArray)) { byteArrayInputStream =>
+      Using.resource(new ObjectInputStream(byteArrayInputStream)) { objectInputStream =>
         try {
           val res1 = objectInputStream.readObject()
           val res2 = res1.asInstanceOf[T]

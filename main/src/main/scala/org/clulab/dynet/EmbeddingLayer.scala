@@ -8,8 +8,9 @@ import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
-import org.clulab.utils.{Configured, Serializer}
+import org.clulab.utils.Configured
 
 import EmbeddingLayer._
 
@@ -431,7 +432,7 @@ object EmbeddingLayer {
       val wordLookupParameters:LookupParameter = parameters.addLookupParameters(w2i.size, Dim(learnedWordEmbeddingSize))
 
       val c2iFilename = config.getArgString(paramPrefix + ".c2i", Some("org/clulab/c2i-en.txt"))
-      val c2i = Serializer.using(Utils.newSource(c2iFilename)) { source =>
+      val c2i = Using.resource(Utils.newSource(c2iFilename)) { source =>
         val byLineCharMapBuilder = new Utils.ByLineCharIntMapBuilder()
         val lines = source.getLines().buffered
         val c2i = byLineCharMapBuilder.build(lines)
