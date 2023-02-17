@@ -49,9 +49,9 @@ trait WordEmbeddingMap {
   def mostSimilarWords(vector: Array[Float], howMany: Int, filterPredicateOpt: Option[String => Boolean]): Seq[(String, Double)] = {
     val unfilteredKeys = keys
     val filteredKeys = filterPredicateOpt.map(unfilteredKeys.filter).getOrElse(unfilteredKeys)
-    val resultList = MathUtils.nBest[String](word => WordEmbeddingMap.dotProduct(vector, getOrElseUnknown(word)).toDouble)(filteredKeys, howMany)
+    val result = MathUtils.nBest[String](word => WordEmbeddingMap.dotProduct(vector, getOrElseUnknown(word)).toDouble)(filteredKeys, howMany)
 
-    resultList
+    result
   }
 
   /**
