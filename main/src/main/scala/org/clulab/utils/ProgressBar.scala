@@ -2,7 +2,7 @@ package org.clulab.utils
 
 import me.tongfei.progressbar.{ProgressBar => JProgressBar}
 
-class ProgressBar[T](text: String, outerIterator: Iterator[T]) extends Iterable[T] {
+class ProgressBar[T](text: String, outerIterator: Iterator[T]) extends Iterable[T] with AutoCloseable {
   val (jProgressBar, innerIterator) = {
     val (leftIterator, rightIterator) = outerIterator.duplicate
     val jProgressBar = new JProgressBar(text, leftIterator.length)
@@ -14,6 +14,8 @@ class ProgressBar[T](text: String, outerIterator: Iterator[T]) extends Iterable[
 
   // This convenience method unfortunately limits the progress bar to one traversal.
   def setExtraMessage(message: String): Unit = jProgressBar.setExtraMessage(message)
+
+  override def close(): Unit = jProgressBar.close()
 }
 
 object ProgressBar {
@@ -28,11 +30,7 @@ object ProgressBar {
 class ProgressBarIterator[T](jProgressBar: JProgressBar, iterator: Iterator[T]) extends Iterator[T] {
 
   override def hasNext: Boolean = {
-    val result = iterator.hasNext
-
-    if (!result)
-      jProgressBar.close()
-    result
+    iterator.hasNext
   }
 
   override def next(): T = {

@@ -1,11 +1,12 @@
 package org.clulab.utils
 
+import org.clulab.scala.Using._
+
 import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter }
 import java.util.Properties
 import java.util.regex.Pattern
-
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
 
 /**
  * Converts a command line to properties; and other useful String utils
@@ -36,15 +37,15 @@ object StringUtils {
         if ((key == PROPERTIES || key == PROPS) && ! value.isEmpty) {
           // a props file was specified. read props from there
           println(s"loading props from file ${value.get}")
-          val is = new BufferedInputStream(new FileInputStream(value.get))
           val propsFromFile = new Properties()
-          propsFromFile.load(is)
+          Using.resource(new BufferedInputStream(new FileInputStream(value.get))) { is =>
+            propsFromFile.load(is)
+          }
           // trim all values, they may have trailing spaces
           for (k <- propsFromFile.keySet().asScala) {
             val v = propsFromFile.getProperty(k.asInstanceOf[String]).trim
             result.setProperty(k.asInstanceOf[String], v)
           }
-          is.close()
         } else {
           result.setProperty(key, value.getOrElse("true"))
         }

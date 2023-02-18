@@ -1,15 +1,15 @@
 package org.clulab.sequences
 
-import java.io._
-
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
 import org.clulab.utils.SeqUtils
 
+import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -84,17 +84,15 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
   }
 
   override def save(fn:File): Unit = {
-    val w = new PrintWriter(new FileWriter(fn))
-    w.println(order)
-    model.get.saveTo(w)
-    w.close()
+    Using.resource(new PrintWriter(new FileWriter(fn))) { w =>
+      w.println(order)
+      model.get.saveTo(w)
+    }
   }
 
-  override def load(reader:BufferedReader): Unit = {
+  override def load(reader: BufferedReader): Unit = {
     order = reader.readLine().toInt
     val c = LiblinearClassifier.loadFrom[L, F] (reader)
     model = Some(c)
   }
-  
 }
-

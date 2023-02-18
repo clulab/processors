@@ -1,15 +1,15 @@
 package org.clulab.sequences
 
-import java.io._
-
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
 import org.clulab.struct.Counter
 import org.clulab.utils.SeqUtils
 
+import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -49,18 +49,18 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
       val firstPassFile = new File(FIRST_PASS_FILE)
       firstPassLabels = if(firstPassFile.exists()) {
         logger.debug(s"Found cached file with first-pass labels: $FIRST_PASS_FILE")
-        val source = scala.io.Source.fromFile(firstPassFile)
-        val labels = readFirstPassLabels(source)
-        source.close()
+        val labels = Using.resource(scala.io.Source.fromFile(firstPassFile)) { source =>
+          readFirstPassLabels(source)
+        }
         Some(labels)
       } else {
         logger.debug("Generating first-pass labels from scratch...")
         val labels = mkFirstPassLabels(sentences)
-        val pw = new PrintWriter(new FileWriter(FIRST_PASS_FILE))
-        for(s <- labels) {
-          pw.println(s.mkString("\t"))
+        Using.resource(new PrintWriter(new FileWriter(FIRST_PASS_FILE))) { pw =>
+          for (s <- labels) {
+            pw.println(s.mkString("\t"))
+          }
         }
-        pw.close()
         Some(labels)
       }
       assert(firstPassLabels.get.length >= sentences.size)
@@ -249,23 +249,23 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
 
   override def save(fn:File): Unit = {
     // save meta data
-    var w = new PrintWriter(new FileWriter(fn))
-    w.println(order)
-    w.println(leftToRight)
+    Using.resource(new PrintWriter(new FileWriter(fn))) { w =>
+      w.println(order)
+      w.println(leftToRight)
 
-    // save second pass model
-    secondPassModel.get.saveTo(w)
-    w.close()
+      // save second pass model
+      secondPassModel.get.saveTo(w)
+    }
 
     // save first pass model (if any)
-    w = new PrintWriter(new FileWriter(fn, true))
-    if(firstPassModel.nonEmpty) {
-      w.println(1)
-      firstPassModel.get.saveTo(w)
-    } else {
-      w.println(0)
+    Using.resource(new PrintWriter(new FileWriter(fn, true))) { w =>
+      if (firstPassModel.nonEmpty) {
+        w.println(1)
+        firstPassModel.get.saveTo(w)
+      } else {
+        w.println(0)
+      }
     }
-    w.close()
   }
 
   override def load(reader:BufferedReader): Unit = {
@@ -284,6 +284,5 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
     } else {
       firstPassModel = None
     }
-    reader.close()
   }
 }

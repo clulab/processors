@@ -1,5 +1,6 @@
 package org.clulab.utils
 
+import org.clulab.scala.Using._
 import org.clulab.utils.PrintUtils._
 
 import java.io.{PrintWriter, StringWriter}
@@ -17,10 +18,9 @@ class TestPrintUtils extends Test {
 
   def withPrintWriter(f: PrintWriter => Unit): String = {
     val stringWriter = new StringWriter
-    val printWriter = new PrintWriter(stringWriter)
-
-    f(printWriter)
-    printWriter.close()
+    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+      f(printWriter)
+    }
     stringWriter.toString
   }
 

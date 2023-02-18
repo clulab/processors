@@ -1,9 +1,7 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.examples.ParallelProcessorExample
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
-import org.clulab.serialization.DocumentSerializer
+import org.clulab.scala.Using._
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Sourcer.utf8
 import org.clulab.utils.Test
@@ -11,17 +9,15 @@ import org.clulab.utils.Test
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import scala.collection.mutable
 import scala.io.Source
 
 class TestRepeatability extends Test {
 
   def printDocument(document: Document): String = {
     val stringWriter = new StringWriter
-    val printWriter = new PrintWriter(stringWriter)
-
-    document.prettyPrint(printWriter)
-    printWriter.close()
+    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+      document.prettyPrint(printWriter)
+    }
     stringWriter.toString
   }
 
@@ -33,10 +29,9 @@ class TestRepeatability extends Test {
     val inputDir = FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents")
     val file = new File(inputDir + "/16_South Sudan - Key Message Update_ Thu, 2018-01-25.txt")
     val text = {
-      val source = Source.fromFile(file, utf8)
-      val text = source.mkString.replace("\r\n", "\n")
-
-      source.close()
+      val text = Using.resource(Source.fromFile(file, utf8)) { source =>
+        source.mkString.replace("\r\n", "\n")
+      }
 
       val beginIndex = text.indexOf("This\nanalysis")
       val endIndex = text.indexOf("*According to the IPC")

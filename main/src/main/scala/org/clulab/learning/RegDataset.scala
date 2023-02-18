@@ -1,19 +1,19 @@
 package org.clulab.learning
 
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-
-import scala.io.{BufferedSource, Source}
-import java.util.zip.GZIPInputStream
-import java.io.{BufferedInputStream, FileInputStream, FileWriter, PrintWriter}
-
-import org.slf4j.LoggerFactory
-import RVFRegDataset._
 import org.clulab.utils.Files
+import org.slf4j.LoggerFactory
 
+import java.io.{BufferedInputStream, FileInputStream, FileWriter, PrintWriter}
+import java.util.zip.GZIPInputStream
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
+
+import RVFRegDataset._
 
 /**
   * Parent class for regression datasets. For classification, see [[Dataset]].
@@ -450,25 +450,25 @@ object RVFRegDataset {
                             featureLexicon:Lexicon[String],
                             fn:String): Unit = {
 
-    val os = new PrintWriter(new FileWriter(fn))
-    for(datum <- datums) {
-      os.print(datum.label)
-      val fs = new ListBuffer[(Int, Double)]
-      val c = datum.featuresCounter
-      for(k <- c.keySet) {
-        val fi = featureLexicon.get(k)
-        if(fi.isDefined) {
-          // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-          fs += ((fi.get + 1, c.getCount(k)))
+    Using.resource(new PrintWriter(new FileWriter(fn))) { os =>
+      for (datum <- datums) {
+        os.print(datum.label)
+        val fs = new ListBuffer[(Int, Double)]
+        val c = datum.featuresCounter
+        for (k <- c.keySet) {
+          val fi = featureLexicon.get(k)
+          if (fi.isDefined) {
+            // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
+            fs += ((fi.get + 1, c.getCount(k)))
+          }
         }
+        val fss = fs.toList.sortBy(_._1)
+        for (t <- fss) {
+          os.print(s" ${t._1}:${t._2}")
+        }
+        os.println()
       }
-      val fss = fs.toList.sortBy(_._1)
-      for(t <- fss) {
-        os.print(s" ${t._1}:${t._2}")
-      }
-      os.println()
     }
-    os.close()
   }
 
   def mkDatumsFromSvmLightResource(path: String): Iterable[Datum[Double, String]] = {

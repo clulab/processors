@@ -9,7 +9,7 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
 import org.clulab.struct.Counter
-import org.clulab.utils.{ProgressBar, Serializer, StringUtils}
+import org.clulab.utils.{ProgressBar, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{FileWriter, PrintWriter}
@@ -139,56 +139,57 @@ class Metal(val taskManagerOpt: Option[TaskManager],
       // traverse all training sentences
       //
 
-      val progressBar = ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)
-      for(metaSentence <- progressBar) {
-        val taskId = metaSentence._1
-        val sentence = metaSentence._2
-        val insertNegatives = taskManager.tasks(taskId).insertNegatives
+      Using.resource(ProgressBar(s"Epoch ${epoch + 1}/${taskManager.maxEpochs}", sentenceIterator)) { progressBar =>
+        for (metaSentence <- progressBar) {
+          val taskId = metaSentence._1
+          val sentence = metaSentence._2
+          val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
-        sentCount += 1
+          sentCount += 1
 
-        val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
-        assert(annotatedSentences.nonEmpty)
+          val annotatedSentences = reader.toAnnotatedSentences(sentence, insertNegatives)
+          assert(annotatedSentences.nonEmpty)
 
-        val unweightedLoss = {
-          val lossSum = new ExpressionVector()
-          for (as <- annotatedSentences) {
-            val annotatedSentence = as._1
-            val sentenceLabels = as._2
-            val sentenceLoss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
-            lossSum.add(sentenceLoss)
+          val unweightedLoss = {
+            val lossSum = new ExpressionVector()
+            for (as <- annotatedSentences) {
+              val annotatedSentence = as._1
+              val sentenceLabels = as._2
+              val sentenceLoss = Layers.loss(model, taskId, annotatedSentence, sentenceLabels)
+              lossSum.add(sentenceLoss)
+            }
+            Expression.sum(lossSum)
           }
-          Expression.sum(lossSum)
-        }
 
-        // task weighting
-        val loss = {
-          if (taskManager.tasks(taskId).taskWeight != 1.0) {
-            unweightedLoss * Expression.input(taskManager.tasks(taskId).taskWeight)
-          } else {
-            unweightedLoss
+          // task weighting
+          val loss = {
+            if (taskManager.tasks(taskId).taskWeight != 1.0) {
+              unweightedLoss * Expression.input(taskManager.tasks(taskId).taskWeight)
+            } else {
+              unweightedLoss
+            }
           }
-        }
 
-        batchLosses.add(loss)
+          batchLosses.add(loss)
 
-        if(batchLosses.size >= batchSize) {
-          // backprop
-          cummulativeLoss += batchBackprop(batchLosses, trainer)
+          if (batchLosses.size >= batchSize) {
+            // backprop
+            cummulativeLoss += batchBackprop(batchLosses, trainer)
 
-          // start a new batch
-          ComputationGraph.renew()
-          batchLosses = new ExpressionVector()
-        }
+            // start a new batch
+            ComputationGraph.renew()
+            batchLosses = new ExpressionVector()
+          }
 
-        numTagged += sentence.length
+          numTagged += sentence.length
 
-        if(sentCount % 1000 == 0) {
-          val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
-          progressBar.setExtraMessage(message)
-          // logger.info(message) // This would likely mess up the progressBar.
-          cummulativeLoss = 0.0
-          numTagged = 0
+          if (sentCount % 1000 == 0) {
+            val message = "Cumulative loss: " + cummulativeLoss / numTagged + s" ($sentCount sentences)"
+            progressBar.setExtraMessage(message)
+            // logger.info(message) // This would likely mess up the progressBar.
+            cummulativeLoss = 0.0
+            numTagged = 0
+          }
         }
       }
 
@@ -303,51 +304,50 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
 
-    val pw =
-      if(epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
+    Using.resource(
+      if (epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
       else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
+    ) { pw =>
+      val reader = new MetalRowReader
+      val insertNegatives = taskManager.tasks(taskId).insertNegatives
 
-    val reader = new MetalRowReader
-    val insertNegatives = taskManager.tasks(taskId).insertNegatives
+      if (insertNegatives > 0) {
+        pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
+      }
 
-    if(insertNegatives > 0) {
-      pw.println("Cannot generate CoNLL format because insertNegatives == true for this task!")
-    }
+      for (sent <- ProgressBar(taskName, sentences)) {
+        sentCount += 1
 
-    for (sent <- ProgressBar(taskName, sentences)) {
-      sentCount += 1
+        val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
 
-      val annotatedSentences = reader.toAnnotatedSentences(sent, insertNegatives)
+        for (as <- annotatedSentences) {
+          val sentence = as._1
+          val goldLabels = as._2.map(_.label)
+          val modHeadPairsOpt = getModHeadPairs(as._2)
 
-      for(as <- annotatedSentences) {
-        val sentence = as._1
-        val goldLabels = as._2.map(_.label)
-        val modHeadPairsOpt = getModHeadPairs(as._2)
+          val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
 
-        val constEmbeddings = ConstEmbeddingsGlove.mkConstLookupParams(sentence.words)
-        
-        // vanilla inference
-        val preds = Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
+          // vanilla inference
+          val preds = Layers.predict(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
 
-        // ceiling strategy: choose the gold label if it shows up in the top K predictions
-        //val predsTopK = Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
-        //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
+          // ceiling strategy: choose the gold label if it shows up in the top K predictions
+          //val predsTopK = Layers.predictWithScores(model, taskId, sentence, modHeadPairsOpt, constEmbeddings)
+          //val preds = chooseOptimalPreds(predsTopK, goldLabels, 2)
 
-        // Eisner parsing algorithm using the top K predictions
-        //val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
+          // Eisner parsing algorithm using the top K predictions
+          //val preds = parseWithEisner(sentence, constEmbeddings, 3).map(_._1.toString)
 
-        val sc = SeqScorer.f1(goldLabels, preds)
-        scoreCountsByLabel.incAll(sc)
+          val sc = SeqScorer.f1(goldLabels, preds)
+          scoreCountsByLabel.incAll(sc)
 
-        if(insertNegatives == 0) {
-          // we can only print in the CoNLL format if we did not insert artificial negatives
-          // these negatives break the one label per token assumption
-          printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+          if (insertNegatives == 0) {
+            // we can only print in the CoNLL format if we did not insert artificial negatives
+            // these negatives break the one label per token assumption
+            printCoNLLOutput(pw, sentence.words, goldLabels, preds)
+          }
         }
       }
     }
-
-    pw.close()
 
     logger.info(s"Accuracy on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.accuracy()}")
     logger.info(s"Precision on ${sentences.length} $name sentences for task $taskNumber ($taskName): ${scoreCountsByLabel.precision()}")

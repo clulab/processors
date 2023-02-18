@@ -26,9 +26,9 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       try {
         val doc = parseFile(f)
         val ofn = s"$outDir/${f.getName.substring(0, f.getName.length - 4)}.conllu"
-        val pw = new PrintWriter(ofn)
-        toCoNLLU(doc, pw)
-        pw.close()
+        Using.resource(new PrintWriter(ofn)) { pw =>
+          toCoNLLU(doc, pw)
+        }
       } catch {
         case e:Exception => {
           logger.error(s"Parsing of file $f failed with error:")

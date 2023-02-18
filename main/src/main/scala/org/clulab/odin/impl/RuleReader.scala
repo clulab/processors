@@ -251,10 +251,10 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
         readFileToString(f, StandardCharsets.UTF_8)
       case None =>
         val url = mkURL(s)
-        val source = Source.fromURL(url)
-        val data = source.mkString
-        source.close()
-        data
+        Using.resource(Source.fromURL(url)) { source =>
+          val data = source.mkString
+          data
+        }
     }
   }
 
