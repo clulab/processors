@@ -142,9 +142,9 @@ object StringUtils {
 
   /** Format the given exception as a string and return the string. */
   def exceptionToString (ex: Exception): String = {
-    val sw = new StringWriter
-    ex.printStackTrace(new PrintWriter(sw))
-    sw.toString
+    StringUtils.viaPrintWriter { printWriter =>
+      ex.printStackTrace(printWriter)
+    }
   }
 
   /** Generates the stem of a word, according to the Porter algorithm */
@@ -183,4 +183,13 @@ object StringUtils {
     after(string, string.indexOf(char), all, keep)
 
   def med(source: String, target: String): Int = MED(source, target).getDistance
+
+  def viaPrintWriter(f: (PrintWriter) => Unit): String = {
+    val stringWriter = new StringWriter
+
+    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+      f(printWriter)
+    }
+    stringWriter.toString
+  }
 }

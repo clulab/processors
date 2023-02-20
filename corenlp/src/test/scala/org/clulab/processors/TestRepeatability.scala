@@ -2,23 +2,18 @@ package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
 import org.clulab.scala.Using._
-import org.clulab.utils.FileUtils
+import org.clulab.utils.{FileUtils, StringUtils, Test}
 import org.clulab.utils.Sourcer.utf8
-import org.clulab.utils.Test
 
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 import scala.io.Source
 
 class TestRepeatability extends Test {
 
   def printDocument(document: Document): String = {
-    val stringWriter = new StringWriter
-    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+    StringUtils.viaPrintWriter { printWriter =>
       document.prettyPrint(printWriter)
     }
-    stringWriter.toString
   }
 
   val processor: Processor = new FastNLPProcessorWithSemanticRoles()

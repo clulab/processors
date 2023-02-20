@@ -4,9 +4,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.{Sourcer, Test}
-
-import java.io.{PrintWriter, StringWriter}
+import org.clulab.utils.{Sourcer, StringUtils, Test}
 
 class TestMkCombinedDocument extends Test {
   val sentences = Using.resource(Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt")) { source =>
@@ -29,12 +27,9 @@ class TestMkCombinedDocument extends Test {
   val processor = new CluProcessor()
 
   def toString(document: Document): String = {
-    val stringWriter = new StringWriter()
-
-    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+    StringUtils.viaPrintWriter { printWriter =>
       documentSerializer.save(document, printWriter, keepText = true)
     }
-    stringWriter.toString
   }
 
   behavior of "mkCombinedDocument"

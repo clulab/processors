@@ -5,15 +5,12 @@ import org.clulab.processors.Processor
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.FileUtils
-import org.clulab.utils.ThreadUtils
-import org.clulab.utils.Timer
+import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
 
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
-import java.io.StringWriter
 
 object ParallelProcessorExample {
 
@@ -60,15 +57,8 @@ object ParallelProcessorExample {
           println(s"Threw exception for ${file.getName}")
           throw throwable
       }
-      val printedDocument = {
-        val stringWriter = new StringWriter
-
-        Using.resource(new PrintWriter(stringWriter)) { printWriter =>
-          printDocument(document, printWriter)
-        }
-
-        val result = stringWriter.toString
-        result
+      val printedDocument = StringUtils.viaPrintWriter { printWriter =>
+        printDocument(document, printWriter)
       }
       val savedDocument = documentSerializer.save(document)
       val outputDocument = printedDocument + savedDocument
