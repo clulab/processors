@@ -3,9 +3,10 @@ package org.clulab.sequences
 import org.clulab.processors.Document
 import org.clulab.scala.Using._
 import org.clulab.sequences.SequenceTaggerEvaluator._
+import org.clulab.utils.NullWriter
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.PrintWriter
 
 /**
   * Implements evaluation of a sequence tagger
@@ -15,7 +16,7 @@ class SequenceTaggerEvaluator[L, F] {
   def accuracy(tagger:SequenceTagger[L, F], docs:Iterator[Document], saveOutput:Boolean = true): Double = {
     Using.resource(
       if (saveOutput) new PrintWriter("output_for_conlleval.txt")
-      else new PrintWriter(new StringWriter())
+      else new PrintWriter(new NullWriter())
     ) { pw =>
       var correct = 0
       var total = 0

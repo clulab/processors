@@ -451,7 +451,7 @@ object RVFRankingDataset {
                            featureLexicon:Lexicon[String],
                            fn:String): Unit = {
     var qid = 0
-    Using.resource (new PrintWriter(new FileWriter(fn))) { os =>
+    Using.resource(new PrintWriter(fn)) { os =>
       for (query <- queries) {
         qid += 1
         for (datum <- query) {

@@ -12,7 +12,7 @@ import org.clulab.struct.Counter
 import org.clulab.utils.{ProgressBar, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.PrintWriter
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
@@ -304,10 +304,12 @@ class Metal(val taskManagerOpt: Option[TaskManager],
 
     logger.debug(s"Started evaluation on the $name dataset for task $taskNumber ($taskName)...")
 
-    Using.resource(
-      if (epoch >= 0) new PrintWriter(new FileWriter(s"task$taskNumber.dev.output.$epoch"))
-      else new PrintWriter(new FileWriter(s"task$taskNumber.test.output"))
-    ) { pw =>
+    Using.resource {
+      val filename =
+          if (epoch >= 0) s"task$taskNumber.dev.output.$epoch"
+          else s"task$taskNumber.test.output"
+      new PrintWriter(filename)
+    } { pw =>
       val reader = new MetalRowReader
       val insertNegatives = taskManager.tasks(taskId).insertNegatives
 

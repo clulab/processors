@@ -83,8 +83,8 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
     if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
-  override def save(fn:File): Unit = {
-    Using.resource(new PrintWriter(new FileWriter(fn))) { w =>
+  override def save(file: File): Unit = {
+    Using.resource(new PrintWriter(file)) { w =>
       w.println(order)
       model.get.saveTo(w)
     }

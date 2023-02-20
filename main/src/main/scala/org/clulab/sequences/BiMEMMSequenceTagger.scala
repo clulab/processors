@@ -56,7 +56,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
       } else {
         logger.debug("Generating first-pass labels from scratch...")
         val labels = mkFirstPassLabels(sentences)
-        Using.resource(new PrintWriter(new FileWriter(FIRST_PASS_FILE))) { pw =>
+        Using.resource(new PrintWriter(FIRST_PASS_FILE)) { pw =>
           for (s <- labels) {
             pw.println(s.mkString("\t"))
           }
@@ -249,7 +249,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
 
   override def save(fn:File): Unit = {
     // save meta data
-    Using.resource(new PrintWriter(new FileWriter(fn))) { w =>
+    Using.resource(new PrintWriter(fn)) { w =>
       w.println(order)
       w.println(leftToRight)
 

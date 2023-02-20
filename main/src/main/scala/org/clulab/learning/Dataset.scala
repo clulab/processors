@@ -6,7 +6,7 @@ import org.clulab.struct.Lexicon
 import org.clulab.utils.Files
 import org.slf4j.{Logger, LoggerFactory}
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.PrintWriter
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
@@ -454,7 +454,7 @@ object RVFDataset {
     featureLexicon:Lexicon[String],
     fn:String): Unit = {
 
-    Using.resource(new PrintWriter(new FileWriter(fn))) { os =>
+    Using.resource(new PrintWriter(fn)) { os =>
       for (datum <- datums) {
         os.print(datum.label)
         val fs = new ListBuffer[(Int, Double)]

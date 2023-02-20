@@ -76,7 +76,7 @@ object InfiniteParallelProcessorExample {
   def run(args: Array[String]): Unit = {
 
     mainWithCallback(args) { case (file: File, contents: String) =>
-      Using.resource(new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)))) { printWriter =>
+      Using.resource(new PrintWriter(file)) { printWriter =>
         printWriter.println(contents)
       }
     }

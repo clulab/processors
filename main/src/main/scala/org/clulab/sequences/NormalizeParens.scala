@@ -2,7 +2,7 @@ package org.clulab.sequences
 
 import org.clulab.scala.Using._
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.PrintWriter
 import scala.io.Source
 
 /**
@@ -15,7 +15,7 @@ import scala.io.Source
 object NormalizeParens {
   def main(args: Array[String]): Unit = {
     val isConll = args(1) == "conll"
-    Using.resource(new PrintWriter(new FileWriter(args(0) + ".parens"))) { pw =>
+    Using.resource(new PrintWriter(args(0) + ".parens")) { pw =>
       for (line <- Source.fromFile(args(0)).getLines()) {
         if (line.trim.isEmpty) {
           pw.println(line)
