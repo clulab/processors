@@ -173,7 +173,7 @@ class Sentence(
     reverted
   }
 
-  def copy(sentence: Sentence): Sentence = {
+  def assimilate(sentence: Sentence): Sentence = {
     tags = sentence.tags
     lemmas = sentence.lemmas
     entities = sentence.entities
@@ -186,7 +186,7 @@ class Sentence(
   }
 
   def copy(raw: Array[String] = raw, startOffsets: Array[Int] = startOffsets, endOffsets: Array[Int] = endOffsets, words: Array[String] = words): Sentence =
-      new Sentence(raw, startOffsets, endOffsets, words).copy(this)
+      new Sentence(raw, startOffsets, endOffsets, words).assimilate(this)
 
   def offset(offset: Int): Sentence = {
     if (offset == 0) this
