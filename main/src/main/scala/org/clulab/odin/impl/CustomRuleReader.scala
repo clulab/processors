@@ -28,7 +28,7 @@ class CustomRuleReader(actions: Actions, charset: Charset) extends RuleReader(ac
   }
 
   /** Override that enables the config to be captured */
-  override def rulesFromMasterFile(input: String): Seq[Rule] = {
+  override protected def rulesFromMasterFile(input: String): Seq[Rule] = {
     // The superclass's version calls readRules and when this happens, we want the config
     // to be captured.  This saves us from reimplementation of the superclass's method.
     captureConfig = true
