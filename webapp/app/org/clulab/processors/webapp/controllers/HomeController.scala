@@ -131,17 +131,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(text)
     println()
 
-//    val document = processor.annotate(text)
-
-//    val veiledLetters = Seq(scala.collection.immutable.Range.inclusive(text.indexOf('('), text.indexOf(')')))
-//    val veiledText = new VeiledText(text, veiledLetters)
-//    val document1 = veiledText.mkDocument(processor)
-//    val document = processor.annotate(document1)
-
-    val document1 = processor.mkDocument(text)
-    val veiledWords = Seq((0, scala.collection.immutable.Range.inclusive(document1.sentences(0).raw.indexOf("("), document1.sentences(0).raw.indexOf(")"))))
-    val veiledDocument = new VeiledDocument(document1, veiledWords)
-    val document = veiledDocument.annotate(processor)
+    val document = processor.annotate(text)
 
     println("Sentences:")
     document.sentences.foreach { sentence =>
