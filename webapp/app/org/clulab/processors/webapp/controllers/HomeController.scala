@@ -2,7 +2,7 @@ package org.clulab.processors.webapp.controllers
 
 import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{CluProcessor, VeiledDocument, VeiledText}
 import org.clulab.processors.webapp.serialization.WebSerializer
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Unordered}
@@ -131,7 +131,17 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     println(text)
     println()
 
-    val document = processor.annotate(text)
+//    val document = processor.annotate(text)
+
+//    val veiledLetters = Seq(scala.collection.immutable.Range.inclusive(text.indexOf('('), text.indexOf(')')))
+//    val veiledText = new VeiledText(text, veiledLetters)
+//    val document1 = veiledText.mkDocument(processor)
+//    val document = processor.annotate(document1)
+
+    val document1 = processor.mkDocument(text)
+    val veiledWords = Seq((0, scala.collection.immutable.Range.inclusive(document1.sentences(0).raw.indexOf("("), document1.sentences(0).raw.indexOf(")"))))
+    val veiledDocument = new VeiledDocument(document1, veiledWords)
+    val document = veiledDocument.annotate(processor)
 
     println("Sentences:")
     document.sentences.foreach { sentence =>

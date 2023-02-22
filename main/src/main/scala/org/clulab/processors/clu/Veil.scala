@@ -1,12 +1,12 @@
-package org.clulab.processors.clu.veil
+package org.clulab.processors.clu
 
-import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.{Document, Processor}
 import org.clulab.serialization.DocumentSerializer
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
 import org.clulab.utils.Closer.AutoCloser
 
 import java.io.PrintWriter
-import scala.collection.mutable.{Map => MutableMap, Set => MutableSet}
+import scala.collection.mutable.{Set => MutableSet}
 
 trait Veil
 
@@ -62,7 +62,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
       val array = new Array[Int](originalSentence.words.length)
       var veiledIndex = 0
-
+// TODO: These at the same time!
       array.indices.foreach { originalIndex =>
         if (set(originalIndex))
           array(originalIndex) = -1 // This word was deleted.
@@ -76,6 +76,24 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
 
     arrays
   }
+  protected lazy val ununveilArrays = {
+    // What should this be called?
+    val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
+      val array = new Array[Int](originalSentence.words.length - set.size)
+      var ununveiledIndex = 0
+
+      array.indices.foreach { veiledIndex =>
+        while (set(ununveiledIndex))
+          ununveiledIndex += 1
+        array(veiledIndex) = ununveiledIndex
+        ununveiledIndex += 1
+      }
+      array
+    }
+
+    arrays
+  }
+
   protected lazy val veiledDocument = {
     val veiledSentences = originalDocument.sentences.zipWithIndex.map { case (originalSentence, sentenceIndex) =>
       val wordIndexes = originalSentence.words.indices.filter { wordIndex => !veilSets(sentenceIndex)(wordIndex) }.toArray
@@ -100,24 +118,45 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
       val unveiledWords = originalSentence.words
       val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
       val unveilArray = unveilArrays(sentenceIndex)
+      val ununveilArray = ununveilArrays(sentenceIndex)
 
-      def unveil(veiledArray: Array[String]): Array[String] = {
+      def unveilStrings(veiledArray: Array[String]): Array[String] = {
         val unveiledArray = Array.tabulate(unveilArray.length) { unveiledIndex =>
           val veiledIndex = unveilArray(unveiledIndex)
           // Put at the unveiled index what was at the veiled index.
-          if (veiledIndex != -1) veiledArray(veiledIndex) else ""
+          if (veiledIndex != -1) veiledArray(veiledIndex) else "?"
         }
 
         unveiledArray
       }
 
-      unveiledSentence.tags = unveiledSentence.tags.map(unveil)
-      unveiledSentence.lemmas = unveiledSentence.lemmas.map(unveil)
-      unveiledSentence.entities = unveiledSentence.entities.map(unveil)
-      unveiledSentence.norms = unveiledSentence.norms.map(unveil)
-      unveiledSentence.chunks = unveiledSentence.chunks.map(unveil)
+      def unveilGraphs(veiledGraphs: GraphMap): GraphMap = {
+        val unveiledGraphs = GraphMap()
+
+        veiledGraphs.foreach { case (name, directedGraph) =>
+          val veiledEdges = directedGraph.allEdges.map { case (veiledSource, veiledDestination, relation) =>
+            val unveiledSource = ununveilArray(veiledSource)
+            val unveiledDestination = ununveilArray(veiledDestination)
+
+            Edge(unveiledSource, unveiledDestination, relation)
+          }
+          val veiledSize = unveilArray.size
+          val veiledRoots = directedGraph.roots.map { root =>
+            ununveilArray(root)
+          }
+// TODO still need to shove left or right
+          unveiledGraphs(name) = new DirectedGraph(veiledEdges, Some(veiledSize), Some(veiledRoots))
+        }
+        unveiledGraphs
+      }
+
+      unveiledSentence.tags = unveiledSentence.tags.map(unveilStrings)
+      unveiledSentence.lemmas = unveiledSentence.lemmas.map(unveilStrings)
+      unveiledSentence.entities = unveiledSentence.entities.map(unveilStrings)
+      unveiledSentence.norms = unveiledSentence.norms.map(unveilStrings)
+      unveiledSentence.chunks = unveiledSentence.chunks.map(unveilStrings)
 //      unveiledSentence.syntacticTree
-//      unveiledSentence.graphs
+      unveiledSentence.graphs = unveilGraphs(unveiledSentence.graphs)
 //      unveiledSentence.relations
       unveiledSentence
     }
