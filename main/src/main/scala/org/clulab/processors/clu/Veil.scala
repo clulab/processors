@@ -1,8 +1,8 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.{Document, Processor}
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.struct.{DirectedGraph, Edge, GraphMap}
+import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
 import org.clulab.utils.Closer.AutoCloser
 
 import java.io.PrintWriter
@@ -10,74 +10,88 @@ import scala.collection.mutable.{Set => MutableSet}
 
 trait Veil
 
-class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
-  protected lazy val veiledText: String = {
-    val letters = new StringBuffer(originalText)
-    val indices = originalText.indices
+object Veil {
+  val veiledTag    = ""
+  val veiledLemma  = ""
+  val veiledEntity = ""
+  val veiledNorm   = ""
+  val veiledChunk  = ""
+}
 
-    veiledLetters.foreach { range =>
-      range.foreach { index =>
-        if (indices.contains(index))
-          letters.setCharAt(index, ' ')
+/** Manipulate a document with veiled text
+  *
+  * @param originalText text that has not yet been veiled
+  * @param veiledLetters a sequence of ranges which specify by index which letters in the original text to veil
+  *                      when a document is created with mkDocument(processor)
+  *
+  * See [[VeilApp.veilText]] for an example.
+  */
+class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
+  /** This is a set containing veiled letter indices.
+    * They have been vetted and deduplicated.
+    */
+  protected lazy val veilSet: MutableSet[Int] = {
+    val set = MutableSet.empty[Int]
+    val letterIndexes = originalText.indices
+
+    veiledLetters.foreach { letterRange =>
+      letterRange.foreach { letterIndex =>
+        letterIndexes.lift(letterIndex).foreach(set += _)
       }
     }
+    set
+  }
+  protected lazy val veiledText: String = {
+    val letters = new StringBuffer(originalText)
+
+    veilSet.foreach(letters.setCharAt(_, ' '))
     letters.toString
   }
 
-  protected def unveil(veiledDocument: Document): Document = {
+  protected def unveilDocument(veiledDocument: Document): Document = {
     val unveiledDocument = veiledDocument.copy(textOpt = Some(originalText))
 
     unveiledDocument
   }
 
   def mkDocument(processor: Processor): Document = {
-    val veiledDocument = processor.mkDocument(veiledText, keepText = false)
-    val unveiledDocument = unveil(veiledDocument)
+    val veiledDocument = processor.mkDocument(veiledText)
+    val unveiledDocument = unveilDocument(veiledDocument)
 
     unveiledDocument
   }
 }
 
+/** Manipulate a document with text veiled by word
+  *
+  * @param originalDocument a document that has not yet been veiled
+  * @param veiledWords a sequence of (integer, range) pairs which specify by sentence index and then word index range
+  *                    which words of a document to veil during annotation with annotate(processor)
+  *
+  * See [[VeilApp.veilDocument]] for an example.
+  */
 class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)]) extends Veil {
-  // This is an array of sets, each containing veiled word indices for each sentence.
-  protected lazy val veilSets = {
+  /** This is an array of sets, each containing veiled word indices for each sentence.
+    * They have been vetted and deduplicated.
+    */
+  protected lazy val veilSets: Array[MutableSet[Int]] = {
     val sets = Array.fill(originalDocument.sentences.length)(MutableSet.empty[Int])
 
     veiledWords.foreach { case (sentenceIndex, wordRange) =>
-      if (sets.indices.contains(sentenceIndex)) {
-        val set = sets(sentenceIndex)
+      sets.lift(sentenceIndex).foreach { set =>
         val wordIndexes = originalDocument.sentences(sentenceIndex).words.indices
 
         wordRange.foreach { wordIndex =>
-          if (wordIndexes.contains(wordIndex))
-            set += wordIndex
+          wordIndexes.lift(wordIndex).foreach(set += _)
         }
       }
     }
     sets
   }
-  // This is an array of arrays, each containing at an index the index of the unveiled value
-  // that should be used in the result.  If the value is -1, then that index had been veiled.
+  /**
+    *
+    */
   protected lazy val unveilArrays = {
-    val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
-      val array = new Array[Int](originalSentence.words.length)
-      var veiledIndex = 0
-// TODO: These at the same time!
-      array.indices.foreach { originalIndex =>
-        if (set(originalIndex))
-          array(originalIndex) = -1 // This word was deleted.
-        else {
-          array(originalIndex) = veiledIndex
-          veiledIndex += 1
-        }
-      }
-      array
-    }
-
-    arrays
-  }
-  protected lazy val ununveilArrays = {
-    // What should this be called?
     val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
       val array = new Array[Int](originalSentence.words.length - set.size)
       var ununveiledIndex = 0
@@ -93,14 +107,13 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
 
     arrays
   }
-
   protected lazy val veiledDocument = {
     val veiledSentences = originalDocument.sentences.zipWithIndex.map { case (originalSentence, sentenceIndex) =>
-      val wordIndexes = originalSentence.words.indices.filter { wordIndex => !veilSets(sentenceIndex)(wordIndex) }.toArray
-      val veiledRaw = wordIndexes.map(originalSentence.raw)
+      val wordIndexes = originalSentence.words.indices.filterNot(veilSets(sentenceIndex)).toArray
+      val veiledRaw          = wordIndexes.map(originalSentence.raw)
       val veiledStartOffsets = wordIndexes.map(originalSentence.startOffsets)
-      val veiledEndOffsets = wordIndexes.map(originalSentence.endOffsets)
-      val veiledWords = wordIndexes.map(originalSentence.words)
+      val veiledEndOffsets   = wordIndexes.map(originalSentence.endOffsets)
+      val veiledWords        = wordIndexes.map(originalSentence.words)
       val veiledSentence = originalSentence.copy(veiledRaw, veiledStartOffsets, veiledEndOffsets, veiledWords)
 
       veiledSentence
@@ -109,56 +122,68 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     originalDocument.copy(veiledSentences)
   }
 
-  protected def unveil(veiledDocument: Document): Document = {
+  def unveilStringArray(veiledArrayOpt: Option[Array[String]], sentenceIndex: Int, veil: String): Option[Array[String]] = {
+    val unveilArray = unveilArrays(sentenceIndex)
+    val originalLength = originalDocument.sentences(sentenceIndex).words.length
+
+    veiledArrayOpt.map { veiledArray =>
+      val unveiledArray = Array.fill(originalLength)(veil)
+
+      veiledArray.zipWithIndex.foreach { case (veiledString, veiledIndex) =>
+        unveiledArray(unveilArray(veiledIndex)) = veiledString
+      }
+      unveiledArray
+    }
+  }
+
+  def unveilGraphs(veiledGraphs: GraphMap, sentenceIndex: Int): GraphMap = {
+    val unveilArray = unveilArrays(sentenceIndex)
+    val unveiledGraphs = GraphMap()
+    val originalLength = originalDocument.sentences(sentenceIndex).words.length
+
+    veiledGraphs.foreach { case (name, veiledDirectedGraph) =>
+      val unveiledEdges = veiledDirectedGraph.allEdges.map { case (veiledSource, veiledDestination, relation) =>
+        Edge(unveilArray(veiledSource), unveilArray(veiledDestination), relation)
+      }
+      val unveiledRoots = veiledDirectedGraph.roots.map(unveilArray)
+
+      unveiledGraphs(name) = new DirectedGraph(unveiledEdges, Some(originalLength), Some(unveiledRoots))
+    }
+    unveiledGraphs
+  }
+
+  // TODO
+  def unveilSyntacticTree(syntacticTreeOpt: Option[Tree]): Option[Tree] = syntacticTreeOpt
+
+  // TODO
+  def unveilRelations(relations: Option[Array[RelationTriple]]): Option[Array[RelationTriple]] = relations
+
+  protected def unveilSentence(veiledSentence: Sentence, sentenceIndex: Int): Sentence = {
+    val originalSentence = originalDocument.sentences(sentenceIndex)
+    val unveiledRaw = originalSentence.raw
+    val unveiledStartOffsets = originalSentence.startOffsets
+    val unveiledEndOffsets = originalSentence.endOffsets
+    val unveiledWords = originalSentence.words
+    val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
+
+    def unveilStringArray(veiledArrayOpt: Option[Array[String]], veil: String): Option[Array[String]] =
+        this.unveilStringArray(veiledArrayOpt, sentenceIndex, veil)
+
+    unveiledSentence.tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)
+    unveiledSentence.lemmas   = unveilStringArray(unveiledSentence.lemmas,   Veil.veiledLemma)
+    unveiledSentence.entities = unveilStringArray(unveiledSentence.entities, Veil.veiledEntity)
+    unveiledSentence.norms    = unveilStringArray(unveiledSentence.norms,    Veil.veiledNorm)
+    unveiledSentence.chunks   = unveilStringArray(unveiledSentence.chunks,   Veil.veiledChunk)
+
+    unveiledSentence.syntacticTree = unveilSyntacticTree(unveiledSentence.syntacticTree)
+    unveiledSentence.graphs = unveilGraphs(unveiledSentence.graphs, sentenceIndex)
+    unveiledSentence.relations = unveilRelations(unveiledSentence.relations)
+    unveiledSentence
+  }
+
+  protected def unveilDocument(veiledDocument: Document): Document = {
     val unveiledSentences = veiledDocument.sentences.zipWithIndex.map { case (veiledSentence, sentenceIndex) =>
-      val originalSentence = originalDocument.sentences(sentenceIndex)
-      val unveiledRaw = originalSentence.raw
-      val unveiledStartOffsets = originalSentence.startOffsets
-      val unveiledEndOffsets = originalSentence.endOffsets
-      val unveiledWords = originalSentence.words
-      val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
-      val unveilArray = unveilArrays(sentenceIndex)
-      val ununveilArray = ununveilArrays(sentenceIndex)
-
-      def unveilStrings(veiledArray: Array[String]): Array[String] = {
-        val unveiledArray = Array.tabulate(unveilArray.length) { unveiledIndex =>
-          val veiledIndex = unveilArray(unveiledIndex)
-          // Put at the unveiled index what was at the veiled index.
-          if (veiledIndex != -1) veiledArray(veiledIndex) else ""
-        }
-
-        unveiledArray
-      }
-
-      def unveilGraphs(veiledGraphs: GraphMap): GraphMap = {
-        val unveiledGraphs = GraphMap()
-
-        veiledGraphs.foreach { case (name, directedGraph) =>
-          val veiledEdges = directedGraph.allEdges.map { case (veiledSource, veiledDestination, relation) =>
-            val unveiledSource = ununveilArray(veiledSource)
-            val unveiledDestination = ununveilArray(veiledDestination)
-
-            Edge(unveiledSource, unveiledDestination, relation)
-          }
-          val veiledSize = unveilArray.size
-          val veiledRoots = directedGraph.roots.map { root =>
-            ununveilArray(root)
-          }
-// TODO still need to shove left or right
-          unveiledGraphs(name) = new DirectedGraph(veiledEdges, Some(veiledSize), Some(veiledRoots))
-        }
-        unveiledGraphs
-      }
-
-      unveiledSentence.tags = unveiledSentence.tags.map(unveilStrings)
-      unveiledSentence.lemmas = unveiledSentence.lemmas.map(unveilStrings)
-      unveiledSentence.entities = unveiledSentence.entities.map(unveilStrings)
-      unveiledSentence.norms = unveiledSentence.norms.map(unveilStrings)
-      unveiledSentence.chunks = unveiledSentence.chunks.map(unveilStrings)
-//      unveiledSentence.syntacticTree
-      unveiledSentence.graphs = unveilGraphs(unveiledSentence.graphs)
-//      unveiledSentence.relations
-      unveiledSentence
+      unveilSentence(veiledSentence, sentenceIndex)
     }
     val unveiledAnnotatedDocument = veiledDocument.copy(unveiledSentences)
 
@@ -167,17 +192,15 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
 
   def annotate(processor: Processor): Document = {
     val veiledAnnotatedDocument = processor.annotate(veiledDocument)
-    val unveiledAnnotatedDocument = unveil(veiledAnnotatedDocument)
+    val unveiledAnnotatedDocument = unveilDocument(veiledAnnotatedDocument)
 
     unveiledAnnotatedDocument
   }
 }
 
 object VeilApp extends App {
-  val processor = new CluProcessor()
 
-  if (false)
-  {
+  def veilText(processsor: Processor): Unit = {
     // Treat this text as if the letters "(Hahn-Powell, 2012)" did not exist
     // for the purpose of mkDocument, but do include them in the text.
     val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
@@ -192,8 +215,7 @@ object VeilApp extends App {
     }
   }
 
-  if (true)
-  {
+  def veilDocument(processor: Processor): Unit = {
     // Treat this text as if the words "( Hahn-Powell , 2012 )" did not exist
     // for the purpose of annotate, but do include them in the document.
     val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
@@ -208,4 +230,9 @@ object VeilApp extends App {
       documentSerializer.save(annotatedDocument, printWriter)
     }
   }
+
+  val processor = new CluProcessor()
+
+  veilText(processor)
+  veilDocument(processor)
 }
