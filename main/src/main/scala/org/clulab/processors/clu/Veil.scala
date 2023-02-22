@@ -95,13 +95,13 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   protected lazy val unveilArrays = {
     val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
       val array = new Array[Int](originalSentence.words.length - set.size)
-      var ununveiledIndex = 0
+      var unveiledIndex = 0
 
       array.indices.foreach { veiledIndex =>
-        while (set(ununveiledIndex))
-          ununveiledIndex += 1
-        array(veiledIndex) = ununveiledIndex
-        ununveiledIndex += 1
+        while (set(unveiledIndex))
+          unveiledIndex += 1
+        array(veiledIndex) = unveiledIndex
+        unveiledIndex += 1
       }
       array
     }
