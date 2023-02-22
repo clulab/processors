@@ -88,8 +88,9 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     }
     sets
   }
-  /**
-    *
+  /** There is one array per sentence and it contains at each index the index where a value (e.g., word in
+    * an array of words) should be transferred as it is unveiled.  Code using the unveilArrays might look like
+    * unveiledValues(unveilArrays(sentenceIndex)(veiledIndex)) = veiledValues(veiledIndex)
     */
   protected lazy val unveilArrays = {
     val arrays = originalDocument.sentences.zip(veilSets).map { case (originalSentence, set) =>
