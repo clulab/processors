@@ -124,7 +124,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
         val unveiledArray = Array.tabulate(unveilArray.length) { unveiledIndex =>
           val veiledIndex = unveilArray(unveiledIndex)
           // Put at the unveiled index what was at the veiled index.
-          if (veiledIndex != -1) veiledArray(veiledIndex) else "?"
+          if (veiledIndex != -1) veiledArray(veiledIndex) else ""
         }
 
         unveiledArray
