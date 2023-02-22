@@ -12,6 +12,10 @@ table, th,td {
     border: 1px solid black;
     font-size: inherit;
 }
+th, td {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
 
 h1 {
     font-size: 150%;
