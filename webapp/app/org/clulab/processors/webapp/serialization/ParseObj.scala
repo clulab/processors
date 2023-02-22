@@ -7,7 +7,12 @@ class ParseObj(doc: Document) {
 
   def mkParseObj(sentence: Sentence, sb: StringBuilder): Unit = {
 
-    def getTd(text: String): String = "<td>" + xml.Utility.escape(text) + "</td>"
+    def getTd(text: String, right: Boolean = false): String = {
+      val head = if (right) """<td align="right">""" else "<td>"
+      val tail = "</td>"
+
+      head + xml.Utility.escape(text) + tail
+    }
 
     def getTdAtOptString(option: Option[Array[String]], n: Int): String = {
       val text =
@@ -19,7 +24,7 @@ class ParseObj(doc: Document) {
 
     def getTdAtString(values: Array[String], n: Int): String = getTd(values(n))
 
-    def getTdAtInt(values: Array[Int], n: Int): String = getTd(values(n).toString)
+    def getTdAtInt(values: Array[Int], n: Int): String = getTd(values(n).toString, true)
 
     def edgesToString(to: Int): String = {
       val edges = sentence.dependencies.get.incomingEdges(to)
@@ -30,6 +35,7 @@ class ParseObj(doc: Document) {
     sentence.words.indices.foreach { i =>
       sb
           .append("<tr>")
+          .append(s"""<td align="right">$i</td>""")
           .append(getTdAtString(sentence.raw, i))
           .append(getTdAtInt(sentence.startOffsets, i))
           .append(getTdAtInt(sentence.endOffsets, i))
@@ -39,7 +45,6 @@ class ParseObj(doc: Document) {
           .append(getTdAtOptString(sentence.entities, i))
           .append(getTdAtOptString(sentence.norms, i))
           .append(getTdAtOptString(sentence.chunks, i))
-          .append(getTdAtString(sentence.raw, i))
           .append(getTd(edgesToString(i)))
           .append("</tr>")
     }
@@ -49,7 +54,8 @@ class ParseObj(doc: Document) {
     val header = """
       |<table style="margin-top: 0;">
       |  <tr>
-      |    <th>Text</th>
+      |    <th>Index</th>
+      |    <th>Raw</th>
       |    <th>Start</th>
       |    <th>End</th>
       |    <th>Word</th>
@@ -58,7 +64,6 @@ class ParseObj(doc: Document) {
       |    <th>Entities</th>
       |    <th>Norms</th>
       |    <th>Chunks</th>
-      |    <th>Raw</th>
       |    <th>Dependencies</th>
       |  </tr>
       |""".stripMargin
