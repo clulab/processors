@@ -3,6 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
+import org.clulab.struct.GraphMap._
 import org.clulab.utils.Closer.AutoCloser
 
 import java.io.PrintWriter
