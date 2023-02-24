@@ -75,8 +75,10 @@ package object json {
   }
 
   implicit class TextBoundMentionOps(tb: TextBoundMention) extends JSONSerialization with Equivalency {
-
     val stringCode = s"org.clulab.odin.${TextBoundMention.string}"
+    // This is a very expensive calculation.  Do not perform it more than once.
+    // The Document is assumed not to change during the lifetime of this object.
+    lazy val documentEquivalenceHash: Int = tb.document.equivalenceHash
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -90,7 +92,7 @@ package object json {
       // sentence index
       val h4 = mix(h3, tb.sentence)
       // document.equivalenceHash
-      val h5 = mix(h4, tb.document.equivalenceHash)
+      val h5 = mix(h4, documentEquivalenceHash)
       finalizeHash(h5, 5)
     }
 
@@ -99,22 +101,22 @@ package object json {
     def jsonAST: JValue = {
       ("type" -> TextBoundMention.string) ~
       // used for correspondence with paths map
-      ("id" -> tb.id) ~
+      ("id" -> id) ~ // tb.id would just create a different TextBoundMentionOps to provide the id
       ("text" -> tb.text) ~
       ("labels" -> tb.labels) ~
       ("tokenInterval" -> Map("start" -> tb.tokenInterval.start, "end" -> tb.tokenInterval.end)) ~
       ("characterStartOffset" -> tb.startOffset) ~
       ("characterEndOffset" -> tb.endOffset) ~
       ("sentence" -> tb.sentence) ~
-      ("document" -> tb.document.equivalenceHash.toString) ~
+      ("document" -> documentEquivalenceHash.toString) ~
       ("keep" -> tb.keep) ~
       ("foundBy" -> tb.foundBy)
     }
   }
 
   implicit class EventMentionOps(em: EventMention) extends JSONSerialization with Equivalency {
-
     val stringCode = s"org.clulab.odin.${EventMention.string}"
+    lazy val documentEquivalenceHash: Int = em.document.equivalenceHash
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -128,7 +130,7 @@ package object json {
       // sentence index
       val h4 = mix(h3, em.sentence)
       // document.equivalenceHash
-      val h5 = mix(h4, em.document.equivalenceHash)
+      val h5 = mix(h4, documentEquivalenceHash)
       // args
       val h6 = mix(h5, argsHash(em.arguments))
       // trigger
@@ -141,7 +143,7 @@ package object json {
     def jsonAST: JValue = {
       ("type" -> EventMention.string) ~
       // used for paths map
-      ("id" -> em.id) ~
+      ("id" -> id) ~ // em.id would just create a different EventMentionOps to provide the id
       ("text" -> em.text) ~
       ("labels" -> em.labels) ~
       ("trigger" -> em.trigger.jsonAST) ~
@@ -159,8 +161,8 @@ package object json {
   }
 
   implicit class RelationMentionOps(rm: RelationMention) extends JSONSerialization with Equivalency {
-
     val stringCode = s"org.clulab.odin.${RelationMention.string}"
+    lazy val documentEquivalenceHash: Int = rm.document.equivalenceHash
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -174,7 +176,7 @@ package object json {
       // sentence index
       val h4 = mix(h3, rm.sentence)
       // document.equivalenceHash
-      val h5 = mix(h4, rm.document.equivalenceHash)
+      val h5 = mix(h4, documentEquivalenceHash)
       // args
       val h6 = mix(h5, argsHash(rm.arguments))
       finalizeHash(h6, 6)
@@ -185,7 +187,7 @@ package object json {
     def jsonAST: JValue = {
       ("type" -> RelationMention.string) ~
       // used for paths map
-      ("id" -> rm.id) ~
+      ("id" -> id) ~ // rm.id would just create a different RelationMentionOps to provide the id
       ("text" -> rm.text) ~
       ("labels" -> rm.labels) ~
       ("arguments" -> argsAST(rm.arguments)) ~
@@ -202,8 +204,8 @@ package object json {
   }
 
   implicit class CrossSentenceMentionOps(csm: CrossSentenceMention) extends JSONSerialization with Equivalency {
-
     val stringCode = s"org.clulab.odin.${CrossSentenceMention.string}"
+    lazy val documentEquivalenceHash: Int = csm.document.equivalenceHash
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -217,7 +219,7 @@ package object json {
       // sentence index
       val h4 = mix(h3, csm.sentence)
       // document.equivalenceHash
-      val h5 = mix(h4, csm.document.equivalenceHash)
+      val h5 = mix(h4, documentEquivalenceHash)
       // args
       val h6 = mix(h5, argsHash(csm.arguments))
       finalizeHash(h6, 6)
@@ -228,7 +230,7 @@ package object json {
     def jsonAST: JValue = {
       ("type" -> CrossSentenceMention.string) ~
         // used for paths map
-        ("id" -> csm.id) ~
+        ("id" -> id) ~ // csm.id would just create a different CrossSentenceMentionOps to provide the id
         ("text" -> csm.text) ~
         ("labels" -> csm.labels) ~
         ("anchor" -> csm.anchor.id) ~
