@@ -74,6 +74,13 @@ package object json {
 
   }
 
+  /** Calls to jsonAST will result in "id" and "document" values being calculated.  The id comes from the
+    * id method which calls equivalenceHash which in turn calls documentEquivalenceHash.  The document
+    * comes directly from documentEquivalenceHash.  The hash is an expensive calculation, so it is stored
+    * here in a lazy val rather than a def to prevent recalculation with the assumption that the value
+    * will not change during the serialization of the Mention.  Subclasses that know the Document does
+    * not change across serialization of multiple Mentions may want to implement more extensive caching.
+    */
   implicit class TextBoundMentionOps(tb: TextBoundMention) extends JSONSerialization with Equivalency {
     val stringCode = s"org.clulab.odin.${TextBoundMention.string}"
     // This is a very expensive calculation.  Do not perform it more than once.
@@ -114,9 +121,17 @@ package object json {
     }
   }
 
+  /** Child Mentions, in this case the trigger and arguments, may not be the exact type
+    * expected, especially if EventMention has been subclassed.  Therefore, the jsonAST
+    * conversions have been isolated in a method that can be overridden by subclasses.
+    */
   implicit class EventMentionOps(em: EventMention) extends JSONSerialization with Equivalency {
     val stringCode = s"org.clulab.odin.${EventMention.string}"
     lazy val documentEquivalenceHash: Int = em.document.equivalenceHash
+
+    def triggerJsonAST: JValue = em.trigger.jsonAST
+
+    def argumentsJsonAST: JObject = argsAST(em.arguments)
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -146,15 +161,15 @@ package object json {
       ("id" -> id) ~ // em.id would just create a different EventMentionOps to provide the id
       ("text" -> em.text) ~
       ("labels" -> em.labels) ~
-      ("trigger" -> em.trigger.jsonAST) ~
-      ("arguments" -> argsAST(em.arguments)) ~
+      ("trigger" -> triggerJsonAST) ~
+      ("arguments" -> argumentsJsonAST) ~
       // paths are encoded as (arg name -> (mentionID -> path))
       ("paths" -> pathsAST(em.paths)) ~
       ("tokenInterval" -> Map("start" -> em.tokenInterval.start, "end" -> em.tokenInterval.end)) ~
       ("characterStartOffset" -> em.startOffset) ~
       ("characterEndOffset" -> em.endOffset) ~
       ("sentence" -> em.sentence) ~
-      ("document" -> em.document.equivalenceHash.toString) ~
+      ("document" -> documentEquivalenceHash.toString) ~
       ("keep" -> em.keep) ~
       ("foundBy" -> em.foundBy)
     }
@@ -163,6 +178,8 @@ package object json {
   implicit class RelationMentionOps(rm: RelationMention) extends JSONSerialization with Equivalency {
     val stringCode = s"org.clulab.odin.${RelationMention.string}"
     lazy val documentEquivalenceHash: Int = rm.document.equivalenceHash
+
+    def argumentsJsonAST: JObject = argsAST(rm.arguments)
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -190,14 +207,14 @@ package object json {
       ("id" -> id) ~ // rm.id would just create a different RelationMentionOps to provide the id
       ("text" -> rm.text) ~
       ("labels" -> rm.labels) ~
-      ("arguments" -> argsAST(rm.arguments)) ~
+      ("arguments" -> argumentsJsonAST) ~
       // paths are encoded as (arg name -> (mentionID -> path))
       ("paths" -> pathsAST(rm.paths)) ~
       ("tokenInterval" -> Map("start" -> rm.tokenInterval.start, "end" -> rm.tokenInterval.end)) ~
       ("characterStartOffset" -> rm.startOffset) ~
       ("characterEndOffset" -> rm.endOffset) ~
       ("sentence" -> rm.sentence) ~
-      ("document" -> rm.document.equivalenceHash.toString) ~
+      ("document" -> documentEquivalenceHash.toString) ~
       ("keep" -> rm.keep) ~
       ("foundBy" -> rm.foundBy)
     }
@@ -206,6 +223,8 @@ package object json {
   implicit class CrossSentenceMentionOps(csm: CrossSentenceMention) extends JSONSerialization with Equivalency {
     val stringCode = s"org.clulab.odin.${CrossSentenceMention.string}"
     lazy val documentEquivalenceHash: Int = csm.document.equivalenceHash
+
+    def argumentsJsonAST: JObject = argsAST(csm.arguments)
 
     def equivalenceHash: Int = {
       // the seed (not counted in the length of finalizeHash)
@@ -235,10 +254,10 @@ package object json {
         ("labels" -> csm.labels) ~
         ("anchor" -> csm.anchor.id) ~
         ("neighbor" -> csm.anchor.id) ~
-        ("arguments" -> argsAST(csm.arguments)) ~
+        ("arguments" -> argumentsJsonAST) ~
         ("tokenInterval" -> Map("start" -> csm.tokenInterval.start, "end" -> csm.tokenInterval.end)) ~
         ("sentence" -> csm.sentence) ~
-        ("document" -> csm.document.equivalenceHash.toString) ~
+        ("document" -> documentEquivalenceHash.toString) ~
         ("keep" -> csm.keep) ~
         ("foundBy" -> csm.foundBy)
     }
