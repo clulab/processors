@@ -1,7 +1,7 @@
 package org.clulab.numeric
 
+import org.clulab.scala.Using._
 import org.clulab.sequences.CommentedStandardKbSource
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
@@ -43,7 +43,7 @@ object UnitNormalizer {
   private val normMapper = readNormsFromResource("/org/clulab/numeric/MEASUREMENT-UNIT.tsv")
 
   def readNormsFromResource(path: String): Map[String, NormAndUnitClass] =
-      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
+      Using.resource(Sourcer.sourceFromResource(path))(readNormsFromSource)
 
   def readNormsFromSource(source: Source): Map[String, NormAndUnitClass] = {
     val norms = new mutable.HashMap[String, NormAndUnitClass]()

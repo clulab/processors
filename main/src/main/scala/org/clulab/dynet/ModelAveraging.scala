@@ -1,10 +1,11 @@
 package org.clulab.dynet
 
-import java.io.{File, PrintWriter}
-import java.text.DecimalFormat
 
 import org.apache.commons.io.FileUtils
+import org.clulab.scala.Using._
 
+import java.io.{File, PrintWriter}
+import java.text.DecimalFormat
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -21,27 +22,27 @@ object ModelAveraging extends App {
   //
   // generate the .rnn file
   //
-  val out = new PrintWriter(outputModelFileName + ".rnn")
-  val lines = new Array[Iterator[String]](individualModelFileNames.length)
-  for(i <- individualModelFileNames.indices) {
-    lines(i) = io.Source.fromFile(individualModelFileNames(i) + ".rnn").getLines()
-  }
-
-  while(lines(0).hasNext) {
-    val crtLines = new Array[String](lines.length)
-    for(i <- lines.indices) {
-      crtLines(i) = lines(i).next()
+  Using.resource(new PrintWriter(outputModelFileName + ".rnn")) { out =>
+    val lines = new Array[Iterator[String]](individualModelFileNames.length)
+    for (i <- individualModelFileNames.indices) {
+      lines(i) = io.Source.fromFile(individualModelFileNames(i) + ".rnn").getLines()
     }
 
-    if(crtLines(0).startsWith("#Parameter#") ||
-      crtLines(0).startsWith("#LookupParameter#") ||
-      crtLines(0).trim.isEmpty) {
-      out.println(crtLines(0))
-    } else {
-      out.println(avg(crtLines))
+    while (lines(0).hasNext) {
+      val crtLines = new Array[String](lines.length)
+      for (i <- lines.indices) {
+        crtLines(i) = lines(i).next()
+      }
+
+      if (crtLines(0).startsWith("#Parameter#") ||
+        crtLines(0).startsWith("#LookupParameter#") ||
+        crtLines(0).trim.isEmpty) {
+        out.println(crtLines(0))
+      } else {
+        out.println(avg(crtLines))
+      }
     }
   }
-  out.close()
 
   //
   // generate the .x2i file

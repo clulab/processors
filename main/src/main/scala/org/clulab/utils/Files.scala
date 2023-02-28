@@ -1,9 +1,10 @@
 package org.clulab.utils
 
+import org.clulab.scala.Using._
+
 import java.io._
 import java.nio.charset.Charset
 import java.util.zip.GZIPInputStream
-
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -98,20 +99,21 @@ object Files {
                    deleteOnExit:Boolean = true, bufSize:Int = 131072): Unit = {
     val jar = new java.util.jar.JarFile(jarFileName)
     val entry = jar.getEntry(entryName)
-    val is = jar.getInputStream(entry)
-    val fos = new FileOutputStream(outFileName)
-    val buffer = new Array[Byte](bufSize)
-    var done = false
-    while(! done) {
-      val num = is.read(buffer, 0, bufSize)
-      if(num > 0) {
-        fos.write(buffer, 0, num)
-      } else {
-        done = true
+    Using.resources(
+      jar.getInputStream(entry),
+      new FileOutputStream(outFileName)
+    ) { (is, fos) =>
+      val buffer = new Array[Byte](bufSize)
+      var done = false
+      while (!done) {
+        val num = is.read(buffer, 0, bufSize)
+        if (num > 0) {
+          fos.write(buffer, 0, num)
+        } else {
+          done = true
+        }
       }
     }
-    fos.close()
-    is.close()
 
     if(deleteOnExit)
       new File(outFileName).deleteOnExit()

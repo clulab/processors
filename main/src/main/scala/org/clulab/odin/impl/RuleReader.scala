@@ -1,25 +1,22 @@
 package org.clulab.odin.impl
 
-import java.io.File
-import java.net.URL
-import java.util.{Collection, Map => JMap}
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-
-import org.apache.commons.text.StrSubstitutor
 import org.apache.commons.io.FileUtils.readFileToString
-
-import scala.jdk.CollectionConverters._
-import scala.io.{Codec, Source}
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
+import org.apache.commons.text.StrSubstitutor
 import org.clulab.odin._
 import org.clulab.odin.impl.MarkdownGeneration._
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.FileUtils
-import org.clulab.utils.Closer.AutoCloser
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
 
-
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.util.{Collection, Map => JMap}
+import scala.io.{Codec, Source}
+import scala.jdk.CollectionConverters._
 
 class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option[File] = None) {
 
@@ -254,10 +251,10 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
         readFileToString(f, StandardCharsets.UTF_8)
       case None =>
         val url = mkURL(s)
-        val source = Source.fromURL(url)
-        val data = source.mkString
-        source.close()
-        data
+        Using.resource(Source.fromURL(url)) { source =>
+          val data = source.mkString
+          data
+        }
     }
   }
 
@@ -503,7 +500,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
   def exportRuleSchemas(input: String, outname: String): Unit = {
     val markdown = ruleSchemas(input)
     // export
-    FileUtils.printWriterFromFile(new File(outname)).autoClose { pw =>
+    Using(FileUtils.printWriterFromFile(new File(outname))) { pw =>
       pw.println(markdown)
     }
   }
@@ -559,7 +556,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     */
   def exportExtractionSchemas(input: String, outname: String, minimal: Boolean = false): Unit = {
     val markdown = extractionSchemas(input, minimal)
-    FileUtils.printWriterFromFile(new File(outname)).autoClose { pw =>
+    Using.resource(FileUtils.printWriterFromFile(new File(outname))) { pw =>
       pw.println(markdown)
     }
   }

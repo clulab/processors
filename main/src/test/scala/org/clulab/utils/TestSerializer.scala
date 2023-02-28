@@ -1,5 +1,7 @@
 package org.clulab.utils
 
+import org.clulab.scala.Using._
+
 import java.io.PrintWriter
 
 class TestSerializer extends Test {
@@ -9,8 +11,10 @@ class TestSerializer extends Test {
   it should "not close a null resource" in {
     val printWriter: PrintWriter = null
 
-    Serializer.using(printWriter) { printWriter =>
-      println(printWriter)
+    assertThrows[NullPointerException] {
+      Using.resource(printWriter) { printWriter =>
+        println(printWriter)
+      }
     }
   }
 }

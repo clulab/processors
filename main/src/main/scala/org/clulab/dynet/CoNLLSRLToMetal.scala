@@ -1,13 +1,13 @@
 package org.clulab.dynet
 
-import java.io.{BufferedReader, File, FileReader, PrintWriter}
-
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor}
+import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.{BufferedReader, File, FileReader, PrintWriter}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
@@ -46,9 +46,9 @@ class CoNLLSRLToMetal {
       // if the serialized file exists, use it
       logger.debug(s"Found serialized file at ${serFile.getAbsolutePath}. Will use that.")
       val documentSerializer = new DocumentSerializer
-      val b = new BufferedReader(new FileReader(serFile))
-      val doc = documentSerializer.load(b)
-      b.close()
+      val doc = Using.resource(new BufferedReader(new FileReader(serFile))) { b =>
+        documentSerializer.load(b)
+      }
       doc
     } else {
       // the serialized file does not exist!
@@ -59,40 +59,41 @@ class CoNLLSRLToMetal {
   def read(file:File,
            proc:Processor = null,
            verbose:Boolean = false):Document = {
-    val source = Source.fromFile(file)
-    val sentences = new ArrayBuffer[Array[CoNLLToken]]
-    var sentence = new ArrayBuffer[CoNLLToken]
-
-    argConflictCount = 0
-    multiPredCount = 0
-    argCount = 0
-    predCount = 0
     var tokenCount = 0
     var sentCount = 0
     var hyphCount = 0
+    val sentences = new ArrayBuffer[Array[CoNLLToken]]
 
-    //
-    // read all sentences
-    // also, collapse hyphenated phrases, which were brutally tokenized in CoNLL
-    //
-    for(l <- source.getLines()) {
-      val line = l.trim
-      if(line.length > 0) {
-        val bits = l.split("\\t")
-        // e println(s"LINE: $line")
-        assert(bits.size >= 14)
-        val token = mkToken(bits)
-        sentence += token
-        tokenCount += 1
-        if(token.pos == "HYPH") hyphCount += 1
-      } else {
-        // end of sentence
-        sentences += collapseHyphens(sentence.toArray, verbose)
-        sentence = new ArrayBuffer[CoNLLToken]()
-        sentCount += 1
+    Using.resource(Source.fromFile(file)) { source =>
+      var sentence = new ArrayBuffer[CoNLLToken]
+
+      argConflictCount = 0
+      multiPredCount = 0
+      argCount = 0
+      predCount = 0
+
+      //
+      // read all sentences
+      // also, collapse hyphenated phrases, which were brutally tokenized in CoNLL
+      //
+      for (l <- source.getLines()) {
+        val line = l.trim
+        if (line.length > 0) {
+          val bits = l.split("\\t")
+          // e println(s"LINE: $line")
+          assert(bits.size >= 14)
+          val token = mkToken(bits)
+          sentence += token
+          tokenCount += 1
+          if (token.pos == "HYPH") hyphCount += 1
+        } else {
+          // end of sentence
+          sentences += collapseHyphens(sentence.toArray, verbose)
+          sentence = new ArrayBuffer[CoNLLToken]()
+          sentCount += 1
+        }
       }
     }
-    source.close()
     logger.debug(s"Read $tokenCount tokens, grouped in $sentCount sentences.")
     logger.debug(s"Found $hyphCount hyphens.")
     logger.debug(s"In hyphenated phrases, found $multiPredCount multi predicates and $argConflictCount argument conflicts.")
@@ -412,123 +413,39 @@ object CoNLLSRLToMetal {
   }
 
   def saveMetal(doc: Document, predsFile: String, argsFile: String): Unit = {
-    val predsPw = new PrintWriter(predsFile)
-    val argsPw = new PrintWriter(argsFile)
     var selfLoopCount = 0
 
-    for(sent <- doc.sentences) {
-      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+    Using.resources(
+      new PrintWriter(predsFile),
+      new PrintWriter(argsFile)
+    ) { (predsPw, argsPw) =>
+      for (sent <- doc.sentences) {
+        val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
 
-      val heads = new Array[String](sent.words.length)
-      for(i <- heads.indices) heads(i) = "O"
-      var headPositions = new mutable.HashSet[Int]()
-      for(e <- g.edges) {
-        headPositions += e.source
-        heads(e.source) = "B-P"
-      }
-
-      //
-      // save predicate information
-      //
-      assert(heads.length == sent.words.length)
-      for(i <- heads.indices) {
-        predsPw.println(
-          sent.words(i) + "\t" +
-          heads(i) + "\t0\t" +
-          sent.tags.get(i) + "\t" +
-          sent.entities.get(i)
-        )
-      }
-
-      //
-      // save one frame for each predicate in the Metal format
-      //
-      val sortedHeadPositions = headPositions.toList.sorted
-      val headMap = sortedHeadPositions.zipWithIndex.toMap
-
-      val args = new Array[Array[String]](headMap.size)
-      for(i <- args.indices) {
-        args(i) = new Array[String](sent.size)
-        for(j <- args(i).indices) args(i)(j) = "O"
-      }
-
-      for(e <- g.edges) {
-        args(headMap(e.source))(e.destination) = e.relation
-
-        if(REMOVE_SELF_LOOPS) {
-          if(e.source == e.destination) {
-            args(headMap(e.source))(e.destination) = "O"
-            selfLoopCount += 1
-          }
+        val heads = new Array[String](sent.words.length)
+        for (i <- heads.indices) heads(i) = "O"
+        var headPositions = new mutable.HashSet[Int]()
+        for (e <- g.edges) {
+          headPositions += e.source
+          heads(e.source) = "B-P"
         }
-      }
 
-      // each frame saved separately
-      assert(headMap.size == args.length)
-      assert(sortedHeadPositions.size == args.length)
-      for(fi <- args.indices) {
-        val predPosition = sortedHeadPositions(fi)
-        val frame = args(fi)
-
-        assert(frame.length == sent.words.length)
-        for(i <- frame.indices) {
-          argsPw.println(
+        //
+        // save predicate information
+        //
+        assert(heads.length == sent.words.length)
+        for (i <- heads.indices) {
+          predsPw.println(
             sent.words(i) + "\t" +
-            frame(i) + "\t" +
-            predPosition + "\t" +
-            sent.tags.get(i) + "\t" +
-            sent.entities.get(i)
+              heads(i) + "\t0\t" +
+              sent.tags.get(i) + "\t" +
+              sent.entities.get(i)
           )
         }
-        argsPw.println()
 
-      }
-
-      predsPw.println()
-    }
-
-    predsPw.close()
-    argsPw.close()
-
-    if(REMOVE_SELF_LOOPS) {
-      logger.info(s"Removed $selfLoopCount self-argument loops.")
-    }
-  }
-
-  def saveMetalFull(doc: Document, predsFile: String, argsFile: String): Unit = {
-    val predsPw = new PrintWriter(predsFile)
-    val argsPw = new PrintWriter(argsFile)
-    var selfLoopCount = 0
-
-    for(sent <- doc.sentences) {
-      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
-
-      val heads = new Array[String](sent.words.length)
-      for(i <- heads.indices) heads(i) = "O"
-      var headPositions = new mutable.HashSet[Int]()
-      for(e <- g.edges) {
-        headPositions += e.source
-        heads(e.source) = "B-P"
-      }
-
-      //
-      // save predicate information
-      //
-      assert(heads.length == sent.words.length)
-      for(i <- heads.indices) {
-        predsPw.println(
-          sent.words(i) + "\t" +
-            sent.tags.get(i) + "\t" +
-            sent.entities.get(i) + "\t" +
-            heads(i)
-        )
-      }
-      predsPw.println()
-
-      //
-      // save one frame for each predicate in the Metal format
-      //
-      if(headPositions.nonEmpty) {
+        //
+        // save one frame for each predicate in the Metal format
+        //
         val sortedHeadPositions = headPositions.toList.sorted
         val headMap = sortedHeadPositions.zipWithIndex.toMap
 
@@ -549,36 +466,117 @@ object CoNLLSRLToMetal {
           }
         }
 
-        // save all frames together, as separate columns
+        // each frame saved separately
         assert(headMap.size == args.length)
         assert(sortedHeadPositions.size == args.length)
-        for (i <- sent.words.indices) {
-          // word, POS tag, NE label
-          argsPw.print(
-            sent.words(i) + "\t" +
-              sent.tags.get(i) + "\t" +
-              sent.entities.get(i)
-          )
+        for (fi <- args.indices) {
+          val predPosition = sortedHeadPositions(fi)
+          val frame = args(fi)
 
-          // (label, head position)+
-          for (fi <- args.indices) {
-            val predPosition = sortedHeadPositions(fi)
-            val frame = args(fi)
-
-            argsPw.print(
-              "\t" + frame(i) +
-                "\t" + predPosition
+          assert(frame.length == sent.words.length)
+          for (i <- frame.indices) {
+            argsPw.println(
+              sent.words(i) + "\t" +
+                frame(i) + "\t" +
+                predPosition + "\t" +
+                sent.tags.get(i) + "\t" +
+                sent.entities.get(i)
             )
           }
           argsPw.println()
+
         }
 
-        argsPw.println()
+        predsPw.println()
       }
     }
 
-    predsPw.close()
-    argsPw.close()
+    if(REMOVE_SELF_LOOPS) {
+      logger.info(s"Removed $selfLoopCount self-argument loops.")
+    }
+  }
+
+  def saveMetalFull(doc: Document, predsFile: String, argsFile: String): Unit = {
+    var selfLoopCount = 0
+    Using.resources(new PrintWriter(predsFile), new PrintWriter(argsFile)) { (predsPw, argsPw) =>
+
+      for (sent <- doc.sentences) {
+        val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+
+        val heads = new Array[String](sent.words.length)
+        for (i <- heads.indices) heads(i) = "O"
+        var headPositions = new mutable.HashSet[Int]()
+        for (e <- g.edges) {
+          headPositions += e.source
+          heads(e.source) = "B-P"
+        }
+
+        //
+        // save predicate information
+        //
+        assert(heads.length == sent.words.length)
+        for (i <- heads.indices) {
+          predsPw.println(
+            sent.words(i) + "\t" +
+              sent.tags.get(i) + "\t" +
+              sent.entities.get(i) + "\t" +
+              heads(i)
+          )
+        }
+        predsPw.println()
+
+        //
+        // save one frame for each predicate in the Metal format
+        //
+        if (headPositions.nonEmpty) {
+          val sortedHeadPositions = headPositions.toList.sorted
+          val headMap = sortedHeadPositions.zipWithIndex.toMap
+
+          val args = new Array[Array[String]](headMap.size)
+          for (i <- args.indices) {
+            args(i) = new Array[String](sent.size)
+            for (j <- args(i).indices) args(i)(j) = "O"
+          }
+
+          for (e <- g.edges) {
+            args(headMap(e.source))(e.destination) = e.relation
+
+            if (REMOVE_SELF_LOOPS) {
+              if (e.source == e.destination) {
+                args(headMap(e.source))(e.destination) = "O"
+                selfLoopCount += 1
+              }
+            }
+          }
+
+          // save all frames together, as separate columns
+          assert(headMap.size == args.length)
+          assert(sortedHeadPositions.size == args.length)
+          for (i <- sent.words.indices) {
+            // word, POS tag, NE label
+            argsPw.print(
+              sent.words(i) + "\t" +
+                sent.tags.get(i) + "\t" +
+                sent.entities.get(i)
+            )
+
+            // (label, head position)+
+            for (fi <- args.indices) {
+              val predPosition = sortedHeadPositions(fi)
+              val frame = args(fi)
+
+              argsPw.print(
+                "\t" + frame(i) +
+                  "\t" + predPosition
+              )
+            }
+            argsPw.println()
+          }
+
+          argsPw.println()
+        }
+      }
+    }
 
     if(REMOVE_SELF_LOOPS) {
       logger.info(s"Removed $selfLoopCount self-argument loops.")
@@ -586,48 +584,48 @@ object CoNLLSRLToMetal {
   }
 
   def saveSimplified(doc: Document, outputFileName: String): Unit = {
-    val pw = new PrintWriter(outputFileName)
     var selfLoopCount = 0
+    Using.resource(new PrintWriter(outputFileName)) { pw =>
 
-    for(sent <- doc.sentences) {
-      val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
-      val heads = new Array[Boolean](sent.words.length)
-      var headPositions = new mutable.HashSet[Int]()
-      for(e <- g.edges) {
-        headPositions += e.source
-        heads(e.source) = true
-      }
+      for (sent <- doc.sentences) {
+        val g = sent.graphs(GraphMap.SEMANTIC_ROLES)
+        val heads = new Array[Boolean](sent.words.length)
+        var headPositions = new mutable.HashSet[Int]()
+        for (e <- g.edges) {
+          headPositions += e.source
+          heads(e.source) = true
+        }
 
-      val headMap = headPositions.toList.sorted.zipWithIndex.toMap
+        val headMap = headPositions.toList.sorted.zipWithIndex.toMap
 
-      val args = new Array[Array[String]](headMap.size)
-      for(i <- args.indices) {
-        args(i) = new Array[String](sent.size)
-        for(j <- args(i).indices) args(i)(j) = "O"
-      }
+        val args = new Array[Array[String]](headMap.size)
+        for (i <- args.indices) {
+          args(i) = new Array[String](sent.size)
+          for (j <- args(i).indices) args(i)(j) = "O"
+        }
 
-      for(e <- g.edges) {
-        args(headMap(e.source))(e.destination) = e.relation
+        for (e <- g.edges) {
+          args(headMap(e.source))(e.destination) = e.relation
 
-        if(REMOVE_SELF_LOOPS) {
-          if(e.source == e.destination) {
-            args(headMap(e.source))(e.destination) = "O"
-            selfLoopCount += 1
+          if (REMOVE_SELF_LOOPS) {
+            if (e.source == e.destination) {
+              args(headMap(e.source))(e.destination) = "O"
+              selfLoopCount += 1
+            }
           }
         }
-      }
 
-      for(i <- sent.words.indices) {
-        pw.print(sent.words(i) + "\t" + (if(heads(i)) "B-P" else "O"))
-        pw.print("\t" + sent.tags.get(i) + "\t" + sent.entities.get(i))
-        for(j <- args.indices) {
-          pw.print("\t" + args(j)(i))
+        for (i <- sent.words.indices) {
+          pw.print(sent.words(i) + "\t" + (if (heads(i)) "B-P" else "O"))
+          pw.print("\t" + sent.tags.get(i) + "\t" + sent.entities.get(i))
+          for (j <- args.indices) {
+            pw.print("\t" + args(j)(i))
+          }
+          pw.println()
         }
         pw.println()
       }
-      pw.println()
     }
-    pw.close()
 
     if(REMOVE_SELF_LOOPS) {
       logger.info(s"Removed $selfLoopCount self-argument loops.")
@@ -644,11 +642,10 @@ object CoNLLSRLToMetal {
       }
     }
 
-    val pw = new PrintWriter("labels.tsv")
-    for(l <- labels.sorted){
-      pw.println(s"${l._1}\t${l._2}")
+    Using.resource(new PrintWriter("labels.tsv")) { pw =>
+      for (l <- labels.sorted) {
+        pw.println(s"${l._1}\t${l._2}")
+      }
     }
-    pw.close()
-
   }
 }

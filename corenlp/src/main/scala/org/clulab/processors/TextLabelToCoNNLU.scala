@@ -1,14 +1,15 @@
 package org.clulab.processors
 
-import java.io.{File, FileFilter, PrintWriter}
 import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
-import org.slf4j.{Logger, LoggerFactory}
-import TextLabelToCoNLLU._
-import org.clulab.dynet.Utils
+import org.clulab.scala.Using._
 import org.clulab.struct.GraphMap
-import org.clulab.utils.Closer.AutoCloser
+import org.slf4j.{Logger, LoggerFactory}
+
+import java.io.{File, FileFilter, PrintWriter}
+
+import TextLabelToCoNLLU._
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format
@@ -25,9 +26,9 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       try {
         val doc = parseFile(f)
         val ofn = s"$outDir/${f.getName.substring(0, f.getName.length - 4)}.conllu"
-        val pw = new PrintWriter(ofn)
-        toCoNLLU(doc, pw)
-        pw.close()
+        Using.resource(new PrintWriter(ofn)) { pw =>
+          toCoNLLU(doc, pw)
+        }
       } catch {
         case e:Exception => {
           logger.error(s"Parsing of file $f failed with error:")
@@ -78,7 +79,7 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
 
   def parseFile(f:File):Document = {
     def option1(): Document = {
-      val tokens = Sourcer.sourceFromFile(f).autoClose { source =>
+      val tokens = Using.resource(Sourcer.sourceFromFile(f)) { source =>
         for (line <- source.getLines())
           yield line.split(' ').toSeq
       }.toSeq

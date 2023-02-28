@@ -1,17 +1,18 @@
 package org.clulab.processors
 
+import org.clulab.scala.Using._
 import org.clulab.utils.Sourcer
 
 class TestLemmatizer extends FatdynetTest {
 
   "the lemmatizer" should "not crash when processing this weird file" in {
-    val source = Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")
     val sb = new StringBuilder
-    for(line <- source.getLines()) {
-      sb.append(line)
-      sb.append("\n")
+    Using.resource(Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")) { source =>
+      for (line <- source.getLines()) {
+        sb.append(line)
+        sb.append("\n")
+      }
     }
-    source.close()
 
     val text = sb.toString()
     println("Trying to parse file:")

@@ -1,10 +1,10 @@
 package org.clulab.learning
 
+import org.clulab.scala.Using._
 import org.clulab.utils.Test
 
 import java.io.{File, PrintWriter}
 import org.scalatest._
-
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.sys.process._
@@ -55,9 +55,9 @@ class TestSVMRankingClassifier extends Test {
     //
 
     // let's make sure we get the same values as svm_rank_classify
-    val pw = new PrintWriter("./test.dat")
-    classifier.mkTestFile(pw, qid3, 1)
-    pw.close()
+    Using.resource(new PrintWriter("./test.dat")) { pw =>
+      classifier.mkTestFile(pw, qid3, 1)
+    }
     val exitCode = "svm_rank_classify ./test.dat ./model.dat ./predictions".!
     exitCode should be (0)
 

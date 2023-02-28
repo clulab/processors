@@ -2,8 +2,6 @@ package org.clulab.utils
 
 import org.clulab.utils.PrintUtils._
 
-import java.io.{PrintWriter, StringWriter}
-
 class TestPrintUtils extends Test {
   val int = 5
   val string = "hello"
@@ -15,20 +13,11 @@ class TestPrintUtils extends Test {
 
   behavior of "PrintUtils"
 
-  def withPrintWriter(f: PrintWriter => Unit): String = {
-    val stringWriter = new StringWriter
-    val printWriter = new PrintWriter(stringWriter)
-
-    f(printWriter)
-    printWriter.close()
-    stringWriter.toString
-  }
-
   it should "print with no arguments" in {
 
     def test(any: Any, expectedResult: String): Unit = {
-      val standardResult = withPrintWriter(_.print(any))
-      val customResult = withPrintWriter { printWriter => any.print(printWriter) }
+      val standardResult = StringUtils.viaPrintWriter(_.print(any))
+      val customResult = StringUtils.viaPrintWriter { printWriter => any.print(printWriter) }
 
       println(standardResult)
       println(customResult)
@@ -51,7 +40,7 @@ class TestPrintUtils extends Test {
     val end = ">"
 
     def test(any: Any, expectedResult: String): Unit = {
-      val customResult = withPrintWriter { printWriter => any.print(printWriter, start, sep, end) }
+      val customResult = StringUtils.viaPrintWriter { printWriter => any.print(printWriter, start, sep, end) }
 
       println(customResult)
       customResult should be (expectedResult)

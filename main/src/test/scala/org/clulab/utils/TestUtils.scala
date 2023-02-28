@@ -1,6 +1,7 @@
 package org.clulab.utils
 
 import org.clulab.dynet.Utils
+import org.clulab.scala.Using._
 
 import java.io.FileNotFoundException
 
@@ -12,7 +13,7 @@ class TestUtils extends Test {
     assertThrows[FileNotFoundException] {
       val source = Utils.newSource("missing")
 
-      Serializer.using(source) { source =>
+      Using.resource(source) { source =>
         println(source)
       }
     }

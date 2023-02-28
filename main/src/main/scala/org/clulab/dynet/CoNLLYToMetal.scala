@@ -1,5 +1,7 @@
 package org.clulab.dynet
 
+import org.clulab.scala.Using._
+
 import java.io.PrintWriter
 
 /**
@@ -7,43 +9,41 @@ import java.io.PrintWriter
  */
 object CoNLLYToMetal {
   def main(args: Array[String]): Unit = {
-    val in = io.Source.fromFile(args(0))
-    val headsPw = new PrintWriter(args(1) + ".heads")
-    val labelsPw = new PrintWriter(args(1) + ".labels")
+    Using.resources(
+      io.Source.fromFile(args(0)),
+      new PrintWriter(args(1) + ".heads"),
+      new PrintWriter(args(1) + ".labels")
+    ) { (in, headsPw, labelsPw) =>
+      var position = 0
+      for (line <- in.getLines()) {
+        if (line.trim.isEmpty) {
+          headsPw.println()
+          labelsPw.println()
+          position = 0
+        } else {
+          val tokens = line.split("\\s+")
+          assert(tokens.length == 4)
 
-    var position = 0
-    for(line <- in.getLines()) {
-      if(line.trim.isEmpty) {
-        headsPw.println()
-        labelsPw.println()
-        position = 0
-      } else {
-        val tokens = line.split("\\s+")
-        assert(tokens.length == 4)
+          val word = tokens(0)
+          val relativeHeadDist = tokens(1).toInt
+          val depLabel = tokens(2)
+          val posTag = tokens(3)
 
-        val word = tokens(0)
-        val relativeHeadDist = tokens(1).toInt
-        val depLabel = tokens(2)
-        val posTag = tokens(3)
+          headsPw.println(s"$word\t$posTag\t_\t$relativeHeadDist")
 
-        headsPw.println(s"$word\t$posTag\t_\t$relativeHeadDist")
-
-        val headPosition = {
-          if(relativeHeadDist == 0) {
-            -1
-          } else {
-            position + relativeHeadDist
+          val headPosition = {
+            if (relativeHeadDist == 0) {
+              -1
+            } else {
+              position + relativeHeadDist
+            }
           }
+
+          labelsPw.println(s"$word\t$posTag\t_\t$depLabel\t$headPosition")
+
+          position += 1
         }
-
-        labelsPw.println(s"$word\t$posTag\t_\t$depLabel\t$headPosition")
-
-        position += 1
       }
     }
-
-    in.close()
-    headsPw.close()
-    labelsPw.close()
   }
 }
