@@ -41,7 +41,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     }
   }
 
-  private def rulesFromSimpleFile(input: String): Seq[Rule] = {
+  protected def rulesFromSimpleFile(input: String): Seq[Rule] = {
     val yaml = new Yaml(new Constructor(classOf[Collection[JMap[String, Any]]]))
     val jRules = yaml.load(input).asInstanceOf[Collection[JMap[String, Any]]]
     // no resources are specified
@@ -50,7 +50,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     readRules(jRules, config)
   }
 
-  private def rulesFromMasterFile(input: String): Seq[Rule] = {
+  protected def rulesFromMasterFile(input: String): Seq[Rule] = {
     val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
     val master = yaml.load(input).asInstanceOf[JMap[String, Any]].asScala.toMap
     val taxonomy = master.get("taxonomy").map(readTaxonomy)
@@ -194,7 +194,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     }
   }
 
-  private def readRules(
+  protected def readRules(
       rules: Collection[JMap[String, Any]],
       config: OdinConfig
   ): Seq[Rule] = {
