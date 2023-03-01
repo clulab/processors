@@ -37,7 +37,7 @@ class TestJSONSerializer extends Test {
   val mentions = engine.extractFrom(doc)
 
   it should "serialize/deserialize a Mention to/from json correctly " in {
-    val mns = JSONSerializer.toMentions(mentions.head.completeAST)
+    val mns = JSONSerializer.toMentions(JSONSerializer.jsonAST(mentions.head))
     mns should have size 1
     val m = mns.head
     m.document.equivalenceHash should equal (mentions.head.document.equivalenceHash)
@@ -86,28 +86,28 @@ class TestJSONSerializer extends Test {
     mentions should have size (1)
     val Seq(coref) = mentions
     (coref matches "Coref") should be (true)
-    val deserializedMentions = JSONSerializer.toMentions(mentions.jsonAST)
+    val deserializedMentions = JSONSerializer.toMentions(JSONSerializer.jsonAST(mentions))
     deserializedMentions should have size (mentions.size)
-    deserializedMentions.map(_.equivalenceHash).toSet should equal(mentions.map(_.equivalenceHash).toSet)
+    deserializedMentions.map(MentionOps(_).equivalenceHash).toSet should equal(mentions.map(MentionOps(_).equivalenceHash).toSet)
   }
 
   it should "serialize/deserialize a Seq[Mention] to/from json correctly " in {
-    val mentions2 = JSONSerializer.toMentions(mentions.jsonAST)
+    val mentions2 = JSONSerializer.toMentions(JSONSerializer.jsonAST(mentions))
     mentions2 should have size mentions.size
     mentions2.map(_.label) should equal (mentions.map(_.label))
     mentions2.map(_.document.equivalenceHash) should equal (mentions.map(_.document.equivalenceHash))
   }
 
   "When non-empty, Mention.paths" should "be represented in Mention's json" in {
-    (mentions.jsonAST \ "arguments" \\ "paths") should not equal JNothing
+    (JSONSerializer.jsonAST(mentions) \ "arguments" \\ "paths") should not equal JNothing
   }
 
   "serialization.json.MentionOps" should "produce an invariant id for a serialized/deserialzed Mention" in {
     val m = mentions.head
-    val mns2 = JSONSerializer.toMentions(Seq(m).jsonAST)
+    val mns2 = JSONSerializer.toMentions(JSONSerializer.jsonAST(m))
     mns2 should not be empty
     mns2 should have size 1
-    m.id should equal (mns2.head.id)
+    MentionOps(m).id should equal (MentionOps(mns2.head).id)
   }
 
 }
