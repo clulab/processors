@@ -27,11 +27,18 @@ abstract class MentionOps(mention: Mention) extends JSONSerialization with Equiv
   // This is a very expensive calculation.  Do not perform it more than once.
   // The Document is assumed not to change during the lifetime of this object.
   lazy val documentEquivalenceHash: Int = mention.document.equivalenceHash
+  // This could be mention.getClass.getName, but we're apparently guarding against
+  // refactorizations that could change the value and against automatically using
+  // the value from subclasses.  They should explicitly change their stringCode.
+  val stringCode = s"org.clulab.odin.$longString"
 
-  val stringCode: String
+  def longString: String
+  def shortString: String
+
   def jsonAST: JValue
   def equivalenceHash: Int
-  def id: String
+
+  override def id: String = s"$shortString:$equivalenceHash"
 
   def asMentionOps(mention: Mention): MentionOps = MentionOps(mention)
 
@@ -76,7 +83,10 @@ abstract class MentionOps(mention: Mention) extends JSONSerialization with Equiv
   * not change across serialization of multiple Mentions may want to implement more extensive caching.
   */
 class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
-  override lazy val stringCode = s"org.clulab.odin.${TextBoundMentionOps.string}"
+
+  def longString: String = TextBoundMentionOps.string
+
+  def shortString: String = TextBoundMentionOps.shortString
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
@@ -94,10 +104,8 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
     finalizeHash(h5, 5)
   }
 
-  override def id: String = s"${TextBoundMentionOps.shortString}:$equivalenceHash"
-
   override def jsonAST: JValue = {
-    ("type" -> TextBoundMentionOps.string) ~
+    ("type" -> longString) ~
     // used for correspondence with paths map
     ("id" -> id) ~ // tb.id would just create a different TextBoundMentionOps to provide the id
     ("text" -> tb.text) ~
@@ -117,7 +125,10 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
   * conversions have been isolated in a method that can be overridden by subclasses.
   */
 class EventMentionOps(em: EventMention) extends MentionOps(em) {
-  override lazy val stringCode = s"org.clulab.odin.${EventMentionOps.string}"
+
+  def longString: String = EventMentionOps.string
+
+  def shortString: String = EventMentionOps.shortString
 
   def triggerAST: JValue = asMentionOps(em.trigger).jsonAST
 
@@ -141,10 +152,8 @@ class EventMentionOps(em: EventMention) extends MentionOps(em) {
     finalizeHash(h7, 7)
   }
 
-  override def id: String = s"${EventMentionOps.shortString}:$equivalenceHash"
-
   override def jsonAST: JValue = {
-    ("type" -> EventMentionOps.string) ~
+    ("type" -> longString) ~
     // used for paths map
     ("id" -> id) ~ // em.id would just create a different EventMentionOps to provide the id
     ("text" -> em.text) ~
@@ -164,7 +173,9 @@ class EventMentionOps(em: EventMention) extends MentionOps(em) {
 }
 
 class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
-  override lazy val stringCode = s"org.clulab.odin.${RelationMentionOps.string}"
+
+  def longString: String = RelationMentionOps.string
+  def shortString: String = RelationMentionOps.shortString
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
@@ -184,10 +195,8 @@ class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
     finalizeHash(h6, 6)
   }
 
-  override def id: String = s"${RelationMentionOps.shortString}:$equivalenceHash"
-
   override def jsonAST: JValue = {
-    ("type" -> RelationMentionOps.string) ~
+    ("type" -> longString) ~
     // used for paths map
     ("id" -> id) ~ // rm.id would just create a different RelationMentionOps to provide the id
     ("text" -> rm.text) ~
@@ -206,7 +215,9 @@ class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
 }
 
 class CrossSentenceMentionOps(csm: CrossSentenceMention) extends MentionOps(csm) {
-  override lazy val stringCode = s"org.clulab.odin.${CrossSentenceMentionOps.string}"
+
+  def longString: String = CrossSentenceMentionOps.string
+  def shortString: String = CrossSentenceMentionOps.shortString
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
@@ -226,10 +237,8 @@ class CrossSentenceMentionOps(csm: CrossSentenceMention) extends MentionOps(csm)
     finalizeHash(h6, 6)
   }
 
-  override def id: String = s"${CrossSentenceMentionOps.shortString}:$equivalenceHash"
-
   override def jsonAST: JValue = {
-    ("type" -> CrossSentenceMentionOps.string) ~
+    ("type" -> longString) ~
     // used for paths map
     ("id" -> id) ~ // csm.id would just create a different CrossSentenceMentionOps to provide the id
     ("text" -> csm.text) ~
