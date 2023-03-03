@@ -21,7 +21,8 @@ object MentionOps {
   }
 }
 
-abstract class MentionOps(mention: Mention) extends JSONSerialization with Equivalency {
+// The Mention is now recorded in a val so that mixed-in traits can make use of it.
+abstract class MentionOps(val mention: Mention) extends JSONSerialization with Equivalency {
   implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
   // This is a very expensive calculation.  Do not perform it more than once.
@@ -30,7 +31,8 @@ abstract class MentionOps(mention: Mention) extends JSONSerialization with Equiv
   // This could be mention.getClass.getName, but we're apparently guarding against
   // refactorizations that could change the value and against automatically using
   // the value from subclasses.  They should explicitly change their stringCode.
-  val stringCode = s"org.clulab.odin.$longString"
+  val namespace = "org.clulab.odin"
+  val stringCode = s"$namespace.$longString"
 
   def longString: String
   def shortString: String
@@ -61,13 +63,19 @@ abstract class MentionOps(mention: Mention) extends JSONSerialization with Equiv
   }
 
   protected def pathsAST: JValue = {
+    println("Calculating pathsAST...")
     if (mention.paths.isEmpty) JNothing
     else {
       val simplePathMap: Map[String, Map[String, List[JValue]]] = mention.paths.map { case (key, innermap) =>
         val pairs = for {
           (m: Mention, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
-        } yield (asMentionOps(m).id, edgeAST)
+        } yield {
+          val mentionOps = asMentionOps(m)
+          println(mentionOps)
+          val id = mentionOps.id
+          (mentionOps.id, edgeAST)
+        }
         key -> pairs.toMap
       }
       simplePathMap
@@ -90,7 +98,8 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
-    val h0 = stringHash(stringCode)
+    // The stringHash is based on information from this class, not the actual class.
+    val h0 = stringHash(s"$namespace.${TextBoundMentionOps.string}") // (stringCode)
     // labels
     val h1 = mix(h0, tb.labels.hashCode)
     // interval.start
@@ -101,7 +110,9 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
     val h4 = mix(h3, tb.sentence)
     // document.equivalenceHash
     val h5 = mix(h4, documentEquivalenceHash)
-    finalizeHash(h5, 5)
+    val result = finalizeHash(h5, 5)
+
+    result
   }
 
   override def jsonAST: JValue = {
@@ -134,7 +145,8 @@ class EventMentionOps(em: EventMention) extends MentionOps(em) {
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
-    val h0 = stringHash(stringCode)
+    // The stringHash is based on information from this class, not the actual class.
+    val h0 = stringHash(s"$namespace.${EventMentionOps.string}") // (stringCode)
     // labels
     val h1 = mix(h0, em.labels.hashCode)
     // interval.start
@@ -175,11 +187,13 @@ class EventMentionOps(em: EventMention) extends MentionOps(em) {
 class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
 
   def longString: String = RelationMentionOps.string
+
   def shortString: String = RelationMentionOps.shortString
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
-    val h0 = stringHash(stringCode)
+    // The stringHash is based on information from this class, not the actual class.
+    val h0 = stringHash(s"$namespace.${RelationMentionOps.string}") // (stringCode)
     // labels
     val h1 = mix(h0, rm.labels.hashCode)
     // interval.start
@@ -217,11 +231,13 @@ class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
 class CrossSentenceMentionOps(csm: CrossSentenceMention) extends MentionOps(csm) {
 
   def longString: String = CrossSentenceMentionOps.string
+
   def shortString: String = CrossSentenceMentionOps.shortString
 
   override def equivalenceHash: Int = {
     // the seed (not counted in the length of finalizeHash)
-    val h0 = stringHash(stringCode)
+    // The stringHash is based on information from this class, not the actual class.
+    val h0 = stringHash(s"$namespace.${CrossSentenceMentionOps.string}") // (stringCode)
     // labels
     val h1 = mix(h0, csm.labels.hashCode)
     // interval.start

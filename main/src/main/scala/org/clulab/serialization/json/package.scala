@@ -40,7 +40,7 @@ package object json {
     def jsonAST: JValue = {
       ("edges" -> dg.edges.map(_.jsonAST)) ~
       // The roots are being saved for backward compatibility and human consumption.
-      ("roots" -> dg.roots.toSeq.sorted) // If this remains a set, output order may change.
+      ("roots" -> dg.roots) // keith .toSeq.sorted) // If this remains a set, output order may change.
     }
   }
 
