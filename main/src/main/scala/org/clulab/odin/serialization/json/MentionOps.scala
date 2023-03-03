@@ -63,19 +63,13 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   }
 
   protected def pathsAST: JValue = {
-    println("Calculating pathsAST...")
     if (mention.paths.isEmpty) JNothing
     else {
       val simplePathMap: Map[String, Map[String, List[JValue]]] = mention.paths.map { case (key, innermap) =>
         val pairs = for {
           (m: Mention, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
-        } yield {
-          val mentionOps = asMentionOps(m)
-          println(mentionOps)
-          val id = mentionOps.id
-          (mentionOps.id, edgeAST)
-        }
+        } yield (asMentionOps(m).id, edgeAST)
         key -> pairs.toMap
       }
       simplePathMap
@@ -110,9 +104,7 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
     val h4 = mix(h3, tb.sentence)
     // document.equivalenceHash
     val h5 = mix(h4, documentEquivalenceHash)
-    val result = finalizeHash(h5, 5)
-
-    result
+    finalizeHash(h5, 5)
   }
 
   override def jsonAST: JValue = {
