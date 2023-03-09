@@ -5,7 +5,7 @@ import org.clulab.processors.Document
 import org.clulab.struct.{DirectedGraph, Edge, Interval}
 import org.clulab.odin
 import org.clulab.odin._
-import org.clulab.serialization.json.DocOps
+import org.clulab.serialization.json.{DocOps, stringify}
 import org.clulab.utils.FileUtils
 import org.json4s.JsonDSL._
 import org.json4s._
@@ -14,9 +14,11 @@ import org.json4s.jackson.JsonMethods._
 
 /** JSON serialization utilities */
 object JSONSerializer {
-
-  import org.clulab.odin.serialization.json._
   import org.clulab.serialization.json.JSONSerializer.toDocument
+
+  def json(jsonAST: JValue, pretty: Boolean = false): String = stringify(jsonAST, pretty)
+
+  def jsonAST(mention: Mention): JValue = jsonAST(Seq(mention))
 
   def jsonAST(mentions: Seq[Mention]): JValue = {
     val docsMap: Map[String, JValue] = {
@@ -26,7 +28,8 @@ object JSONSerializer {
       docs.map(doc => doc.equivalenceHash.toString -> doc.jsonAST)
         .toMap
     }
-    val mentionList = JArray(mentions.map(_.jsonAST).toList)
+    // This asMentionOps decides what kind of Mentions they will appear as.
+    val mentionList = JArray(mentions.map(MentionOps(_).jsonAST).toList)
 
     ("documents" -> docsMap) ~
     ("mentions" -> mentionList)
@@ -133,7 +136,7 @@ object JSONSerializer {
 
     // build Mention
     mjson \ "type" match {
-      case JString(EventMention.string) =>
+      case JString(EventMentionOps.string) =>
         new EventMention(
           labels,
           tokInterval,
@@ -146,7 +149,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
-      case JString(RelationMention.string) =>
+      case JString(RelationMentionOps.string) =>
         new RelationMention(
           labels,
           tokInterval,
@@ -157,7 +160,7 @@ object JSONSerializer {
           keep,
           foundBy
         )
-      case JString(TextBoundMention.string) =>
+      case JString(TextBoundMentionOps.string) =>
         new TextBoundMention(
           labels,
           tokInterval,
@@ -166,15 +169,15 @@ object JSONSerializer {
           keep,
           foundBy
         )
-      case JString(CrossSentenceMention.string) =>
+      case JString(CrossSentenceMentionOps.string) =>
         val args = mkArgumentsFromJsonAST(mjson \ "arguments")
         val anchorID = (mjson \ "anchor").extract[String]
         val neighborID = (mjson \ "neighbor").extract[String]
         //toMention(mjson \ "neighbor", docMap)
         new CrossSentenceMention(
           labels,
-          anchor = args.values.flatten.find(_.id == anchorID).get,
-          neighbor = args.values.flatten.find(_.id == neighborID).get,
+          anchor = args.values.flatten.find(MentionOps(_).id == anchorID).get,
+          neighbor = args.values.flatten.find(MentionOps(_).id == neighborID).get,
           mkArgumentsFromJsonAST(mjson \ "arguments"),
           document,
           keep,
