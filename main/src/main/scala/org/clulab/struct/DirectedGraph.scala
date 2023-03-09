@@ -1,10 +1,10 @@
 package org.clulab.struct
 
 import org.clulab.scala.WrappedArray._
+import org.clulab.utils.Hash
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.util.hashing.MurmurHash3._
 
 
 /**
@@ -41,14 +41,10 @@ case class DirectedGraph[E](
     *
     * @return a hash (Int) based on the [[edges]]
     */
-  def equivalenceHash: Int = {
-    val stringCode = "org.clulab.struct.DirectedGraph"
-    // the seed (not counted in the length of finalizeHash)
-    // decided to use the class name
-    val h0 = stringHash(stringCode)
-    val h1 = mix(h0, edges.hashCode)
-    finalizeHash(h1, 1)
-  }
+  def equivalenceHash: Int = Hash(
+    Hash("org.clulab.struct.DirectedGraph"),
+    edges.hashCode
+  )
 
   protected def computeSize(edges: List[Edge[_]]):Int = {
     val maxVertex = edges.foldLeft(0) { (max, edge) => math.max(max, math.max(edge.source, edge.destination)) }
