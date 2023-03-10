@@ -1,13 +1,10 @@
-package org.clulab.processors
+package org.clulab.utils
 
-import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention, RelationMention, TextBoundMention}
 import org.clulab.odin.serialization.json._
+import org.clulab.odin.{CrossSentenceMention, EventMention, RelationMention, TextBoundMention, _}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
-import org.clulab.utils.FileUtils
-import org.clulab.utils.Test
-
-import java.io.File
+import org.clulab.struct.{DirectedGraph, Edge}
 
 class TestHash extends Test {
   val customLexiconNer = {
@@ -17,14 +14,12 @@ class TestHash extends Test {
     val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
     val caseInsensitiveMatchings = kbsAndCaseInsensitiveMatchings.map(_._2)
 
-    val result = LexiconNER(kbs, caseInsensitiveMatchings, None)
-    println(result.getLabels)
-    result
+    LexiconNER(kbs, caseInsensitiveMatchings, None)
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
   val extractorEngine = {
     val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
-    println(rules)
+
     ExtractorEngine(rules)
   }
   val document = processor.annotate("John eats cake.")
@@ -39,7 +34,7 @@ class TestHash extends Test {
   behavior of "Hash"
 
   it should "compute the expected equivalence hash for a Document" in {
-    val expectedHash = -1960515414
+    val expectedHash = 1145238653
     val actualHash = document.equivalenceHash
 
     actualHash should be (expectedHash)
@@ -66,14 +61,14 @@ class TestHash extends Test {
   }
 
   it should "compute the expected equivalence hashes for Mentions" in {
-    val expectedHashes = Array(-1163474360, 1678747586, 308621545, 1846645205, -1357918569)
+    val expectedHashes = Array(1317064233, 418554464, 269168883, 1021871359, 1657321605)
     val actualHashes = allMentions.map(getEquivalenceHash)
 
     actualHashes should be (expectedHashes)
   }
 
   it should "compute the expected hashCode for Mentions" in {
-    val expectedHashes = Array(-681771612, -254169462, -1589508928, 823771056, 1600327181)
+    val expectedHashes = Array(1493402696, -1515246319, 205797074, -1416141606, -1294266266)
     val actualHashes = allMentions.map(_.hashCode)
 
     actualHashes should be(expectedHashes)
@@ -84,5 +79,21 @@ class TestHash extends Test {
     val actualHash = "supercalifragilisticexpialidocious".hashCode
 
     actualHash should be(expectedHash)
+  }
+
+  it should "compute the expected equivalence hash for a String" in {
+    val expectedHash = 887441175
+    val actualHash = Hash("supercalifragilisticexpialidocious")
+
+    actualHash should be(expectedHash)
+  }
+
+  it should "compute the expected equivalence hash for a DirectedGraph" in {
+    val expectedHash = 821315811
+    val edge = Edge(0, 1, "relation")
+    val directedGraph = DirectedGraph(List(edge))
+    val actualHash = directedGraph.equivalenceHash
+
+    actualHash should be (expectedHash)
   }
 }
