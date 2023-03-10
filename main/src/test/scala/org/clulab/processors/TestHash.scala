@@ -10,7 +10,6 @@ import org.clulab.utils.Test
 import java.io.File
 
 class TestHash extends Test {
-  val resourceDir: File = new File("./main/src/main/resources")
   val customLexiconNer = {
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
       ("org/clulab/odinstarter/FOOD.tsv", true)
@@ -18,14 +17,15 @@ class TestHash extends Test {
     val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
     val caseInsensitiveMatchings = kbsAndCaseInsensitiveMatchings.map(_._2)
 
-    LexiconNER(kbs, caseInsensitiveMatchings, Some(resourceDir))
+    val result = LexiconNER(kbs, caseInsensitiveMatchings, None)
+    println(result.getLabels)
+    result
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
   val extractorEngine = {
-    val masterResource = "/org/clulab/odinstarter/main.yml"
-    val masterFile = new File(resourceDir, masterResource.drop(1))
-    val rules = FileUtils.getTextFromFile(masterFile)
-    ExtractorEngine(rules, ruleDir = Some(resourceDir))
+    val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
+    println(rules)
+    ExtractorEngine(rules)
   }
   val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
