@@ -10,7 +10,7 @@ import org.clulab.utils.Test
 import java.io.File
 
 class TestHash extends Test {
-  val resourceDir: File = new File("./src/main/resources")
+  val resourceDir: File = new File("./main/src/main/resources")
   val customLexiconNer = {
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
       ("org/clulab/odinstarter/FOOD.tsv", true)
