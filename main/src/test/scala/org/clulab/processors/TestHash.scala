@@ -78,4 +78,11 @@ class TestHash extends Test {
 
     actualHashes should be(expectedHashes)
   }
+
+  it should "compute the expected hashCode for a String" in {
+    val expectedHash = 1077910243
+    val actualHash = "supercalifragilisticexpialidocious".hashCode
+
+    actualHash should be(expectedHash)
+  }
 }
