@@ -73,16 +73,14 @@ object DependencyUtils {
   }
 
   /**
-   * Finds the highest node (i.e. closest to a root) in an Interval of a directed graph. If there are multiple nodes of
-   * the same rank, all are returned.
-   *
-   * @param span an Interval of nodes
-   * @param graph a directed graph containing the nodes in span
-   * @return the single node which is closest to the root among those in span
-   */
-  def findHeads(span: Interval, graph: DependencyGraph): Seq[Int] = {
+    * Finds the minimum distance to a root node for the
+    */
+
+  def distToRoot(token: Int, graph: DependencyGraph): Double = {
+    // println(s"distToRoot for token: $token:")
+
     @annotation.tailrec
-    def countSteps(toksWithDist: List[(Int, Double)], seen: Set[Int]): Double = {
+    def loop(toksWithDist: List[(Int, Double)], seen: Set[Int]): Double = {
       // println("\tcountSteps: " + toksWithDist.mkString(", "))
 
       toksWithDist match {
@@ -94,7 +92,7 @@ object DependencyUtils {
           Double.MaxValue // this means the distance to the head is infinite, i.e., the head is not reachable
         case (tok, dist) :: rest if seen contains tok =>
           // we already explored this token, skip
-          countSteps(rest, seen)
+          loop(rest, seen)
         case (tok, dist) :: rest if graph.roots contains tok =>
           // found a root
           // it is the closest one because we are searching breath-first
@@ -111,21 +109,27 @@ object DependencyUtils {
           } else {
             // keep looking, breadth-first
             val nextStep = incoming.map(i => (i, dist + 1)).toList
-            countSteps(rest ::: nextStep, seen + tok)
+            loop(rest ::: nextStep, seen + tok)
           }
       }
     }
 
-    // returns the distance to the closest root for a given token
-    def distToRoot(token: Int): Double = {
-      // println(s"distToRoot for token: $token:")
-      countSteps(List((token, 0)), Set.empty)
-    }
+    loop(List((token, 0)), Set.empty)
+  }
 
+  /**
+   * Finds the highest node (i.e. closest to a root) in an Interval of a directed graph. If there are multiple nodes of
+   * the same rank, all are returned.
+   *
+   * @param span an Interval of nodes
+   * @param graph a directed graph containing the nodes in span
+   * @return the single node which is closest to the root among those in span
+   */
+  def findHeads(span: Interval, graph: DependencyGraph): Seq[Int] = {
     if (span.isEmpty) Nil
     else {
       // get the distance to root for each token in span
-      val toksWithDist = span.map(t => (t, distToRoot(t)))
+      val toksWithDist = span.map(t => (t, distToRoot(t, graph)))
       val dists = toksWithDist.map(_._2)
       // return all tokens with minimum distance
       val minDist = dists.min
