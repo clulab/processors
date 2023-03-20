@@ -63,7 +63,9 @@ ton                 // t::mass
 t                   // t::mass
 carat               // carat::mass
 pound               // lb::mass
+pounds              // lb::mass
 lb                  // lb::mass
+lbs                 // lb::mass
 ounce               // oz::mass
 oz                  // oz::mass
 fl oz               // oz::volume
