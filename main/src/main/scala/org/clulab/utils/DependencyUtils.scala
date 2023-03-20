@@ -73,9 +73,13 @@ object DependencyUtils {
   }
 
   /**
-    * Finds the minimum distance to a root node for the
-    */
-
+   * Finds the minimum distance to a root from the token position.
+   * In some edge cases, Double.MaxValue and Double.PositiveInfinity can be returned.
+   *
+   * @param token an Interval of nodes
+   * @param graph a directed graph containing the nodes in span
+   * @return the minimum distance to the root among those in span
+   */
   def distToRoot(token: Int, graph: DependencyGraph): Double = {
     // println(s"distToRoot for token: $token:")
 
@@ -115,6 +119,27 @@ object DependencyUtils {
     }
 
     loop(List((token, 0)), Set.empty)
+  }
+
+  /**
+   * Finds the optional distance to a root for the highest node in an Interval of a directed graph.
+   * If span is empty or no root is reachable, None is returned.
+   *
+   * @param span  an Interval of nodes
+   * @param graph a directed graph containing the nodes in span
+   * @return some minimum distance to the root among those in span or None if the span is not empty or None if it is
+   */
+  def distToRootOpt(span: Interval, graph: DependencyGraph): Option[Int] = {
+    if (span.isEmpty) None
+    else {
+      val distances = span.map { tokenIndex =>
+        DependencyUtils.distToRoot(tokenIndex, graph)
+      }
+      val minDistance = distances.min
+
+      if (minDistance == Double.MaxValue || minDistance == Double.PositiveInfinity) None
+      else Some(minDistance.toInt)
+    }
   }
 
   /**

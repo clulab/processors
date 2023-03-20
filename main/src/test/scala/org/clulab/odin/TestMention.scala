@@ -25,6 +25,8 @@ class TestMention extends Test {
     val mentions = ee.extractFrom(doc)
     mentions should have length(1)
     mentions.head.text shouldBe "I'm going to dance"
+    val head = mentions.head.synHead
+    mentions.head.distToRootOpt shouldBe (Some(0))
   }
 
 }

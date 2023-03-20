@@ -126,14 +126,12 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     case None => Nil
   }
 
-  def distToRoot: Option[Int] = sentenceObj.dependencies.map { deps =>
-    val distances = tokenInterval.map { tokenIndex =>
-      DependencyUtils.distToRoot(tokenIndex, deps)
-    }
+  /** returns the minimum distance to a root node for dependencies within the token interval */
+  def distToRootOpt: Option[Int] = sentenceObj.dependencies.flatMap { deps =>
     // Note that
     // Double.MaxValue.toInt == Int.MaxValue
     // Double.PositiveInfinity.toInt == Int.MaxValue
-    distances.min.toInt
+    DependencyUtils.distToRootOpt(tokenInterval, deps).map(_.toInt)
   }
 
   /** returns the syntactic head of `mention`  */
