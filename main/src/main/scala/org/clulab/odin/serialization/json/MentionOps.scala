@@ -13,7 +13,8 @@ import scala.util.hashing.MurmurHash3._
 
 object MentionOps {
   // TODO: Reuse for Seq of anything that itself has an ordering?
-  implicit val labelsOrdering: Ordering[Seq[String]] = (lefts: Seq[String], rights: Seq[String]) => {
+  implicit val stringSeqOrdering: Ordering[Seq[String]] = (lefts: Seq[String], rights: Seq[String]) => {
+    // Sequences are expected to be sorted for comparison in advance.
     val ordering = lefts.zip(rights).foldLeft(0) { case (order, (left, right)) =>
       if (order != 0) order
       else left.compare(right)
@@ -23,6 +24,7 @@ object MentionOps {
     else lefts.length.compare(rights.length)
   }
   implicit val mentionsOrdering: Ordering[Seq[Mention]] = (lefts: Seq[Mention], rights: Seq[Mention]) => {
+    // Sequences are expected to be sorted for comparison in advance.
     val orderedLefts = lefts.sorted
     val orderedRights = rights.sorted
     val ordering = orderedLefts.zip(orderedRights).foldLeft(0) { case (order, (left, right)) =>
@@ -33,44 +35,49 @@ object MentionOps {
     if (ordering != 0) ordering
     else lefts.length.compare(rights.length)
   }
-  implicit val argumentsOrdering: Ordering[Map[String, Seq[Mention]]] = (leftArguments: Map[String, Seq[Mention]], rightArguments: Map[String, Seq[Mention]]) => {
-    // Turn into seq of tuples? and then order tuples?
-    val leftKeys = leftArguments.keys.toSeq.sorted
-    val rightKeys = rightArguments.keys.toSeq.sorted
-    val ordering = labelsOrdering.compare(leftKeys, rightKeys)
+  implicit val argumentSeqOrdering: Ordering[Seq[(String, Seq[Mention])]] = (leftArgumentSeq: Seq[(String, Seq[Mention])], rightArgumentSeq: Seq[(String, Seq[Mention])]) => {
+    // Sequences are expected to be sorted for comparison in advance.
+    val leftKeys = leftArgumentSeq.map(_._1)
+    val rightKeys = rightArgumentSeq.map(_._1)
+    val ordering = stringSeqOrdering.compare(leftKeys, rightKeys)
 
     if (ordering != 0) ordering
     else {
-      val ordering = leftKeys.foldLeft(0) { case (order, key) =>
+      val ordering = leftArgumentSeq.zip(rightArgumentSeq).foldLeft(0) { case (order, (leftArgument, rightArgument)) =>
         if (order != 0) order
-        else leftArguments(key).compare(rightArguments(key))
+        else leftArgument._2.sorted.compare(rightArgument._2.sorted)
       }
 
       ordering
     }
   }
-  implicit val pathsOrdering: Ordering[Map[String, Map[Mention, SynPath]]] = (leftPaths: Map[String, Map[Mention, SynPath]], rightPaths: Map[String, Map[Mention, SynPath]]) => {
-    val leftKeys = leftPaths.keys.toSeq.sorted
-    val rightKeys = rightPaths.keys.toSeq.sorted
-    val ordering = labelsOrdering.compare(leftKeys, rightKeys)
+  implicit val argumentMapOrdering: Ordering[Map[String, Seq[Mention]]] = (leftArgumentMap: Map[String, Seq[Mention]], rightArgumentMap: Map[String, Seq[Mention]]) => {
+    val leftArgumentSeq = leftArgumentMap.toSeq.sortBy(_._1)
+    val rightArgumentSeq = rightArgumentMap.toSeq.sortBy(_._1)
 
-    if (ordering != 0) ordering
-    else {
-      val ordering = leftKeys.foldLeft(0) { case (order, key) =>
-        if (order != 0) order
-        else leftPaths(key).keys.compare(rightPaths(key).keys)
-      }
-
-      ordering
-    }
+    leftArgumentSeq.compare(rightArgumentSeq)
   }
+  implicit val pathSeqOrdering: Ordering[Seq[(String, Map[Mention, SynPath])]] = (leftPathSeq: Seq[(String, Map[Mention, SynPath])], rightPathSeq: Seq[(String, Map[Mention, SynPath])]) => {
+    // Strip off the SynPath and sort the rest as if they were arguments.
+    val leftArgumentSeq = leftPathSeq.map { case (string, map) => (string, map.keys.toSeq.sorted) }
+    val rightArgumentSeq = rightPathSeq.map { case (string, map) => (string, map.keys.toSeq.sorted) }
 
+    leftArgumentSeq.compare(rightArgumentSeq)
+  }
+  implicit val pathMapOrdering: Ordering[Map[String, Map[Mention, SynPath]]] = (leftPathMap: Map[String, Map[Mention, SynPath]], rightPathMap: Map[String, Map[Mention, SynPath]]) => {
+    // Turn the map into a sequence sorted by key.
+    val leftPathSeq = leftPathMap.toSeq.sortBy(_._1)
+    val rightPathSeq = rightPathMap.toSeq.sortBy(_._1)
+
+    leftPathSeq.compare(rightPathSeq)
+  }
   implicit val mentionOrdering: Ordering[Mention] = Unordered[Mention]
       .orElseBy(_.sentence)
       .orElseBy(_.tokenInterval)
       .orElseBy(_.labels)
       .orElseBy(_.foundBy)
       .orElseBy(_.arguments)
+      // Skip the paths for now.
       .orElse {
         println("I hope these are equal!")
         -1
@@ -110,8 +117,8 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   def asMentionOps(mention: Mention): MentionOps = MentionOps(mention)
 
   protected def argsAST: JObject = {
-    val args = mention.arguments.map {
-      case (name, mentions) => name -> JArray(mentions.map(asMentionOps(_).jsonAST).toList)
+    val args = mention.arguments.toSeq.sorted(MentionOps.argumentSeqOrdering).map { case (name, mentions) =>
+      name -> JArray(mentions.sorted(MentionOps.mentionsOrdering).map(asMentionOps(_).jsonAST).toList)
     }
     JObject(args.toList)
   }
@@ -120,6 +127,7 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   protected def argsHash: Int = {
     val argHashes = for {
       (role, mns) <- mention.arguments
+      // TODO: These keys need to be sorted!
       bh = stringHash(s"role:$role")
       hs = mns.map(asMentionOps(_).equivalenceHash)
     } yield mix(bh, unorderedHash(hs))
@@ -128,6 +136,7 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   }
 
   protected def pathsAST: JValue = {
+    // Would removing a path mess up the sort order?  We are not sorting on paths.
     // Figure out which paths are allowed to be serialized because their mentions are arguments.
     val argumentMentionIds = mention.arguments.values.flatten.map(MentionOps(_).id).toSet
     // Convert all the mentions to their IDs just once: now.
@@ -152,13 +161,16 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
 
     if (nonEmptyArgumentPaths.isEmpty) JNothing
     else {
-      val simplePathMap: Map[String, Map[String, List[JValue]]] = nonEmptyArgumentPaths.map { case (key, innermap) =>
+      // TODO: This assumes that the resulting JObject sorts the keys somehow.
+      val simplePathMap: Map[String, Map[String, List[JValue]]] = nonEmptyArgumentPaths.toSeq.sorted(MentionOps.pathSeqOrdering).map { case (key, innermap) =>
         val pairs = for {
+          // TODO: The innermap needs to be sorted, but now we only have mentionId
+          // Get the mention back and don't lose it in the first place.
           (mentionId: String, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
         } yield (mentionId, edgeAST)
         key -> pairs.toMap
-      }
+      }.toMap
       simplePathMap
     }
   }
