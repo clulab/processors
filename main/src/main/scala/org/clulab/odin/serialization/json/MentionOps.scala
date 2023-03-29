@@ -118,7 +118,9 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
 
   protected def argsAST: JObject = {
     val args = mention.arguments.toSeq.sorted(MentionOps.argumentSeqOrdering).map { case (name, mentions) =>
-      name -> JArray(mentions.sorted(MentionOps.mentionsOrdering).map(asMentionOps(_).jsonAST).toList)
+      val sortedMentions = mentions.sorted(MentionOps.mentionsOrdering)
+
+      name -> JArray(sortedMentions.map(asMentionOps(_).jsonAST).toList)
     }
     JObject(args.toList)
   }
@@ -162,7 +164,8 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
     if (nonEmptyArgumentPaths.isEmpty) JNothing
     else {
       // TODO: This assumes that the resulting JObject sorts the keys somehow.
-      val simplePathMap: Map[String, Map[String, List[JValue]]] = nonEmptyArgumentPaths.toSeq.sorted(MentionOps.pathSeqOrdering).map { case (key, innermap) =>
+      val sortedPaths = nonEmptyArgumentPaths.toSeq.sorted(MentionOps.pathSeqOrdering)
+      val simplePathMap: Map[String, Map[String, List[JValue]]] = sortedPaths.map { case (key, innermap) =>
         val pairs = for {
           // TODO: The innermap needs to be sorted, but now we only have mentionId
           // Get the mention back and don't lose it in the first place.
