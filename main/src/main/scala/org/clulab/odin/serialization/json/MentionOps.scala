@@ -4,12 +4,77 @@ import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.serialization.json.{JSONSerializer => _, _}
 import org.clulab.struct.DirectedGraph
+import org.clulab.utils.Unordered
+import org.clulab.utils.Unordered.OrderingOrElseBy
 import org.json4s._
 import org.json4s.JsonDSL._
 
 import scala.util.hashing.MurmurHash3._
 
 object MentionOps {
+  // TODO: Reuse for Seq of anything that itself has an ordering?
+  implicit val labelsOrdering: Ordering[Seq[String]] = (lefts: Seq[String], rights: Seq[String]) => {
+    val ordering = lefts.zip(rights).foldLeft(0) { case (order, (left, right)) =>
+      if (order != 0) order
+      else left.compare(right)
+    }
+
+    if (ordering != 0) ordering
+    else lefts.length.compare(rights.length)
+  }
+  implicit val mentionsOrdering: Ordering[Seq[Mention]] = (lefts: Seq[Mention], rights: Seq[Mention]) => {
+    val orderedLefts = lefts.sorted
+    val orderedRights = rights.sorted
+    val ordering = orderedLefts.zip(orderedRights).foldLeft(0) { case (order, (left, right)) =>
+      if (order != 0) order
+      else left.compare(right)
+    }
+
+    if (ordering != 0) ordering
+    else lefts.length.compare(rights.length)
+  }
+  implicit val argumentsOrdering: Ordering[Map[String, Seq[Mention]]] = (leftArguments: Map[String, Seq[Mention]], rightArguments: Map[String, Seq[Mention]]) => {
+    // Turn into seq of tuples? and then order tuples?
+    val leftKeys = leftArguments.keys.toSeq.sorted
+    val rightKeys = rightArguments.keys.toSeq.sorted
+    val ordering = labelsOrdering.compare(leftKeys, rightKeys)
+
+    if (ordering != 0) ordering
+    else {
+      val ordering = leftKeys.foldLeft(0) { case (order, key) =>
+        if (order != 0) order
+        else leftArguments(key).compare(rightArguments(key))
+      }
+
+      ordering
+    }
+  }
+  implicit val pathsOrdering: Ordering[Map[String, Map[Mention, SynPath]]] = (leftPaths: Map[String, Map[Mention, SynPath]], rightPaths: Map[String, Map[Mention, SynPath]]) => {
+    val leftKeys = leftPaths.keys.toSeq.sorted
+    val rightKeys = rightPaths.keys.toSeq.sorted
+    val ordering = labelsOrdering.compare(leftKeys, rightKeys)
+
+    if (ordering != 0) ordering
+    else {
+      val ordering = leftKeys.foldLeft(0) { case (order, key) =>
+        if (order != 0) order
+        else leftPaths(key).keys.compare(rightPaths(key).keys)
+      }
+
+      ordering
+    }
+  }
+
+  implicit val mentionOrdering: Ordering[Mention] = Unordered[Mention]
+      .orElseBy(_.sentence)
+      .orElseBy(_.tokenInterval)
+      .orElseBy(_.labels)
+      .orElseBy(_.foundBy)
+      .orElseBy(_.arguments)
+      .orElse {
+        println("I hope these are equal!")
+        -1
+      } // favor the left argument
 
   def apply(mention: Mention): MentionOps = {
     mention match {
@@ -63,13 +128,35 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   }
 
   protected def pathsAST: JValue = {
-    if (mention.paths.isEmpty) JNothing
+    // Figure out which paths are allowed to be serialized because their mentions are arguments.
+    val argumentMentionIds = mention.arguments.values.flatten.map(MentionOps(_).id).toSet
+    // Convert all the mentions to their IDs just once: now.
+    // Confirm externally to this that all IDs are unique.
+    val mentionIdPaths = mention.paths.mapValues { innerMap =>
+      val newInnerMap = innerMap.map { case (mention, synPath) =>
+        MentionOps(mention).id -> synPath
+      }
+
+      newInnerMap
+    }
+    // Only use mentions whose IDs are in argumentMentionIds.
+    val argumentPaths = mentionIdPaths.mapValues { innerMap =>
+      val newInnerMap = innerMap.filter { case (mentionId, _) => argumentMentionIds(mentionId) }
+
+      newInnerMap
+    }
+    // Only keep the paths for which the innerMap is nonEmpty.
+    val nonEmptyArgumentPaths = argumentPaths.filter { case (_, innerMap) =>
+      innerMap.nonEmpty
+    }
+
+    if (nonEmptyArgumentPaths.isEmpty) JNothing
     else {
-      val simplePathMap: Map[String, Map[String, List[JValue]]] = mention.paths.map { case (key, innermap) =>
+      val simplePathMap: Map[String, Map[String, List[JValue]]] = nonEmptyArgumentPaths.map { case (key, innermap) =>
         val pairs = for {
-          (m: Mention, path: odin.SynPath) <- innermap.toList
+          (mentionId: String, path: odin.SynPath) <- innermap.toList
           edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
-        } yield (asMentionOps(m).id, edgeAST)
+        } yield (mentionId, edgeAST)
         key -> pairs.toMap
       }
       simplePathMap
