@@ -13,20 +13,60 @@ import scala.math.Ordering.Implicits._ // Allow Seqs to be compared to each othe
 import scala.util.hashing.MurmurHash3._
 
 object MentionOps {
-  def flattenArguments(mention: Mention): Seq[(String, Seq[Mention])] =
-      mention.arguments.map { case (key, value) => key -> value.sorted }.toSeq.sorted
+  // Lists are produced so that they can be quickly converted to JObjects and JArrays.
+  // Maps cannot be used because the order of the keys is not fixed.
+  def flattenArguments(mention: Mention): List[(String, List[Mention])] =
+      mention.arguments.map { case (key, value) => key -> value.sorted.toList }.toSeq.sorted.toList
 
-  def flattenPaths(mention: Mention): Seq[(String, Seq[(Mention, SynPath)])] =
-      mention.paths.map { case (key, value) => key -> value.toSeq.sorted }.toSeq.sorted
+  // Lists are produced so that they can be quickly converted to JObjects.
+  // Maps cannot be used because the order of the keys is not fixed.
+  // TODO: convert the SynPath to Seq[(Int, Int, String)]
+  def flattenPaths(mention: Mention): List[(String, List[(Mention, SynPath)])] = {
+    if (mention.paths == null)
+      println("This isn't right!")
+    mention.paths.map { case (key, value) =>
+      if (key == null)
+        println("This isn't, either")
+      if (value == null)
+        println("The value is messed up as well")
+      value.foreach { case (mention, synPath) =>
+        if (mention == null)
+          println("Bad as well")
+        if (synPath == null)
+          println("This won't work")
+        synPath.foreach { case (_, _, string) =>
+          if (string == null)
+            println("That shouldn't happen!")
+        }
+      }
+      val newValue = try {
+        val valueSeq = value.toSeq
+        // Don't
+        val sortedValueSeq = valueSeq.sortBy { case (mention, synPath) => synPath }
+        sortedValueSeq.toList
+      }
+      catch {
+        case exception =>
+          println("It didn't work!")
+          val valueSeq = value.toSeq
+          val sortedValueSeq1 = valueSeq.sortBy { case (mention, synPath) => synPath }
+          val sortedValueSeq = valueSeq.sorted
+          throw exception
+      }
+      key -> newValue
+    }.toSeq.sorted.toList // May not want to touch mention inside
+  }
 
+  // As Scala 3 points out, this is recursive, because the arguments contain more Mentions.
+  // Triggers are not taken into account and neither is the class of he Mention except through the name.
   implicit val mentionOrdering: Ordering[Mention] = Unordered[Mention]
       .orElseBy(_.sentence)
       .orElseBy(_.tokenInterval)
       .orElseBy(_.labels)
       .orElseBy(_.foundBy)
+      .orElseBy(_.getClass.getName)
       .orElseBy(flattenArguments(_)) // Maps cannot be sorted, but Seqs can.
       // Skip paths.
-      .orElse(-1)
 
   def apply(mention: Mention): MentionOps = {
     mention match {
@@ -64,9 +104,10 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   protected def argsAST: JObject = {
     val flattenedArguments = MentionOps.flattenArguments(mention)
     val args = flattenedArguments.map { case (name, mentions) =>
-      name -> JArray(mentions.map(asMentionOps(_).jsonAST).toList)
+      name -> JArray(mentions.map(asMentionOps(_).jsonAST))
     }
-    JObject(args.toList)
+
+    JObject(args)
   }
 
   /** Hash representing the [[Mention.arguments]] */
@@ -87,7 +128,7 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
     // Convert all the mentions to their IDs just once, now.
     // Confirm externally to this that all IDs are unique.
     // mapValues is not available without warning in Scala 2.13+.
-    val mentionIdPaths: Seq[(String, Seq[(String, SynPath)])] = flattenedPaths.map { case (key, innerMap) =>
+    val mentionIdPaths: List[(String, List[(String, SynPath)])] = flattenedPaths.map { case (key, innerMap) =>
       val newInnerMap = innerMap.map { case (mention, synPath) =>
         MentionOps(mention).id -> synPath
       }
@@ -108,14 +149,17 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
     if (nonEmptyArgumentPaths.isEmpty) JNothing
     else {
       // Do not use Maps here because the order of the keys is not fixed.
-      val simplePathMap = nonEmptyArgumentPaths.map { case (key, innermap) =>
-        val pairs = for {
-          (mentionId: String, path: odin.SynPath) <- innermap.toList
-          edgeAST = DirectedGraph.triplesToEdges[String](path.toList).map(_.jsonAST)
-        } yield (mentionId, edgeAST)
-        key -> pairs
+      val outerPairs = nonEmptyArgumentPaths.map { case (key, innermap) =>
+        val innerPairs = innermap.map { case (mentionId, synPath) =>
+          val edgeAST = DirectedGraph.triplesToEdges[String](synPath.toList).map(_.jsonAST)
+        
+          mentionId -> JArray(edgeAST)
+        }
+
+        key -> JObject(innerPairs)
       }
-      val result: JValue = simplePathMap
+
+      val result = JObject(outerPairs)
       result
     }
   }
