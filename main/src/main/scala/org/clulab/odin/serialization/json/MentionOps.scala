@@ -12,8 +12,13 @@ import org.json4s.JsonDSL._
 import scala.util.hashing.MurmurHash3._
 
 object MentionOps {
+//  import scala.math.Ordering.Implicits.seqDerivedOrdering
+//  implicit val stringSeqOrdering = seqDerivedOrdering[String]
+  // There is already an ordering on the String.
   // TODO: Reuse for Seq of anything that itself has an ordering?
+  // Should be takencare of with seqDerivedOrdering
   implicit val stringSeqOrdering: Ordering[Seq[String]] = (lefts: Seq[String], rights: Seq[String]) => {
+//    seqDerivedOrderings(lefts).compare(rights)
     // Sequences are expected to be sorted for comparison in advance.
     val ordering = lefts.zip(rights).foldLeft(0) { case (order, (left, right)) =>
       if (order != 0) order
@@ -23,6 +28,8 @@ object MentionOps {
     if (ordering != 0) ordering
     else lefts.length.compare(rights.length)
   }
+  implicit val mentionPathOrdering: Ordering[Seq[(Mention, SynPath)]] = null
+  // There is already an ordering on the Mention.
   implicit val mentionsOrdering: Ordering[Seq[Mention]] = (lefts: Seq[Mention], rights: Seq[Mention]) => {
     // Sequences are expected to be sorted for comparison in advance.
     val orderedLefts = lefts.sorted
@@ -71,6 +78,9 @@ object MentionOps {
 
     leftPathSeq.compare(rightPathSeq)
   }
+  implicit val synPathOrdering: Ordering[SynPath] = (leftSynPath: SynPath, rightSynPath: SynPath) => {
+    0
+  }
   implicit val mentionOrdering: Ordering[Mention] = Unordered[Mention]
       .orElseBy(_.sentence)
       .orElseBy(_.tokenInterval)
@@ -82,6 +92,19 @@ object MentionOps {
         println("I hope these are equal!")
         -1
       } // favor the left argument
+
+  val mention1: Mention = null
+  val mention2: Mention = null
+  val mentions = Seq(mention1, mention2)
+  val sortedMentions = mentions.sorted
+  val args: Seq[(String, Seq[Mention])] = mention1.arguments.toSeq
+  val argsSorted = args.sorted
+  val argumentSeq = Seq(mention1.arguments.toSeq, mention2.arguments.toSeq)
+  val sortedArgumentSeq = argumentSeq.sorted
+  val paths: Seq[(String, Seq[(Mention, SynPath)])] = mention1.paths.mapValues(_.toSeq).toSeq
+  val pathsSorted = paths.sorted
+  val pathSeq = Seq(mention1.paths.toSeq, mention2.paths.toSeq)
+  val sortedPathSeq = pathSeq.sorted
 
   def apply(mention: Mention): MentionOps = {
     mention match {
@@ -117,8 +140,13 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   def asMentionOps(mention: Mention): MentionOps = MentionOps(mention)
 
   protected def argsAST: JObject = {
-    val args = mention.arguments.toSeq.sorted(MentionOps.argumentSeqOrdering).map { case (name, mentions) =>
-      val sortedMentions = mentions.sorted(MentionOps.mentionsOrdering)
+    import MentionOps.mentionsOrdering
+
+    val argumentSeq: Seq[(String, Seq[Mention])] = mention.arguments.toSeq
+    // This sort compares the individual arguments, not the whole sequence.
+    val sortedArgumentSeq = argumentSeq.sorted // This is where mentionsOrdering is used.
+    val args = sortedArgumentSeq.map { case (name, mentions) =>
+      val sortedMentions = mentions.sorted // sorts individual mentions
 
       name -> JArray(sortedMentions.map(asMentionOps(_).jsonAST).toList)
     }
@@ -164,7 +192,9 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
     if (nonEmptyArgumentPaths.isEmpty) JNothing
     else {
       // TODO: This assumes that the resulting JObject sorts the keys somehow.
-      val sortedPaths = nonEmptyArgumentPaths.toSeq.sorted(MentionOps.pathSeqOrdering)
+      import MentionOps._
+      import scala.math.Ordering.Implicits.seqDerivedOrdering
+      val sortedPaths = nonEmptyArgumentPaths.mapValues(_.toSeq).toSeq.sorted // (MentionOps.pathSeqOrdering)
       val simplePathMap: Map[String, Map[String, List[JValue]]] = sortedPaths.map { case (key, innermap) =>
         val pairs = for {
           // TODO: The innermap needs to be sorted, but now we only have mentionId
