@@ -20,8 +20,7 @@ object MentionOps {
 
   // Lists are produced so that they can be quickly converted to JObjects.
   // Maps cannot be used because the order of the keys is not fixed.
-  // TODO: convert the SynPath to Seq[(Int, Int, String)]
-  def flattenPaths(mention: Mention): List[(String, List[(Mention, SynPath)])] = {
+  def flattenPaths(mention: Mention): List[(String, List[(Mention, List[(Int, Int, String)])])] = {
     if (mention.paths == null)
       println("This isn't right!")
     mention.paths.map { case (key, value) =>
@@ -40,16 +39,17 @@ object MentionOps {
         }
       }
       val newValue = try {
-        val valueSeq = value.toSeq
-        // Don't
-        val sortedValueSeq = valueSeq.sortBy { case (mention, synPath) => synPath }
+        val valueSeq = value.toSeq.map { case (mention, synPath) =>
+          (mention, synPath.toList)
+        }
+        val sortedValueSeq = valueSeq.sorted // By { case (mention, synPath) => synPath }
         sortedValueSeq.toList
       }
       catch {
         case exception =>
           println("It didn't work!")
           val valueSeq = value.toSeq
-          val sortedValueSeq1 = valueSeq.sortBy { case (mention, synPath) => synPath }
+          val sortedValueSeq1 = valueSeq.sorted // By { case (mention, synPath) => synPath }
           val sortedValueSeq = valueSeq.sorted
           throw exception
       }
@@ -57,7 +57,8 @@ object MentionOps {
     }.toSeq.sorted.toList // May not want to touch mention inside
   }
 
-  // As Scala 3 points out, this is recursive, because the arguments contain more Mentions.
+  // As Scala 3 points out, this can be recursive, because the arguments contain more Mentions.
+  // In part because of this, only the argument keys are used in sort, not the Mention values.
   // Triggers are not taken into account and neither is the class of he Mention except through the name.
   implicit val mentionOrdering: Ordering[Mention] = Unordered[Mention]
       .orElseBy(_.sentence)
@@ -65,7 +66,10 @@ object MentionOps {
       .orElseBy(_.labels)
       .orElseBy(_.foundBy)
       .orElseBy(_.getClass.getName)
-      .orElseBy(flattenArguments(_)) // Maps cannot be sorted, but Seqs can.
+      .orElseBy(_.arguments.keys.toSeq.sorted)
+      // The above gets all but a very few.
+      .orElseBy(_.arguments.values.flatten.map(_.tokenInterval).toSeq.sorted)
+//      .orElseBy(flattenArguments(_)) // Maps cannot be sorted, but Seqs can.
       // Skip paths.
 
   def apply(mention: Mention): MentionOps = {
@@ -128,7 +132,7 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
     // Convert all the mentions to their IDs just once, now.
     // Confirm externally to this that all IDs are unique.
     // mapValues is not available without warning in Scala 2.13+.
-    val mentionIdPaths: List[(String, List[(String, SynPath)])] = flattenedPaths.map { case (key, innerMap) =>
+    val mentionIdPaths: List[(String, List[(String, List[(Int, Int, String)])])] = flattenedPaths.map { case (key, innerMap) =>
       val newInnerMap = innerMap.map { case (mention, synPath) =>
         MentionOps(mention).id -> synPath
       }
@@ -151,7 +155,7 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
       // Do not use Maps here because the order of the keys is not fixed.
       val outerPairs = nonEmptyArgumentPaths.map { case (key, innermap) =>
         val innerPairs = innermap.map { case (mentionId, synPath) =>
-          val edgeAST = DirectedGraph.triplesToEdges[String](synPath.toList).map(_.jsonAST)
+          val edgeAST = DirectedGraph.triplesToEdges[String](synPath).map(_.jsonAST)
         
           mentionId -> JArray(edgeAST)
         }
