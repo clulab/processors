@@ -30,9 +30,8 @@ object JSONSerializer {
     }
     val sortedMentions = mentions.sorted(MentionOps.mentionOrdering).toList
     // This asMentionOps decides what kind of Mentions they will appear as.
-    val mentionList = JArray(sortedMentions.zipWithIndex.map { case (mention, index) =>
-      println(s"Converting mention $index!")
-      (MentionOps(mention).jsonAST)
+    val mentionList = JArray(sortedMentions.map { mention =>
+      MentionOps(mention).jsonAST
     })
 
     ("documents" -> docsMap) ~
