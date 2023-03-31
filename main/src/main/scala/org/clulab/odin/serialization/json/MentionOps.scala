@@ -21,40 +21,15 @@ object MentionOps {
   // Lists are produced so that they can be quickly converted to JObjects.
   // Maps cannot be used because the order of the keys is not fixed.
   def flattenPaths(mention: Mention): List[(String, List[(Mention, List[(Int, Int, String)])])] = {
-    if (mention.paths == null)
-      println("This isn't right!")
     mention.paths.map { case (key, value) =>
-      if (key == null)
-        println("This isn't, either")
-      if (value == null)
-        println("The value is messed up as well")
-      value.foreach { case (mention, synPath) =>
-        if (mention == null)
-          println("Bad as well")
-        if (synPath == null)
-          println("This won't work")
-        synPath.foreach { case (_, _, string) =>
-          if (string == null)
-            println("That shouldn't happen!")
-        }
+      val valueSeq = value.toSeq.map { case (mention, synPath) =>
+        (mention, synPath.toList)
       }
-      val newValue = try {
-        val valueSeq = value.toSeq.map { case (mention, synPath) =>
-          (mention, synPath.toList)
-        }
-        val sortedValueSeq = valueSeq.sorted // By { case (mention, synPath) => synPath }
-        sortedValueSeq.toList
-      }
-      catch {
-        case exception =>
-          println("It didn't work!")
-          val valueSeq = value.toSeq
-          val sortedValueSeq1 = valueSeq.sorted // By { case (mention, synPath) => synPath }
-          val sortedValueSeq = valueSeq.sorted
-          throw exception
-      }
+      val sortedValueSeq = valueSeq.sorted // By { case (mention, synPath) => synPath }
+      val newValue = sortedValueSeq.toList
+
       key -> newValue
-    }.toSeq.sorted.toList // May not want to touch mention inside
+    }.toSeq.sorted.toList
   }
 
   // As Scala 3 points out, this can be recursive, because the arguments contain more Mentions.
@@ -69,7 +44,6 @@ object MentionOps {
       .orElseBy(_.arguments.keys.toSeq.sorted)
       // The above gets all but a very few.
       .orElseBy(_.arguments.values.flatten.map(_.tokenInterval).toSeq.sorted)
-//      .orElseBy(flattenArguments(_)) // Maps cannot be sorted, but Seqs can.
       // Skip paths.
 
   def apply(mention: Mention): MentionOps = {
