@@ -42,6 +42,7 @@ libraryDependencies ++= {
     "org.clulab"                 %% "fatdynet"                 % "0.4.4",
     "de.bwaldvogel"               % "liblinear"                % "2.30",
     "tw.edu.ntu.csie"             % "libsvm"                   % "3.23",
+    "org.clulab"                 %% "scala-transformers-encoder"  % "0.2.1-SNAPSHOT",
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",  // for tokenization
     "org.clulab"                  % "lemport"                  % "0.9.10" exclude("org.scala-lang", "scala-library"), // Portuguese lemmatizer
@@ -70,3 +71,4 @@ libraryDependencies ++= {
     "me.tongfei"                  % "progressbar"              % "0.9.3"
   ) ++ parallelLibraries ++ scala2Libraries
 }
+
