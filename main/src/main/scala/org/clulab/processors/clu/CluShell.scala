@@ -13,7 +13,7 @@ import java.io.PrintWriter
   */
 class CluShell extends Shell {
   val printWriter = new PrintWriter(System.out, true)
-  val proc = new ReloadableProcessor(() => new CluProcessor(), true)
+  val proc = new ReloadableProcessor(() => new BalaurProcessor(), true)
 
   def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
