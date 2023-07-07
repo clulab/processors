@@ -47,10 +47,11 @@ libraryDependencies ++= {
     "org.json4s"                 %% "json4s-core"              % json4sVersion, // Apache-2.0
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion, // Apache-2.0
     // for machine learning
-    "org.clulab"                 %% "fatdynet"                 % "0.4.4", // Apache-2.0
+    "org.clulab"                 %% "fatdynet"                    % "0.4.4", // Apache-2.0
+    "org.clulab"                  % "roberta-onnx-model"          % "0.0.2",
     "org.clulab"                 %% "scala-transformers-encoder"  % "0.2.1-SNAPSHOT", // Apache-2.0
-    "de.bwaldvogel"               % "liblinear"                % "2.30", // BSD-3
-    "tw.edu.ntu.csie"             % "libsvm"                   % "3.23", // BSD
+    "de.bwaldvogel"               % "liblinear"                   % "2.30", // BSD-3
+    "tw.edu.ntu.csie"             % "libsvm"                      % "3.23", // BSD
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",  // for tokenization // BSD
     "org.clulab"                  % "lemport"                  % "0.9.10" exclude("org.scala-lang", "scala-library"), // Portuguese lemmatizer // LGPL-3.0
