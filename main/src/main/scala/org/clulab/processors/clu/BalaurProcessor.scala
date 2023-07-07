@@ -34,12 +34,15 @@ class BalaurProcessor protected (
     config: Config = ConfigFactory.load("balaurprocessor"),
     optionalNER: Option[LexiconNER] = None,
     seasonPathOpt: Option[String] = Some("/org/clulab/numeric/SEASON.tsv")
-  ) = this(config, 
-           optionalNER, 
-           newNumericEntityRecognizerOpt(seasonPathOpt), 
-           mkTokenizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
-           mkLemmatizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
-           TokenClassifier.fromFiles(config.getString(s"$prefix.modelName")))
+  ) = this(
+    config,
+    optionalNER,
+    newNumericEntityRecognizerOpt(seasonPathOpt),
+    mkTokenizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
+    mkLemmatizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
+    // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
+    TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
+  )
 
   override def getConf: Config = config
 
