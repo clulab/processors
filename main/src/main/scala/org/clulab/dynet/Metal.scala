@@ -15,6 +15,7 @@ import java.io.PrintWriter
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import scala.util.Using
+import scala.util.Using.Releasable
 
 import Metal._
 
@@ -28,6 +29,10 @@ class Metal(val taskManagerOpt: Option[TaskManager],
             modelOpt: Option[IndexedSeq[Layers]]) {
   // One Layers object per task; model(0) contains the Layers shared between all tasks (if any)
   protected lazy val model: IndexedSeq[Layers] = modelOpt.getOrElse(initialize())
+
+  implicit object CloseableModelSaverReleaser extends Releasable[CloseableModelSaver] {
+    override def release(resource: CloseableModelSaver): Unit = resource.close()
+  }
 
   // Use this carefully. That is, only when taskManagerOpt.isDefined
   def taskManager: TaskManager = {
