@@ -1,6 +1,5 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
 import org.clulab.utils.ScienceUtils._
 
 import java.io.{BufferedReader, InputStreamReader}
@@ -8,6 +7,7 @@ import java.nio.charset.StandardCharsets
 import java.text.Normalizer
 import java.util.regex.Pattern
 import scala.collection.mutable
+import scala.util.Using
 
 class ScienceUtils {
   val unicodes:Map[Char, String] = loadUnicodes

@@ -1,7 +1,6 @@
 package org.clulab.learning
 
 import de.bwaldvogel.liblinear._
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import org.clulab.utils.{Files,MathUtils}
@@ -10,6 +9,7 @@ import org.slf4j.LoggerFactory
 import java.io._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Using
 
 import LiblinearClassifier.logger
 

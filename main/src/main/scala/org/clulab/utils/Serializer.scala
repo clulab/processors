@@ -1,8 +1,7 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import scala.language.implicitConversions
+import scala.util.Using
 import java.io._
 
 object Serializer {

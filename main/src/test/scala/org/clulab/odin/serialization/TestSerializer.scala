@@ -2,8 +2,9 @@ package org.clulab.odin.serialization
 
 import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
-import org.clulab.scala.Using._
 import org.clulab.utils.Test
+
+import scala.util.Using
 
 // See TestJSONSerializer for the test upon which this is based.
 class TestSerializer extends Test {

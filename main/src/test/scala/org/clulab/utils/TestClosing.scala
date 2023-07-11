@@ -1,10 +1,10 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using.Using
 import org.scalatest._
 
 import java.io.Closeable
 import scala.io.Source
+import scala.util.Using
 
 class TestClosing extends Test {
 

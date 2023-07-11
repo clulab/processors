@@ -3,7 +3,6 @@ package org.clulab.processors.examples
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
-import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
 
@@ -12,6 +11,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
 import scala.collection.parallel.ParSeq
+import scala.util.Using
 
 object InfiniteParallelProcessorExample {
 

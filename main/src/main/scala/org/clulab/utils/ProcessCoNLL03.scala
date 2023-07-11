@@ -1,10 +1,10 @@
 package org.clulab.utils
 
 import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
-import org.clulab.scala.Using._
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
+import scala.util.Using
 
 /**
  * Little utility that regenerates the POS tags and chunk labels for the CoNLL-03 dataset

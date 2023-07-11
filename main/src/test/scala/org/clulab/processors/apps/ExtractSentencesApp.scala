@@ -1,8 +1,9 @@
 package org.clulab.processors.apps
 
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.scala.Using._
 import org.clulab.utils.FileUtils
+
+import scala.util.Using
 
 object ExtractSentencesApp extends App {
   val directoryName = args.lift(0).getOrElse("../corpora/Doc16k/txt")

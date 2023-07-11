@@ -2,9 +2,9 @@ package org.clulab.processors.apps
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.scala.Using._
 import org.clulab.utils.{Sourcer, Timers}
 
+import scala.util.Using
 
 object TokenClassifierTimerApp extends App {
   val fileName = args.lift(0).getOrElse("../sentences.txt")

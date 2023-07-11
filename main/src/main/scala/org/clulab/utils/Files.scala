@@ -1,11 +1,10 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import java.io._
 import java.nio.charset.Charset
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable.ListBuffer
+import scala.util.Using
 
 /**
  * File utilities

@@ -2,7 +2,6 @@ package org.clulab.sequences
 
 import org.clulab.learning._
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.SequenceTaggerLogger._
@@ -12,6 +11,7 @@ import org.clulab.utils.SeqUtils
 import java.io._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
+import scala.util.Using
 
 /**
   * Bidirectional MEMM sequence tagger

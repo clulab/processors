@@ -2,12 +2,12 @@ package org.clulab.numeric
 
 import java.io.File
 
-import org.clulab.scala.Using._
 import org.clulab.sequences.CommentedStandardKbSource
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Using
 
 class SeasonNormalizer(seasonsPath: String) {
   val normMapper = SeasonNormalizer.readNormsFromResource(seasonsPath)

@@ -1,8 +1,7 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import java.io.PrintWriter
+import scala.util.Using
 
 class TestSerializer extends Test {
 

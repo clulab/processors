@@ -1,6 +1,5 @@
 package org.clulab.embeddings
 
-import org.clulab.scala.Using._
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.InputStreamer.StreamResult
 import org.clulab.utils.NamedFuture
@@ -9,6 +8,8 @@ import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+
+import scala.util.Using
 
 /** Manages a pool of word embedding maps, so we do not load them more than once */
 object WordEmbeddingMapPool {

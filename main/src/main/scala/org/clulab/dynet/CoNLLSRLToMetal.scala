@@ -2,7 +2,6 @@ package org.clulab.dynet
 
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.{Document, Processor}
-import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{Counter, DirectedGraph, GraphMap}
 import org.slf4j.{Logger, LoggerFactory}
@@ -11,6 +10,7 @@ import java.io.{BufferedReader, File, FileReader, PrintWriter}
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
+import scala.util.Using
 
 import CoNLLSRLToMetal._
 

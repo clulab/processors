@@ -1,8 +1,7 @@
 package org.clulab.dynet
 
-import org.clulab.scala.Using._
-
 import java.io.PrintWriter
+import scala.util.Using
 
 /** Converts the standard CoNLLU syntactic dependency format to Metal */
 object CoNLLUToMetal {

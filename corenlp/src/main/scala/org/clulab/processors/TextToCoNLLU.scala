@@ -3,12 +3,12 @@ package org.clulab.processors
 
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.scala.Using._
 import org.clulab.struct.GraphMap
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileFilter, PrintWriter}
+import scala.util.Using
 
 import TextToCoNLLU._
 

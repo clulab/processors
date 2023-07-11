@@ -2,12 +2,12 @@ package org.clulab
 
 import org.clulab.learning.RVFDatum
 import org.clulab.processors.Document
-import org.clulab.scala.Using._
 import org.clulab.serialization.json.JSONSerializer
 import org.clulab.struct.Counter
 import org.json4s.jackson.JsonMethods._
 
 import _root_.scala.io.Source
+import _root_.scala.util.Using
 import java.io.File
 
 object TestUtils {

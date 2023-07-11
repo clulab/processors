@@ -1,6 +1,5 @@
 package org.clulab.processors
 
-import org.clulab.scala.Using._
 import org.clulab.sequences.LexiconNER
 import org.clulab.sequences.FileOverrideKbSource
 import org.clulab.sequences.FileStandardKbSource
@@ -20,7 +19,7 @@ import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import scala.collection.mutable
-import scala.io.Source
+import scala.util.Using
 
 class TestLexiconNER extends FatdynetTest {
 

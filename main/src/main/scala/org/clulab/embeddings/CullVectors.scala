@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
-import java.io.File
-
-import org.clulab.scala.Using._
 import org.clulab.utils.Sinker
 import org.clulab.utils.Sourcer
+
+import java.io.File
+import scala.util.Using
 
 // Expect this to use lots of memory.
 object CullVectors extends App {

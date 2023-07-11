@@ -1,7 +1,6 @@
 package org.clulab.embeddings
 
 import org.clulab.scala.BufferedIterator
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
 import org.clulab.utils.Logging
@@ -11,6 +10,7 @@ import java.nio.charset.StandardCharsets
 import java.io._
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+import scala.util.Using
 
 /**
  * Implements a word embedding map where each embedding is stored as a distinct array.

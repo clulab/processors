@@ -1,7 +1,6 @@
 package org.clulab.utils
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.Using._
 
 import java.io._
 import java.net.URL
@@ -10,6 +9,7 @@ import java.nio.file.StandardCopyOption
 import java.util.zip.ZipFile
 import scala.io.Source
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 object FileUtils {
   def appendingPrintWriterFromFile(file: File): PrintWriter = Sinker.printWriterFromFile(file, append = true)

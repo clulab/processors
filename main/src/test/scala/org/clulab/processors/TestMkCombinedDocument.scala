@@ -1,10 +1,11 @@
 package org.clulab.processors
 
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.{Sourcer, StringUtils, Test}
+
+import scala.util.Using
 
 class TestMkCombinedDocument extends Test {
   val sentences = Using.resource(Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt")) { source =>

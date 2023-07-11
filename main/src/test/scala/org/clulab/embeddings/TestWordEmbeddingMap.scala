@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
-import org.clulab.scala.Using._
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.Test
 
 import java.io.File
+import scala.util.Using
 
 class TestWordEmbeddingMap extends Test {
   val name = "/test_vectors"

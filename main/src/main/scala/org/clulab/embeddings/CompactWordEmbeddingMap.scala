@@ -4,7 +4,6 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Input
 import com.esotericsoftware.kryo.io.Output
 import org.clulab.scala.BufferedIterator
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.utils.ArrayView
@@ -20,6 +19,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+import scala.util.Using
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional

@@ -4,7 +4,6 @@ import com.typesafe.config.ConfigFactory
 import edu.cmu.dynet.{AdamTrainer, ComputationGraph, Expression, ExpressionVector, ParameterCollection, RMSPropTrainer, SimpleSGDTrainer}
 import org.clulab.dynet.Utils._
 import org.clulab.fatdynet.utils.CloseableModelSaver
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.sequences.Row
@@ -15,6 +14,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import java.io.PrintWriter
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import scala.util.Using
 
 import Metal._
 

@@ -1,7 +1,8 @@
 package org.clulab.processors
 
-import org.clulab.scala.Using._
 import org.clulab.utils.Sourcer
+
+import scala.util.Using
 
 class TestLemmatizer extends FatdynetTest {
 
