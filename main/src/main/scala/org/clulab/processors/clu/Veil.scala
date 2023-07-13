@@ -4,10 +4,10 @@ import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
-import org.clulab.utils.Closer.AutoCloser
 
 import java.io.PrintWriter
 import scala.collection.mutable.{Set => MutableSet}
+import scala.util.Using
 
 trait Veil
 
@@ -200,33 +200,37 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   }
 }
 
+/** Demonstrate how either parts of the text or Document can be veiled.
+  */
 object VeilApp extends App {
 
+  /** Treat this text as if the letters "(Hahn-Powell, 2012)" did not exist
+    *  for the purpose of mkDocument, but do include them in the text.
+    */
   def veilText(processsor: Processor): Unit = {
-    // Treat this text as if the letters "(Hahn-Powell, 2012)" did not exist
-    // for the purpose of mkDocument, but do include them in the text.
     val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
     val veiledLetters = Seq(Range.inclusive(text.indexOf('('), text.indexOf(')')))
     val veiledText = new VeiledText(text, veiledLetters)
     val document = veiledText.mkDocument(processor)
 
-    new PrintWriter("veiledLetters.out").autoClose { printWriter =>
+    Using.resource(new PrintWriter("veiledLetters.out")) { printWriter =>
       val documentSerializer = new DocumentSerializer()
 
       documentSerializer.save(document, printWriter)
     }
   }
 
+  /** Treat this text as if the words "( Hahn-Powell , 2012 )" did not exist
+    * for the purpose of annotate, but do include them in the document.
+    */
   def veilDocument(processor: Processor): Unit = {
-    // Treat this text as if the words "( Hahn-Powell , 2012 )" did not exist
-    // for the purpose of annotate, but do include them in the document.
     val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
     val document = processor.mkDocument(text)
     val veiledWords = Seq((0, Range.inclusive(document.sentences(0).raw.indexOf("("), document.sentences(0).raw.indexOf(")"))))
     val veiledDocument = new VeiledDocument(document, veiledWords)
     val annotatedDocument = veiledDocument.annotate(processor)
 
-    new PrintWriter("veiledWords.out").autoClose { printWriter =>
+    Using.resource(new PrintWriter("veiledWords.out")) { printWriter =>
       val documentSerializer = new DocumentSerializer()
 
       documentSerializer.save(annotatedDocument, printWriter)
