@@ -178,16 +178,21 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     })
   }
 
-  def copy(document: Document): Document = {
+  def assimilate(document: Document, textOpt: Option[String]): Document = {
     id = document.id
     coreferenceChains = document.coreferenceChains
-    text = document.text
+    text = textOpt
     attachments = document.attachments
     documentCreationTime = document.documentCreationTime
     this
   }
 
-  def copy(sentences: Array[Sentence] = sentences): Document = new Document(sentences).copy(this)
+  // sentences are a val, so they must be initialized through the construction of a new Document.
+  // Thereafter, the remaining values can be assimilated from the old document.  The shortcut
+  // is used so that subclasses don't have to duplicate almost everything in their copy.
+  def copy(sentences: Array[Sentence] = sentences, textOpt: Option[String] = text): Document = {
+    new Document(sentences).assimilate(this, textOpt)
+  }
 
   def offset(offset: Int): Document =
       // If a subclass of Document constructs itself with an attachment or a documentCreationTime that
