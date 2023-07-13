@@ -1,6 +1,5 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import org.clulab.utils.Files
@@ -11,6 +10,7 @@ import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWrit
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.{BufferedSource, Source}
+import scala.util.Using
 
 /**
  * Parent class for all datasets used for ranking problems

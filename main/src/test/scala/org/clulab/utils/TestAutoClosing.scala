@@ -1,10 +1,10 @@
 package org.clulab.utils
 
-import org.clulab.utils.Closer.AutoCloser
 import org.scalatest._
 
 import java.io.Closeable
 import scala.io.Source
+import scala.util.Using
 
 class TestAutoClosing extends Test {
 
@@ -22,7 +22,7 @@ class TestAutoClosing extends Test {
 
   it should "be able to produce a simple result" in {
     val closing = new Closing()
-    val result = closing.autoClose { _ =>
+    val result = Using.resource(closing) { _ =>
       5
     }
     result should be (5)
@@ -31,7 +31,7 @@ class TestAutoClosing extends Test {
 
   it should "be able to produce a null result" in {
     val closing = new Closing()
-    val result: AnyRef = closing.autoClose { _ =>
+    val result: AnyRef = Using.resource(closing) { _ =>
       null
     }
 
@@ -41,7 +41,7 @@ class TestAutoClosing extends Test {
 
   it should "be able to produce a None result" in {
     val closing = new Closing()
-    val result = closing.autoClose { _ =>
+    val result = Using.resource(closing) { _ =>
       None
     }
     result should be (None)
@@ -50,7 +50,7 @@ class TestAutoClosing extends Test {
 
   it should "be able to produce a Some result" in {
     val closing = new Closing()
-    val result = closing.autoClose { _ =>
+    val result = Using.resource(closing) { _ =>
       Some(5)
     }
     result should be (Some(5))
@@ -61,7 +61,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing()
 
     an [IllegalStateException] should be thrownBy {
-      closing.autoClose(_ => throw new IllegalStateException("Boom!"))
+      Using.resource(closing)(_ => throw new IllegalStateException("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -70,7 +70,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing()
 
     an [StackOverflowError] should be thrownBy {
-      closing.autoClose(_ => throw new StackOverflowError("Boom!"))
+      Using.resource(closing)(_ => throw new StackOverflowError("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -79,7 +79,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new IllegalStateException("Boom!")))
 
     an [IllegalStateException] should be thrownBy {
-      closing.autoClose(_ => "Hello")
+      Using.resource(closing)(_ => "Hello")
     }
     closing.closed should be (true)
   }
@@ -88,7 +88,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new StackOverflowError("Boom!")))
 
     an [StackOverflowError] should be thrownBy {
-      closing.autoClose(_ => "Hello")
+      Using.resource(closing)(_ => "Hello")
     }
     closing.closed should be (true)
   }
@@ -97,7 +97,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new IllegalStateException("Boom!")))
 
     an [RuntimeException] should be thrownBy {
-      closing.autoClose(_ => throw new RuntimeException("Boom!"))
+      Using.resource(closing)(_ => throw new RuntimeException("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -106,7 +106,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new OutOfMemoryError("Boom!")))
 
     an [StackOverflowError] should be thrownBy {
-      closing.autoClose(_ => throw new StackOverflowError("Boom!"))
+      Using.resource(closing)(_ => throw new StackOverflowError("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -115,7 +115,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new IllegalStateException("Boom!")))
 
     an [StackOverflowError] should be thrownBy {
-      closing.autoClose(_ => throw new StackOverflowError("Boom!"))
+      Using.resource(closing)(_ => throw new StackOverflowError("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -124,7 +124,7 @@ class TestAutoClosing extends Test {
     val closing = new Closing(Some(new OutOfMemoryError("Boom!")))
 
     an [OutOfMemoryError] should be thrownBy {
-      closing.autoClose(_ => throw new IllegalStateException("Boom!"))
+      Using.resource(closing)(_ => throw new IllegalStateException("Boom!"))
     }
     closing.closed should be (true)
   }
@@ -137,13 +137,13 @@ class TestAutoClosing extends Test {
     }
 
     an [RuntimeException] should be thrownBy {
-      getClosing.autoClose( _ => 5)
+      Using.resource(getClosing)( _ => 5)
     }
     closing.closed should be (false)
   }
 
   it should "work with a plain Source, even in Scala 2.11" in {
-    Source.fromString("foo\nbar\n").autoClose { source =>
+    Using.resource(Source.fromString("foo\nbar\n")) { source =>
       source.getLines().toList
     }
   }

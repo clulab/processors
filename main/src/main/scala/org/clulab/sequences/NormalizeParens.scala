@@ -1,9 +1,8 @@
 package org.clulab.sequences
 
-import org.clulab.scala.Using._
-
 import java.io.PrintWriter
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Transforms -LRB-, -LCB-, etc. tokens back into "(", "{", etc.

@@ -8,13 +8,13 @@ import org.clulab.struct.Counter
 import org.slf4j.{Logger, LoggerFactory}
 import org.clulab.dynet.Utils._
 import org.clulab.scala.BufferedIterator
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.Configured
 
 import EmbeddingLayer._
 
 import scala.util.Random
+import scala.util.Using
 
 /**
  * This layer takes a sequence of words and produces a sequence of Expression that stores the words' full embeddings

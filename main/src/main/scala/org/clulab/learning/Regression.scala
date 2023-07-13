@@ -1,9 +1,9 @@
 package org.clulab.learning
 
 import org.clulab.learning.Datasets._
-import org.clulab.scala.Using._
 
 import java.io._
+import scala.util.Using
 
 /**
   * Trait for regression

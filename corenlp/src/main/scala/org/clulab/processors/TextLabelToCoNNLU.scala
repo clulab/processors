@@ -3,11 +3,11 @@ package org.clulab.processors
 import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
-import org.clulab.scala.Using._
 import org.clulab.struct.GraphMap
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileFilter, PrintWriter}
+import scala.util.Using
 
 import TextLabelToCoNLLU._
 

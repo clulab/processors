@@ -1,10 +1,9 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import java.io.PrintWriter
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Using
 
 /**
  * Converts the CoNLL format into the one-sentence-per-line required by our LMs

@@ -2,11 +2,11 @@ package org.clulab.dynet
 
 
 import org.apache.commons.io.FileUtils
-import org.clulab.scala.Using._
 
 import java.io.{File, PrintWriter}
 import java.text.DecimalFormat
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Using
 
 /**
  * Averages the parameter weights from multiple DyNet model files

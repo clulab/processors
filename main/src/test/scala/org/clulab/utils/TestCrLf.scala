@@ -1,11 +1,10 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
+import scala.util.Using
 
 class TestCrLf extends Test {
 

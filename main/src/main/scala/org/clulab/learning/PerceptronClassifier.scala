@@ -1,6 +1,5 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.utils.{Files, MathUtils, StringUtils}
 import org.clulab.struct.Lexicon
@@ -12,6 +11,7 @@ import java.util.Properties
 import scala.Serializable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import scala.util.Using
 
 import PerceptronClassifier.logger
 

@@ -6,7 +6,6 @@ import org.clulab.embeddings.SanitizedWordEmbeddingMap
 import org.clulab.fatdynet.utils.BaseTextLoader
 import org.clulab.fatdynet.utils.Initializer
 import org.clulab.scala.BufferedIterator
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, MutableNumber}
@@ -18,6 +17,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 /**
  * Utility methods used by DyNet applications

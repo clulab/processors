@@ -1,12 +1,11 @@
 package org.clulab.utils
 
-import org.clulab.scala.Using._
-
 import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter }
 import java.util.Properties
 import java.util.regex.Pattern
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 /**
  * Converts a command line to properties; and other useful String utils

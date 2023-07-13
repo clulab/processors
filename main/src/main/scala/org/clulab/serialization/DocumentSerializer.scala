@@ -3,7 +3,6 @@ package org.clulab.serialization
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.scala.Using._
 import org.clulab.struct._
 import org.clulab.utils.Logging
 import org.json4s.DefaultFormats
@@ -12,6 +11,7 @@ import java.io._
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.reflect.ClassTag
+import scala.util.Using
 
 /**
   * Saves/loads a Document to/from a stream

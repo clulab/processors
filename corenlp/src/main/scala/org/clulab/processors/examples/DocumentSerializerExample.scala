@@ -1,9 +1,9 @@
 package org.clulab.processors.examples
 
-import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 
 import java.io.{BufferedReader, FileReader}
+import scala.util.Using
 
 /**
  *

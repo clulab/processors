@@ -2,7 +2,6 @@ package org.clulab.struct
 
 import org.clulab.processors.Document
 import org.clulab.processors.Sentence
-import org.clulab.scala.Using._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.serialization.json._
 import org.clulab.struct.test.CaseClass
@@ -18,6 +17,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import scala.util.Using
 
 class TestDocumentAttachment extends Test {
   protected val FIRST_KEY = "first"

@@ -1,12 +1,12 @@
 package org.clulab.sequences
 
 import org.clulab.processors.Document
-import org.clulab.scala.Using._
 import org.clulab.sequences.SequenceTaggerEvaluator._
 import org.clulab.utils.NullWriter
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.PrintWriter
+import scala.util.Using
 
 /**
   * Implements evaluation of a sequence tagger

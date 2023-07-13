@@ -71,7 +71,8 @@ libraryDependencies ++= {
     // for odin
     "org.apache.commons"          % "commons-text"             % "1.1", // Apache-2.0
     // See https://docs.scala-lang.org/overviews/core/collections-migration-213.html.
-    "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.6.0", // up to 2.9.0, but match fatdynet // Apache-2.0
+    // fatdynet 0.4.4 uses 2.6.0 which will be evicted.  Move to fatdynet 0.4.5 for a 2.11.0 match.
+    "org.scala-lang.modules"     %% "scala-collection-compat"  % "2.11.0", // up to 2.11.0 // Apache-2.0
     "org.scala-lang.modules"     %% "scala-parser-combinators" % combinatorsVersion, // Apache-2.0
     "org.yaml"                    % "snakeyaml"                % "1.14", // Apache-2.0
     // progress bar for training

@@ -1,9 +1,9 @@
 package org.clulab.utils
 
 import org.clulab.dynet.Utils
-import org.clulab.scala.Using._
 
 import java.io.FileNotFoundException
+import scala.util.Using
 
 class TestUtils extends Test {
 
