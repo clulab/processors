@@ -3,13 +3,13 @@ package org.clulab.processors
 import java.io.PrintWriter
 
 import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
+import org.clulab.utils.Hash
 import org.clulab.utils.Serializer
 import org.json4s.JString
 import org.json4s.JValue
 import org.json4s.jackson.prettyJson
 
 import scala.collection.mutable
-import scala.util.hashing.MurmurHash3._
 
 /**
   * Stores all annotations for one document.
@@ -47,25 +47,24 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     // Used by equivalenceHash.
     // return an Int hash based on the Sentence.equivalenceHash of each sentence
     def sentencesHash: Int = {
-      val h0 = stringHash(s"$stringCode.sentences")
       val hs = sentences.map(_.equivalenceHash)
-      val h = mixLast(h0, unorderedHash(hs))
-      finalizeHash(h, sentences.length)
+
+      Hash.withLast(sentences.length)(
+        Hash(s"$stringCode.sentences"),
+        Hash.unordered(hs) // TODO: This should be ordered.
+      )
     }
 
-    // the seed (not counted in the length of finalizeHash)
-    // decided to use the class name
-    val h0 = stringHash(stringCode)
-    // comprised of the equiv. hash of sentences
-    val h1 = mix(h0, sentencesHash)
-    finalizeHash(h1, 1)
+    Hash(
+      Hash(stringCode),
+      sentencesHash
+    )
   }
 
-  def ambivalenceHash: Int = {
-    val h0 = stringHash(Document.getClass.getName)
-    val h1 = mix(h0, orderedHash(sentences.map(_.ambivalenceHash)))
-    finalizeHash(h1, 1)
-  }
+  def ambivalenceHash: Int = Hash(
+    Hash(Document.getClass.getName),
+    Hash.ordered(sentences.map(_.ambivalenceHash))
+  )
 
   /** Adds an attachment to the document's attachment map */
   def addAttachment(name: String, attachment: DocumentAttachment): Unit = {

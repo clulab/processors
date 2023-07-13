@@ -3,10 +3,10 @@ package org.clulab.processors
 import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{DirectedGraph, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
+import org.clulab.utils.Hash
 import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable
-import scala.util.hashing.MurmurHash3._
 
 /** Stores the annotations for a single sentence */
 class Sentence(
@@ -52,46 +52,45 @@ class Sentence(
 
   protected lazy val cachedAmbivalenceHash = calculateAmbivalenceHash
 
-  protected def calculateAmbivalenceHash: Int = {
-    val h0 = stringHash(Sentence.getClass.getName)
-    val h1 = mix(h0, orderedHash(raw))
-    val h2 = mix(h1, orderedHash(startOffsets))
-    val h3 = mix(h2, orderedHash(endOffsets))
-    finalizeHash(h3, 3)
-  }
+  protected def calculateAmbivalenceHash: Int = Hash(
+    Hash(Sentence.getClass.getName),
+    Hash.ordered(raw),
+    Hash.ordered(startOffsets),
+    Hash.ordered(endOffsets)
+  )
 
   /**
     * Used to compare Sentences.
     * @return a hash (Int) based on the contents of a sentence
     */
   def equivalenceHash: Int = {
-
     val stringCode = "org.clulab.processors.Sentence"
 
-    def getAnnotationsHash(labels: Option[Array[_]]): Int = labels match {
-      case Some(lbls) =>
-        val h0 = stringHash(s"$stringCode.annotations")
-        val hs = lbls.map(_.hashCode)
-        val h = mixLast(h0, orderedHash(hs))
-        finalizeHash(h, lbls.length)
-      case None => None.hashCode
-    }
+    def getAnnotationsHash(labelsOpt: Option[Array[_]]): Int = labelsOpt
+        .map { labels =>
+          val hs = labels.map(_.hashCode)
+          val result = Hash.withLast(labels.length)(
+            Hash(s"$stringCode.annotations"),
+            Hash.ordered(hs)
+          )
+          
+          result
+        }
+        .getOrElse(None.hashCode)
 
-    // the seed (not counted in the length of finalizeHash)
-    // decided to use the class name
-    val h0 = stringHash(stringCode)
-    // NOTE: words.hashCode will produce inconsistent values
-    val h1a = mix(h0, getAnnotationsHash(Some(raw)))
-    val h1b = mix(h1a, getAnnotationsHash(Some(words)))
-    val h2 = mix(h1b, getAnnotationsHash(Some(startOffsets)))
-    val h3 = mix(h2, getAnnotationsHash(Some(endOffsets)))
-    val h4 = mix(h3, getAnnotationsHash(tags))
-    val h5 = mix(h4, getAnnotationsHash(lemmas))
-    val h6 = mix(h5, getAnnotationsHash(entities))
-    val h7 = mix(h6, getAnnotationsHash(norms))
-    val h8 = mix(h7, getAnnotationsHash(chunks))
-    val h9 = mix(h8, if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode)
-    finalizeHash(h9, 10) 
+    Hash(
+      Hash(stringCode),
+      getAnnotationsHash(Some(raw)),
+      getAnnotationsHash(Some(words)),
+      getAnnotationsHash(Some(startOffsets)),
+      getAnnotationsHash(Some(endOffsets)),
+      getAnnotationsHash(tags),
+      getAnnotationsHash(lemmas),
+      getAnnotationsHash(entities),
+      getAnnotationsHash(norms),
+      getAnnotationsHash(chunks),
+      if (dependencies.nonEmpty) dependencies.get.equivalenceHash else None.hashCode
+    )
   }
 
   /**

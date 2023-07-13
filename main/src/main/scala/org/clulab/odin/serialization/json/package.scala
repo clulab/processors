@@ -3,9 +3,9 @@ package org.clulab.odin.serialization
 import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.struct.DirectedGraph
+import org.clulab.utils.Hash
 import org.json4s._
 import org.json4s.JsonDSL._
-import scala.util.hashing.MurmurHash3._
 
 
 package object json {
@@ -20,14 +20,18 @@ package object json {
   }
 
   /** Hash representing the [[Mention.arguments]] */
-  private def argsHash(args: Map[String, Seq[Mention]]): Int = {
-    val argHashes = for {
-      (role, mns) <- args
-      bh = stringHash(s"role:$role")
-      hs = mns.map(_.equivalenceHash)
-    } yield mix(bh, unorderedHash(hs))
-    val h0 = stringHash("org.clulab.odin.Mention.arguments")
-    finalizeHash(h0, unorderedHash(argHashes))
+  // TODO: Compare this to Mention.argsHash().
+  private def argsHash(arguments: Map[String, Seq[Mention]]): Int = {
+    val argHashes = arguments.map { case (name, mentions) =>
+      val seed = Hash(s"role:$name")
+      val data = mentions.map(_.equivalenceHash)
+
+      Hash.mix(seed, Hash.unordered(data))
+    }
+    // TODO: This is not the proper use of the count.
+    Hash.withLast(Hash.unordered(argHashes))(
+      Hash("org.clulab.odin.Mention.arguments")
+    )
   }
 
   private def pathsAST(paths: Map[String, Map[Mention, odin.SynPath]]): JValue = paths match {
@@ -78,21 +82,14 @@ package object json {
 
     val stringCode = s"org.clulab.odin.${TextBoundMention.string}"
 
-    def equivalenceHash: Int = {
-      // the seed (not counted in the length of finalizeHash)
-      val h0 = stringHash(stringCode)
-      // labels
-      val h1 = mix(h0, tb.labels.hashCode)
-      // interval.start
-      val h2 = mix(h1, tb.tokenInterval.start)
-      // interval.end
-      val h3 = mix(h2, tb.tokenInterval.end)
-      // sentence index
-      val h4 = mix(h3, tb.sentence)
-      // document.equivalenceHash
-      val h5 = mix(h4, tb.document.equivalenceHash)
-      finalizeHash(h5, 5)
-    }
+    def equivalenceHash: Int = Hash(
+      Hash(stringCode),
+      tb.labels.hashCode,
+      tb.tokenInterval.start,
+      tb.tokenInterval.end,
+      tb.sentence,
+      tb.document.equivalenceHash
+    )
 
     override def id: String = s"${TextBoundMention.shortString}:$equivalenceHash"
 
@@ -116,25 +113,16 @@ package object json {
 
     val stringCode = s"org.clulab.odin.${EventMention.string}"
 
-    def equivalenceHash: Int = {
-      // the seed (not counted in the length of finalizeHash)
-      val h0 = stringHash(stringCode)
-      // labels
-      val h1 = mix(h0, em.labels.hashCode)
-      // interval.start
-      val h2 = mix(h1, em.tokenInterval.start)
-      // interval.end
-      val h3 = mix(h2, em.tokenInterval.end)
-      // sentence index
-      val h4 = mix(h3, em.sentence)
-      // document.equivalenceHash
-      val h5 = mix(h4, em.document.equivalenceHash)
-      // args
-      val h6 = mix(h5, argsHash(em.arguments))
-      // trigger
-      val h7 = mix(h6, TextBoundMentionOps(em.trigger).equivalenceHash)
-      finalizeHash(h7, 7)
-    }
+    def equivalenceHash: Int = Hash(
+      Hash(stringCode),
+      em.labels.hashCode,
+      em.tokenInterval.start,
+      em.tokenInterval.end,
+      em.sentence,
+      em.document.equivalenceHash,
+      argsHash(em.arguments),
+      TextBoundMentionOps(em.trigger).equivalenceHash
+    )
 
     override def id: String = s"${EventMention.shortString}:$equivalenceHash"
 
@@ -162,23 +150,15 @@ package object json {
 
     val stringCode = s"org.clulab.odin.${RelationMention.string}"
 
-    def equivalenceHash: Int = {
-      // the seed (not counted in the length of finalizeHash)
-      val h0 = stringHash(stringCode)
-      // labels
-      val h1 = mix(h0, rm.labels.hashCode)
-      // interval.start
-      val h2 = mix(h1, rm.tokenInterval.start)
-      // interval.end
-      val h3 = mix(h2, rm.tokenInterval.end)
-      // sentence index
-      val h4 = mix(h3, rm.sentence)
-      // document.equivalenceHash
-      val h5 = mix(h4, rm.document.equivalenceHash)
-      // args
-      val h6 = mix(h5, argsHash(rm.arguments))
-      finalizeHash(h6, 6)
-    }
+    def equivalenceHash: Int = Hash(
+      Hash(stringCode),
+      rm.labels.hashCode,
+      rm.tokenInterval.start,
+      rm.tokenInterval.end,
+      rm.sentence,
+      rm.document.equivalenceHash,
+      argsHash(rm.arguments)
+    )
 
     override def id: String = s"${RelationMention.shortString}:$equivalenceHash"
 
@@ -205,23 +185,15 @@ package object json {
 
     val stringCode = s"org.clulab.odin.${CrossSentenceMention.string}"
 
-    def equivalenceHash: Int = {
-      // the seed (not counted in the length of finalizeHash)
-      val h0 = stringHash(stringCode)
-      // labels
-      val h1 = mix(h0, csm.labels.hashCode)
-      // interval.start
-      val h2 = mix(h1, csm.tokenInterval.start)
-      // interval.end
-      val h3 = mix(h2, csm.tokenInterval.end)
-      // sentence index
-      val h4 = mix(h3, csm.sentence)
-      // document.equivalenceHash
-      val h5 = mix(h4, csm.document.equivalenceHash)
-      // args
-      val h6 = mix(h5, argsHash(csm.arguments))
-      finalizeHash(h6, 6)
-    }
+    def equivalenceHash: Int = Hash(
+      Hash(stringCode),
+      csm.labels.hashCode,
+      csm.tokenInterval.start,
+      csm.tokenInterval.end,
+      csm.sentence,
+      csm.document.equivalenceHash,
+      argsHash(csm.arguments)
+    )
 
     override def id: String = s"${CrossSentenceMention.shortString}:$equivalenceHash"
 
