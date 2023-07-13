@@ -2,8 +2,8 @@ package org.clulab.numeric
 
 import java.io.File
 
+import org.clulab.scala.Using._
 import org.clulab.sequences.CommentedStandardKbSource
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
@@ -40,9 +40,9 @@ object SeasonNormalizer {
     val customResourcePath = new File(NumericEntityRecognizer.resourceDir, path)
 
     if (customResourcePath.exists)
-      Sourcer.sourceFromFile(customResourcePath).autoClose(readNormsFromSource)
+      Using.resource(Sourcer.sourceFromFile(customResourcePath))(readNormsFromSource)
     else
-      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
+      Using.resource(Sourcer.sourceFromResource(path))(readNormsFromSource)
   }
 
   def readNormsFromSource(source: Source): Map[String, SeasonRange] = {

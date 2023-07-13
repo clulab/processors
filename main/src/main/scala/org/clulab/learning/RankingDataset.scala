@@ -1,16 +1,16 @@
 package org.clulab.learning
 
-import java.util.zip.GZIPInputStream
-import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
-
-import org.slf4j.LoggerFactory
-
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.io.{BufferedSource, Source}
+import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import org.clulab.utils.Files
 import org.clulab.utils.Serializer
+import org.slf4j.LoggerFactory
+
+import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
+import java.util.zip.GZIPInputStream
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -451,29 +451,29 @@ object RVFRankingDataset {
                            featureLexicon:Lexicon[String],
                            fn:String): Unit = {
     var qid = 0
-    val os = new PrintWriter(new FileWriter(fn))
-    for(query <- queries) {
-      qid += 1
-      for(datum <- query) {
-        os.print(datum.label)
-        os.print(s" qid:$qid")
-        val fs = new ListBuffer[(Int, Double)]
-        val c = datum.featuresCounter
-        for(k <- c.keySet) {
-          val fi = featureLexicon.get(k)
-          if(fi.isDefined) {
-            // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-            fs += ((fi.get + 1, c.getCount(k)))
+    Using.resource(new PrintWriter(fn)) { os =>
+      for (query <- queries) {
+        qid += 1
+        for (datum <- query) {
+          os.print(datum.label)
+          os.print(s" qid:$qid")
+          val fs = new ListBuffer[(Int, Double)]
+          val c = datum.featuresCounter
+          for (k <- c.keySet) {
+            val fi = featureLexicon.get(k)
+            if (fi.isDefined) {
+              // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
+              fs += ((fi.get + 1, c.getCount(k)))
+            }
           }
+          val fss = fs.toList.sortBy(_._1)
+          for (t <- fss) {
+            os.print(s" ${t._1}:${t._2}")
+          }
+          os.println()
         }
-        val fss = fs.toList.sortBy(_._1)
-        for(t <- fss) {
-          os.print(s" ${t._1}:${t._2}")
-        }
-        os.println()
       }
     }
-    os.close()
   }
 
   def loadFrom[F](fileName:String):RVFRankingDataset[F] = {

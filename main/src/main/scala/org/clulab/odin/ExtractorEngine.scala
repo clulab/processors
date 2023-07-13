@@ -1,14 +1,15 @@
 package org.clulab.odin
 
+import org.clulab.odin
+import org.clulab.odin.impl.{ Extractor, RuleReader }
+import org.clulab.scala.Using._
+import org.clulab.processors.Document
+
 import java.io._
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
-
 import scala.io.{ Codec, Source }
 import scala.reflect.ClassTag
-import org.clulab.processors.Document
-import org.clulab.odin
-import org.clulab.odin.impl.{ Extractor, RuleReader }
 
 class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Action) {
 
@@ -140,18 +141,17 @@ object ExtractorEngine {
 
   private def read(file: File, charset: Charset): String = {
     implicit val codec: Codec = new Codec(charset)
-    val source = Source.fromFile(file)
-    val text = source.mkString
-    source.close()
-    text
+    Using.resource(Source.fromFile(file)) { source =>
+      val text = source.mkString
+      text
+    }
   }
 
   private def read(stream: InputStream, charset: Charset): String = {
-    implicit val codec: Codec = new Codec(charset)
-    val source = Source.fromInputStream(stream)
-    val text = source.mkString
-    source.close()
-    text
+    Using.resource (Source.fromInputStream(stream)(new Codec(charset))) { source =>
+      val text = source.mkString
+      text
+    }
   }
 
   def fromFile(

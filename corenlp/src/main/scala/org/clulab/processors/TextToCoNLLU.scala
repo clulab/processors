@@ -1,13 +1,16 @@
 package org.clulab.processors
 
-import java.io.{File, FileFilter, PrintWriter}
 
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.scala.Using._
+import org.clulab.struct.GraphMap
 import org.clulab.utils.StringUtils
 import org.slf4j.{Logger, LoggerFactory}
+
+import java.io.{File, FileFilter, PrintWriter}
+
 import TextToCoNLLU._
-import org.clulab.struct.GraphMap
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format
@@ -24,9 +27,9 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       try {
         val doc = parseFile(f)
         val ofn = s"$outDir/${f.getName.substring(0, f.getName.length - 4)}.conllu"
-        val pw = new PrintWriter(ofn)
-        toCoNLLU(doc, pw)
-        pw.close()
+        Using.resource(new PrintWriter(ofn)) { pw =>
+          toCoNLLU(doc, pw)
+        }
       } catch {
         case e:Exception => {
           logger.error(s"Parsing of file $f failed with error:")
@@ -65,13 +68,13 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
   }
 
   def parseFile(f:File):Document = {
-    val s = scala.io.Source.fromFile(f)
     val buffer = new StringBuilder
-    for(line <- s.getLines()) {
-      buffer.append(line)
-      buffer.append("\n")
+    Using.resource(scala.io.Source.fromFile(f)) { s =>
+      for (line <- s.getLines()) {
+        buffer.append(line)
+        buffer.append("\n")
+      }
     }
-    s.close()
 
     val doc = proc.mkDocument(buffer.toString())
     annotate(doc)

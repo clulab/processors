@@ -1,9 +1,6 @@
 package org.clulab.struct
 
-import java.io.{BufferedWriter, PrintWriter, StringWriter}
-
-import org.clulab.utils.Files
-import org.clulab.utils.Test
+import org.clulab.utils.{StringUtils, Test}
 
 /**
   * Tests Counter methods
@@ -12,16 +9,15 @@ import org.clulab.utils.Test
   */
 class TestCounter extends Test {
   "TestCounter" should "serialize content correctly in saveTo " in {
-    val sw = new StringWriter()
-    val w = Files.toPrintWriter(sw)
-    val c = new Counter[String]()
-    c += "uno"
-    c += "dos"
-    c.saveTo(w)
-    w.close()
+    val string = StringUtils.viaPrintWriter { printWriter =>
+      val c = new Counter[String]()
+      c += "uno"
+      c += "dos"
+      c.saveTo(printWriter)
+    }
 
     val eol = System.getProperty("line.separator")
-    val content = sw.toString.replace(eol, " ")
+    val content = string.replace(eol, " ")
     val values = content.split(' ')
 
     val Array(defaultReturnValue, size, kind) = values.take(3)

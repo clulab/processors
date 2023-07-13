@@ -1,13 +1,16 @@
 package org.clulab.learning
 
+import de.bwaldvogel.liblinear._
+import org.clulab.scala.Using._
 import org.clulab.utils.Files
 import org.slf4j.LoggerFactory
-import de.bwaldvogel.liblinear._
+
+import java.io._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import scala.collection.mutable.ArrayBuffer
+
 import LiblinearRegression.logger
-import java.io._
 
 /**
   * Wrapper for liblinear regression, including LR and linear SVM
@@ -253,10 +256,10 @@ object LiblinearRegression {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   def loadFrom[F](fileName:String):LiblinearRegression[F] = {
-    val r = new BufferedReader(new FileReader(fileName))
-    val c = loadFrom[F](r)
-    r.close()
-    c
+    Using.resource(new BufferedReader(new FileReader(fileName))) { r =>
+      val c = loadFrom[F](r)
+      c
+    }
   }
 
   def loadFrom[F](r:Reader): LiblinearRegression[F] = {

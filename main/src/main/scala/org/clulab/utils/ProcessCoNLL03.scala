@@ -1,6 +1,7 @@
 package org.clulab.utils
 
 import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
+import org.clulab.scala.Using._
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
@@ -14,20 +15,20 @@ object ProcessCoNLL03 extends App {
   val proc = new CluProcessor()
   val rows = ColumnReader.readColumns(args(0))
   println(s"Found ${rows.length} sentences.")
-  val pw = new PrintWriter(args(0) + ".reparsed")
-  for (row <- rows) {
-    val words = row.map(e => e.get(0))
-    if (row.length == 1 && words(0) == "-DOCSTART-") {
-      saveSent(pw, row)
-    } else {
-      val doc = proc.mkDocumentFromTokens(Seq(words))
-      GivenConstEmbeddingsAttachment(doc).perform {
-        proc.tagPartsOfSpeech(doc)
+  Using.resource(new PrintWriter(args(0) + ".reparsed")) { pw =>
+    for (row <- rows) {
+      val words = row.map(e => e.get(0))
+      if (row.length == 1 && words(0) == "-DOCSTART-") {
+        saveSent(pw, row)
+      } else {
+        val doc = proc.mkDocumentFromTokens(Seq(words))
+        GivenConstEmbeddingsAttachment(doc).perform {
+          proc.tagPartsOfSpeech(doc)
+        }
+        saveSent(pw, row, doc.sentences(0).tags, doc.sentences(0).chunks)
       }
-      saveSent(pw, row, doc.sentences(0).tags, doc.sentences(0).chunks)
     }
   }
-  pw.close()
 
   def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Array[String]] = None, chunks: Option[Array[String]] = None): Unit = {
     if (tags.isDefined) {

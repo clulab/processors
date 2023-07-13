@@ -1,14 +1,14 @@
 package org.clulab.embeddings
 
-import java.io._
 import org.clulab.scala.BufferedIterator
+import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import java.nio.charset.StandardCharsets
+import java.io._
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
 
@@ -153,7 +153,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
   }
 
   def save(filename: String): Unit = {
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+    Using.resource(new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename)))) { objectOutputStream =>
       objectOutputStream.writeObject(map)
       objectOutputStream.writeObject(buildType.unknownArray)
     }
@@ -197,10 +197,10 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
-    (
+    Using.resource(
       if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
       else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
-    ).autoClose { source =>
+    ) { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -208,7 +208,7 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   protected def loadBin(filename: String): BuildType = {
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
+    Using.resource(new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename)))) { objectInputStream =>
       loadBin(objectInputStream)
     }
   }

@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
-import java.io.PrintWriter
-
 import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
+import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 
+import java.io.PrintWriter
 import scala.collection.mutable
 
 /**
@@ -125,15 +125,15 @@ object LemmatizeEmbeddings {
     val le = new LemmatizeEmbeddings(freqFile, embedFile)
     val lemmaEmbeddings = le.lemmatize()
 
-    val pw = new PrintWriter(outputFile)
-    for(lemma <- lemmaEmbeddings.keySet) {
-      pw.print(lemma)
-      val v = lemmaEmbeddings(lemma)
-      for(i <- v.indices) {
-        pw.print(" " + v(i))
+    Using.resource(new PrintWriter(outputFile)) { pw =>
+      for (lemma <- lemmaEmbeddings.keySet) {
+        pw.print(lemma)
+        val v = lemmaEmbeddings(lemma)
+        for (i <- v.indices) {
+          pw.print(" " + v(i))
+        }
+        pw.println()
       }
-      pw.println()
     }
-    pw.close()
   }
 }

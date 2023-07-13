@@ -1,14 +1,17 @@
 package org.clulab.learning
 
-import org.clulab.utils.{Files,MathUtils}
-import org.slf4j.LoggerFactory
 import de.bwaldvogel.liblinear._
+import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
-import scala.collection.mutable.ArrayBuffer
-import LiblinearClassifier.logger
-import scala.collection.mutable
+import org.clulab.utils.{Files,MathUtils}
+import org.slf4j.LoggerFactory
+
 import java.io._
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
+import LiblinearClassifier.logger
 
 /**
  * Wrapper for liblinear classifiers, which includes LR and linear SVM
@@ -324,10 +327,10 @@ object LiblinearClassifier {
   val logger = LoggerFactory.getLogger(classOf[LiblinearClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):LiblinearClassifier[L, F] = {
-    val r = new BufferedReader(new FileReader(fileName))
-    val c = loadFrom[L, F](r)
-    r.close()
-    c
+    Using.resource(new BufferedReader(new FileReader(fileName))) { r =>
+      val c = loadFrom[L, F](r)
+      c
+    }
   }
 
   def loadFrom[L, F](r:Reader):LiblinearClassifier[L, F] = {

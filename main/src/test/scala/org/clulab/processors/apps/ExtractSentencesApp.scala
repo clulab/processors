@@ -1,7 +1,7 @@
 package org.clulab.processors.apps
 
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.utils.Closer.AutoCloser
+import org.clulab.scala.Using._
 import org.clulab.utils.FileUtils
 
 object ExtractSentencesApp extends App {
@@ -12,7 +12,7 @@ object ExtractSentencesApp extends App {
   val processor = new CluProcessor()
   var count = 0
 
-  FileUtils.printWriterFromFile(fileName).autoClose { printWriter =>
+  Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>
     files.foreach { file =>
       val text = FileUtils.getTextFromFile(file)
       val document = processor.mkDocument(text, keepText = true)

@@ -2,6 +2,7 @@ package org.clulab.processors.apps
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.scala.Using._
 import org.clulab.utils.{Sourcer, Timers}
 
 
@@ -15,11 +16,10 @@ object TokenClassifierTimerApp extends App {
     processor
   }
   val lines = {
-    val source = Sourcer.sourceFromFilename(fileName)
-    val lines = source.getLines().take(100).toArray
-
-    source.close
-    lines
+    Using.resource(Sourcer.sourceFromFilename(fileName)) { source =>
+      val lines = source.getLines().take(100).toArray
+      lines
+    }
   }
   val elapsedTimer = Timers.getOrNew("Elapsed")
 
