@@ -70,6 +70,9 @@ class TestDependencyUtils extends Test {
   val sent3 = doc3.sentences.head
   text3 should "produce one head using findHeads" in {
     findHeads(Interval(0, 1), sent3.dependencies.get) should have size (1)
+    val heads = findHeads(Interval(0, 1), sent3.dependencies.get)
+    // Note: This test will probably break after the deserializatoin code starts calculating the roots better.
+    distToRootOpt(Interval(0, 1), sent3.dependencies.get) should be (None)
   }
   text3 should "produce no heads using findHeadsStrict" in {
     findHeadsStrict(Interval(0, 1), sent3) should have size (0)
@@ -82,6 +85,7 @@ class TestDependencyUtils extends Test {
     val depGraph = new DirectedGraph[String](DirectedGraph.triplesToEdges[String](edges))
     val tokenInterval = Interval(0, 2)
     noException shouldBe thrownBy (DependencyUtils.findHeads(tokenInterval, depGraph))
+    distToRootOpt(tokenInterval, depGraph) should be (Some(1))
   }
 
   it should "handle roots with incoming dependencies" in {
@@ -94,6 +98,7 @@ class TestDependencyUtils extends Test {
     val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges))
     val interval = Interval(4, 8)
     noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
+    distToRootOpt(interval, graph) should be (Some(0))
   }
 
   // this test comes from sentence 23556 in file /data/nlp/corpora/agiga/data/xml/afp_eng_199405.xml.gz
@@ -110,6 +115,7 @@ class TestDependencyUtils extends Test {
     val graph = DirectedGraph(DirectedGraph.triplesToEdges[String](edges))
     val interval = Interval(21, 23)
     noException shouldBe thrownBy (DependencyUtils.findHeads(interval, graph))
+    distToRootOpt(interval, graph) should be (Some(1))
   }
 
 }
