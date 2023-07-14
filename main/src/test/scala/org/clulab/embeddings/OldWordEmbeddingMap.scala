@@ -1,7 +1,6 @@
 package org.clulab.embeddings
 
 import org.apache.commons.io.{FileUtils, IOUtils}
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.MathUtils
 import org.slf4j.{Logger, LoggerFactory}
@@ -10,6 +9,7 @@ import java.io._
 import java.nio.{ByteBuffer, ByteOrder}
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Implements similarity metrics using the embedding matrix

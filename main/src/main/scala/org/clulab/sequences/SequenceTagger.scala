@@ -1,11 +1,11 @@
 package org.clulab.sequences
 
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.utils.Files
 
 import java.io.{BufferedReader, File}
+import scala.util.Using
 
 /**
   * Trait for all sequence taggers

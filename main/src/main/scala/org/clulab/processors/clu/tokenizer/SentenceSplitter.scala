@@ -1,11 +1,11 @@
 package org.clulab.processors.clu.tokenizer
 
 import org.clulab.processors.Sentence
-import org.clulab.scala.Using._
 
 import java.io.{BufferedReader, InputStreamReader}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
+import scala.util.Using
 
 import SentenceSplitter._
 

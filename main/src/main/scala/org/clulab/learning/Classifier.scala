@@ -1,10 +1,10 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.learning.Datasets._
 
 import java.io._
+import scala.util.Using
 
 /**
  * Trait for iid classification

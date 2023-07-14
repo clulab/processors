@@ -1,13 +1,13 @@
 package org.clulab.processors.corenlp.chunker
 
 import edu.stanford.nlp.ling.{ CoreLabel, CoreAnnotations }
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 
 import java.io.FileInputStream
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Using
 
 object TrainChunker extends App {
 

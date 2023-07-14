@@ -5,7 +5,6 @@
 
 package org.clulab.sequences
 
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.BooleanHashTrie
@@ -22,6 +21,7 @@ import java.util.function.Consumer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Concrete subclasses are responsible for building various NERs.  The mapping is as follows:

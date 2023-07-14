@@ -2,10 +2,10 @@ package org.clulab.numeric
 
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.clu.CluProcessor
-import org.clulab.scala.Using._
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source
+import scala.util.Using
 
 object EvalTimeNorm {
 

@@ -1,10 +1,10 @@
 package org.clulab.odin
 
 import org.clulab.TestUtils._
-import org.clulab.scala.Using._
 import org.clulab.utils.Test
 
 import scala.io.Source
+import scala.util.Using
 
 class TestVariables extends Test {
 

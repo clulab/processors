@@ -1,11 +1,11 @@
 package org.clulab.numeric
 
-import org.clulab.scala.Using._
 import org.clulab.sequences.CommentedStandardKbSource
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Using
 
 case class NormAndUnitClass(norm: String, unitClassOpt: Option[String])
 

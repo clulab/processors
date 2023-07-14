@@ -1,8 +1,7 @@
 package org.clulab.openie
 
-import org.clulab.scala.Using._
-
 import java.io.InputStream
+import scala.util.Using
 
 object ResourceUtils {
 

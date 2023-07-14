@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils.readFileToString
 import org.apache.commons.text.StrSubstitutor
 import org.clulab.odin._
 import org.clulab.odin.impl.MarkdownGeneration._
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
@@ -17,6 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.util.{Collection, Map => JMap}
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option[File] = None) {
 

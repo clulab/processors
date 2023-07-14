@@ -1,6 +1,5 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import org.clulab.utils.Files
@@ -12,6 +11,7 @@ import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
+import scala.util.Using
 
 import RVFDataset._
 

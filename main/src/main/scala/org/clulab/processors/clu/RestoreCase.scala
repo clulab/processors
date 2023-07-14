@@ -1,11 +1,11 @@
 package org.clulab.processors.clu
 
-import org.clulab.scala.Using._
 import org.clulab.processors.Document
 import org.clulab.sequences.ColumnReader
 import org.clulab.sequences.Row
 
 import java.io.PrintWriter
+import scala.util.Using
 
 /** Restores the case for tokens stored in the first column in a CoNLL-formatted file */
 object RestoreCase extends App {

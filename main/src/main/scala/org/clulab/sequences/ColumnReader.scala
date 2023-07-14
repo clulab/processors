@@ -1,10 +1,10 @@
 package org.clulab.sequences
 
-import org.clulab.scala.Using._
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Reads the CoNLL-like column format

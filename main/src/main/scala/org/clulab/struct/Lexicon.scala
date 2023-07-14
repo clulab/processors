@@ -1,12 +1,12 @@
 package org.clulab.struct
 
-import org.clulab.scala.Using._
 import org.clulab.struct.Lexicon.logger
 import org.clulab.utils.Files
 import org.slf4j.LoggerFactory
 
 import java.io._
 import scala.Serializable
+import scala.util.Using
 
 /**
  * Generic lexicon: maps objects of type T to Ints, both ways

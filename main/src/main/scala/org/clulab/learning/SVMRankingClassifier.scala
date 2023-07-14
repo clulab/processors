@@ -1,6 +1,5 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.struct.{Counter, Counters, Lexicon}
 import org.clulab.utils.Serializer
 import org.clulab.utils.StringUtils
@@ -12,6 +11,7 @@ import scala.Serializable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.sys.process._
+import scala.util.Using
 
 import SVMRankingClassifier.logger
 

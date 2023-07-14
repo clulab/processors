@@ -1,12 +1,12 @@
 package org.clulab.processors
 
 import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
-import org.clulab.scala.Using._
 import org.clulab.utils.{FileUtils, StringUtils, Test}
 import org.clulab.utils.Sourcer.utf8
 
 import java.io.File
 import scala.io.Source
+import scala.util.Using
 
 class TestRepeatability extends Test {
 

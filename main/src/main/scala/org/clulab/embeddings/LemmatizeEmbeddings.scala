@@ -1,11 +1,11 @@
 package org.clulab.embeddings
 
 import org.clulab.processors.clu.tokenizer.EnglishLemmatizer
-import org.clulab.scala.Using._
 import org.clulab.struct.Counter
 
 import java.io.PrintWriter
 import scala.collection.mutable
+import scala.util.Using
 
 /**
  * Generates embeddings for lemmas, by averaging GloVe embeddings for words that have the same lemma

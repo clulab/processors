@@ -1,6 +1,5 @@
 package org.clulab.learning
 
-import org.clulab.scala.Using._
 import org.clulab.utils.Test
 
 import java.io.{File, PrintWriter}
@@ -9,6 +8,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source
 import scala.sys.process._
 import scala.util.Try
+import scala.util.Using
 
 object NeedsExternalBinary extends Tag("NeedsExternalBinary")
 

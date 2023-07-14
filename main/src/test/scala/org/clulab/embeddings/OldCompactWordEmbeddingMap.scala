@@ -1,6 +1,5 @@
 package org.clulab.embeddings
 
-import org.clulab.scala.Using._
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 import org.slf4j.{Logger, LoggerFactory}
@@ -9,6 +8,7 @@ import java.io._
 import java.nio.charset.StandardCharsets
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
+import scala.util.Using
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
