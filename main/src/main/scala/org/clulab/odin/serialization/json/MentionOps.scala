@@ -4,6 +4,7 @@ import org.clulab.odin
 import org.clulab.odin._
 import org.clulab.serialization.json.{JSONSerializer => _, _}
 import org.clulab.struct.DirectedGraph
+import org.clulab.utils.Hash
 import org.clulab.utils.Unordered
 import org.clulab.utils.Unordered.OrderingOrElseBy
 import org.json4s.{DefaultFormats, JArray, JNothing, JObject, JValue}
@@ -89,14 +90,18 @@ abstract class MentionOps(val mention: Mention) extends JSONSerialization with E
   }
 
   /** Hash representing the [[Mention.arguments]] */
-  protected def argsHash: Int = {
-    val argHashes = for {
-      (role, mns) <- mention.arguments
-      bh = stringHash(s"role:$role")
-      hs = mns.map(asMentionOps(_).equivalenceHash)
-    } yield mix(bh, unorderedHash(hs))
-    val h0 = stringHash("org.clulab.odin.Mention.arguments")
-    finalizeHash(h0, unorderedHash(argHashes))
+  // TODO: Compare this to Mention.argsHash().
+  protected def argsHash(arguments: Map[String, Seq[Mention]]): Int = {
+    val argHashes = arguments.map { case (name, mentions) =>
+      val seed = Hash(s"role:$name")
+      val data = mentions.map(asMentionOps(_).equivalenceHash)
+
+      Hash.mix(seed, Hash.unordered(data))
+    }
+    // TODO: This is not the proper use of the count.
+    Hash.withLast(Hash.unordered(argHashes))(
+      Hash("org.clulab.odin.Mention.arguments")
+    )
   }
 
   protected def pathsAST: JValue = {
@@ -156,22 +161,14 @@ class TextBoundMentionOps(tb: TextBoundMention) extends MentionOps(tb) {
 
   def shortString: String = TextBoundMentionOps.shortString
 
-  override def equivalenceHash: Int = {
-    // the seed (not counted in the length of finalizeHash)
-    // The stringHash is based on information from this class, not the actual class.
-    val h0 = stringHash(s"$namespace.${TextBoundMentionOps.string}") // (stringCode)
-    // labels
-    val h1 = mix(h0, tb.labels.hashCode)
-    // interval.start
-    val h2 = mix(h1, tb.tokenInterval.start)
-    // interval.end
-    val h3 = mix(h2, tb.tokenInterval.end)
-    // sentence index
-    val h4 = mix(h3, tb.sentence)
-    // document.equivalenceHash
-    val h5 = mix(h4, documentEquivalenceHash)
-    finalizeHash(h5, 5)
-  }
+  override def equivalenceHash: Int = Hash(
+    Hash(stringCode),
+    tb.labels.hashCode,
+    tb.tokenInterval.start,
+    tb.tokenInterval.end,
+    tb.sentence,
+    documentEquivalenceHash
+  )
 
   override def jsonAST: JValue = {
     ("type" -> longString) ~
@@ -201,26 +198,16 @@ class EventMentionOps(em: EventMention) extends MentionOps(em) {
 
   def triggerAST: JValue = asMentionOps(em.trigger).jsonAST
 
-  override def equivalenceHash: Int = {
-    // the seed (not counted in the length of finalizeHash)
-    // The stringHash is based on information from this class, not the actual class.
-    val h0 = stringHash(s"$namespace.${EventMentionOps.string}") // (stringCode)
-    // labels
-    val h1 = mix(h0, em.labels.hashCode)
-    // interval.start
-    val h2 = mix(h1, em.tokenInterval.start)
-    // interval.end
-    val h3 = mix(h2, em.tokenInterval.end)
-    // sentence index
-    val h4 = mix(h3, em.sentence)
-    // document.equivalenceHash
-    val h5 = mix(h4, documentEquivalenceHash)
-    // args
-    val h6 = mix(h5, argsHash)
-    // trigger
-    val h7 = mix(h6, asMentionOps(em.trigger).equivalenceHash)
-    finalizeHash(h7, 7)
-  }
+  override def equivalenceHash: Int = Hash(
+    Hash(stringCode),
+    em.labels.hashCode,
+    em.tokenInterval.start,
+    em.tokenInterval.end,
+    em.sentence,
+    documentEquivalenceHash,
+    argsHash(em.arguments),
+    asMentionOps(em.trigger).equivalenceHash
+  )
 
   override def jsonAST: JValue = {
     ("type" -> longString) ~
@@ -248,24 +235,15 @@ class RelationMentionOps(rm: RelationMention) extends MentionOps(rm) {
 
   def shortString: String = RelationMentionOps.shortString
 
-  override def equivalenceHash: Int = {
-    // the seed (not counted in the length of finalizeHash)
-    // The stringHash is based on information from this class, not the actual class.
-    val h0 = stringHash(s"$namespace.${RelationMentionOps.string}") // (stringCode)
-    // labels
-    val h1 = mix(h0, rm.labels.hashCode)
-    // interval.start
-    val h2 = mix(h1, rm.tokenInterval.start)
-    // interval.end
-    val h3 = mix(h2, rm.tokenInterval.end)
-    // sentence index
-    val h4 = mix(h3, rm.sentence)
-    // document.equivalenceHash
-    val h5 = mix(h4, documentEquivalenceHash)
-    // args
-    val h6 = mix(h5, argsHash)
-    finalizeHash(h6, 6)
-  }
+  override def equivalenceHash: Int = Hash(
+    Hash(stringCode),
+    rm.labels.hashCode,
+    rm.tokenInterval.start,
+    rm.tokenInterval.end,
+    rm.sentence,
+    documentEquivalenceHash,
+    argsHash(rm.arguments)
+  )
 
   override def jsonAST: JValue = {
     ("type" -> longString) ~
@@ -292,24 +270,15 @@ class CrossSentenceMentionOps(csm: CrossSentenceMention) extends MentionOps(csm)
 
   def shortString: String = CrossSentenceMentionOps.shortString
 
-  override def equivalenceHash: Int = {
-    // the seed (not counted in the length of finalizeHash)
-    // The stringHash is based on information from this class, not the actual class.
-    val h0 = stringHash(s"$namespace.${CrossSentenceMentionOps.string}") // (stringCode)
-    // labels
-    val h1 = mix(h0, csm.labels.hashCode)
-    // interval.start
-    val h2 = mix(h1, csm.tokenInterval.start)
-    // interval.end
-    val h3 = mix(h2, csm.tokenInterval.end)
-    // sentence index
-    val h4 = mix(h3, csm.sentence)
-    // document.equivalenceHash
-    val h5 = mix(h4, documentEquivalenceHash)
-    // args
-    val h6 = mix(h5, argsHash)
-    finalizeHash(h6, 6)
-  }
+  override def equivalenceHash: Int = Hash(
+    Hash(stringCode),
+    csm.labels.hashCode,
+    csm.tokenInterval.start,
+    csm.tokenInterval.end,
+    csm.sentence,
+    documentEquivalenceHash,
+    argsHash(csm.arguments)
+  )
 
   override def jsonAST: JValue = {
     ("type" -> longString) ~
