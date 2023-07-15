@@ -32,15 +32,15 @@ object Hash {
     loop(seed, data.length)
   }
 
-  def ordered(xs: TraversableOnce[Any]): Int = orderedHash(xs)
+  def ordered(xs: Iterable[Any]): Int = orderedHash(xs)
 
-  def unordered(xs: TraversableOnce[Any]): Int = unorderedHash(xs)
+  def unordered(xs: Iterable[Any]): Int = unorderedHash(xs)
 
   def stringHash(x: String): Int = MurmurHash3.stringHash(x)
 
-  def orderedHash(xs: TraversableOnce[Any]): Int = MurmurHash3.orderedHash(xs)
+  def orderedHash(xs: Iterable[Any]): Int = MurmurHash3.orderedHash(xs)
 
-  def unorderedHash(xs: TraversableOnce[Any]): Int = MurmurHash3.unorderedHash(xs)
+  def unorderedHash(xs: Iterable[Any]): Int = MurmurHash3.unorderedHash(xs)
 
   def finalizeHash(hash: Int, length: Int): Int = MurmurHash3.finalizeHash(hash, length)
 
