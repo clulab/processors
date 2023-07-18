@@ -56,7 +56,9 @@ class TestMention extends Test {
     val doc = jsonStringToDocument(json)
     val mention = ee.extractFrom(doc).head
 
-    mention.distToRootOpt shouldBe (None)
+    // The original value for the roots is incorrect.  They are recalculated during deserialization.
+    // Without any edges, all six words are roots and the distance to the root is 0.
+    mention.distToRootOpt shouldBe (Some(0))
   }
 
   it should "get None when the Interval is empty" in {

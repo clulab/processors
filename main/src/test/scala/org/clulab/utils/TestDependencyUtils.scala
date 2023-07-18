@@ -70,9 +70,7 @@ class TestDependencyUtils extends Test {
   val sent3 = doc3.sentences.head
   text3 should "produce one head using findHeads" in {
     findHeads(Interval(0, 1), sent3.dependencies.get) should have size (1)
-    val heads = findHeads(Interval(0, 1), sent3.dependencies.get)
-    // Note: This test will probably break after the deserializatoin code starts calculating the roots better.
-    distToRootOpt(Interval(0, 1), sent3.dependencies.get) should be (None)
+    distToRootOpt(Interval(0, 1), sent3.dependencies.get) should be (Some(0))
   }
   text3 should "produce no heads using findHeadsStrict" in {
     findHeadsStrict(Interval(0, 1), sent3) should have size (0)
