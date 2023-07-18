@@ -14,25 +14,6 @@ import scala.math.Ordering.Implicits._ // Allow Seqs to be compared to each othe
 import scala.util.hashing.MurmurHash3._
 
 object MentionOps {
-  // Lists are produced so that they can be quickly converted to JObjects and JArrays.
-  // Maps cannot be used because the order of the keys is not fixed.
-  def flattenArguments(mention: Mention): List[(String, List[Mention])] =
-      mention.arguments.map { case (key, value) => key -> value.sorted.toList }.toSeq.sorted.toList
-
-  // Lists are produced so that they can be quickly converted to JObjects.
-  // Maps cannot be used because the order of the keys is not fixed.
-  def flattenPaths(mention: Mention): List[(String, List[(Mention, List[(Int, Int, String)])])] = {
-    mention.paths.map { case (key, value) =>
-      val valueSeq = value.toSeq.map { case (mention, synPath) =>
-        (mention, synPath.toList)
-      }
-      val sortedValueSeq = valueSeq.sorted // By { case (mention, synPath) => synPath }
-      val newValue = sortedValueSeq.toList
-
-      key -> newValue
-    }.toSeq.sorted.toList
-  }
-
   // As Scala 3 points out, this can be recursive, because the arguments contain more Mentions.
   // In part because of this, only the argument keys are used in sort, not the Mention values.
   // Triggers are not taken into account and neither is the class of he Mention except through the name.
@@ -46,6 +27,46 @@ object MentionOps {
       // The above gets all but a very few.
       .orElseBy(_.arguments.values.flatten.map(_.tokenInterval).toSeq.sorted)
       // Skip paths.
+
+  // Scala 2.11 requires this for some reason.
+  implicit val pathsOrdering: Ordering[(Mention, List[(Int, Int, String)])] = Unordered[(Mention, List[(Int, Int, String)])]
+      .orElseBy(_._1)
+      .orElseBy(_._2)
+
+  // Lists are produced so that they can be quickly converted to JObjects and JArrays.
+  // Maps cannot be used because the order of the keys is not fixed.
+  def flattenArguments(mention: Mention): List[(String, List[Mention])] = {
+    // First sort the keys and then sort the corresponding values.
+    val sortedKeys = mention.arguments.keys.toList.sorted
+
+    sortedKeys.map { key =>
+      // For efficience, sort smaller lists of these per key values rather than
+      // one large List[(key, value)].
+      val sortedValues = mention.arguments(key).sorted.toList
+
+      key -> sortedValues
+    }
+  }
+
+  // Lists are produced so that they can be quickly converted to JObjects.
+  // Maps cannot be used because the order of the keys is not fixed.
+  def flattenPaths(mention: Mention): List[(String, List[(Mention, List[(Int, Int, String)])])] = {
+    // Again, first sort the keys and then sort the corresponding values.
+    val sortedKeys = mention.paths.keys.toList.sorted
+
+    sortedKeys.map { key =>
+      val unsortedValues = mention.paths(key).toList.map { case (mention, synPath) =>
+        // These are being left as tuples, because it seems quite expensive to sort
+        // the keys and then track down their values.  There are other ways, though.
+        val synPathList: List[(Int, Int, String)] = synPath.toList
+
+        (mention, synPathList)
+      }
+      val sortedValues = unsortedValues.sorted // This is handled by pathsOrdering.
+
+      key -> sortedValues
+    }
+  }
 
   def apply(mention: Mention): MentionOps = {
     mention match {
