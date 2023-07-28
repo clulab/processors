@@ -1,24 +1,24 @@
 package org.clulab.processors.clu
 
-import org.clulab.scala_transformers.encoder.TokenClassifier
 import com.typesafe.config.Config
-
-import org.clulab.processors.clu.tokenizer._
-import org.clulab.sequences.{LexiconNER, NamedEntity}
+import com.typesafe.config.ConfigFactory
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
 import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import org.clulab.processors.clu.tokenizer._
+import org.clulab.scala.WrappedArray._
+import org.clulab.scala_transformers.encoder.TokenClassifier
+import org.clulab.sequences.{LexiconNER, NamedEntity}
+import org.clulab.struct.DirectedGraph
+import org.clulab.struct.Edge
+import org.clulab.struct.GraphMap
 import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
-import com.typesafe.config.ConfigFactory
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.ListBuffer
 
 import BalaurProcessor._
 import PostProcessor._
-import org.clulab.struct.GraphMap
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
-import org.clulab.struct.Edge
-import org.clulab.struct.DirectedGraph
-import scala.collection.mutable.HashSet
 
 class BalaurProcessor protected (
   val config: Config,
@@ -235,15 +235,12 @@ class BalaurProcessor protected (
   }
 
   private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
-    val heads = new ArrayBuffer[Int]()
-    for(i <- relativeHeads.indices) {
-      if(relativeHeads(i) == 0) {
-        heads += -1
-      } else {
-        heads += i + relativeHeads(i)
-      }
+    val absoluteHeads = relativeHeads.zipWithIndex.map { case (relativeHead, index) =>
+      if (relativeHead == 0) -1
+      else index + relativeHead
     }
-    heads
+
+    absoluteHeads
   }
 }
 
