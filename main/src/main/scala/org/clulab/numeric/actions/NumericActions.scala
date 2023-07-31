@@ -1,13 +1,13 @@
 package org.clulab.numeric.actions
 
-import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer}
+import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer, WeekNormalizer}
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 import org.clulab.scala.WrappedArrayBuffer._
 
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer) extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer, weekNormalizer: WeekNormalizer) extends Actions {
   //
   // local actions
   //
@@ -96,6 +96,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithUntilRef, "toDateRangeMentionWithUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithWeek(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithWeek(weekNormalizer), "toDateRangeMentionWithWeek")
   }
 
   /** Constructs a DateRangeMention from a token pattern */
