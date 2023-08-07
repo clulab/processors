@@ -230,16 +230,34 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
       }
     }
 
-    val r1 = keepLongestMentions(mentions)
+    val r1 = postprocessNumericEntities(mentions)
+    val r2 = keepLongestMentions(r1)
 
     if(false) {
       println("mentions after cleanup:")
-      for (m <- r1) {
+      for (m <- r2) {
         println("\t" + m.text)
       }
       println()
     }
-    r1
+    r2
+  }
+
+  /** filter out season homonyms (fall, spring) **/
+  def postprocessNumericEntities(mentions: Seq[Mention]): Seq[Mention] = {
+    val (seasonMentions, otherMentions) = mentions.partition(m => m.foundBy.contains("season"))
+    val (springFall, otherSeasons) = seasonMentions.partition(m => m.text.equalsIgnoreCase("spring") || m.text.equalsIgnoreCase("fall"))
+    val trueSeasons = springFall.filter { m =>
+      m.tags.head.contains("NN") && {
+        val wordIndex = m.tokenInterval.start
+        val prevWords = m.sentenceObj.words.slice(wordIndex - 2, wordIndex)
+        val contextWords = m.sentenceObj.words.slice(wordIndex - 5, wordIndex + 5)
+
+        (prevWords.contains("in") && prevWords.contains("the")) || prevWords.contains("this") || prevWords.contains("last") || prevWords.contains("every") ||
+          contextWords.exists(_.matches("[0-9]{0,4}"))
+      }
+    }
+    trueSeasons ++ otherSeasons ++ otherMentions
   }
 
   /** Keeps a date (or date range) mention only if it is not contained in another */

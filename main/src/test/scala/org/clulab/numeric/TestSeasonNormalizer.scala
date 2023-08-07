@@ -8,6 +8,11 @@ class TestSeasonNormalizer extends Test {
   val autumnText = "When the leaves changed color in autumn 2017 they were the prettiest ever."
   val seasonText = "When the leaves changed color in rainy season 2017 they were the prettiest ever."
 
+  val trueSeason1 = "you have from fall 2021 or 2022." // originally "you have, um, from, you know, fall 2021 or 2022." but fillers removed to prevent parsing errors
+  val trueSeason2 = "do you do that mainly in the fall or in the spring or do you do a little bit of both?"
+  val falseSeason1 = "Don't like to fall corn with corn here."
+  val falseSeason2 = "He does the spring."
+
   val bDateRange = "B-DATE-RANGE"
   val iDateRange = "I-DATE-RANGE"
 
@@ -57,5 +62,37 @@ class TestSeasonNormalizer extends Test {
     seasonEntities should contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms should contain (seasonDateRange)
+  }
+
+  behavior of "Default SeasonalCluProcessor"
+
+  it should "find true seasons in trueSeason1" in {
+    val processor = new CluProcessor()
+
+    val (trueEntities1, trueNorms1) = mkEntitiesAndNorms(processor, trueSeason1)
+    trueEntities1 should contain (bDateRange)
+  }
+
+  it should "find true seasons in trueSeason2" in {
+    val processor = new CluProcessor()
+
+    val (trueEntities2, trueNorms2) = mkEntitiesAndNorms(processor, trueSeason2)
+    trueEntities2 should contain (bDateRange)
+  }
+
+  it should "not find false seasons in falseSeason1" in {
+    val processor = new CluProcessor()
+
+    val (falseEntities1, falseNorms1) = mkEntitiesAndNorms(processor, falseSeason1)
+    falseEntities1 shouldNot contain (bDateRange)
+    falseEntities1 shouldNot contain (iDateRange)
+  }
+
+  it should "not find false seasons in falseSeason2" in {
+    val processor = new CluProcessor()
+
+    val (falseEntities2, falseNorms2) = mkEntitiesAndNorms(processor, falseSeason2)
+    falseEntities2 shouldNot contain (bDateRange)
+    falseEntities2 shouldNot contain (iDateRange)
   }
 }
