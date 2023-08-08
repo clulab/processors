@@ -51,7 +51,7 @@ object TempEvalFormatter {
     }
   }
 
-  private def convertLiteralMonth(s: String): Int = {
+  def convertLiteralMonth(s: String): Int = {
     val v = s.toLowerCase()
 
     if(v.startsWith("jan")) 1
