@@ -1,23 +1,17 @@
 package org.clulab.processors
 
-import org.clulab.dynet.{Utils => DynetUtils}
-import org.clulab.fatdynet.utils.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.Test
 import org.scalatest.BeforeAndAfterAll
 
 class FatdynetTest extends Test with BeforeAndAfterAll {
-  // We can't really be debugging without the debug build of dynet.  However,
-  // there may as well be a way to activate the shutdown process for when a
-  // human is observing the testing.
-  val debugging = System.getenv.containsKey("MALLOC_TRACE")
-  var proc: CluProcessor = null // sorry
+  var proc: BalaurProcessor = null // sorry
+  val debugging = false
 
   override def beforeAll(): Unit = {
-    Utils.startup()
-    proc = newCluProcessor()
+    proc = newProcessor()
   }
 
   override def afterAll(): Unit = {
@@ -25,18 +19,17 @@ class FatdynetTest extends Test with BeforeAndAfterAll {
     // Its use should be limited to times when a human is watching over it.
     if (debugging) {
       stop()
-      Utils.shutdown()
     }
   }
 
-  def newCluProcessor(): CluProcessor = {
+  def newProcessor(): BalaurProcessor = {
     // A custom NER to make sure this works
     val kbs = Seq(
       "org/clulab/processors/D.tsv"
     )
     val lexiconNer = LexiconNER(kbs, Seq(false), useLemmasForMatching = false) // case sensitive match on this KB
 
-    new CluProcessor(optionalNER = Some(lexiconNer))
+    new BalaurProcessor(optionalNER = Some(lexiconNer))
   }
 
   def stop(): Unit = {

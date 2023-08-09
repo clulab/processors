@@ -24,9 +24,7 @@ class TestLemmatizer extends FatdynetTest {
 
   def annotate(text:String): Document = {
     val doc = proc.mkDocument(text)
-    proc.mkConstEmbeddings(doc)
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
+    proc.annotate(doc)
     doc
   }
 }

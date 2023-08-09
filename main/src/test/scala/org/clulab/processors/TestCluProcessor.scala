@@ -41,10 +41,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "POS tag correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
-    proc.mkConstEmbeddings(doc)
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
-    doc.clear()
+    proc.annotate(doc)
     
     doc.sentences(0).tags.get(0) should be ("NNP")
     doc.sentences(0).tags.get(1) should be ("NNP")
@@ -63,9 +60,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "POS tag parentheses correctly" in {
     val doc = proc.mkDocument("This is a test (of parentheses).")
-    proc.mkConstEmbeddings(doc)
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
+    proc.annotate(doc)
 
     doc.sentences(0).tags.get(4) should be ("-LRB-")
     doc.sentences(0).tags.get(7) should be ("-RRB-")
@@ -73,10 +68,7 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "recognize syntactic chunks correctly" in {
     val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
-    proc.mkConstEmbeddings(doc)
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
-    proc.chunking(doc)
+    proc.annotate(doc)
     doc.clear()
 
     doc.sentences(0).chunks.get(0) should be ("B-NP")
@@ -95,21 +87,13 @@ class TestCluProcessor extends FatdynetTest {
 
   it should "lemmatize text correctly" in {
     val doc = proc.mkDocument("John Doe went to the shops.")
-    proc.mkConstEmbeddings(doc)
-    proc.lemmatize(doc)
+    proc.annotate(doc)
     doc.clear()
 
     doc.sentences(0).lemmas.get(0) should be ("john")
     doc.sentences(0).lemmas.get(2) should be ("go")
     doc.sentences(0).lemmas.get(5) should be ("shop")
     println("Lemmatization is fine.")
-  }
-
-  it should "recognize semantic roles correctly" in {
-    val doc = proc.annotate("John Doe visited China.")
-
-    doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
-    doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
   }
 
   it should "parse text correctly" in {
@@ -127,39 +111,36 @@ class TestCluProcessor extends FatdynetTest {
     println("Parsing is fine.")
   }
 
-  it should "create semantic dependencies of the correct length" in {
-    val text = "John ate cake, zz zz zz."
-    val doc = proc.annotate(text)
-
-    val sent = doc.sentences.head
-
-    sent.semanticRoles.get.outgoingEdges.length should be(sent.size)
-    sent.semanticRoles.get.incomingEdges.length should be(sent.size)
-    sent.enhancedSemanticRoles.get.outgoingEdges.length should be(sent.size)
-    sent.enhancedSemanticRoles.get.incomingEdges.length should be(sent.size)
-  }
-
   it should "parse MWEs correctly" in {
-    var doc = proc.mkDocument("Foods such as icecream are tasty.")
+    var sent = "Foods such as icecream are tasty."
+    var doc = proc.mkDocument(sent)
     println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
 
     proc.annotate(doc)
+    println(s"Enhanced universal dependencies for sentence: $sent")
+    println(doc.sentences.head.universalEnhancedDependencies.get)
 
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
 
-    doc = proc.mkDocument("There was famine due to drought.")
+    sent = "There was famine due to drought."
+    doc = proc.mkDocument(sent)
     println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
 
     proc.annotate(doc)
+    println(s"Enhanced universal dependencies for sentence: $sent")
+    println(doc.sentences.head.universalEnhancedDependencies.get)
 
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
 
-    doc = proc.mkDocument("They ate cake due to hunger.")
+    sent = "They ate cake due to hunger."
+    doc = proc.mkDocument(sent)
     println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
 
     proc.annotate(doc)
+    println(s"Enhanced universal dependencies for sentence: $sent")
+    println(doc.sentences.head.universalEnhancedDependencies.get)
 
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
