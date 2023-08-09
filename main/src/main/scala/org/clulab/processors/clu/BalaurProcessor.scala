@@ -160,7 +160,6 @@ class BalaurProcessor protected (
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
   private def assignNamedEntityLabels(labels: Array[String], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
-    sent.entities = Some(labels)
 
     // NER labels from the custom NER
     val optionalNERLabels: Option[Array[String]] = optionalNER.map { ner =>
@@ -185,7 +184,12 @@ class BalaurProcessor protected (
     if(optionalNERLabels.isEmpty) {
       sent.entities = Some(NamedEntity.patch(labels))
     } else {
-      sent.entities = Some(NamedEntity.patch(mergeNerLabels(labels, optionalNERLabels.get)))
+      //println(s"MERGING NE labels for sentence: ${sent.words.mkString(" ")}")
+      //println(s"Generic labels: ${NamedEntity.patch(labels).mkString(", ")}")
+      //println(s"Optional labels: ${optionalNERLabels.get.mkString(", ")}")
+      val mergedLabels = NamedEntity.patch(mergeNerLabels(NamedEntity.patch(labels), optionalNERLabels.get))
+      //println(s"Merged labels: ${mergedLabels.mkString(", ")}")
+      sent.entities = Some(mergedLabels)
     }
   }
 
@@ -199,6 +203,9 @@ class BalaurProcessor protected (
       result
     else {
       val genericNamedEntities = NamedEntity.collect(generic)
+
+      //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
+      //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")
 
       // The custom labels override the generic ones!
       NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
