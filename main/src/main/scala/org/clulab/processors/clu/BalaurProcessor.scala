@@ -128,19 +128,14 @@ class BalaurProcessor protected (
 
     // process one sentence at a time through the MTL framework
     for(sent <- doc.sentences) {
-      val allLabels = tokenClassifier.predict(sent.words)
-      if(verbose) {
-        for (labels <- allLabels) {
-          if(labels != null) {
-            println(s"Labels: ${labels.mkString(", ")}")
-          }
-        }
-      }
-      assignPosTags(allLabels(TASK_TO_INDEX(POS_TASK)), sent)
-      assignNamedEntityLabels(allLabels(TASK_TO_INDEX(NER_TASK)), sent)
-      assignChunkLabels(allLabels(TASK_TO_INDEX(CHUNKING_TASK)), sent)
-      assignDependencyLabels(allLabels(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
-        allLabels(TASK_TO_INDEX(DEPS_LABEL_TASK)), sent)
+      val allLabelsAndScores = tokenClassifier.predictWithScores(sent.words)
+      assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
+      assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
+      assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
+      assignDependencyLabels(
+        allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
+        allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
+        sent)
     }
 
     // numeric entities using our numeric entity recognizer based on Odin rules
@@ -152,13 +147,13 @@ class BalaurProcessor protected (
     doc
   }
 
-  private def assignPosTags(labels: Array[String], sent: Sentence): Unit = {
+  private def assignPosTags(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
-    sent.tags = Some(postprocessPartOfSpeechTags(sent.words, labels))
+    sent.tags = Some(postprocessPartOfSpeechTags(sent.words, labels.map(_.head._1)))
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def assignNamedEntityLabels(labels: Array[String], sent: Sentence): Unit = {
+  private def assignNamedEntityLabels(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
 
     // NER labels from the custom NER
@@ -181,13 +176,15 @@ class BalaurProcessor protected (
       ner.find(sentence)
     }
 
+    val genericLabels = NamedEntity.patch(labels.map(_.head._1))
+
     if(optionalNERLabels.isEmpty) {
-      sent.entities = Some(NamedEntity.patch(labels))
+      sent.entities = Some(genericLabels)
     } else {
       //println(s"MERGING NE labels for sentence: ${sent.words.mkString(" ")}")
       //println(s"Generic labels: ${NamedEntity.patch(labels).mkString(", ")}")
       //println(s"Optional labels: ${optionalNERLabels.get.mkString(", ")}")
-      val mergedLabels = NamedEntity.patch(mergeNerLabels(NamedEntity.patch(labels), optionalNERLabels.get))
+      val mergedLabels = NamedEntity.patch(mergeNerLabels(genericLabels, optionalNERLabels.get))
       //println(s"Merged labels: ${mergedLabels.mkString(", ")}")
       sent.entities = Some(mergedLabels)
     }
@@ -212,12 +209,18 @@ class BalaurProcessor protected (
     }
   }
 
-  private def assignChunkLabels(labels: Array[String], sent: Sentence): Unit = {
+  private def assignChunkLabels(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
-    sent.chunks = Some(labels)
+    sent.chunks = Some(labels.map(_.head._1))
   }
 
-  private def assignDependencyLabels(headLabels: Array[String], labelLabels: Array[String], sent: Sentence): Unit = {
+  private def assignDependencyLabels(
+    headLabels: Array[Array[(String, Float)]], 
+    labelLabels: Array[Array[(String, Float)]], 
+    sent: Sentence): Unit = {
+
+    // TODO: AICI
+
     val heads = convertToAbsoluteHeads(headLabels.map(_.toInt))
     val headsWithLabels = heads.zip(labelLabels).toArray
     parserPostProcessing(sent, headsWithLabels)
