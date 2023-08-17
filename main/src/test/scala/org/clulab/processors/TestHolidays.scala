@@ -1,10 +1,10 @@
 package org.clulab.processors
 
-import org.clulab.processors.shallownlp.ShallowNLPProcessor
+import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Test
 
 class TestHolidays extends Test {
-  val processor = new ShallowNLPProcessor()
+  val processor = new CluProcessor()
 
   def test(text: String): Unit = {
     val threw = try {
