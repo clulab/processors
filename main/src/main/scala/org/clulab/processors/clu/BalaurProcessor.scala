@@ -255,36 +255,26 @@ class BalaurProcessor protected (
     val top = eisner.parse(startingDeps)
 
     // convert back to relative (or absolute) heads
-    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false)
+    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false).toArray // AICI
+    parserPostProcessing(sent, bestDeps)
 
-    println(s"TREE: ${bestDeps.mkString(", ")}")
-    System.exit(1)
-
-    // TODO: AICI
-    // depends on scala-transformers:headAndLabels
-
-    /*
-    val heads = convertToAbsoluteHeads(headLabels.map(_.toInt))
-    val headsWithLabels = heads.zip(labelLabels).toArray
-    parserPostProcessing(sent, headsWithLabels)
-
+    // construct the dependency graphs to be stored in the sentence object
     val edges = new ListBuffer[Edge[String]]()
     val roots = new HashSet[Int]()
-    for(i <- headsWithLabels.indices) {
-      if(headsWithLabels(i)._1 != -1) {
-        val edge = Edge[String](headsWithLabels(i)._1, i, headsWithLabels(i)._2)
+    for(i <- bestDeps.indices) {
+      if(bestDeps(i)._1 != -1) {
+        val edge = Edge[String](bestDeps(i)._1, i, bestDeps(i)._2)
         edges.append(edge)
       } else {
         roots += i
       }
     }
-    
+
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
     val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
-    */
   }
 
   private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {

@@ -27,7 +27,10 @@ object PostProcessor {
     tags
   }
 
-  /** Deterministic corrections for dependency parsing */
+  /** 
+   * Deterministic corrections for dependency parsing 
+   * Modifies headsWithLabels in place
+   */
   def parserPostProcessing(sentence: Sentence, headsWithLabels: Array[(Int, String)]): Unit = {
     for(i <- sentence.indices) {
       // "due to" must be a MWE
