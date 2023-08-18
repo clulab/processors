@@ -11,7 +11,7 @@ import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.Edge
 import org.clulab.struct.GraphMap
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles, MathUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.mutable.HashSet
@@ -19,6 +19,7 @@ import scala.collection.mutable.ListBuffer
 
 import BalaurProcessor._
 import PostProcessor._
+import scala.collection.mutable.ArrayBuffer
 
 class BalaurProcessor protected (
   val config: Config,
@@ -214,13 +215,55 @@ class BalaurProcessor protected (
     sent.chunks = Some(labels.map(_.head._1))
   }
 
+  private def interpolateHeadsAndLabels(
+    headLabels: Array[Array[(String, Float)]], 
+    labelLabels: Array[Array[(String, Float)]], 
+    lambda: Float): Array[Array[(Int, String, Float)]] = {
+      assert(headLabels.length == labelLabels.length)
+      val allDepsPerModifier = new ArrayBuffer[Array[(Int, String, Float)]]
+      for(i <- headLabels.indices) {
+        assert(headLabels(i).length == labelLabels(i).length)
+        val depCands = new ArrayBuffer[(Int, String, Float)]
+
+        // convert logits to probabilities so we can interpolate them later
+        val headProbs = MathUtils.softmaxFloat(headLabels(i).map(_._2))
+        val labelProbs = MathUtils.softmaxFloat(labelLabels(i).map(_._2))
+
+        for(j <- headLabels(i).indices) {
+          val relHead = headLabels(i)(j)._1.toInt
+          val label = labelLabels(i)(j)._1
+          val interpolatedScore = lambda * headProbs(j) + (1.0 - lambda) * labelProbs(j) // these are probabilities not logits!
+          depCands += Tuple3(relHead, label, interpolatedScore.toFloat)
+        }
+        allDepsPerModifier += depCands.toArray
+      }
+      allDepsPerModifier.toArray
+    }
+
   private def assignDependencyLabels(
     headLabels: Array[Array[(String, Float)]], 
     labelLabels: Array[Array[(String, Float)]], 
     sent: Sentence): Unit = {
 
-    // TODO: AICI
+    val eisner = new Eisner  
 
+    // preparate the input dependency table
+    val headsAndLabels = interpolateHeadsAndLabels(headLabels, labelLabels, PARSING_INTERPOLATION_LAMBDA)
+    val startingDeps = eisner.toDependencyTable(headsAndLabels, PARSING_TOPK)
+
+    // the actual Eisner parsing algorithm
+    val top = eisner.parse(startingDeps)
+
+    // convert back to relative (or absolute) heads
+    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false)
+
+    println(s"TREE: ${bestDeps.mkString(", ")}")
+    System.exit(1)
+
+    // TODO: AICI
+    // depends on scala-transformers:headAndLabels
+
+    /*
     val heads = convertToAbsoluteHeads(headLabels.map(_.toInt))
     val headsWithLabels = heads.zip(labelLabels).toArray
     parserPostProcessing(sent, headsWithLabels)
@@ -241,7 +284,7 @@ class BalaurProcessor protected (
 
     val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
-
+    */
   }
 
   private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
@@ -266,6 +309,9 @@ object BalaurProcessor {
   val CHUNKING_TASK = "Chunking"
   val DEPS_HEAD_TASK = "Deps Head"
   val DEPS_LABEL_TASK = "Deps Label"
+
+  val PARSING_INTERPOLATION_LAMBDA = 0.6f
+  val PARSING_TOPK = 5
 
   // maps a task name to a head index in the encoder
   val TASK_TO_INDEX = Map(

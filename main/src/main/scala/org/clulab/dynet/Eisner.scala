@@ -119,6 +119,10 @@ class Chart(val dimension: Int) {
 
 class Eisner {
   def parse(startingDependencies: Array[Array[Dependency]]): Option[Span] = {
+    for(i <- startingDependencies.indices) {
+      println(s"Index $i: " + startingDependencies(i).mkString(", "))
+    }
+
     val length = startingDependencies.length
     val chart = new Chart(length)
 
