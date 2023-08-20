@@ -250,11 +250,10 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
     val trueSeasons = springFall.filter { m =>
       m.tags.head.contains("NN") && {
         val wordIndex = m.tokenInterval.start
-        val prevWords = m.sentenceObj.words.slice(wordIndex - 2, wordIndex)
-        val contextWords = m.sentenceObj.words.slice(wordIndex - 5, wordIndex + 5)
+        val prevWords = m.sentenceObj.words.slice(wordIndex - 2, wordIndex).map(_.toLowerCase)
+        val contextWords = m.sentenceObj.words.slice(wordIndex - 5, wordIndex + 5).map(_.toLowerCase)
 
-        (prevWords.contains("in") && prevWords.contains("the")) || prevWords.contains("this") || prevWords.contains("last") || prevWords.contains("every") ||
-          contextWords.exists(_.matches("[0-9]{0,4}"))
+        (prevWords.contains("in") && prevWords.contains("the")) || prevWords.exists(Array("this", "last", "every").contains) || contextWords.exists(_.matches("[0-9]{1,4}")) || contextWords.exists(Array("spring", "summer", "fall", "autumn", "winter").contains)
       }
     }
     trueSeasons ++ otherSeasons ++ otherMentions
