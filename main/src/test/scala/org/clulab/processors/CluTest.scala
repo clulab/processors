@@ -6,7 +6,7 @@ import org.clulab.struct.TrueEntityValidator
 import org.clulab.utils.Test
 import org.scalatest.BeforeAndAfterAll
 
-class FatdynetTest extends Test with BeforeAndAfterAll {
+class CluTest extends Test with BeforeAndAfterAll {
   var proc: BalaurProcessor = null // sorry
   val debugging = false
 

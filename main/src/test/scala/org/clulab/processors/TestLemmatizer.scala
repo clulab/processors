@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.utils.Sourcer
 
-class TestLemmatizer extends FatdynetTest {
+class TestLemmatizer extends CluTest {
 
   "the lemmatizer" should "not crash when processing this weird file" in {
     val source = Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")

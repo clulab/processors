@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-class TestUniversalEnhancedDependencies extends FatdynetTest {
+class TestUniversalEnhancedDependencies extends CluTest {
 
   "CluProcessor" should "parse some basic sentences correctly" in {
     var doc = proc.annotate("Ras1 is associated with cancer.")

@@ -5,7 +5,7 @@ package org.clulab.processors
   * User: mihais
   * Date: 6/17/17
   */
-class TestCluProcessor extends FatdynetTest {
+class TestCluProcessor extends CluTest {
 
   "CluProcessor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")

@@ -3,7 +3,7 @@ package org.clulab.processors
 import org.clulab.struct.DirectedGraph
 
 /** Makes sure that CluProcessor produces dependency graphs of correct sizes */
-class TestDepGraphSizes extends FatdynetTest {
+class TestDepGraphSizes extends CluTest {
 
   "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
     // Document 3

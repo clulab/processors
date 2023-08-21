@@ -22,7 +22,7 @@ import org.clulab.utils.SeqOdometer
 import java.io.File
 import scala.collection.mutable
 
-class TestLexiconNER extends FatdynetTest {
+class TestLexiconNER extends CluTest {
 
   def mkSentence(text: String): Sentence = {
     val doc = proc.mkDocument(text)
