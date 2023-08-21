@@ -241,27 +241,22 @@ class Eisner {
       }
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
-            
-      // AICI: fix me
-      /*
       for(i <- scores.indices) {
-        val relativeHead = scores(i).maxBy(_._2)._1.toInt
+        val bestDep = scores(i).maxBy(_._2)
+        val relativeHead = bestDep._1.toInt
+        val label = bestDep._2
         val depMod = i + 1
         val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
-        // lift() checks the index, and Option(_) checks for nulls.
-        val valid = dependencies(depMod).lift(depHead).flatMap(Option(_)).isDefined
-        val label = if (valid) dependencies(depMod)(depHead).label else "root"
         val head =
           if(generateRelativeHeads) {
             // we are storing *relative* head positions here
-            if (valid) relativeHead else 0
+            relativeHead
           } else {
             // we are storing absolute heads, starting at offset 0
-            if (valid) depHead - 1 else -1
+            depHead - 1
           }
         heads(i) = (head, label)
       }
-      */
     }
     heads
   }

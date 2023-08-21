@@ -1,4 +1,4 @@
-package org.clulab.dynet
+package org.clulab.processors
 
 import org.clulab.embeddings.WordEmbeddingMapPool
 import org.clulab.utils.Test

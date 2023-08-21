@@ -255,7 +255,7 @@ class BalaurProcessor protected (
     val top = eisner.parse(startingDeps)
 
     // convert back to relative (or absolute) heads
-    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false).toArray // AICI
+    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false).toArray 
     parserPostProcessing(sent, bestDeps)
 
     // construct the dependency graphs to be stored in the sentence object

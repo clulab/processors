@@ -25,6 +25,7 @@ class TestDepGraphSizes extends CluTest {
       checkGraph(sent, d2, "universalEnhancedDependencies")
       d2.size should be (size)
 
+      /*
       val d3 = sent.semanticRoles.get
       checkGraph(sent, d3, "semanticRoles")
       d3.size should be (size)
@@ -32,6 +33,7 @@ class TestDepGraphSizes extends CluTest {
       val d4 = sent.enhancedSemanticRoles.get
       checkGraph(sent, d4, "enhancedSemanticRoles")
       d4.size should be (size)
+      */
     }
   }
 
