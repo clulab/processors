@@ -5,6 +5,7 @@ import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 import org.clulab.scala.WrappedArrayBuffer._
 
+import java.util.regex.Pattern
 import scala.collection.mutable.ArrayBuffer
 
 class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer, weekNormalizer: WeekNormalizer) extends Actions {
@@ -245,15 +246,30 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
 
   /** filter out season homonyms (fall, spring) **/
   def postprocessNumericEntities(mentions: Seq[Mention]): Seq[Mention] = {
+
+    def prevWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+      val prevWords = words.slice(wordIndex - 2, wordIndex).map(_.toLowerCase)
+
+      prevWords.exists(NumericActions.preSeasons) ||
+          prevWords.containsSlice(NumericActions.inThe)
+    }
+
+    def contextWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+      val window = 5
+      val contextWords = words.slice(wordIndex - window, wordIndex + window).map(_.toLowerCase)
+
+      contextWords.exists(NumericActions.seasons) ||
+          contextWords.exists(NumericActions.yearMatcherPattern.matcher(_).matches)
+    }
+
     val (seasonMentions, otherMentions) = mentions.partition(m => m.foundBy.contains("season"))
     val (springFall, otherSeasons) = seasonMentions.partition(m => m.text.equalsIgnoreCase("spring") || m.text.equalsIgnoreCase("fall"))
     val trueSeasons = springFall.filter { m =>
       m.tags.head.contains("NN") && {
+        val words = m.sentenceObj.words
         val wordIndex = m.tokenInterval.start
-        val prevWords = m.sentenceObj.words.slice(wordIndex - 2, wordIndex).map(_.toLowerCase)
-        val contextWords = m.sentenceObj.words.slice(wordIndex - 5, wordIndex + 5).map(_.toLowerCase)
 
-        (prevWords.contains("in") && prevWords.contains("the")) || prevWords.exists(Array("this", "last", "every").contains) || contextWords.exists(_.matches("[0-9]{1,4}")) || contextWords.exists(Array("spring", "summer", "fall", "autumn", "winter").contains)
+        prevWordsMatch(words, wordIndex) || contextWordsMatch(words, wordIndex)
       }
     }
     trueSeasons ++ otherSeasons ++ otherMentions
@@ -275,6 +291,14 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
 }
 
 object NumericActions {
+  val seasons: Set[String] = Set("spring", "summer", "fall", "autumn", "winter")
+  // Words that typically precede a season that might distinguish it from a similar verb
+  val preSeasons: Set[String] = Set("this", "last", "every")
+  // A common introduction to a season
+  val inThe: Array[String] = Array("in", "the")
+  // Match a 4-digit year
+  val yearMatcherPattern = Pattern.compile("[0-9]{1,4}")
+
   def isNumeric(m: Mention): Boolean = {
     m.isInstanceOf[DateMention] ||
       m.isInstanceOf[DateRangeMention] ||
