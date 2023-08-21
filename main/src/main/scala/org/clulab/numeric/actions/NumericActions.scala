@@ -259,7 +259,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
       val contextWords = words.slice(wordIndex - window, wordIndex + window).map(_.toLowerCase)
 
       contextWords.exists(NumericActions.seasons) ||
-          contextWords.exists(NumericActions.yearMatcherPattern.matcher(_).matches)
+          contextWords.exists(NumericActions.yearPattern.matcher(_).matches)
     }
 
     val (seasonMentions, otherMentions) = mentions.partition(m => m.foundBy.contains("season"))
@@ -296,8 +296,8 @@ object NumericActions {
   val preSeasons: Set[String] = Set("this", "last", "every")
   // A common introduction to a season
   val inThe: Array[String] = Array("in", "the")
-  // Match a 4-digit year
-  val yearMatcherPattern = Pattern.compile("[0-9]{1,4}")
+  // Match a 1 to 4 digit year
+  val yearPattern = Pattern.compile("[0-9]{1,4}")
 
   def isNumeric(m: Mention): Boolean = {
     m.isInstanceOf[DateMention] ||
