@@ -131,8 +131,8 @@ class TestCluProcessor extends FatdynetTest {
     println(s"Enhanced universal dependencies for sentence: $sent")
     println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "amod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 3, "amod") should be (false)
 
     sent = "They ate cake due to hunger."
     doc = proc.mkDocument(sent)
@@ -142,8 +142,8 @@ class TestCluProcessor extends FatdynetTest {
     println(s"Enhanced universal dependencies for sentence: $sent")
     println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "advmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 3, "advmod") should be (false)
   }
 
   it should "parse incomplete sentence without crashing" in {
