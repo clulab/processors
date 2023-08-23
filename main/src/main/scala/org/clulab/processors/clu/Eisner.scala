@@ -241,21 +241,32 @@ class Eisner {
       }
     } else {
       // Eisner failed to produce a complete tree; revert to the greedy inference
+      val sentLength = scores.length
       for(i <- scores.indices) {
-        val bestDep = scores(i).maxBy(_._2)
-        val relativeHead = bestDep._1.toInt
-        val label = bestDep._2
-        val depMod = i + 1
-        val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
-        val head =
-          if(generateRelativeHeads) {
-            // we are storing *relative* head positions here
-            relativeHead
-          } else {
-            // we are storing absolute heads, starting at offset 0
-            depHead - 1
+        val bestDeps = scores(i).sortBy(- _._3) // sort from highest to lowest logits
+        var foundValid = false
+
+        for(bestDep <- bestDeps if ! foundValid) {
+          val relativeHead = bestDep._1.toInt
+          val label = bestDep._2
+          val depMod = i + 1
+          val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
+
+          // found a valid head, i.e., within the sentence boundaries or root (-1)
+          if(depHead >= -1 && depHead < sentLength) {
+            val head =
+              if(generateRelativeHeads) {
+                // we are storing *relative* head positions here
+                relativeHead
+              } else {
+                // we are storing absolute heads, starting at offset 0
+                depHead - 1
+            }
+
+            heads(i) = (head, label)
+            foundValid = true
           }
-        heads(i) = (head, label)
+        }
       }
     }
     heads

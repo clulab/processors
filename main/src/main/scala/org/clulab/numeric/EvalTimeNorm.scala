@@ -2,7 +2,8 @@ package org.clulab.numeric
 
 import org.clulab.dynet.Utils
 import org.clulab.numeric.mentions.Norm
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.Processor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.Closer.AutoCloser
 
 import java.nio.charset.StandardCharsets
@@ -10,7 +11,7 @@ import scala.io.Source
 
 object EvalTimeNorm {
 
-  def runEval(proc: CluProcessor, ner: NumericEntityRecognizer,
+  def runEval(proc: Processor, ner: NumericEntityRecognizer,
               testFile: String): Double = {
     val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
     val goldStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$testFile")
@@ -55,12 +56,12 @@ object EvalTimeNorm {
   }
 
   protected def run(): Double = {
-    val proc = new CluProcessor() // there are lots of options for this
+    val proc = new BalaurProcessor() // there are lots of options for this
     val ner = NumericEntityRecognizer()
     test(proc, ner)
   }
 
-  def test(proc: CluProcessor, ner: NumericEntityRecognizer): Double = {
+  def test(proc: Processor, ner: NumericEntityRecognizer): Double = {
     runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
   }
 

@@ -258,6 +258,9 @@ class BalaurProcessor protected (
     val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false).toArray 
     parserPostProcessing(sent, bestDeps)
 
+    //println("Sentence: " + sent.words.mkString(", "))
+    //println("bestDeps: " + bestDeps.mkString(", "))
+
     // construct the dependency graphs to be stored in the sentence object
     val edges = new ListBuffer[Edge[String]]()
     val roots = new HashSet[Int]()
