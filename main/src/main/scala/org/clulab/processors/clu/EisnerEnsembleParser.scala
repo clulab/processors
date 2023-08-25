@@ -4,7 +4,7 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.scala.WrappedListBuffer._
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import Eisner._
+import EisnerEnsembleParser._
 
 import scala.collection.mutable
 
@@ -117,7 +117,7 @@ class Chart(val dimension: Int) {
   }
 }
 
-class Eisner {
+class EisnerEnsembleParser {
   def parse(startingDependencies: Array[Array[Dependency]]): Option[Span] = {
     // for(i <- startingDependencies.indices) println(s"Index $i: " + startingDependencies(i).mkString(", "))
 
@@ -325,7 +325,7 @@ class Eisner {
   }
 }
 
-object Eisner {
+object EisnerEnsembleParser {
   // prints for debugging
   val DEBUG = false
   def p(s: String): Unit = { if(DEBUG) print(s) }

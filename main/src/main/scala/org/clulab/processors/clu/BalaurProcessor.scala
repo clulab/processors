@@ -245,7 +245,7 @@ class BalaurProcessor protected (
     labelLabels: Array[Array[(String, Float)]], 
     sent: Sentence): Unit = {
 
-    val eisner = new Eisner  
+    val eisner = new EisnerEnsembleParser()  
 
     // preparate the input dependency table
     val headsAndLabels = interpolateHeadsAndLabels(headLabels, labelLabels, PARSING_INTERPOLATION_LAMBDA)
