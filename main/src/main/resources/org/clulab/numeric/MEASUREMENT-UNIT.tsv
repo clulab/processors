@@ -27,6 +27,7 @@ yd                  // yd::distance
 foot                // ft::length
 feet                // ft::length
 ft                  // ft::length
+ft.                 // ft::length
 inch                // in::length
 inches              // in::length
 in                  // in::length
