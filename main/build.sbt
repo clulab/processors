@@ -47,7 +47,7 @@ libraryDependencies ++= {
     "org.json4s"                 %% "json4s-core"              % json4sVersion, // Apache-2.0
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion, // Apache-2.0
     // for machine learning
-    "org.clulab"                  % "deberta-onnx-model"          % "0.0.3",
+    "org.clulab"                  % "deberta-onnx-model"          % "0.0.4",
     // "org.clulab"                  % "roberta-onnx-model"          % "0.0.2",
     "org.clulab"                 %% "scala-transformers-encoder"  % "0.3.1-SNAPSHOT", // Apache-2.0
     "de.bwaldvogel"               % "liblinear"                   % "2.30", // BSD-3
@@ -68,7 +68,6 @@ libraryDependencies ++= {
     // trained models for local ML models used in both main and corenlp
     // These are stored in the CLU lab Artifactory instance, not maven!
     "org.clulab"                  % "glove-840b-300d-10f-kryo" % "1.0.0", // Apache-2.0
-    "org.clulab"                  % "processors-models"        % "0.2.4" exclude("org.scala-lang", "scala-library"), // Apache-2.0
     "com.esotericsoftware"        % "kryo"                     % "5.1.1", // BSD-3
     // for odin
     "org.apache.commons"          % "commons-text"             % "1.1", // Apache-2.0
