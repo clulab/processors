@@ -1,6 +1,6 @@
 package org.clulab.processors.apps
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
 
@@ -9,7 +9,7 @@ object ExtractSentencesApp extends App {
   val fileName = args.lift(1).getOrElse("sentences.txt")
 
   val files = FileUtils.findFiles(directoryName, ".txt")
-  val processor = new CluProcessor()
+  val processor = new BalaurProcessor()
   var count = 0
 
   FileUtils.printWriterFromFile(fileName).autoClose { printWriter =>

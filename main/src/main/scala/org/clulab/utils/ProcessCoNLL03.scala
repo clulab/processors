@@ -1,6 +1,6 @@
 package org.clulab.utils
 
-import org.clulab.processors.clu.{CluProcessor, GivenConstEmbeddingsAttachment}
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
@@ -11,7 +11,7 @@ import java.io.PrintWriter
  * The words and gold NE labels are in the first and fourth columns, respectively. These are not changed
  */
 object ProcessCoNLL03 extends App {
-  val proc = new CluProcessor()
+  val proc = new BalaurProcessor()
   val rows = ColumnReader.readColumns(args(0))
   println(s"Found ${rows.length} sentences.")
   val pw = new PrintWriter(args(0) + ".reparsed")
@@ -21,9 +21,7 @@ object ProcessCoNLL03 extends App {
       saveSent(pw, row)
     } else {
       val doc = proc.mkDocumentFromTokens(Seq(words))
-      GivenConstEmbeddingsAttachment(doc).perform {
-        proc.tagPartsOfSpeech(doc)
-      }
+      proc.annotate(doc)
       saveSent(pw, row, doc.sentences(0).tags, doc.sentences(0).chunks)
     }
   }

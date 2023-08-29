@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.examples.ParallelProcessorExample
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Sourcer.utf8
@@ -25,7 +25,7 @@ class TestRepeatability extends Test {
     stringWriter.toString
   }
 
-  val processor: Processor = new FastNLPProcessorWithSemanticRoles()
+  val processor: Processor = new FastNLPProcessor()
 
   behavior of "processing a document twice"
 

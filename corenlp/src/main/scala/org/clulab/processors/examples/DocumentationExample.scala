@@ -1,6 +1,6 @@
 package org.clulab.processors.examples
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.{Document, Processor}
@@ -13,10 +13,7 @@ object DocumentationExample extends App {
 
   // val proc: Processor = new FastNLPProcessor()
 
-  // val proc: Processor = new CluProcessor()
-
-  // org.clulab.dynet.Utils.initializeDyNet(mem = "1024,1024,1024,1024")
-  // val proc: Processor = new CluProcessor()
+  // val proc: Processor = new BalaurProcessor()
 
   // val proc = new CoreNLPProcessor(internStrings = false)
 

@@ -1,6 +1,6 @@
 package org.clulab.sentiment
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.Processor
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.Counter
@@ -14,7 +14,7 @@ class LexiconSentimentAnalyzer {
   import LexiconSentimentAnalyzer._
 
   val lexiconNer: LexiconNER = mkLexicon()
-  val proc: Processor = new CluProcessor()
+  val proc: Processor = new BalaurProcessor()
 
   private def mkLexicon(): LexiconNER = {
     // Bing Liu's words are case insensitive, so we must have caseInsensitiveMatching = true

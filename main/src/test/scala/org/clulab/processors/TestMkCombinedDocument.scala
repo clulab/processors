@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.scala.WrappedArray._
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Closer.AutoCloser
@@ -26,7 +26,7 @@ class TestMkCombinedDocument extends Test {
   )
   val separator = "  "
   val documentSerializer = new DocumentSerializer()
-  val processor = new CluProcessor()
+  val processor = new BalaurProcessor()
 
   def toString(document: Document): String = {
     val stringWriter = new StringWriter()

@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.Test
 
 /**
@@ -11,7 +11,7 @@ import org.clulab.utils.Test
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends Test {
-  var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+  var proc:Processor = new FastNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")

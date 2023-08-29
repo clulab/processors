@@ -1,8 +1,7 @@
 package org.clulab.numeric
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.Sentence
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.struct.Interval
 import org.clulab.utils.Test
@@ -42,7 +41,7 @@ class TestNumericEntityRecognition extends Test {
     val replacer: Regex.Match => String = m => s"${m.group(1)}$dash${m.group(2)}"
   }
 
-  class HabitusProcessor() extends CluProcessor {
+  class HabitusProcessor() extends BalaurProcessor {
     lazy val habitusTokenizer: HabitusTokenizer = new HabitusTokenizer(super.tokenizer)
     override def tokenizer: Tokenizer = habitusTokenizer
   }

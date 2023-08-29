@@ -1,6 +1,5 @@
 package org.clulab.processors.clu
 
-import org.clulab.dynet.Utils
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.Shell
 

@@ -1,9 +1,8 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.CliReader
 import org.clulab.utils.ExitMenuItem
 import org.clulab.utils.HelpMenuItem
@@ -24,7 +23,7 @@ import java.io.PrintWriter
   */
 class ProcessorShell extends Shell {
   val core = new PromptedReloadableProcessor("(core)>>> ", () => new CoreNLPProcessor()) // this uses the slower constituent parser
-  val fast = new PromptedReloadableProcessor("(fast)>>> ", () => new FastNLPProcessorWithSemanticRoles()) // this uses the faster dependency parser
+  val fast = new PromptedReloadableProcessor("(fast)>>> ", () => new FastNLPProcessor()) // this uses the faster dependency parser
   val balaur = new PromptedReloadableProcessor("(balaur)>>> ", () => new BalaurProcessor(), true)
 
   var proc = balaur // Note that the initial proc does not get initialized.

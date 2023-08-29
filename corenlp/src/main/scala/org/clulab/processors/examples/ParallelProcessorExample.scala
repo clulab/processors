@@ -5,11 +5,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
-import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.CluProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
@@ -36,7 +35,7 @@ object ParallelProcessorExample {
     val startupTimer = new Timer("This is how long it takes to start up")
     startupTimer.start()
 
-    val processor: Processor = new CluProcessor()
+    val processor: Processor = new BalaurProcessor()
     processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
     startupTimer.stop()
     println(startupTimer.toString)
@@ -91,9 +90,6 @@ object ParallelProcessorExample {
   }
 
   def main(args: Array[String]): Unit = {
-    import org.clulab.fatdynet.utils.Utils
-
-    Utils.startup()
     run(Array(
       FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents"),
       ".",
@@ -101,6 +97,5 @@ object ParallelProcessorExample {
       "8",
       "false"
     ))
-    Utils.shutdown()
   }
 }
