@@ -346,13 +346,6 @@ package object mentions {
         throw new RuntimeException(s"ERROR: could not find argument week in mention ${m.raw.mkString(" ")}!")
 
       val month = getArgWords("month", m)
-//
-//      val (yearStart, yearEnd) = yearNorm match {
-//        case Some(year) =>
-//          val adjustedRange = seasonNormalizer.adjustYearRange(seasonNorm.get, year)
-//          (Some(adjustedRange._1), Some(adjustedRange._2))
-//        case _ => (None, None)
-//      }
 
       DateRangeMention(
         m,
@@ -923,7 +916,6 @@ package object mentions {
 
   private def getWeekRange(weekNormalizer: WeekNormalizer)(argName: String, m:Mention): Option[WeekRange] = {
     val wordsOpt = getArgWords(argName, m)
-    print("this is wordsOpt: " ++ wordsOpt.get.mkString(" "))
 
     if (wordsOpt.isEmpty) None
     else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last week")) {getLastWeekRange(m)}

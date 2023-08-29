@@ -297,7 +297,7 @@ object NumericActions {
   // A common introduction to a season
   val inThe: Array[String] = Array("in", "the")
   // Match a 1 to 4 digit year
-  val yearPattern = Pattern.compile("[0-9]{1,4}")
+  val yearPattern = Pattern.compile("[0-9]{2}|[0-9]{4}")
 
   def isNumeric(m: Mention): Boolean = {
     m.isInstanceOf[DateMention] ||
