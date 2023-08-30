@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala_transformers.encoder.TokenClassifier
@@ -11,16 +11,11 @@ import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.Edge
 import org.clulab.struct.GraphMap
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, MathUtils, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles}
+import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.ListBuffer
 import BalaurProcessor._
 import PostProcessor._
-
-import scala.collection.mutable.ArrayBuffer
-import scala.util.Try
 
 class BalaurProcessor protected (
   val config: Config,
