@@ -16,7 +16,7 @@ case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:S
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
   def this() = {
-    this(List[Dependency](), -1, 0f)
+    this(List[Dependency](), HeadLabelScore.ROOT, 0f)
   }
 
   override def toString: String = {
@@ -220,12 +220,13 @@ class EisnerEnsembleParser {
   }
 
   def generateOutput(top: Span): Array[HeadLabel] = {
+    val extension = 1 // See extension in next method.
     val heads = new Array[HeadLabel](top.dependencies.length)
 
     // If these were sorted by mod, then we would have it, but
     // they aren't and this is faster.
     top.dependencies.foreach { dependency =>
-      heads(dependency.mod - 1) = (dependency.head - 1, dependency.label)
+      heads(dependency.mod - extension) = (dependency.head - extension, dependency.label)
     }
     heads
   }
@@ -238,8 +239,8 @@ class EisnerEnsembleParser {
     val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
 
     sentHeadLabelScores.zipWithIndex.foreach { case (wordHeadLabelScores, wordIndex) =>
-      val mod = wordIndex + extension // offsets start at 1 in the Dependency class
       val bestHeadLabelScores = wordHeadLabelScores.take(topK)
+      val mod = wordIndex + extension // offsets start at 1 in the Dependency class
 
       bestHeadLabelScores.zipWithIndex.foreach { case (headLabelScore, rank) =>
         val dependency = Dependency(mod, headLabelScore.head + extension, headLabelScore.score, rank, headLabelScore.label)

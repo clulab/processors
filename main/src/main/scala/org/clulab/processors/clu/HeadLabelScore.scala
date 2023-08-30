@@ -3,8 +3,6 @@ package org.clulab.processors.clu
 // This is the linguistic head, not the arrowhead!
 // Rather than calling this constructor directly, go through HeadLabelScore.apply().
 class HeadLabelScore protected (val head: Int, val label: String, val score: Float) {
-  def isRoot: Boolean = head == HeadLabelScore.ROOT
-
   def toHeadLabel: HeadLabel = (head, label)
 }
 

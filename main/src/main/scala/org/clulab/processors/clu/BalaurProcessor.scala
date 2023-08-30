@@ -217,28 +217,36 @@ class BalaurProcessor protected (
     sent.chunks = Some(labels.map(_.head._1))
   }
 
-  // The head has one score, the label has another.  Here they two scores are interpolated
-  // and the head and label are stored together in a single case class with the score.
+  // The head has one score, the label has another.  Here the two scores are interpolated
+  // and the head and label are stored together in a single object with the score if the
+  // object, the HeadLabelScore, has a valid absolute head.
   private def interpolateHeadsAndLabels(
-      sentHeadLabels: Array[Array[PredictionScore]],
-      sentLabelLabels: Array[Array[PredictionScore]],
+      sentHeadPredictionScores: Array[Array[PredictionScore]],
+      sentLabelPredictionScores: Array[Array[PredictionScore]],
       lambda: Float): Array[Array[HeadLabelScore]] = {
-    assert(sentHeadLabels.length == sentLabelLabels.length)
+    assert(sentHeadPredictionScores.length == sentLabelPredictionScores.length)
 
-    val sentHeadLabelScores = sentHeadLabels.zip(sentLabelLabels).map { case (wordHeadPredictionScores, wordLabelPredictionScores) =>
+    val sentHeadLabelScores = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
       assert(wordHeadPredictionScores.length == wordLabelPredictionScores.length)
 
       // convert logits to probabilities so we can interpolate them later
       val wordHeadProbabilities = MathUtils.softmaxFloat(wordHeadPredictionScores.map(_._2))
       val wordLabelProbabilities = MathUtils.softmaxFloat(wordLabelPredictionScores.map(_._2))
-      val wordHeadLabelScores = wordHeadPredictionScores.indices.toArray.flatMap { index =>
-          // These are probabilities not logits!  Zipping four arrays is excessive.
-          val interpolatedScore = lambda * wordHeadProbabilities(index) + (1.0f - lambda) * wordLabelProbabilities(index)
+      val wordHeadLabelScores = wordHeadPredictionScores.indices.toArray.flatMap { predictionIndex =>
+          // These are probabilities not logits!  Zipping four arrays is excessive.  This may interpolate
+          // unnecessarily because the newOpt may return None because of an invalid absolute head.
+          val interpolatedScore = lambda * wordHeadProbabilities(predictionIndex) +
+              (1.0f - lambda) * wordLabelProbabilities(predictionIndex)
 
-          HeadLabelScore.newOpt(index, sentHeadLabels.indices, wordHeadPredictionScores(index)._1, wordLabelPredictionScores(index)._1, interpolatedScore)
+          HeadLabelScore.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
+              wordLabelPredictionScores(predictionIndex)._1, interpolatedScore)
       }
+      // Although the wordHeadPredictionScores are sorted, the wordLabelPredictionScores aren't.
+      // (They can't both be.)  Therefore, they need to be resorted here.  Thankfully, only the
+      // valid HeadLabelScores remain.
+      val sortedWordHeadLabelScores = wordHeadLabelScores.sortBy(-_.score)
 
-      wordHeadLabelScores
+      sortedWordHeadLabelScores
     }
 
     sentHeadLabelScores
@@ -266,7 +274,7 @@ class BalaurProcessor protected (
 
     // construct the dependency graphs to be stored in the sentence object
     // bestDeps(i) means bestDeps(i)_1 -> i if it isn't -1.
-    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == -1 }
+    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == HeadLabelScore.ROOT }
     val edges = nonRootIndices.map { index => Edge(source = bestDeps(index)._1, destination = index, bestDeps(index)._2) }
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
