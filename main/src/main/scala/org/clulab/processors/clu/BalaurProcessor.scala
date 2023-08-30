@@ -50,13 +50,15 @@ class BalaurProcessor protected (
   override def getConf: Config = config
 
   override def mkDocument(text: String, keepText: Boolean): Document = { 
-    DocumentMaker.mkDocument(wordTokenizer, text, keepText)
+    DocumentMaker.mkDocument(tokenizer, text, keepText)
   }
+
+  def tokenizer: Tokenizer = wordTokenizer
 
   override def mkDocumentFromSentences(sentences: Iterable[String], 
     keepText: Boolean, 
     charactersBetweenSentences: Int): Document = {     
-    DocumentMaker.mkDocumentFromSentences(wordTokenizer, sentences, keepText, charactersBetweenSentences)
+    DocumentMaker.mkDocumentFromSentences(tokenizer, sentences, keepText, charactersBetweenSentences)
   }
 
   override def mkDocumentFromTokens(sentences: Iterable[Iterable[String]], 
