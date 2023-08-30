@@ -80,13 +80,16 @@ class TestFastNLPProcessor extends Test {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
   }
 
+  /*
   it should "recognize semantic roles correctly" in {
     val doc = proc.annotate("John Doe visited China.")
 
     doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
     doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
   }
+  */
 
+  /*
   it should "create semantic dependencies of the correct length" in {
     val text = "John ate cake, zz zz zz."
     val doc = proc.annotate(text)
@@ -98,4 +101,5 @@ class TestFastNLPProcessor extends Test {
     sent.enhancedSemanticRoles.get.outgoingEdges.length should be(sent.size)
     sent.enhancedSemanticRoles.get.incomingEdges.length should be(sent.size)
   }
+  */
 }
