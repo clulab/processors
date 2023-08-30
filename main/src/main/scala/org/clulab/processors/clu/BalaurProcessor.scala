@@ -3,7 +3,7 @@ package org.clulab.processors.clu
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
-import org.clulab.processors.{Document, IntermediateDocumentAttachment, Processor, Sentence}
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala_transformers.encoder.TokenClassifier
@@ -11,15 +11,11 @@ import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.Edge
 import org.clulab.struct.GraphMap
-import org.clulab.utils.{BeforeAndAfter, Configured, DependencyUtils, Lazy, ScienceUtils, ToEnhancedDependencies, ToEnhancedSemanticRoles, MathUtils}
+import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
-
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.ListBuffer
 
 import BalaurProcessor._
 import PostProcessor._
-import scala.collection.mutable.ArrayBuffer
 
 class BalaurProcessor protected (
   val config: Config,
@@ -44,6 +40,7 @@ class BalaurProcessor protected (
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
     TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
   )
+  val eisner = new EisnerEnsembleParser()
 
   override def getConf: Config = config
 
@@ -128,7 +125,7 @@ class BalaurProcessor protected (
     lemmatize(doc)
 
     // process one sentence at a time through the MTL framework
-    for(sent <- doc.sentences) {
+    for (sent <- doc.sentences) {
       val allLabelsAndScores = tokenClassifier.predictWithScores(sent.words)
       assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
       assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
@@ -140,7 +137,7 @@ class BalaurProcessor protected (
     }
 
     // numeric entities using our numeric entity recognizer based on Odin rules
-    if(numericEntityRecognizerOpt.nonEmpty) {
+    if (numericEntityRecognizerOpt.nonEmpty) {
       val numericMentions = numericEntityRecognizerOpt.get.extractFrom(doc)
       setLabelsAndNorms(doc, numericMentions)
     }
@@ -215,64 +212,65 @@ class BalaurProcessor protected (
     sent.chunks = Some(labels.map(_.head._1))
   }
 
+  // The head has one score, the label has another.  Here the two scores are interpolated
+  // and the head and label are stored together in a single object with the score if the
+  // object, the HeadLabelScore, has a valid absolute head.
   private def interpolateHeadsAndLabels(
-    headLabels: Array[Array[(String, Float)]], 
-    labelLabels: Array[Array[(String, Float)]], 
-    lambda: Float): Array[Array[(Int, String, Float)]] = {
-      assert(headLabels.length == labelLabels.length)
-      val allDepsPerModifier = new ArrayBuffer[Array[(Int, String, Float)]]
-      for(i <- headLabels.indices) {
-        assert(headLabels(i).length == labelLabels(i).length)
-        val depCands = new ArrayBuffer[(Int, String, Float)]
+      sentHeadPredictionScores: Array[Array[PredictionScore]],
+      sentLabelPredictionScores: Array[Array[PredictionScore]],
+      lambda: Float): Array[Array[HeadLabelScore]] = {
+    assert(sentHeadPredictionScores.length == sentLabelPredictionScores.length)
 
-        // convert logits to probabilities so we can interpolate them later
-        val headProbs = MathUtils.softmaxFloat(headLabels(i).map(_._2))
-        val labelProbs = MathUtils.softmaxFloat(labelLabels(i).map(_._2))
+    val sentHeadLabelScores = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
+      assert(wordHeadPredictionScores.length == wordLabelPredictionScores.length)
 
-        for(j <- headLabels(i).indices) {
-          val relHead = headLabels(i)(j)._1.toInt
-          val label = labelLabels(i)(j)._1
-          val interpolatedScore = lambda * headProbs(j) + (1.0 - lambda) * labelProbs(j) // these are probabilities not logits!
-          depCands += Tuple3(relHead, label, interpolatedScore.toFloat)
-        }
-        allDepsPerModifier += depCands.toArray
+      // convert logits to probabilities so we can interpolate them later
+      val wordHeadProbabilities = MathUtils.softmaxFloat(wordHeadPredictionScores.map(_._2))
+      val wordLabelProbabilities = MathUtils.softmaxFloat(wordLabelPredictionScores.map(_._2))
+      val wordHeadLabelScores = wordHeadPredictionScores.indices.toArray.flatMap { predictionIndex =>
+          // These are probabilities not logits!  Zipping four arrays is excessive.  This may interpolate
+          // unnecessarily because the newOpt may return None because of an invalid absolute head.
+          val interpolatedScore = lambda * wordHeadProbabilities(predictionIndex) +
+              (1.0f - lambda) * wordLabelProbabilities(predictionIndex)
+
+          HeadLabelScore.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
+              wordLabelPredictionScores(predictionIndex)._1, interpolatedScore)
       }
-      allDepsPerModifier.toArray
+      // Although the wordHeadPredictionScores are sorted, the wordLabelPredictionScores aren't.
+      // (They can't both be.)  Therefore, they need to be resorted here.  Thankfully, only the
+      // valid HeadLabelScores remain.
+      val sortedWordHeadLabelScores = wordHeadLabelScores.sortBy(-_.score)
+
+      sortedWordHeadLabelScores
     }
 
+    sentHeadLabelScores
+  }
+
+  // sent = sentence, word = word
   private def assignDependencyLabels(
-    headLabels: Array[Array[(String, Float)]], 
-    labelLabels: Array[Array[(String, Float)]], 
-    sent: Sentence): Unit = {
-
-    val eisner = new EisnerEnsembleParser()  
-
-    // preparate the input dependency table
-    val headsAndLabels = interpolateHeadsAndLabels(headLabels, labelLabels, PARSING_INTERPOLATION_LAMBDA)
-    val startingDeps = eisner.toDependencyTable(headsAndLabels, PARSING_TOPK)
-
+      sentHeadLabels: Array[Array[PredictionScore]],
+      sentLabelLabels: Array[Array[PredictionScore]],
+      sent: Sentence): Unit = {
+    // prepare the input dependency table
+    val sentHeadLabelScores = interpolateHeadsAndLabels(sentHeadLabels, sentLabelLabels, PARSING_INTERPOLATION_LAMBDA)
+    val startingDeps = eisner.toDependencyTable(sentHeadLabelScores, PARSING_TOPK)
     // the actual Eisner parsing algorithm
-    val top = eisner.parse(startingDeps)
-
+    val topOpt = eisner.parse(startingDeps)
     // convert back to relative (or absolute) heads
-    val bestDeps = eisner.generateOutput(top, headsAndLabels, startingDeps, false).toArray 
+    val bestDeps = topOpt
+        .map(eisner.generateOutput)
+        .getOrElse(greedilyGenerateOutput(sentHeadLabelScores))
+
     parserPostProcessing(sent, bestDeps)
 
     //println("Sentence: " + sent.words.mkString(", "))
     //println("bestDeps: " + bestDeps.mkString(", "))
 
     // construct the dependency graphs to be stored in the sentence object
-    val edges = new ListBuffer[Edge[String]]()
-    val roots = new HashSet[Int]()
-    for(i <- bestDeps.indices) {
-      if(bestDeps(i)._1 != -1) {
-        val edge = Edge[String](bestDeps(i)._1, i, bestDeps(i)._2)
-        edges.append(edge)
-      } else {
-        roots += i
-      }
-    }
-
+    // bestDeps(i) means bestDeps(i)_1 -> i if it isn't -1.
+    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == HeadLabelScore.ROOT }
+    val edges = nonRootIndices.map { index => Edge(source = bestDeps(index)._1, destination = index, bestDeps(index)._2) }
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
@@ -280,13 +278,9 @@ class BalaurProcessor protected (
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
   }
 
-  private def convertToAbsoluteHeads(relativeHeads: IndexedSeq[Int]): IndexedSeq[Int] = {
-    val absoluteHeads = relativeHeads.zipWithIndex.map { case (relativeHead, index) =>
-      if (relativeHead == 0) -1
-      else index + relativeHead
-    }
-
-    absoluteHeads
+  def greedilyGenerateOutput(sentHeadLabelScores: Array[Array[HeadLabelScore]]): Array[HeadLabel] = {
+    // These are already sorted by score.
+    sentHeadLabelScores.map(_.head.toHeadLabel)
   }
 }
 

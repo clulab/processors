@@ -235,6 +235,7 @@ class CluProcessor protected (
   override def annotate(doc: Document): Document = {
     GivenConstEmbeddingsAttachment(doc).perform {
       tagPartsOfSpeech(doc) // the call to the POS/chunking/SRLp MTL is in here
+      lemmatize(doc)
       //println("After POS")
       //println(doc.sentences.head.tags.get.mkString(", "))
       recognizeNamedEntities(doc) // the call to the NER MTL is in here
@@ -759,6 +760,7 @@ class CluProcessor protected (
     if(doc.sentences.length > 0) {
       assert(doc.sentences(0).tags.nonEmpty)
       assert(doc.sentences(0).entities.nonEmpty)
+      assert(doc.sentences(0).lemmas.nonEmpty)
     }
     assert(doc.getAttachment(CONST_EMBEDDINGS_ATTACHMENT_NAME).isDefined)
     val embeddings = getEmbeddings(doc)

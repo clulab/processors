@@ -1,29 +1,26 @@
 package org.clulab.processors
 
-import org.clulab.utils.Sourcer
+import org.clulab.utils.{FileUtils, Sourcer}
 
 class TestLemmatizer extends CluTest {
 
-  "the lemmatizer" should "not crash when processing this weird file" in {
-    val source = Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")
-    val sb = new StringBuilder
-    for(line <- source.getLines()) {
-      sb.append(line)
-      sb.append("\n")
-    }
-    source.close()
+  behavior of "the lemmatizer"
 
-    val text = sb.toString()
+  it should "not crash when processing this weird file" in {
+    val resourceName = "/CORD19_DOC_2762.txt"
+    val text = FileUtils.getTextFromResource(resourceName)
+
     println("Trying to parse file:")
     println(text)
 
     // if this does not crash we declare success
     val doc = annotate(text)
-    doc.sentences.length > 0 should be (true)
+    doc.sentences should not be empty
   }
 
-  def annotate(text:String): Document = {
+  def annotate(text: String): Document = {
     val doc = proc.mkDocument(text)
+
     proc.annotate(doc)
     doc
   }
