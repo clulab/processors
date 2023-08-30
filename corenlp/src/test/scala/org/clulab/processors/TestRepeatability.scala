@@ -1,6 +1,5 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.examples.ParallelProcessorExample
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer

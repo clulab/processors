@@ -1,6 +1,5 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.Test
