@@ -219,94 +219,36 @@ class EisnerEnsembleParser {
     Option(top)
   }
 
-  def generateOutput(top: Option[Span],
-                     scores: Array[Array[(Int, String, Float)]],
-                     dependencies: Array[Array[Dependency]],
-                     generateRelativeHeads: Boolean): IndexedSeq[(Int, String)] = {
+  def generateOutput(top: Span): Array[HeadLabel] = {
+    val heads = new Array[HeadLabel](top.dependencies.length)
 
-    val heads = new Array[(Int, String)](scores.size)
-    if(top.nonEmpty) {
-      // Eisner correctly produced a full tree
-      for(dep <- top.get.dependencies) {
-        val head =
-          if(generateRelativeHeads) {
-            // we are storing *relative* head positions here
-            if (dep.head == 0) 0 else dep.head - dep.mod
-          } else {
-            // we are storing absolute heads, starting at offset 0
-            dep.head - 1
-          }
-        val label = dep.label
-        heads(dep.mod - 1) = (head, label)
-      }
-    } else {
-      // Eisner failed to produce a complete tree; revert to the greedy inference
-      val sentLength = scores.length
-      for(i <- scores.indices) {
-        val bestDeps = scores(i).sortBy(- _._3) // sort from highest to lowest logits
-        var foundValid = false
-
-        for(bestDep <- bestDeps if ! foundValid) {
-          val relativeHead = bestDep._1.toInt
-          val label = bestDep._2
-          val depMod = i + 1
-          val depHead = if (relativeHead == 0) 0 else depMod + relativeHead
-
-          // found a valid head, i.e., within the sentence boundaries or root (-1)
-          if(depHead >= -1 && depHead < sentLength) {
-            val head =
-              if(generateRelativeHeads) {
-                // we are storing *relative* head positions here
-                relativeHead
-              } else {
-                // we are storing absolute heads, starting at offset 0
-                depHead - 1
-            }
-
-            heads(i) = (head, label)
-            foundValid = true
-          }
-        }
-      }
+    // If these were sorted by mod, then we would have it, but
+    // they aren't and this is faster.
+    top.dependencies.foreach { dependency =>
+      heads(dependency.mod - 1) = (dependency.head - 1, dependency.label)
     }
     heads
   }
 
-  /** Converts the top K predictions from an unlabeled parserinto a matrix of Dependency (rows are mods; columns are heads) */
-  def toDependencyTable(scores: Array[Array[(Int, String, Float)]],
-                        topK: Int): Array[Array[Dependency]] = {
-    val length = scores.length + 1 // plus 1 to accomodate for root
-    val dependencies = Array.fill(length)(new Array[Dependency](length))
+  /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */
+  def toDependencyTable(sentHeadLabelScores: Array[Array[HeadLabelScore]], topK: Int): Array[Array[Dependency]] = {
+    val extension = 1 // This should probably be -HeadLabelScore.ROOT.
+    val extendedSentLength = sentHeadLabelScores.length + extension
+    // WARNING: Untouched values will be null!
+    val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
 
-    for(i <- scores.indices) {
-      val mod = i + 1 // offsets start at 1 in the Dependency class
-      val sortedPreds = scores(i).sortBy(- _._3) // sort in descending order of scores
-      val sortedProbs = sortedPreds.map(_._3) // MathUtils.softmaxFloat(sortedPreds.map(_._2))
-      val sortedHeads = sortedPreds.map(_._1)
-      val sortedLabels = sortedPreds.map(_._2)
+    sentHeadLabelScores.zipWithIndex.foreach { case (wordHeadLabelScores, wordIndex) =>
+      val mod = wordIndex + extension // offsets start at 1 in the Dependency class
+      val bestHeadLabelScores = wordHeadLabelScores.take(topK)
 
-      var headCount = 0
-      for(j <- sortedHeads.indices if headCount < topK) {
-        try {
-          val relHead = sortedHeads(j).toInt
-          val label = sortedLabels(j)
-          val score = sortedProbs(j)
-          val head = if (relHead == 0) 0 else mod + relHead // +1 offset from mod propagates in the head here
-          if (head >= 0 && head < length) { // we may predict a head outside of sentence boundaries
-            if(dependencies(mod)(head) == null || dependencies(mod)(head).score < score) { // there might be a dependency already with a higher score
-              val dep = Dependency(mod, head, score, j, label)
-              //println(s"Creating dependency: $dep")
-              dependencies(mod)(head) = dep
-              headCount += 1
-            }
-          }
-        } catch {
-          case _: NumberFormatException => // Ok to skip these, since the parser may predict <START> and <STOP> labels
-        }
+      bestHeadLabelScores.zipWithIndex.foreach { case (headLabelScore, rank) =>
+        val dependency = Dependency(mod, headLabelScore.head + extension, headLabelScore.score, rank, headLabelScore.label)
+
+        dependencies(mod)(headLabelScore.head + extension) = dependency
       }
     }
 
-    //printDependencyTable(dependencies)
+    // printDependencyTable(dependencies)
     dependencies
   }
 

@@ -2,26 +2,27 @@ package org.clulab.processors.clu
 
 import org.clulab.processors.Sentence
 
+import java.util.regex.Pattern
+
 object PostProcessor {
   //
   // Patterns for post-processing corrections
   //
-  val VERSUS_PATTERN = """(?i)^vs\.?$""".r
+  val VERSUS_PATTERN = Pattern.compile("""(?i)^vs\.?$""")
 
   /** POS tag corrections, in place */
   def postprocessPartOfSpeechTags(words: Array[String], tags: Array[String]): Array[String] = {
-    for(i <- words.indices) {
-
+    words.indices.foreach { index =>
+      if (tags(index) != "CC" &&
+          VERSUS_PATTERN.matcher(words(index)).matches)
+        tags(index) = "CC" // "versus" seems like a CC to me. but maybe not...
+    }
+    words.indices.dropRight(1).foreach { curr =>
+      val next = curr + 1
       // "due" in "due to" must be a preposition
-      if(i < words.length - 1 &&
-        words(i).equalsIgnoreCase("due") &&
-        words(i + 1).equalsIgnoreCase("to")) {
-        tags(i) = "IN"
-      }
-
-      else if(VERSUS_PATTERN.findFirstIn(words(i)).nonEmpty) {
-        tags(i) = "CC" // "versus" seems like a CC to me. but maybe not...
-      }
+      if (words(curr).equalsIgnoreCase("due") &&
+          words(next).equalsIgnoreCase("to"))
+        tags(curr) = "IN"
     }
 
     tags
@@ -31,17 +32,15 @@ object PostProcessor {
    * Deterministic corrections for dependency parsing 
    * Modifies headsWithLabels in place
    */
-  def parserPostProcessing(sentence: Sentence, headsWithLabels: Array[(Int, String)]): Unit = {
-    for(i <- sentence.indices) {
-      // "due to" must be a MWE
-      if(i < sentence.size - 1 && sentence.tags.isDefined &&
-        sentence.words(i).compareToIgnoreCase("due") == 0 &&
-        sentence.tags.get(i) == "IN" &&
-        sentence.words(i + 1).compareToIgnoreCase("to") == 0 &&
-        sentence.tags.get(i + 1) == "TO" &&
-        headsWithLabels(i + 1)._1 != i &&
-        headsWithLabels(i + 1)._2 != "mwe") {
-        headsWithLabels(i + 1) = Tuple2(i, "mwe")
+  def parserPostProcessing(sentence: Sentence, headLabels: Array[HeadLabel]): Unit = {
+    sentence.tags.foreach { tags => // Tags must be available.
+      sentence.indices.dropRight(1).foreach { curr => // We're looking ahead 1.
+        val next = curr + 1
+        // "due to" must be a MWE
+        if (sentence.words(curr).equalsIgnoreCase("due") && tags(curr) == "IN" &&
+            sentence.words(next).equalsIgnoreCase("to")  && tags(next) == "TO" &&
+            headLabels(next) != (curr, "mwe"))
+          headLabels(next) = (curr, "mwe")
       }
     }
   }
