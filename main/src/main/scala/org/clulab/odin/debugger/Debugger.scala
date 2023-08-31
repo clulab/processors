@@ -1,0 +1,45 @@
+package org.clulab.odin.debugger
+
+import org.clulab.utils.Lazy
+
+class Debugger protected () {
+  val active = true // TODO: You can turn off debugging with this!
+  var stack = List[StackFrame]()
+
+  def debug[T](stackFrame: StackFrame, lazyBlock: Lazy[T]): T = {
+    stack = stackFrame :: stack
+
+    val result = try {
+      lazyBlock.value
+    }
+    finally {
+      stack = stack.tail
+    }
+    result
+  }
+
+  def trace(): Unit = {
+    stack.zipWithIndex.foreach { case (stackFrame, index) =>
+      println(s"$index: ${stackFrame}")
+    }
+  }
+}
+
+object Debugger {
+  lazy val instance = new Debugger()
+
+  def debug[T](stackFrame: StackFrame)(block: => T): T = {
+    instance.debug(stackFrame, Lazy(block))
+  }
+
+  def debug[T](block: => T)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): T = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    instance.debug(stackFrame, Lazy(block))
+  }
+
+  def trace(): Unit = {
+    instance.trace()
+  }
+}
