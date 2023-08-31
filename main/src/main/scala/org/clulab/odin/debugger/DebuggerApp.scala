@@ -14,13 +14,10 @@ object DebuggerApp extends App {
     }
   }
 
-  def lower(depth: Int): Float = {
-    val stackFrame = SpecialStackFrame("This is special")
-    Debugger.debug(stackFrame) {
-      stackFrame.showMessage()
-      Debugger.trace
-      depth.toFloat
-    }
+  def lower(depth: Int): Float = Debugger.debug(SpecialStackFrame("This is special")) { stackFrame =>
+    stackFrame.showMessage()
+    Debugger.trace
+    depth.toFloat
   }
 
   def subroutine(message: String): String = Debugger.debug {

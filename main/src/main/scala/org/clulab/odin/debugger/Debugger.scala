@@ -6,7 +6,7 @@ class Debugger protected () {
   val active = true // TODO: You can turn off debugging with this!
   var stack = List[StackFrame]()
 
-  def debug[T](stackFrame: StackFrame, lazyBlock: Lazy[T]): T = {
+  def debug[StackFrameT <: StackFrame, T](stackFrame: StackFrameT, lazyBlock: Lazy[T]): T = {
     stack = stackFrame :: stack
 
     val result = try {
@@ -28,11 +28,11 @@ class Debugger protected () {
 object Debugger {
   lazy val instance = new Debugger()
 
-  def debug[T](stackFrame: StackFrame)(block: => T): T = {
-    instance.debug(stackFrame, Lazy(block))
+  def debug[StackFrameType <: StackFrame, ResultType](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
+    instance.debug(stackFrame, Lazy(block(stackFrame)))
   }
 
-  def debug[T](block: => T)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): T = {
+  def debug[ResultType](block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
