@@ -4,7 +4,7 @@ import org.clulab.utils.Lazy
 
 class Debugger protected () {
   val active = true // TODO: You can turn off debugging with this!
-  var stack = List[StackFrame]()
+  var stack = List[StackFrame]() // TODO: In the end this will not be global unless it can be thread-aware.
 
   def debug[StackFrameT <: StackFrame, T](stackFrame: StackFrameT, lazyBlock: Lazy[T]): T = {
     stack = stackFrame :: stack
@@ -20,7 +20,7 @@ class Debugger protected () {
 
   def trace(): Unit = {
     stack.zipWithIndex.foreach { case (stackFrame, index) =>
-      println(s"$index: ${stackFrame}")
+      println(s"$index: $stackFrame")
     }
   }
 }
