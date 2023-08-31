@@ -16,7 +16,7 @@ object DebuggerApp extends App {
 
   def lower(depth: Int): Float = Debugger.debug(SpecialStackFrame("This is special")) { stackFrame =>
     stackFrame.showMessage()
-    Debugger.trace
+    Debugger.trace()
     depth.toFloat
   }
 
