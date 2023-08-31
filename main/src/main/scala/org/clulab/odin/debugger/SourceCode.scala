@@ -10,6 +10,7 @@ class SourceCode(val line: sourcecode.Line, val fileName: sourcecode.FileName, v
 }
 
 object SourceCode {
+  
   def apply(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): SourceCode = {
     new SourceCode(line, fileName, enclosing)
   }
