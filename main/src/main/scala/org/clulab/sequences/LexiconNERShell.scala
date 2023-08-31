@@ -1,12 +1,11 @@
 package org.clulab.sequences
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.Shell
 
 class LexiconNERShell(val lexiconNer: LexiconNER) extends Shell {
-  val proc = new ReloadableProcessor(() => new CluProcessor(), true)
+  val proc = new ReloadableProcessor(() => new BalaurProcessor(), true)
 
   override def work(text: String): Unit = {
     val doc = proc.get.mkDocument(text)

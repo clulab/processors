@@ -1,6 +1,5 @@
 package org.clulab.numeric
 
-import org.clulab.dynet.Utils
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.BalaurProcessor

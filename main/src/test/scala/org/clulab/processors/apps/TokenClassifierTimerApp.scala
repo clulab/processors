@@ -1,16 +1,14 @@
 package org.clulab.processors.apps
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.{Sourcer, Timers}
 
 
 object TokenClassifierTimerApp extends App {
   val fileName = args.lift(0).getOrElse("../sentences.txt")
 
-  Utils.initializeDyNet()
   val processor = {
-    val processor = new CluProcessor()
+    val processor = new BalaurProcessor()
     processor.annotate("This is just to prime the pump.")
     processor
   }

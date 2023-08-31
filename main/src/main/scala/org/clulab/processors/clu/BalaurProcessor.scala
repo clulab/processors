@@ -14,6 +14,11 @@ import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
 
+import org.clulab.odin.Mention
+
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.ListBuffer
+
 import BalaurProcessor._
 import PostProcessor._
 
@@ -45,13 +50,15 @@ class BalaurProcessor protected (
   override def getConf: Config = config
 
   override def mkDocument(text: String, keepText: Boolean): Document = { 
-    DocumentMaker.mkDocument(wordTokenizer, text, keepText)
+    DocumentMaker.mkDocument(tokenizer, text, keepText)
   }
+
+  def tokenizer: Tokenizer = wordTokenizer
 
   override def mkDocumentFromSentences(sentences: Iterable[String], 
     keepText: Boolean, 
     charactersBetweenSentences: Int): Document = {     
-    DocumentMaker.mkDocumentFromSentences(wordTokenizer, sentences, keepText, charactersBetweenSentences)
+    DocumentMaker.mkDocumentFromSentences(tokenizer, sentences, keepText, charactersBetweenSentences)
   }
 
   override def mkDocumentFromTokens(sentences: Iterable[Iterable[String]], 
@@ -137,12 +144,16 @@ class BalaurProcessor protected (
     }
 
     // numeric entities using our numeric entity recognizer based on Odin rules
-    if (numericEntityRecognizerOpt.nonEmpty) {
-      val numericMentions = numericEntityRecognizerOpt.get.extractFrom(doc)
+    if(numericEntityRecognizerOpt.nonEmpty) {
+      val numericMentions = extractNumericEntityMentions(doc)
       setLabelsAndNorms(doc, numericMentions)
     }
 
     doc
+  }
+
+  def extractNumericEntityMentions(doc:Document): Seq[Mention] = {
+    numericEntityRecognizerOpt.get.extractFrom(doc)
   }
 
   private def assignPosTags(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
@@ -285,7 +296,7 @@ class BalaurProcessor protected (
 }
 
 object BalaurProcessor {
-  val logger:Logger = LoggerFactory.getLogger(classOf[CluProcessor])
+  val logger:Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix:String = "BalaurProcessor"
 
   val OUTSIDE = "O"

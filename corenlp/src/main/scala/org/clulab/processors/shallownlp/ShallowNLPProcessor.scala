@@ -6,7 +6,7 @@ import edu.stanford.nlp.naturalli.NaturalLogicAnnotations.RelationTriplesAnnotat
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.util.CoreMap
 import org.clulab.processors._
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.DocumentMaker
 import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, Tokenizer, TokenizerStep}
 import org.clulab.processors.corenlp.CoreNLPDocument
 import org.clulab.processors.corenlp.chunker.CRFChunker
@@ -94,7 +94,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
 
   def mkDocument(text:String, keepText:Boolean): Document = {
     // create the CLU document
-    val doc = CluProcessor.mkDocument(tokenizer, text, keepText = true)
+    val doc = DocumentMaker.mkDocument(tokenizer, text, keepText = true)
 
     // now create the CoreNLP document Annotation
     cluDocToCoreDoc(doc, keepText)
@@ -111,7 +111,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
                               keepText:Boolean,
                               charactersBetweenSentences:Int = 1): Document = {
     // create the CLU document
-    val doc = CluProcessor.mkDocumentFromSentences(tokenizer, sentences, keepText = true, charactersBetweenSentences)
+    val doc = DocumentMaker.mkDocumentFromSentences(tokenizer, sentences, keepText = true, charactersBetweenSentences)
 
     // now create the CoreNLP document Annotation
     cluDocToCoreDoc(doc, keepText)
@@ -122,7 +122,7 @@ class ShallowNLPProcessor(val tokenizerPostProcessor:Option[TokenizerStep],
                            charactersBetweenSentences:Int = 1,
                            charactersBetweenTokens:Int = 1): Document = {
     // create the CLU document
-    val doc = CluProcessor.mkDocumentFromTokens(sentences, keepText = true, charactersBetweenSentences, charactersBetweenTokens)
+    val doc = DocumentMaker.mkDocumentFromTokens(sentences, keepText = true, charactersBetweenSentences, charactersBetweenTokens)
 
     // now create the CoreNLP document Annotation
     cluDocToCoreDoc(doc, keepText)

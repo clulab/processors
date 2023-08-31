@@ -1,9 +1,8 @@
 package org.clulab.processors.examples
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
@@ -21,12 +20,12 @@ object InfiniteParallelProcessorExample {
 
   class ProcessorProvider(reuseProcessor: Boolean) {
     protected val processorOpt: Option[Processor] =
-        if (reuseProcessor) Some(new FastNLPProcessorWithSemanticRoles())
+        if (reuseProcessor) Some(new FastNLPProcessor())
         else None
 
     def newOrReusedProcessor: Processor =
         if (reuseProcessor) processorOpt.get
-        else new FastNLPProcessorWithSemanticRoles()
+        else new FastNLPProcessor()
   }
 
   def mainWithCallback(args: Array[String])(callback: (File, String) => Unit): Unit = {
@@ -94,9 +93,6 @@ object InfiniteParallelProcessorExample {
   }
 
   def main(args: Array[String]): Unit = {
-    import org.clulab.fatdynet.utils.Utils
-
-    Utils.startup()
     run(Array(
       FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents"),
       ".",
@@ -104,6 +100,5 @@ object InfiniteParallelProcessorExample {
       "2",
       "false"
     ))
-    Utils.shutdown(true)
   }
 }
