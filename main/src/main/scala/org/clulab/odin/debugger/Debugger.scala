@@ -4,7 +4,7 @@ import org.clulab.utils.Lazy
 
 class Debugger protected () {
   val active = true // TODO: You can turn off debugging with this!
-  var stack = List[StackFrame]() // TODO: In the end this will not be global unless it can be thread-aware.
+  var stack = List[StackFrame]()
 
   def debug[StackFrameT <: StackFrame, T](stackFrame: StackFrameT, lazyBlock: Lazy[T]): T = {
     stack = stackFrame :: stack
@@ -26,7 +26,7 @@ class Debugger protected () {
 }
 
 object Debugger {
-  lazy val instance = new Debugger()
+  lazy val instance = new Debugger() // TODO: In the end this will not be global unless it can be thread-aware.
 
   def debug[StackFrameType <: StackFrame, ResultType](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
     instance.debug(stackFrame, Lazy(block(stackFrame)))
