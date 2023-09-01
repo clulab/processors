@@ -257,7 +257,12 @@ class TestNumericEntityRecognition extends Test {
     ensure("autumn in 2017", Interval(0, 3), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
     ensure("2017 autumn", Interval(0, 2), "DATE-RANGE", "2017-09-22 -- 2017-12-21")
     ensure("winter", Interval(0, 1), "DATE-RANGE", "XXXX-12-21 -- XXXX-03-20")
-    ensure("spring", Interval(0, 1), "DATE-RANGE", "XXXX-03-20 -- XXXX-06-21")
+    ensure("autumn", Interval(0, 1), "DATE-RANGE", "XXXX-09-22 -- XXXX-12-21")
+//    ensure("spring", Interval(0, 1), "DATE-RANGE", "XXXX-03-20 -- XXXX-06-21") // alice: failing this test is an expected behavior as raw spring/fall is now filtered out by postprocessNumericEntities (filtering out homonyms of spring/falls)
+    ensure("fall 2021", Interval(0, 2), "DATE-RANGE", "2021-09-22 -- 2021-12-21")
+    ensure("in the fall", Interval(2, 3), "DATE-RANGE", "XXXX-09-22 -- XXXX-12-21")
+    ensure("fall", Interval(0, 1), "", "")
+    ensure("spring", Interval(0, 1), "", "")
   }
 
   it should "recognize date ranges with seasons" in {
@@ -325,9 +330,11 @@ class TestNumericEntityRecognition extends Test {
     // ensure("drier season between November and March", Interval(2, 8), "DATE-RANGE",  "XXXX-11-XX -- XXXX-03-XX")
     // ensure("flooding are expected to occur in July to August 2021", Interval(5, 10), "DATE-RANGE",  "2021-07-XX -- 2021-08-XX")
     ensure("farmers sowed Jaya between 20 June and 1 July", Interval(3, 8), "DATE-RANGE",  "XXXX-06-20 -- XXXX-07-01")
-
-    // TODO: It would be interesting to handle such dates ranges 1st week of July: "XXXX-07-01 -- XXXX-07-07
-    // ensure(sentence= "transplanted during the 1st week of July", Interval(3, 7), goldEntity= "DATE", goldNorm= "XXXX-07-01")
+    ensure(sentence= "transplanted during the 1st week of July", Interval(3, 7), goldEntity= "DATE-RANGE", goldNorm= "XXXX-07-01 -- XXXX-07-07")
+    ensure(sentence= "We planted corn the first two weeks of April.", Interval(4, 9), goldEntity= "DATE-RANGE", goldNorm= "XXXX-04-01 -- XXXX-04-14")
+    ensure(sentence= "We planted beans the second week of May.", Interval(4, 8), goldEntity= "DATE-RANGE", goldNorm= "XXXX-05-08 -- XXXX-05-14")
+    ensure(sentence= "We planted beans in the last week of June.", Interval(5, 9), goldEntity= "DATE-RANGE", goldNorm= "XXXX-06-24 -- XXXX-06-30")
+    ensure(sentence= "We planted beans in the last two weeks of February.", Interval(5, 10), goldEntity= "DATE-RANGE", goldNorm= "XXXX-02-15 -- XXXX-02-28")
   }
 
   it should "recognize weird date ranges" in {

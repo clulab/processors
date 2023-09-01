@@ -24,8 +24,9 @@ class TestSeasonNormalizer extends Test {
 
   behavior of "Default SeasonalCluProcessor"
 
+  val processor = new CluProcessor()
+
   it should "find autumn but not rainy season" in {
-    val processor = new CluProcessor()
 
     val (autumnEntities, autumnNorms) = mkEntitiesAndNorms(processor, autumnText)
     autumnEntities should contain (bDateRange)
@@ -38,6 +39,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities shouldNot contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms shouldNot contain (seasonDateRange)
+
   }
 
   behavior of "Custom SeasonalCluProcessor"
@@ -57,5 +59,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities should contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms should contain (seasonDateRange)
+
   }
+
 }
