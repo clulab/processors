@@ -9,7 +9,7 @@ object DebuggerApp extends App {
     // I don't do anything.
   }
 
-  def lower(depth: Int): Float = Debugger.debug(SpecialStackFrame("This is special")) { stackFrame =>
+  def lower(depth: Int): Float = Debugger.debugFrame(SpecialFrame("This is special")) { stackFrame =>
     stackFrame.showMessage()
     Debugger.showTrace()
     lowest("hello".r)

@@ -2,6 +2,7 @@ package org.clulab.odin.impl
 
 import org.clulab.processors.Document
 import org.clulab.odin._
+import org.clulab.odin.debugger.{Debugger, TokenExtractorFrame}
 import org.clulab.struct.Interval
 
 
@@ -39,7 +40,7 @@ class TokenExtractor(
     val pattern: TokenPattern
 ) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = Debugger.debug(TokenExtractorFrame(this)) {
     val results = pattern.findAllIn(sent, doc, state)
     val mentions = for (r <- results) yield mkMention(r, sent, doc)
     action(mentions, state)
@@ -106,7 +107,7 @@ class GraphExtractor(
     val config: OdinConfig
 ) extends Extractor {
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = Debugger.debug {
     val mentions = pattern.getMentions(sent, doc, state, labels, keep, name)
     action(mentions, state)
   }
@@ -134,7 +135,7 @@ class CrossSentenceExtractor(
     throw OdinException(s"cross-sentence pattern for '$name' must have window > 0 either to the left or to the right")
   }
 
-  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {
+  def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = Debugger.debug {
 
     def getMentionsWithLabel(m: Mention): Seq[Mention] = {
       state.mentionsFor(m.sentence, m.tokenInterval).filter{ mention =>

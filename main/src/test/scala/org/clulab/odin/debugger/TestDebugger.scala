@@ -54,7 +54,6 @@ class TestDebugger extends Test {
 
     mentions should not be empty
 
-    Debugger.showTrace() // This should be empty.
     Debugger.showDeepest() // This should turn up something.
   }
 }

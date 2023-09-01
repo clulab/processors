@@ -57,8 +57,12 @@ object Debugger extends DebuggerTrait {
 
   override def deactivate(): Unit = instance.deactivate()
 
-  def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
+  def debugFrame[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
     instance.debug(stackFrame)(block(stackFrame))
+  }
+
+  def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+    instance.debug(stackFrame)(block)
   }
 
   def debug[ResultType](block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
