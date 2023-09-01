@@ -71,13 +71,11 @@ class Chart(val dimension: Int) {
   val chart: Array[Array[Array[Span]]] = mkChart()
 
   private def mkChart(): Array[Array[Array[Span]]] = {
-    val c = Array.fill(dimension)(new Array[Array[Span]](dimension))
-    for(i <- c.indices) {
-      for(j <- c(0).indices) {
-        c(i)(j) = new Array[Span](2)
+    val c = Array.tabulate(dimension) { i =>
+      Array.tabulate(dimension) { j =>
+        if (i == j) Array(new Span(), new Span())
+        else new Array[Span](2) // These are left null.
       }
-      c(i)(i)(HEAD_LEFT) = new Span()
-      c(i)(i)(HEAD_RIGHT) = new Span()
     }
     c
   }
