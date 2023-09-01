@@ -1,45 +1,78 @@
 package org.clulab.odin.debugger
 
-import org.clulab.utils.Lazy
+trait DebuggerTrait {
+  def activate(): Unit
+  def deactivate(): Unit
+  def showTrace(): Unit
+  def showDeepest(): Unit
+  // TODO break or pause
+}
 
-class Debugger protected () {
-  val active = true // TODO: You can turn off debugging with this!
-  var stack = List[StackFrame]()
+class Debugger protected () extends DebuggerTrait {
+  protected var active: Boolean = true // TODO: You can turn off debugging with this!
+  protected var stack: Debugger.Stack = List()
+  protected var maxDepth = 0
+  protected var maxStack: Debugger.Stack = stack
 
-  def debug[StackFrameT <: StackFrame, T](stackFrame: StackFrameT, lazyBlock: Lazy[T]): T = {
-    stack = stackFrame :: stack
+  def activate(): Unit = active = true
 
-    val result = try {
-      lazyBlock.value
+  def deactivate(): Unit = active = false
+
+  def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+    if (active) {
+      stack = stackFrame :: stack
+      if (stack.length > maxDepth)
+        maxStack = stack
+
+      val result = try {
+        block
+      }
+      finally {
+        stack = stack.tail
+      }
+      result
     }
-    finally {
-      stack = stack.tail
-    }
-    result
+    else
+      block
   }
 
-  def trace(): Unit = {
+  def showTrace(stack: Debugger.Stack): Unit = {
+    println("Here's your trace...")
     stack.zipWithIndex.foreach { case (stackFrame, index) =>
       println(s"$index: $stackFrame")
     }
   }
+
+  def showTrace(): Unit = showTrace(stack)
+
+  def showDeepest(): Unit = showTrace(maxStack)
 }
 
-object Debugger {
+object Debugger extends DebuggerTrait {
+  type Stack = List[StackFrame]
+
   lazy val instance = new Debugger() // TODO: In the end this will not be global unless it can be thread-aware.
 
-  def debug[StackFrameType <: StackFrame, ResultType](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
-    instance.debug(stackFrame, Lazy(block(stackFrame)))
+  override def activate(): Unit = instance.activate()
+
+  override def deactivate(): Unit = instance.deactivate()
+
+  def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
+    instance.debug(stackFrame)(block(stackFrame))
   }
 
   def debug[ResultType](block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    instance.debug(stackFrame, Lazy(block))
+    instance.debug(stackFrame)(block)
   }
 
-  def trace(): Unit = {
-    instance.trace()
+  def showTrace(): Unit = {
+    instance.showTrace()
+  }
+
+  def showDeepest(): Unit = {
+    instance.showDeepest()
   }
 }
