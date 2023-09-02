@@ -221,17 +221,17 @@ class EisnerEnsembleParser {
   }
 
   /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */
-  def toDependencyTable(sentHeadModLabelScores: Array[Array[Dependency]], topK: Int): Array[Array[Dependency]] = {
+  def toDependencyTable(sentDependencies: Array[Array[Dependency]], topK: Int): Array[Array[Dependency]] = {
     val extension = 1 // This should probably be -HeadLabelScore.ROOT.
-    val extendedSentLength = sentHeadModLabelScores.length + extension
+    val extendedSentLength = sentDependencies.length + extension
     // WARNING: Untouched values will be null!
     val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
 
-    sentHeadModLabelScores.foreach { wordHeadModLabelScores =>
-      val bestHeadModLabelScores = wordHeadModLabelScores.take(topK)
+    sentDependencies.foreach { wordDependencies =>
+      val bestDependencies = wordDependencies.take(topK)
 
-      bestHeadModLabelScores.foreach { headModLabelScore =>
-        dependencies(headModLabelScore.mod)(headModLabelScore.head) = headModLabelScore
+      bestDependencies.foreach { dependency =>
+        dependencies(dependency.mod)(dependency.head) = dependency
       }
     }
 
