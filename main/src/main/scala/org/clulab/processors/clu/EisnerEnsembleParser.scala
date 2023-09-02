@@ -12,11 +12,10 @@ import scala.collection.mutable
   * Stores one dependency for the Eisner algorithm 
   * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
   */
-case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
-class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
+class Span(val dependencies: Seq[HeadModLabelScore], val head: Int, val score: Float) {
   def this() = {
-    this(List[Dependency](), HeadLabelScore.ROOT, 0f)
+    this(List[HeadModLabelScore](), HeadModLabelScore.ROOT, 0f)
   }
 
   override def toString: String = {
@@ -35,12 +34,12 @@ class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
 }
 
 object Span {
-  def apply(left: Span, right: Span, dep: Dependency, head: Int): Span = {
+  def apply(left: Span, right: Span, dep: HeadModLabelScore, head: Int): Span = {
     // product of probabilities, in log space
     val score = left.score + right.score + (if(dep != null) math.log(dep.score).toFloat else 0f)
 
     // aggregate all dependencies for this span
-    val deps = new ListBuffer[Dependency]
+    val deps = new ListBuffer[HeadModLabelScore]
     val allNodes = new mutable.HashSet[Int]
     val modNodes = new mutable.HashSet[Int]
     if(dep != null) {
@@ -56,8 +55,8 @@ object Span {
     new Span(deps, head, score)
   }
 
-  private def addDep(dep: Dependency,
-                     deps: ListBuffer[Dependency],
+  private def addDep(dep: HeadModLabelScore,
+                     deps: ListBuffer[HeadModLabelScore],
                      allNodes: mutable.HashSet[Int],
                      modNodes: mutable.HashSet[Int]): Unit = {
     deps += dep
@@ -116,7 +115,8 @@ class Chart(val dimension: Int) {
 }
 
 class EisnerEnsembleParser {
-  def parse(startingDependencies: Array[Array[Dependency]]): Option[Span] = {
+
+  def parse(startingDependencies: Array[Array[HeadModLabelScore]]): Option[Span] = {
     // for(i <- startingDependencies.indices) println(s"Index $i: " + startingDependencies(i).mkString(", "))
 
     val length = startingDependencies.length
@@ -218,32 +218,21 @@ class EisnerEnsembleParser {
   }
 
   def generateOutput(top: Span): Array[HeadLabel] = {
-    val extension = 1 // See extension in next method.
-    val heads = new Array[HeadLabel](top.dependencies.length)
-
-    // If these were sorted by mod, then we would have it, but
-    // they aren't and this is faster.
-    top.dependencies.foreach { dependency =>
-      heads(dependency.mod - extension) = (dependency.head - extension, dependency.label)
-    }
-    heads
+    HeadModLabelScore.toHeadLabels(top.dependencies)
   }
 
   /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */
-  def toDependencyTable(sentHeadLabelScores: Array[Array[HeadLabelScore]], topK: Int): Array[Array[Dependency]] = {
+  def toDependencyTable(sentHeadModLabelScores: Array[Array[HeadModLabelScore]], topK: Int): Array[Array[HeadModLabelScore]] = {
     val extension = 1 // This should probably be -HeadLabelScore.ROOT.
-    val extendedSentLength = sentHeadLabelScores.length + extension
+    val extendedSentLength = sentHeadModLabelScores.length + extension
     // WARNING: Untouched values will be null!
-    val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
+    val dependencies = Array.fill(extendedSentLength)(new Array[HeadModLabelScore](extendedSentLength))
 
-    sentHeadLabelScores.zipWithIndex.foreach { case (wordHeadLabelScores, wordIndex) =>
-      val bestHeadLabelScores = wordHeadLabelScores.take(topK)
-      val mod = wordIndex + extension // offsets start at 1 in the Dependency class
+    sentHeadModLabelScores.foreach { wordHeadModLabelScores =>
+      val bestHeadModLabelScores = wordHeadModLabelScores.take(topK)
 
-      bestHeadLabelScores.zipWithIndex.foreach { case (headLabelScore, rank) =>
-        val dependency = Dependency(mod, headLabelScore.head + extension, headLabelScore.score, rank, headLabelScore.label)
-
-        dependencies(mod)(headLabelScore.head + extension) = dependency
+      bestHeadModLabelScores.foreach { headModLabelScore =>
+        dependencies(headModLabelScore.mod)(headModLabelScore.head) = headModLabelScore
       }
     }
 
@@ -251,7 +240,7 @@ class EisnerEnsembleParser {
     dependencies
   }
 
-  def printDependencyTable(deps: Array[Array[Dependency]]): Unit = {
+  def printDependencyTable(deps: Array[Array[HeadModLabelScore]]): Unit = {
     p(s"Dependency table of length ${deps.length}:")
     for(i <- deps.indices) {
       p(s"$i:")

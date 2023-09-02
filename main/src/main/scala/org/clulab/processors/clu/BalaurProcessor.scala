@@ -229,7 +229,7 @@ class BalaurProcessor protected (
   private def interpolateHeadsAndLabels(
       sentHeadPredictionScores: Array[Array[PredictionScore]],
       sentLabelPredictionScores: Array[Array[PredictionScore]],
-      lambda: Float): Array[Array[HeadLabelScore]] = {
+      lambda: Float): Array[Array[HeadModLabelScore]] = {
     assert(sentHeadPredictionScores.length == sentLabelPredictionScores.length)
 
     val sentHeadLabelScores = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
@@ -244,7 +244,7 @@ class BalaurProcessor protected (
           val interpolatedScore = lambda * wordHeadProbabilities(predictionIndex) +
               (1.0f - lambda) * wordLabelProbabilities(predictionIndex)
 
-          HeadLabelScore.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
+          HeadModLabelScore.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
               wordLabelPredictionScores(predictionIndex)._1, interpolatedScore)
       }
       // Although the wordHeadPredictionScores are sorted, the wordLabelPredictionScores aren't.
@@ -280,7 +280,7 @@ class BalaurProcessor protected (
 
     // construct the dependency graphs to be stored in the sentence object
     // bestDeps(i) means bestDeps(i)_1 -> i if it isn't -1.
-    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == HeadLabelScore.ROOT }
+    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == HeadModLabelScore.ROOT }
     val edges = nonRootIndices.map { index => Edge(source = bestDeps(index)._1, destination = index, bestDeps(index)._2) }
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
@@ -289,8 +289,8 @@ class BalaurProcessor protected (
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
   }
 
-  def greedilyGenerateOutput(sentHeadLabelScores: Array[Array[HeadLabelScore]]): Array[HeadLabel] = {
-    // These are already sorted by score.
+  def greedilyGenerateOutput(sentHeadLabelScores: Array[Array[HeadModLabelScore]]): Array[HeadLabel] = {
+    // These are already sorted by score, so head will extract the best one.
     sentHeadLabelScores.map(_.head.toHeadLabel)
   }
 }
