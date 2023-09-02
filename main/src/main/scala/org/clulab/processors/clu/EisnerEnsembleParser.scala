@@ -222,8 +222,7 @@ class EisnerEnsembleParser {
 
   /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */
   def toDependencyTable(sentDependencies: Array[Array[Dependency]], topK: Int): Array[Array[Dependency]] = {
-    val extension = 1 // This should probably be -HeadLabelScore.ROOT.
-    val extendedSentLength = sentDependencies.length + extension
+    val extendedSentLength = sentDependencies.length + Dependency.offset
     // WARNING: Untouched values will be null!
     val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
 
