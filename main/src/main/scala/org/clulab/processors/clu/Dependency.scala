@@ -17,6 +17,13 @@ case class Dependency protected(protected val realHead: Int, protected val realM
   def mod: Int = realMod + Dependency.offset
 
   def toEdge: Edge[String] = Edge(source = realHead, destination = realMod, label)
+
+  def copy(realHead: Int = this.realHead, realMod: Int = this.realMod, label: String = this.label, score: Float = this.score): Dependency = {
+    if (realHead != this.realHead || realMod != this.realMod || label != this.label || score != this.score)
+      Dependency(realHead, realMod, label, score)
+    else
+      this
+  }
 }
 
 object Dependency {

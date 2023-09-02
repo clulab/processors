@@ -38,8 +38,7 @@ object PostProcessor {
         val next = curr + 1
         // "due to" must be a MWE
         if (sentence.words(curr).equalsIgnoreCase("due") && tags(curr) == "IN" &&
-            sentence.words(next).equalsIgnoreCase("to")  && tags(next) == "TO" &&
-            dependencies(next) != (curr, "mwe"))
+            sentence.words(next).equalsIgnoreCase("to")  && tags(next) == "TO")
           dependencies(next) = dependencies(next).copy(realHead = curr, label = "mwe")
       }
     }
