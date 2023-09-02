@@ -32,15 +32,15 @@ object PostProcessor {
    * Deterministic corrections for dependency parsing 
    * Modifies headsWithLabels in place
    */
-  def parserPostProcessing(sentence: Sentence, headLabels: Array[HeadLabel]): Unit = {
+  def parserPostProcessing(sentence: Sentence, dependencies: Array[Dependency]): Unit = {
     sentence.tags.foreach { tags => // Tags must be available.
       sentence.indices.dropRight(1).foreach { curr => // We're looking ahead 1.
         val next = curr + 1
         // "due to" must be a MWE
         if (sentence.words(curr).equalsIgnoreCase("due") && tags(curr) == "IN" &&
             sentence.words(next).equalsIgnoreCase("to")  && tags(next) == "TO" &&
-            headLabels(next) != (curr, "mwe"))
-          headLabels(next) = (curr, "mwe")
+            dependencies(next) != (curr, "mwe"))
+          dependencies(next) = dependencies(next).copy(realHead = curr, label = "mwe")
       }
     }
   }

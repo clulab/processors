@@ -1,17 +1,22 @@
 package org.clulab.processors.clu
 
+import org.clulab.struct.Edge
+
 // This is the linguistic head, not the arrowhead!
 // Rather than calling this constructor directly, go through HeadLabelScore.apply().
 case class Dependency protected(protected val realHead: Int, protected val realMod: Int, label: String, score: Float) {
-  def toHeadLabel: HeadLabel = (realHead, label)
 
-  def toHeadLabel(headLabels: Array[HeadLabel]): Unit = headLabels(realMod) = toHeadLabel
+  def insert(dependencies: Array[Dependency]): Unit = dependencies(realMod) = this
+
+  def isRoot: Boolean = realHead == Dependency.ROOT
 
   // For purposes of the Eisner algorithm, these values are offset from the "real" ones.
   // A small amount of code needs to know better.
   def head: Int = realHead + Dependency.offset
 
   def mod: Int = realMod + Dependency.offset
+
+  def toEdge: Edge[String] = Edge(source = realHead, destination = realMod, label)
 }
 
 object Dependency {
@@ -29,14 +34,14 @@ object Dependency {
     absHeadIntOpt.map(new Dependency(_, index, label, score))
   }
 
-  def toHeadLabels(dependencies: Seq[Dependency]): Array[HeadLabel] = {
-    val headLabels = new Array[HeadLabel](dependencies.length)
+  def sort(dependencies: Seq[Dependency]): Array[Dependency] = {
+    val sortedDependencies = new Array[Dependency](dependencies.length)
 
     // If these were sorted by mod, then we would have it,
     // but they aren't and this is faster.
-    dependencies.foreach { headModLabelScores =>
-      headModLabelScores.toHeadLabel(headLabels)
+    dependencies.foreach { dependency =>
+      dependency.insert(sortedDependencies)
     }
-    headLabels
+    sortedDependencies
   }
 }

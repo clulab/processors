@@ -1,9 +1,8 @@
 package org.clulab.processors.clu 
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.scala.WrappedListBuffer._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 import EisnerEnsembleParser._
 
 import scala.collection.mutable
@@ -217,8 +216,8 @@ class EisnerEnsembleParser {
     Option(top)
   }
 
-  def generateOutput(top: Span): Array[HeadLabel] = {
-    Dependency.toHeadLabels(top.dependencies)
+  def generateOutput(top: Span): Array[Dependency] = {
+    Dependency.sort(top.dependencies)
   }
 
   /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */

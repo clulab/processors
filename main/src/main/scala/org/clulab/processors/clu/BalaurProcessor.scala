@@ -27,6 +27,8 @@ class BalaurProcessor protected (
   wordLemmatizer: Lemmatizer,
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
 ) extends Processor with Configured {
+  // This comes from scala-transformers, so we can't make a class from it here.
+  type PredictionScore = (String, Float)
 
   // standard, abbreviated constructor
   def this(
@@ -257,28 +259,27 @@ class BalaurProcessor protected (
 
   // sent = sentence, word = word
   private def assignDependencyLabels(
-      sentHeadLabels: Array[Array[PredictionScore]],
-      sentLabelLabels: Array[Array[PredictionScore]],
+      sentHeadPredictionScores: Array[Array[PredictionScore]],
+      sentLabelPredictionScores: Array[Array[PredictionScore]],
       sent: Sentence): Unit = {
     // prepare the input dependency table
-    val sentDependencies = interpolateHeadsAndLabels(sentHeadLabels, sentLabelLabels, PARSING_INTERPOLATION_LAMBDA)
+    val sentDependencies = interpolateHeadsAndLabels(sentHeadPredictionScores, sentLabelPredictionScores, PARSING_INTERPOLATION_LAMBDA)
     val startingDependencies = eisner.toDependencyTable(sentDependencies, PARSING_TOPK)
     // the actual Eisner parsing algorithm
     val topOpt = eisner.parse(startingDependencies)
     // convert back to relative (or absolute) heads
-    val bestHeadLabels = topOpt
+    val bestDependencies = topOpt
         .map(eisner.generateOutput)
         .getOrElse(greedilyGenerateOutput(sentDependencies))
 
-    parserPostProcessing(sent, bestHeadLabels)
+    parserPostProcessing(sent, bestDependencies)
 
     //println("Sentence: " + sent.words.mkString(", "))
     //println("bestDeps: " + bestDeps.mkString(", "))
 
     // construct the dependency graphs to be stored in the sentence object
-    // bestDeps(i) means bestDeps(i)_1 -> i if it isn't -1.
-    val (roots, nonRootIndices) = bestHeadLabels.indices.partition { index => bestHeadLabels(index)._1 == Dependency.ROOT }
-    val edges = nonRootIndices.map { index => Edge(source = bestHeadLabels(index)._1, destination = index, bestHeadLabels(index)._2) }
+    val (roots, nonRootIndices) = bestDependencies.indices.partition(bestDependencies(_).isRoot)
+    val edges = nonRootIndices.map(bestDependencies(_).toEdge)
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
@@ -286,9 +287,9 @@ class BalaurProcessor protected (
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
   }
 
-  def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[HeadLabel] = {
+  def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[Dependency] = {
     // These are already sorted by score, so head will extract the best one.
-    sentDependencies.map(_.head.toHeadLabel)
+    sentDependencies.map(_.head)
   }
 }
 
