@@ -1,22 +1,18 @@
 package org.clulab.odin.debugger
 
+import scala.util.matching.Regex
+
+// This is an experimental playground.
 object DebuggerApp extends App {
 
-  class SpecialStackFrame(message: String, sourceCode: SourceCode) extends StackFrame(sourceCode) {
-
-    def showMessage(): Unit = println(message)
+  def lowest(regex: Regex): Unit = Debugger.debug {
+    // I don't do anything.
   }
 
-  object SpecialStackFrame {
-
-    def apply(message: String)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): SpecialStackFrame = {
-      new SpecialStackFrame(message, new SourceCode(line, fileName, enclosing))
-    }
-  }
-
-  def lower(depth: Int): Float = Debugger.debug(SpecialStackFrame("This is special")) { stackFrame =>
+  def lower(depth: Int): Float = Debugger.debugFrame(SpecialFrame("This is special")) { stackFrame =>
     stackFrame.showMessage()
-    Debugger.trace()
+    Debugger.showTrace()
+    lowest("hello".r)
     depth.toFloat
   }
 
@@ -31,4 +27,5 @@ object DebuggerApp extends App {
   }
 
   odin()
+  Debugger.showDeepest()
 }

@@ -5,7 +5,7 @@ package org.clulab.odin.debugger
 class SourceCode(val line: sourcecode.Line, val fileName: sourcecode.FileName, val enclosing: sourcecode.Enclosing) {
 
   override def toString: String = {
-    s"enclosing: ${enclosing.value}, ${fileName.value}: ${line.value}"
+    s"enclosing: ${enclosing.value}, ${fileName.value}:${line.value}"
   }
 }
 
