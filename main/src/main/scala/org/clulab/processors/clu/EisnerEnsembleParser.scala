@@ -1,9 +1,8 @@
 package org.clulab.processors.clu 
 
 import org.clulab.scala.WrappedArray._
-import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.scala.WrappedListBuffer._
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ListBuffer
 import EisnerEnsembleParser._
 
 import scala.collection.mutable
@@ -12,11 +11,10 @@ import scala.collection.mutable
   * Stores one dependency for the Eisner algorithm 
   * Indexes for head and mod start at 1 for the first word in the sentence; 0 is reserved for root
   */
-case class Dependency(mod:Int, head:Int, var score:Float, rank: Int, var label:String = "")
 
 class Span(val dependencies: Seq[Dependency], val head: Int, val score: Float) {
   def this() = {
-    this(List[Dependency](), HeadLabelScore.ROOT, 0f)
+    this(List[Dependency](), Dependency.ROOT, 0f)
   }
 
   override def toString: String = {
@@ -71,13 +69,11 @@ class Chart(val dimension: Int) {
   val chart: Array[Array[Array[Span]]] = mkChart()
 
   private def mkChart(): Array[Array[Array[Span]]] = {
-    val c = Array.fill(dimension)(new Array[Array[Span]](dimension))
-    for(i <- c.indices) {
-      for(j <- c(0).indices) {
-        c(i)(j) = new Array[Span](2)
+    val c = Array.tabulate(dimension) { i =>
+      Array.tabulate(dimension) { j =>
+        if (i == j) Array(new Span(), new Span())
+        else new Array[Span](2) // These are left null.
       }
-      c(i)(i)(HEAD_LEFT) = new Span()
-      c(i)(i)(HEAD_RIGHT) = new Span()
     }
     c
   }
@@ -118,6 +114,7 @@ class Chart(val dimension: Int) {
 }
 
 class EisnerEnsembleParser {
+
   def parse(startingDependencies: Array[Array[Dependency]]): Option[Span] = {
     // for(i <- startingDependencies.indices) println(s"Index $i: " + startingDependencies(i).mkString(", "))
 
@@ -219,33 +216,21 @@ class EisnerEnsembleParser {
     Option(top)
   }
 
-  def generateOutput(top: Span): Array[HeadLabel] = {
-    val extension = 1 // See extension in next method.
-    val heads = new Array[HeadLabel](top.dependencies.length)
-
-    // If these were sorted by mod, then we would have it, but
-    // they aren't and this is faster.
-    top.dependencies.foreach { dependency =>
-      heads(dependency.mod - extension) = (dependency.head - extension, dependency.label)
-    }
-    heads
+  def generateOutput(top: Span): Array[Dependency] = {
+    Dependency.sort(top.dependencies)
   }
 
   /** Converts the top K predictions from an unlabeled parser into a matrix of Dependency (rows are mods; columns are heads) */
-  def toDependencyTable(sentHeadLabelScores: Array[Array[HeadLabelScore]], topK: Int): Array[Array[Dependency]] = {
-    val extension = 1 // This should probably be -HeadLabelScore.ROOT.
-    val extendedSentLength = sentHeadLabelScores.length + extension
+  def toDependencyTable(sentDependencies: Array[Array[Dependency]], topK: Int): Array[Array[Dependency]] = {
+    val extendedSentLength = sentDependencies.length + Dependency.offset
     // WARNING: Untouched values will be null!
     val dependencies = Array.fill(extendedSentLength)(new Array[Dependency](extendedSentLength))
 
-    sentHeadLabelScores.zipWithIndex.foreach { case (wordHeadLabelScores, wordIndex) =>
-      val bestHeadLabelScores = wordHeadLabelScores.take(topK)
-      val mod = wordIndex + extension // offsets start at 1 in the Dependency class
+    sentDependencies.foreach { wordDependencies =>
+      val bestDependencies = wordDependencies.take(topK)
 
-      bestHeadLabelScores.zipWithIndex.foreach { case (headLabelScore, rank) =>
-        val dependency = Dependency(mod, headLabelScore.head + extension, headLabelScore.score, rank, headLabelScore.label)
-
-        dependencies(mod)(headLabelScore.head + extension) = dependency
+      bestDependencies.foreach { dependency =>
+        dependencies(dependency.mod)(dependency.head) = dependency
       }
     }
 
