@@ -327,11 +327,16 @@ package object mentions {
         case _ => (None, None)
       }
 
-      DateRangeMention(
+      println(s"yearStart = $yearStart, yearEnd = $yearEnd")
+
+      val dm = DateRangeMention(
         m,
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth,yearStart),
+        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearStart),
         TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
       )
+
+      println(s"DateMention: ${dm.date1Norm} -- ${dm.date2Norm}")
+      dm
 
     case m =>
       throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")

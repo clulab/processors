@@ -16,6 +16,7 @@ class SeasonNormalizer(seasonsPath: String) {
   def adjustYearRange(seasonRange: SeasonRange, year: Seq[String]): (Seq[String], Seq[String]) = {
     val startMonthValue = seasonRange.startMonth.head.mkString(" ").toInt
     val endMonthValue = seasonRange.endMonth.head.mkString(" ").toInt
+    //println(s"startMonth = $startMonthValue; endMonth = $endMonthValue; year = ${year.mkString}")
     endMonthValue < startMonthValue match {
       case true if 12 - startMonthValue >= endMonthValue =>
         val yearEnd = year.mkString.toInt + 1
