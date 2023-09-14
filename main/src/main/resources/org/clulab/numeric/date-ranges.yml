@@ -131,6 +131,16 @@
   pattern: |
     @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear?
 
+# Date range derived from a season, with weak but mandatory year
+- name: date-range-season-1b
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "It was summer in 21"
+  action: mkDateRangeMentionWithSeason
+  pattern: |
+    @season:PossibleSeason /(?i)(in|of)/? @year:WeakPossibleYear    
+
 - name: date-range-season-2
   priority: ${ rulepriority }
   label: DateRange

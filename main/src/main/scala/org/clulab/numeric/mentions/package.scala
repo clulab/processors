@@ -327,15 +327,10 @@ package object mentions {
         case _ => (None, None)
       }
 
-      println(s"yearStart = $yearStart, yearEnd = $yearEnd")
+      val sd = TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearStart)
+      val ed = TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
+      val dm = DateRangeMention(m, sd, ed)
 
-      val dm = DateRangeMention(
-        m,
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearStart),
-        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
-      )
-
-      println(s"DateMention: ${dm.date1Norm} -- ${dm.date2Norm}")
       dm
 
     case m =>
