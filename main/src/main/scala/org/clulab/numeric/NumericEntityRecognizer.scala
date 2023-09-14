@@ -30,6 +30,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
       // this needs to happen in place, otherwise Odin does not see these labels
       // we will restore the original Sentence.entities at the end in `extractFrom`
       sent.entities = Some(labels)
+      // println(s"ENTITIES: ${sent.entities.get.mkString(" ")}")
     }
 
     originalEntities

@@ -418,8 +418,9 @@ class TestNumericEntityRecognition extends Test {
   }
 
   it should "recognize season in year" in {
-    ensure(sentence = "We applied it in summer in 21", Interval(4, 6), goldEntity= "DATE-RANGE", goldNorm = "XXXX-06-21 -- XXXX-09-21")
-    //ensure(sentence = "We applied it in Fall in 21", Interval(4, 6), goldEntity= "DATE-RANGE", goldNorm = "XXXX-06-21 -- XXXX-09-21")
+    ensure(sentence = "We applied it in summer in 21", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "XX21-06-21 -- XX21-09-22")
+    ensure(sentence = "We applied it in Fall in 21", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "XX21-09-22 -- XX21-12-21")
+    ensure(sentence = "We applied it in fall of 2021", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "2021-09-22 -- 2021-12-21")
   }
   
   it should "recognize measurement units" in {

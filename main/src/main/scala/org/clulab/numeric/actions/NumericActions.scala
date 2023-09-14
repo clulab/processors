@@ -265,7 +265,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
     val (seasonMentions, otherMentions) = mentions.partition(m => m.foundBy.contains("season"))
     val (springFall, otherSeasons) = seasonMentions.partition(m => m.text.equalsIgnoreCase("spring") || m.text.equalsIgnoreCase("fall"))
     val trueSeasons = springFall.filter { m =>
-      m.tags.head.contains("NN") && {
+      m.tags.get.head.startsWith("NN") && {
         val words = m.sentenceObj.words
         val wordIndex = m.tokenInterval.start
 
