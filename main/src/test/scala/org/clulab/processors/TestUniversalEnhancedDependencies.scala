@@ -26,8 +26,7 @@ class TestUniversalEnhancedDependencies extends CluTest {
 
     doc = proc.annotate("John Doe will travel to China.")
     doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 1, "nsubj") should be(true)
-    // TODO: this fails with deberta/roberta models
-    //doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(1, 0, "compound") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 2, "aux") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(3, 5, "nmod") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(5, 4, "case") should be(true)
