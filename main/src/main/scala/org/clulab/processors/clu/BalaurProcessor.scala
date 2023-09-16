@@ -17,9 +17,6 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import org.clulab.odin.Mention
 
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.ListBuffer
-
 import BalaurProcessor._
 import PostProcessor._
 
@@ -31,6 +28,8 @@ class BalaurProcessor protected (
   wordLemmatizer: Lemmatizer,
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
 ) extends Processor with Configured {
+  // This comes from scala-transformers, so we can't make a class from it here.
+  type PredictionScore = (String, Float)
 
   // standard, abbreviated constructor
   def this(
@@ -234,63 +233,62 @@ class BalaurProcessor protected (
 
   // The head has one score, the label has another.  Here the two scores are interpolated
   // and the head and label are stored together in a single object with the score if the
-  // object, the HeadLabelScore, has a valid absolute head.
+  // object, the Dependency, has a valid absolute head.
   private def interpolateHeadsAndLabels(
       sentHeadPredictionScores: Array[Array[PredictionScore]],
       sentLabelPredictionScores: Array[Array[PredictionScore]],
-      lambda: Float): Array[Array[HeadLabelScore]] = {
+      lambda: Float): Array[Array[Dependency]] = {
     assert(sentHeadPredictionScores.length == sentLabelPredictionScores.length)
 
-    val sentHeadLabelScores = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
+    val sentDependencies = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
       assert(wordHeadPredictionScores.length == wordLabelPredictionScores.length)
 
       // convert logits to probabilities so we can interpolate them later
       val wordHeadProbabilities = MathUtils.softmaxFloat(wordHeadPredictionScores.map(_._2))
       val wordLabelProbabilities = MathUtils.softmaxFloat(wordLabelPredictionScores.map(_._2))
-      val wordHeadLabelScores = wordHeadPredictionScores.indices.toArray.flatMap { predictionIndex =>
+      val wordDependencies = wordHeadPredictionScores.indices.toArray.flatMap { predictionIndex =>
           // These are probabilities not logits!  Zipping four arrays is excessive.  This may interpolate
           // unnecessarily because the newOpt may return None because of an invalid absolute head.
           val interpolatedScore = lambda * wordHeadProbabilities(predictionIndex) +
               (1.0f - lambda) * wordLabelProbabilities(predictionIndex)
 
-          HeadLabelScore.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
+          Dependency.newOpt(wordIndex, sentHeadPredictionScores.indices, wordHeadPredictionScores(predictionIndex)._1,
               wordLabelPredictionScores(predictionIndex)._1, interpolatedScore)
       }
       // Although the wordHeadPredictionScores are sorted, the wordLabelPredictionScores aren't.
       // (They can't both be.)  Therefore, they need to be resorted here.  Thankfully, only the
-      // valid HeadLabelScores remain.
-      val sortedWordHeadLabelScores = wordHeadLabelScores.sortBy(-_.score)
+      // valid Dependencies remain.
+      val sortedWordDependencies = wordDependencies.sortBy(-_.score)
 
-      sortedWordHeadLabelScores
+      sortedWordDependencies
     }
 
-    sentHeadLabelScores
+    sentDependencies
   }
 
   // sent = sentence, word = word
   private def assignDependencyLabels(
-      sentHeadLabels: Array[Array[PredictionScore]],
-      sentLabelLabels: Array[Array[PredictionScore]],
+      sentHeadPredictionScores: Array[Array[PredictionScore]],
+      sentLabelPredictionScores: Array[Array[PredictionScore]],
       sent: Sentence): Unit = {
     // prepare the input dependency table
-    val sentHeadLabelScores = interpolateHeadsAndLabels(sentHeadLabels, sentLabelLabels, PARSING_INTERPOLATION_LAMBDA)
-    val startingDeps = eisner.toDependencyTable(sentHeadLabelScores, PARSING_TOPK)
+    val sentDependencies = interpolateHeadsAndLabels(sentHeadPredictionScores, sentLabelPredictionScores, PARSING_INTERPOLATION_LAMBDA)
+    val startingDependencies = eisner.toDependencyTable(sentDependencies, PARSING_TOPK)
     // the actual Eisner parsing algorithm
-    val topOpt = eisner.parse(startingDeps)
+    val topOpt = eisner.parse(startingDependencies)
     // convert back to relative (or absolute) heads
-    val bestDeps = topOpt
+    val bestDependencies = topOpt
         .map(eisner.generateOutput)
-        .getOrElse(greedilyGenerateOutput(sentHeadLabelScores))
+        .getOrElse(greedilyGenerateOutput(sentDependencies))
 
-    parserPostProcessing(sent, bestDeps)
+    parserPostProcessing(sent, bestDependencies)
 
     //println("Sentence: " + sent.words.mkString(", "))
     //println("bestDeps: " + bestDeps.mkString(", "))
 
     // construct the dependency graphs to be stored in the sentence object
-    // bestDeps(i) means bestDeps(i)_1 -> i if it isn't -1.
-    val (roots, nonRootIndices) = bestDeps.indices.partition { index => bestDeps(index)._1 == HeadLabelScore.ROOT }
-    val edges = nonRootIndices.map { index => Edge(source = bestDeps(index)._1, destination = index, bestDeps(index)._2) }
+    val (roots, nonRootIndices) = bestDependencies.indices.partition(bestDependencies(_).isRoot)
+    val edges = nonRootIndices.map(bestDependencies(_).toEdge)
     val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
     sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
@@ -298,9 +296,9 @@ class BalaurProcessor protected (
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
   }
 
-  def greedilyGenerateOutput(sentHeadLabelScores: Array[Array[HeadLabelScore]]): Array[HeadLabel] = {
-    // These are already sorted by score.
-    sentHeadLabelScores.map(_.head.toHeadLabel)
+  def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[Dependency] = {
+    // These are already sorted by score, so head will extract the best one.
+    sentDependencies.map(_.head)
   }
 }
 
