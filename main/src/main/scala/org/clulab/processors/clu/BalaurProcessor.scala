@@ -7,6 +7,7 @@ import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala_transformers.encoder.TokenClassifier
+import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.Edge
@@ -69,7 +70,7 @@ class BalaurProcessor protected (
   }
 
   override def tagPartsOfSpeech(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: cannot call this method on its in this procecessor!")
+    throw new RuntimeException("ERROR: cannot call this method on its own in this procecessor!")
   }
 
   /** Lematization; modifies the document in place */
@@ -133,14 +134,22 @@ class BalaurProcessor protected (
 
     // process one sentence at a time through the MTL framework
     for (sent <- doc.sentences) {
-      val allLabelsAndScores = tokenClassifier.predictWithScores(sent.words)
-      assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
-      assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
-      assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
-      assignDependencyLabels(
-        allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
-        allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
-        sent)
+      try {
+        val allLabelsAndScores = tokenClassifier.predictWithScores(sent.words)
+        assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
+        assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
+        assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
+        assignDependencyLabels(
+          allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
+          allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
+          sent)
+      } catch {
+        case e: EncoderMaxTokensRuntimeException => 
+          // this sentence exceeds the maximum number of tokens for the encoder
+          // TODO: at some point do something smart here
+          println(s"ERROR: this sentence exceeds the maximum number of tokens for the encoder and will not be annotated: ${sent.words.mkString(" ")}")
+
+      }
     }
 
     // numeric entities using our numeric entity recognizer based on Odin rules
