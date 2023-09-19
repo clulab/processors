@@ -39,7 +39,7 @@ class MentionsObj(mentions: Seq[Mention]) {
   def getTd(field: String, text: String): String =
     s"""
        |$leftTdHeader
-       |    ${xml.Utility.escape(field)}:&nbsp;
+       |    ${xml.Utility.escape(field)}:
        |$tdSeparator
        |    ${xml.Utility.escape(text)}
        |$tdTrailer

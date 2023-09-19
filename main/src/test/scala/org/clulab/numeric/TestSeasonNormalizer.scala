@@ -23,6 +23,8 @@ class TestSeasonNormalizer extends Test {
 
   behavior of "Default seasonal BalaurProcessor"
 
+  val processor = new CluProcessor()
+
   it should "find autumn but not rainy season" in {
     val processor = new BalaurProcessor()
 
@@ -37,6 +39,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities shouldNot contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms shouldNot contain (seasonDateRange)
+
   }
 
   behavior of "Custom seasonal BalaurProcessor"
@@ -56,5 +59,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities should contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms should contain (seasonDateRange)
+
   }
+
 }

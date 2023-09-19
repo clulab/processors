@@ -1,7 +1,10 @@
 package org.clulab.sequences
 
-import java.io.InputStream
+import org.clulab.processors.{Document, Processor, Sentence}
+import org.clulab.processors.clu.{CluProcessor, SpanishCluProcessor, PortugueseCluProcessor}
+import org.slf4j.{Logger, LoggerFactory}
 
+import java.io.InputStream
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import org.clulab.processors.clu.BalaurProcessor
@@ -52,9 +55,9 @@ object ColumnsToDocument {
       this.prevLang = lang
     }
 
-    val source = Source.fromFile(fn)
-
-    readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
+    Using.resource(Source.fromFile(fn)) { source =>
+      readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
+    }
   }
 
   def readFromStream(stream:InputStream,
@@ -79,8 +82,9 @@ object ColumnsToDocument {
       this.proc = new BalaurProcessor()
     }
 
-    val source = Source.fromInputStream(stream)
-    readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
+    Using.resource(Source.fromInputStream(stream)) { source =>
+      readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
+    }
   }
 
   def readFromSource(source:Source,
@@ -140,7 +144,6 @@ object ColumnsToDocument {
       s.tags = Some(labels.toArray)
       sentences += s
     }
-    source.close()
     logger.debug(s"Loaded ${sentences.size} sentences.")
 
     val d = new Document(sentences.toArray)

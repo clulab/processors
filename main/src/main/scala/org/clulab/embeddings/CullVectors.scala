@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
-import java.io.File
-
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sinker
 import org.clulab.utils.Sourcer
+
+import java.io.File
+import scala.util.Using
 
 // Expect this to use lots of memory.
 object CullVectors extends App {
@@ -84,7 +84,7 @@ object CullVectors extends App {
   )
   // This is Map[word, (index, freq)].  The index is used for separating frequent from infrequent words.
   // The freq is used to eventually weight the vectors for each word when words are combined into single vectors.
-  val wordFrequencies: Map[String, (Int, Int)] = Sourcer.sourceFromFile(inFrequencyFile).autoClose { source =>
+  val wordFrequencies: Map[String, (Int, Int)] = Using.resource(Sourcer.sourceFromFile(inFrequencyFile)) { source =>
     val counter = Counter(-1)
     val frequentWords = source
         .getLines()
@@ -99,7 +99,7 @@ object CullVectors extends App {
 
     frequentWords
   }
-  val (columns, badFloats, goodLines) = Sourcer.sourceFromFile(inVectorFile).autoClose { source =>
+  val (columns, badFloats, goodLines) = Using.resource(Sourcer.sourceFromFile(inVectorFile)) { source =>
     val bufferedLines = source.getLines().buffered
     val line = bufferedLines.head
     val columns = {
@@ -135,7 +135,7 @@ object CullVectors extends App {
   val badLine = badStrings.mkString(" ", " ", "")
 
   // The \n is to force LF as eol even on Windows.
-  Sinker.printWriterFromFile(outputFile, append = false).autoClose { printWriter =>
+  Using.resource(Sinker.printWriterFromFile(outputFile, append = false)) { printWriter =>
     printWriter.print(count.toString + " " + columns)
     printWriter.print("\n")
     printWriter.print(badLine)

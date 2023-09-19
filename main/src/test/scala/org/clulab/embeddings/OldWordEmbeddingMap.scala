@@ -1,16 +1,15 @@
 package org.clulab.embeddings
 
-import org.clulab.scala.WrappedArray._
-
-import java.io._
-import java.nio.{ByteBuffer, ByteOrder}
-
 import org.apache.commons.io.{FileUtils, IOUtils}
+import org.clulab.scala.WrappedArray._
 import org.clulab.utils.MathUtils
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io._
+import java.nio.{ByteBuffer, ByteOrder}
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Implements similarity metrics using the embedding matrix
@@ -45,13 +44,13 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
   val dimensions: Int = matrix.values.head.length
 
   def saveMatrix(mf: String): Unit = {
-    val pw = new PrintWriter(mf)
-    pw.println(s"${matrix.size}, $dimensions")
-    for ((word, vec) <- matrix) {
-      val strRep = vec.map(v => f"$v%.6f").mkString(" ")
-      pw.println(s"$word $strRep")
+    Using.resource(new PrintWriter(mf)) { pw =>
+      pw.println(s"${matrix.size}, $dimensions")
+      for ((word, vec) <- matrix) {
+        val strRep = vec.map(v => f"$v%.6f").mkString(" ")
+        pw.println(s"$word $strRep")
+      }
     }
-    pw.close()
   }
 
   /** If the word doesn't exist in the lexicon, try to use UNK */
@@ -102,7 +101,7 @@ class OldWordEmbeddingMap(matrixConstructor: Map[String, Array[Double]]) extends
     * Finds the words most similar to this set of inputs
     * IMPORTANT: words here must already be normalized using Word2vec.sanitizeWord()!
     */
-  def mostSimilarWords(words:Set[String], howMany:Int):List[(String, Double)] = {
+  override def mostSimilarWords(words:Set[String], howMany:Int):List[(String, Double)] = {
     val v = new Array[Double](dimensions)
     var found = false
     for(w1 <- words) {
@@ -451,24 +450,24 @@ object OldWordEmbeddingMap {
     wordsToUse: Option[Set[String]],
     caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load embedding matrix from file " + mf + "...")
-    val src: Source = Source.fromFile(mf, "iso-8859-1")
-    val lines: Iterator[String] = src.getLines()
-    val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
-    src.close()
-    logger.debug("Completed matrix loading.")
-    matrix
+    Using.resource(Source.fromFile(mf, "iso-8859-1")) { src =>
+      val lines: Iterator[String] = src.getLines()
+      val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
+      logger.debug("Completed matrix loading.")
+      matrix
+    }
   }
 
   private def loadMatrixFromStream(is: InputStream,
     wordsToUse: Option[Set[String]],
     caseInsensitiveWordsToUse:Boolean):(Map[String, Array[Double]], Int) = {
     logger.debug("Started to load embedding matrix from stream ...")
-    val src: Source = Source.fromInputStream(is, "iso-8859-1")
-    val lines: Iterator[String] = src.getLines()
-    val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
-    src.close()
-    logger.debug("Completed matrix loading.")
-    matrix
+    Using.resource(Source.fromInputStream(is, "iso-8859-1")) { src =>
+      val lines: Iterator[String] = src.getLines()
+      val matrix = buildMatrix(lines, wordsToUse, caseInsensitiveWordsToUse)
+      logger.debug("Completed matrix loading.")
+      matrix
+    }
   }
   private def loadMatrixFromSource(src: Source,
     wordsToUse: Option[Set[String]],

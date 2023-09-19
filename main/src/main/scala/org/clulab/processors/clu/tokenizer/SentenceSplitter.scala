@@ -1,11 +1,11 @@
 package org.clulab.processors.clu.tokenizer
 
-import java.io.{BufferedReader, InputStreamReader}
-
 import org.clulab.processors.Sentence
 
+import java.io.{BufferedReader, InputStreamReader}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
+import scala.util.Using
 
 import SentenceSplitter._
 
@@ -199,25 +199,25 @@ object SentenceSplitter {
   private def loadDictionary(rn:String): Regex = {
     val is = SentenceSplitter.getClass.getClassLoader.getResourceAsStream(rn)
     assert(is != null, s"Failed to find resource $rn in the classpath!")
-    val reader = new BufferedReader(new InputStreamReader(is))
     val regex = new StringBuilder
     regex.append("^(")
 
-    var done = false
-    var first = true
-    while(! done) {
-      val line = reader.readLine()
-      if(line == null) {
-        done = true
-      } else if(! line.startsWith("#")) { // skip comments
-        if(! first) regex.append("|")
-        regex.append(normalizeSpecialChars(line.trim))
-        first = false
+    Using.resource(new BufferedReader(new InputStreamReader(is))) { reader =>
+      var done = false
+      var first = true
+      while (!done) {
+        val line = reader.readLine()
+        if (line == null) {
+          done = true
+        } else if (!line.startsWith("#")) { // skip comments
+          if (!first) regex.append("|")
+          regex.append(normalizeSpecialChars(line.trim))
+          first = false
+        }
       }
     }
 
     regex.append(")$")
-    reader.close()
     regex.toString.r
   }
 

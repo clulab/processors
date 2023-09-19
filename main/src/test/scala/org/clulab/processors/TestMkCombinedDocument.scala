@@ -3,13 +3,12 @@ package org.clulab.processors
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.scala.WrappedArray._
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.{Sourcer, Test}
+import org.clulab.utils.{Sourcer, StringUtils, Test}
 
-import java.io.{PrintWriter, StringWriter}
+import scala.util.Using
 
 class TestMkCombinedDocument extends Test {
-  val sentences = Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt").autoClose { source =>
+  val sentences = Using.resource(Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt")) { source =>
     source.getLines().toArray
   }
   val manySentenceLengths = Array(
@@ -29,12 +28,9 @@ class TestMkCombinedDocument extends Test {
   val processor = new BalaurProcessor()
 
   def toString(document: Document): String = {
-    val stringWriter = new StringWriter()
-
-    new PrintWriter(stringWriter).autoClose { printWriter =>
+    StringUtils.viaPrintWriter { printWriter =>
       documentSerializer.save(document, printWriter, keepText = true)
     }
-    stringWriter.toString
   }
 
   behavior of "mkCombinedDocument"

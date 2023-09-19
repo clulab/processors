@@ -8,7 +8,6 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.utils.ArrayView
 import org.clulab.utils.ClassLoaderObjectInputStream
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.MutableArrayView
 import org.clulab.utils.Sourcer
@@ -20,6 +19,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.{ArrayBuilder => MutableArrayBuilder}
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+import scala.util.Using
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -211,7 +211,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
   def save(filename: String): Unit = {
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+    Using.resource(new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename)))) { objectOutputStream =>
       objectOutputStream.writeObject(mkTextFromMap())
       objectOutputStream.writeObject(array)
       objectOutputStream.writeObject(buildType.unknownArray.orNull)
@@ -222,7 +222,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
   def saveKryo(filename: String): Unit = {
     val kryo = CompactWordEmbeddingMap.newKryo()
 
-    new Output(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { output =>
+    Using.resource(new Output(new BufferedOutputStream(new FileOutputStream(filename)))) { output =>
       kryo.writeObject(output, mkTextFromMap())
       kryo.writeObject(output, array)
       kryo.writeObject(output, buildType.unknownArray.orNull)
@@ -273,7 +273,7 @@ object CompactWordEmbeddingMap extends Logging {
       loadTxt(Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString))
 
   def loadTxt(source: Source): BuildType = {
-    source.autoClose { source =>
+    Using.resource(source) { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -306,7 +306,7 @@ object CompactWordEmbeddingMap extends Logging {
   def loadSer(filename: String): BuildType = loadSer(new FileInputStream(filename))
 
   def loadSer(inputStream: InputStream): BuildType = {
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(inputStream)).autoClose { objectInputStream =>
+    Using.resource(new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(inputStream))) { objectInputStream =>
       val map = mkMapFromText(objectInputStream.readObject().asInstanceOf[String])
       val array = objectInputStream.readObject().asInstanceOf[Array[Float]]
       val unknownArrayOpt = Option(objectInputStream.readObject().asInstanceOf[Array[Float]])
@@ -328,7 +328,7 @@ object CompactWordEmbeddingMap extends Logging {
   def loadKryo(inputStream: InputStream): BuildType = {
     val kryo = newKryo()
 
-    new Input(new BufferedInputStream(inputStream)).autoClose { input =>
+    Using.resource(new Input(new BufferedInputStream(inputStream))) { input =>
       val map = mkMapFromText(kryo.readObject(input, classOf[String]))
       val array = kryo.readObject(input, classOf[Array[Float]])
       val unknownArrayOpt = Option(kryo.readObjectOrNull(input, classOf[Array[Float]]))

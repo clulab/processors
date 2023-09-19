@@ -1,6 +1,5 @@
 package org.clulab.embeddings
 
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.InputStreamer.StreamResult
 import org.clulab.utils.NamedFuture
@@ -9,6 +8,8 @@ import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+
+import scala.util.Using
 
 /** Manages a pool of word embedding maps, so we do not load them more than once */
 object WordEmbeddingMapPool {
@@ -72,7 +73,7 @@ object WordEmbeddingMapPool {
   def loadEmbedding(name: String, fileLocation: String, resourceLocation: String, compact: Boolean): WordEmbeddingMap = {
     val StreamResult(inputStream, _, format) = inputStreamer.stream(name, fileLocation, resourceLocation)
         .getOrElse(throw new RuntimeException(s"WordEmbeddingMap $name could not be opened."))
-    val wordEmbeddingMap = inputStream.autoClose { inputStream =>
+    val wordEmbeddingMap = Using.resource(inputStream) { inputStream =>
       val binary = format == InputStreamer.Format.Bin
 
       if (compact) CompactWordEmbeddingMap(inputStream, binary)

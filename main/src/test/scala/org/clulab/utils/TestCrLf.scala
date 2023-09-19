@@ -4,10 +4,7 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
-
-import org.clulab.utils.Closer.AutoCloser
-
-import org.scalatest._
+import scala.util.Using
 
 class TestCrLf extends Test {
 
@@ -24,7 +21,7 @@ class TestCrLf extends Test {
         ),
         Sourcer.utf8
       )
-      val hasCrLf = inputReader.autoClose { inputReader =>
+      val hasCrLf = Using.resource(inputReader) { inputReader =>
         var hasCrLf = false
         var endedWithCr = false
 

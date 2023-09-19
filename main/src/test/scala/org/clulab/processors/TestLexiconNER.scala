@@ -1,14 +1,9 @@
 package org.clulab.processors
 
+import org.clulab.sequences.LexiconNER
 import org.clulab.sequences.FileOverrideKbSource
 import org.clulab.sequences.FileStandardKbSource
 import org.clulab.sequences.LexicalVariations
-
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import org.clulab.sequences.LexiconNER
 import org.clulab.sequences.MemoryOverrideKbSource
 import org.clulab.sequences.MemoryStandardKbSource
 import org.clulab.sequences.NoLexicalVariations
@@ -16,11 +11,15 @@ import org.clulab.sequences.ResourceOverrideKbSource
 import org.clulab.sequences.ResourceStandardKbSource
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.TrueEntityValidator
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.SeqOdometer
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import scala.collection.mutable
+import scala.util.Using
 
 class TestLexiconNER extends CluTest {
 
@@ -36,14 +35,14 @@ class TestLexiconNER extends CluTest {
     def serialize(value: Any): Array[Byte] = {
       val byteArrayOutputStream = new ByteArrayOutputStream()
 
-      new ObjectOutputStream(byteArrayOutputStream).autoClose { objectOutputStream =>
+      Using.resource(new ObjectOutputStream(byteArrayOutputStream)) { objectOutputStream =>
         objectOutputStream.writeObject(value)
       }
       byteArrayOutputStream.toByteArray
     }
 
     def deserialize(bytes: Array[Byte]): Any = {
-      val ner = new ObjectInputStream(new ByteArrayInputStream(bytes)).autoClose { objectInputStream =>
+      val ner = Using.resource(new ObjectInputStream(new ByteArrayInputStream(bytes))) { objectInputStream =>
         objectInputStream.readObject
       }
 
@@ -341,7 +340,7 @@ class TestLexiconNER extends CluTest {
   def serialize(entityValidator: EntityValidator): Array[Byte] = {
     val byteArrayOutputStream = new ByteArrayOutputStream()
 
-    new ObjectOutputStream(byteArrayOutputStream).autoClose { objectOutputStream =>
+    Using.resource(new ObjectOutputStream(byteArrayOutputStream)) { objectOutputStream =>
       objectOutputStream.writeObject(entityValidator)
     }
     byteArrayOutputStream.toByteArray

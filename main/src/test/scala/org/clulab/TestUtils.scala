@@ -1,15 +1,14 @@
 package org.clulab
 
-import java.io.File
-
 import org.clulab.learning.RVFDatum
-import org.clulab.struct.Counter
-
-import _root_.scala.io.Source
-
 import org.clulab.processors.Document
 import org.clulab.serialization.json.JSONSerializer
+import org.clulab.struct.Counter
 import org.json4s.jackson.JsonMethods._
+
+import _root_.scala.io.Source
+import _root_.scala.util.Using
+import java.io.File
 
 object TestUtils {
 
@@ -33,11 +32,9 @@ object TestUtils {
     * @return file contents as a String
     */
   def readFile(path: String) = {
-    val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = Source.fromInputStream(stream)
-    val data = source.mkString
-    source.close()
-    data
+    Using.resource(Source.fromInputStream(getClass.getClassLoader.getResourceAsStream(path))) { source =>
+      val data = source.mkString
+      data
+    }
   }
-
 }

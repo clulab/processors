@@ -85,6 +85,24 @@
   pattern: |
     /(?i)until|through/ @date1:Date
 
+- name: date-range-9
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "First week of May"
+  action: mkDateRangeMentionWithWeek
+  pattern: |
+    (?<week> /(?i)(first|1st|second|2nd|third|3rd|fourth|4th|last)/ /(?i)week/) /(?i)of/ @month:PossibleMonth
+
+- name: date-range-10
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "First two weeks of May"
+  action: mkDateRangeMentionWithWeek
+  pattern: |
+    (?<week> /(?i)(first|second|last)/ /(?i)two/ /(?i)weeks/) /(?i)of/ @month:PossibleMonth
+
 - name: date-unbound-range-1
   priority: ${rulepriority}
   label: DateRange
@@ -112,6 +130,16 @@
   action: mkDateRangeMentionWithSeason
   pattern: |
     @season:PossibleSeason /(?i)(in|of)/? @year:PossibleYear?
+
+# Date range derived from a season, with weak but mandatory year
+- name: date-range-season-1b
+  priority: ${ rulepriority }
+  label: DateRange
+  type: token
+  example: "It was summer in 21"
+  action: mkDateRangeMentionWithSeason
+  pattern: |
+    @season:PossibleSeason /(?i)(in|of)/? @year:WeakPossibleYear    
 
 - name: date-range-season-2
   priority: ${ rulepriority }

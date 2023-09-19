@@ -126,7 +126,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
     Ok(views.html.index())
   }
 
-  def parseText(text: String): Action[AnyContent] = Action {
+  def parseText(text: String): Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     println("Text:")
     println(text)
     println()

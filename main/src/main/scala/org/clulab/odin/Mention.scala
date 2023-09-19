@@ -1,12 +1,13 @@
 package org.clulab.odin
 
-import scala.util.matching.Regex
-import scala.util.hashing.MurmurHash3._
-import org.clulab.struct.Interval
+import org.clulab.odin.impl.StringMatcher
 import org.clulab.processors.Document
 import org.clulab.scala.WrappedArray._
+import org.clulab.struct.Interval
 import org.clulab.utils.DependencyUtils
-import org.clulab.odin.impl.StringMatcher
+import org.clulab.utils.Hash
+
+import scala.util.matching.Regex
 
 
 trait Mention extends Equals with Ordered[Mention] with Serializable {
@@ -126,6 +127,14 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
     case None => Nil
   }
 
+  /** returns the minimum distance to a root node for dependencies within the token interval */
+  def distToRootOpt: Option[Int] = sentenceObj.dependencies.flatMap { deps =>
+    // Note that
+    // Double.MaxValue.toInt == Int.MaxValue
+    // Double.PositiveInfinity.toInt == Int.MaxValue
+    DependencyUtils.distToRootOpt(tokenInterval, deps).map(_.toInt)
+  }
+
   /** returns the syntactic head of `mention`  */
   def synHead: Option[Int] = synHeads.lastOption
 
@@ -187,26 +196,29 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
 
   protected lazy val cachedHashCode = calculateHashCode
 
-  protected def calculateHashCode: Int = {
-    val h0 = stringHash("org.clulab.odin.Mention")
-    val h1 = mix(h0, labels.hashCode)
-    val h2 = mix(h1, tokenInterval.hashCode)
-    val h3 = mix(h2, sentence.hashCode)
-    val h4 = mix(h3, document.ambivalenceHash)
-    val h5 = mix(h4, argumentsHashCode)
-    val h6 = mixLast(h5, unorderedHash(attachments))
-    finalizeHash(h6, 6)
-  }
+  protected def calculateHashCode: Int = Hash.withLast(
+    Hash("org.clulab.odin.Mention"),
+    labels.hashCode,
+    tokenInterval.hashCode,
+    sentence.hashCode,
+    document.ambivalenceHash,
+    argsHash,
+    Hash.unordered(attachments)
+  )
 
-  private def argumentsHashCode: Int = {
-    val h0 = stringHash("Mention.arguments")
-    val hs = arguments map {
-      case (name, args) => mix(stringHash(name), unorderedHash(args))
+  // TODO: Compare this to argsHash in the package.
+  private def argsHash: Int = {
+    val argHashes = arguments.map { case (name, mentions) =>
+      val seed = Hash(name)
+      val data = mentions
+
+      Hash.mix(seed, Hash.unordered(data))
     }
-    val h = mixLast(h0, unorderedHash(hs))
-    finalizeHash(h, arguments.size)
+    Hash.withLast(arguments.size)(
+      Hash("Mention.arguments"),
+      Hash.unordered(argHashes)
+    )
   }
-
 }
 
 @SerialVersionUID(1L)
@@ -318,12 +330,11 @@ class EventMention(
   }
 
   // trigger should be part of the hashCode too
-  protected override def calculateHashCode: Int = {
-    val h0 = stringHash("org.clulab.odin.EventMention")
-    val h1 = mix(h0, super.calculateHashCode)
-    val h2 = mixLast(h1, trigger.hashCode)
-    finalizeHash(h2, 2)
-  }
+  protected override def calculateHashCode: Int = Hash.withLast(
+    Hash("org.clulab.odin.EventMention"),
+    super.calculateHashCode,
+    trigger.hashCode
+  )
 
   // Copy constructor for EventMention
   def copy(

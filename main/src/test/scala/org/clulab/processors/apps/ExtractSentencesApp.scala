@@ -4,6 +4,8 @@ import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
 
+import scala.util.Using
+
 object ExtractSentencesApp extends App {
   val directoryName = args.lift(0).getOrElse("../corpora/Doc16k/txt")
   val fileName = args.lift(1).getOrElse("sentences.txt")
@@ -12,7 +14,7 @@ object ExtractSentencesApp extends App {
   val processor = new BalaurProcessor()
   var count = 0
 
-  FileUtils.printWriterFromFile(fileName).autoClose { printWriter =>
+  Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>
     files.foreach { file =>
       val text = FileUtils.getTextFromFile(file)
       val document = processor.mkDocument(text, keepText = true)

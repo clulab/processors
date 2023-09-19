@@ -1,8 +1,9 @@
 package org.clulab.learning
 
-import java.io._
-
 import org.clulab.learning.Datasets._
+
+import java.io._
+import scala.util.Using
 
 /**
   * Trait for regression
@@ -38,9 +39,9 @@ trait Regression[F] {
 
   /** Saves the current model to a file */
   def saveTo(fileName:String): Unit = {
-    val bw = new BufferedWriter(new FileWriter(fileName))
-    saveTo(bw)
-    bw.close()
+    Using.resource(new BufferedWriter(new FileWriter(fileName))) { bw =>
+      saveTo(bw)
+    }
   }
 
   /** Saves to writer. Does NOT close the writer */

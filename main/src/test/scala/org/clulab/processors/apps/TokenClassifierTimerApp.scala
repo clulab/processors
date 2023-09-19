@@ -3,6 +3,7 @@ package org.clulab.processors.apps
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.{Sourcer, Timers}
 
+import scala.util.Using
 
 object TokenClassifierTimerApp extends App {
   val fileName = args.lift(0).getOrElse("../sentences.txt")
@@ -13,11 +14,10 @@ object TokenClassifierTimerApp extends App {
     processor
   }
   val lines = {
-    val source = Sourcer.sourceFromFilename(fileName)
-    val lines = source.getLines().take(100).toArray
-
-    source.close
-    lines
+    Using.resource(Sourcer.sourceFromFilename(fileName)) { source =>
+      val lines = source.getLines().take(100).toArray
+      lines
+    }
   }
   val elapsedTimer = Timers.getOrNew("Elapsed")
 

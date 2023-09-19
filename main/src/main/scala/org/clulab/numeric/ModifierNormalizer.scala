@@ -2,13 +2,6 @@ package org.clulab.numeric
 
 import java.time.{Month, YearMonth}
 
-import org.clulab.sequences.CommentedStandardKbSource
-import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.Sourcer
-
-import scala.collection.mutable
-import scala.io.Source
-
 object ModifierNormalizer {
 
   val APPROX_SYMBOL = "[APPROX]"

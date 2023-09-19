@@ -4,6 +4,7 @@ import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
+import scala.util.Using
 
 /**
  * Little utility that regenerates the POS tags and chunk labels for the CoNLL-03 dataset
@@ -25,7 +26,6 @@ object ProcessCoNLL03 extends App {
       saveSent(pw, row, doc.sentences(0).tags, doc.sentences(0).chunks)
     }
   }
-  pw.close()
 
   def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Array[String]] = None, chunks: Option[Array[String]] = None): Unit = {
     if (tags.isDefined) {

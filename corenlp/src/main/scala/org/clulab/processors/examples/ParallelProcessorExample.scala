@@ -10,10 +10,13 @@ import org.clulab.processors.Processor
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.Closer.AutoCloser
-import org.clulab.utils.FileUtils
-import org.clulab.utils.ThreadUtils
-import org.clulab.utils.Timer
+import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
+
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintWriter
+import scala.util.Using
 
 object ParallelProcessorExample {
 
@@ -60,15 +63,8 @@ object ParallelProcessorExample {
           println(s"Threw exception for ${file.getName}")
           throw throwable
       }
-      val printedDocument = {
-        val stringWriter = new StringWriter
-
-        new PrintWriter(stringWriter).autoClose { printWriter =>
-          printDocument(document, printWriter)
-        }
-
-        val result = stringWriter.toString
-        result
+      val printedDocument = StringUtils.viaPrintWriter { printWriter =>
+        printDocument(document, printWriter)
       }
       val savedDocument = documentSerializer.save(document)
       val outputDocument = printedDocument + savedDocument
@@ -83,7 +79,7 @@ object ParallelProcessorExample {
   def run(args: Array[String]): Unit = {
 
     mainWithCallback(args) { case (file: File, contents: String) =>
-      new PrintWriter(new BufferedOutputStream(new FileOutputStream(file))).autoClose { printWriter =>
+      Using.resource(new PrintWriter(file)) { printWriter =>
         printWriter.println(contents)
       }
     }

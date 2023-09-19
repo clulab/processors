@@ -1,15 +1,17 @@
 package org.clulab.serialization
 
-import java.io._
-import scala.collection.mutable
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.reflect.ClassTag
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct._
 import org.clulab.utils.Logging
 import org.json4s.DefaultFormats
+
+import java.io._
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.reflect.ClassTag
+import scala.util.Using
 
 /**
   * Saves/loads a Document to/from a stream
@@ -142,10 +144,10 @@ class DocumentSerializer extends Logging {
 
   def load(s:String, encoding:String = "UTF-8"): Document = {
     val is = new ByteArrayInputStream(s.getBytes(encoding))
-    val r = new BufferedReader(new InputStreamReader(is))
-    val doc = load(r)
-    r.close()
-    doc
+    Using.resource(new BufferedReader(new InputStreamReader(is))) { r =>
+      val doc = load(r)
+      doc
+    }
   }
 
   private def loadText (r:BufferedReader, charCount:Int): String = {
@@ -346,11 +348,9 @@ class DocumentSerializer extends Logging {
 
   def save(doc:Document, encoding:String = "UTF-8", keepText:Boolean = false): String = {
     val byteOutput = new ByteArrayOutputStream
-    val os = new PrintWriter(byteOutput)
-    save(doc, os, keepText)
-    os.flush()
-    os.close()
-    byteOutput.close()
+    Using.resource(new PrintWriter(byteOutput)) { os =>
+      save(doc, os, keepText)
+    }
     byteOutput.toString(encoding)
   }
 

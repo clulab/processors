@@ -4,7 +4,12 @@ import java.io.{File, FileFilter, PrintWriter}
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
+import org.clulab.struct.GraphMap
 import org.slf4j.{Logger, LoggerFactory}
+
+import java.io.{File, FileFilter, PrintWriter}
+import scala.util.Using
+
 import TextLabelToCoNLLU._
 import org.clulab.struct.GraphMap
 import org.clulab.utils.Closer.AutoCloser
@@ -24,9 +29,9 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
       try {
         val doc = parseFile(f)
         val ofn = s"$outDir/${f.getName.substring(0, f.getName.length - 4)}.conllu"
-        val pw = new PrintWriter(ofn)
-        toCoNLLU(doc, pw)
-        pw.close()
+        Using.resource(new PrintWriter(ofn)) { pw =>
+          toCoNLLU(doc, pw)
+        }
       } catch {
         case e:Exception => {
           logger.error(s"Parsing of file $f failed with error:")
@@ -77,7 +82,7 @@ class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
 
   def parseFile(f:File):Document = {
     def option1(): Document = {
-      val tokens = Sourcer.sourceFromFile(f).autoClose { source =>
+      val tokens = Using.resource(Sourcer.sourceFromFile(f)) { source =>
         for (line <- source.getLines())
           yield line.split(' ').toSeq
       }.toSeq

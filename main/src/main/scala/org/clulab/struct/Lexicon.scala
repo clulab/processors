@@ -1,12 +1,12 @@
 package org.clulab.struct
 
-import java.io._
-
 import org.clulab.struct.Lexicon.logger
 import org.clulab.utils.Files
 import org.slf4j.LoggerFactory
 
+import java.io._
 import scala.Serializable
+import scala.util.Using
 
 /**
  * Generic lexicon: maps objects of type T to Ints, both ways
@@ -87,9 +87,9 @@ class Lexicon[T] extends Serializable {
   }
 
   def saveTo(fileName:String): Unit = {
-    val w = new BufferedWriter(new FileWriter(fileName))
-    saveTo(w)
-    w.close()
+    Using.resource(new BufferedWriter(new FileWriter(fileName))) { w =>
+      saveTo(w)
+    }
   }
 
   def saveTo(w:Writer): Unit = {
@@ -151,10 +151,10 @@ object Lexicon {
 
   /** Loads a lexicon saved by Lexicon.saveTo */
   def loadFrom[F](fileName:String):Lexicon[F] = {
-    val is = new BufferedReader(new FileReader(fileName))
-    val lex = loadFrom[F](is)
-    is.close()
-    lex
+    Using.resource(new BufferedReader(new FileReader(fileName))) { is =>
+      val lex = loadFrom[F](is)
+      lex
+    }
   }
 
   def loadFrom[F](r:Reader):Lexicon[F] = {

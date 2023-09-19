@@ -1,14 +1,14 @@
 package org.clulab.embeddings
 
-import java.io._
 import org.clulab.scala.WrappedArray._
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.{ClassLoaderObjectInputStream, Sourcer}
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.io._
 import java.nio.charset.StandardCharsets
 import scala.collection.immutable.HashMap
 import scala.collection.mutable.{HashMap => MutableHashMap, Map => MutableMap}
+import scala.util.Using
 
 /**
   * This class and its companion object have been backported from Eidos.  There it is/was an optional
@@ -64,7 +64,7 @@ class OldCompactWordEmbeddingMap(buildType: OldCompactWordEmbeddingMap.BuildType
     // Sort the map entries (word -> row) by row and then keep just the word.
     val words = map.toArray.sortBy(_._2).map(_._1).mkString("\n")
 
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+    Using.resource(new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename)))) { objectOutputStream =>
       // Writing is performed in two steps so that the parts can be
       // processed separately when read back in.
       objectOutputStream.writeObject(words)
@@ -224,10 +224,10 @@ object OldCompactWordEmbeddingMap {
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
-    (
-        if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
-        else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
-        ).autoClose { source =>
+    Using.resource(
+      if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
+      else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
+    ) { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -242,7 +242,7 @@ object OldCompactWordEmbeddingMap {
     //    (map, array)
 
     // This is "unrolled" for performance purposes.
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
+    Using.resource(new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename)))) { objectInputStream =>
       val map: MapType = new MutableMapType()
 
       {
