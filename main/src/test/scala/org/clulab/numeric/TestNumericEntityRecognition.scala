@@ -416,6 +416,12 @@ class TestNumericEntityRecognition extends Test {
     // ensure(sentence= "on 18th of Oct 2019", Interval(1, 5), goldEntity= "DATE", goldNorm= "2019-10-18")
     // ensure(sentence= "old seedlings transplanted on 14 July in 1999/00", Interval(4, 8), goldEntity= "DATE", goldNorm= "2000-07-14")
   }
+
+  it should "recognize season in year" in {
+    ensure(sentence = "We applied it in summer in 21", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "XX21-06-21 -- XX21-09-22")
+    ensure(sentence = "We applied it in Fall in 21", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "XX21-09-22 -- XX21-12-21")
+    ensure(sentence = "We applied it in fall of 2021", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "2021-09-22 -- 2021-12-21")
+  }
   
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT-AREA", "12.0 ha")
