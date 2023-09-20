@@ -293,6 +293,10 @@ class BalaurProcessor protected (
 
     val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
     sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+
+    // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
+    // however, this processor produces only syntactic dependencies
+    sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
   }
 
   def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[Dependency] = {
