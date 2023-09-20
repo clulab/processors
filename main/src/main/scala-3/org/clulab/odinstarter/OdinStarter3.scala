@@ -2,7 +2,7 @@ package org.clulab.odinstarter
 
 import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.Mention
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
@@ -27,7 +27,7 @@ object OdinStarter3:
       val baseDirOpt = if isLocal then Some(resourceDir) else None
 
       LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
-    val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+    val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
     val extractorEngine =
       val masterResource = "/org/clulab/odinstarter/main.yml"
       // We usually want to reload rules during development,
