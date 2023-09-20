@@ -21,6 +21,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Date: 8/1/17
   */
 object ToEnhancedDependencies {
+  type EdgeSpec = (Int, Int, String)
+
   def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
     collapsePrepositionsStanford(sentence, dgi)
@@ -49,7 +51,7 @@ object ToEnhancedDependencies {
    * Replicates nmod_* accross conj dependencies
    * economic decline has led to violence and displacement => nmod_to from "led" to both "violence" and "displacement"
    */
-  def replicateCollapsedNmods(collapsedNmods: Seq[(Int, Int, String)],
+  def replicateCollapsedNmods(collapsedNmods: Seq[EdgeSpec],
                               dgi: DirectedGraphIndex[String]): Unit = {
     for(nmod <- collapsedNmods) {
       val conjs = dgi.findByHeadAndName(nmod._2, "conj")
@@ -138,9 +140,9 @@ object ToEnhancedDependencies {
 
   def collapsePrepositionsUniversal(
     sentence:Sentence, 
-    dgi:DirectedGraphIndex[String]): Seq[(Int, Int, String)] = {
+    dgi:DirectedGraphIndex[String]): Seq[EdgeSpec] = {
 
-    val collapsedNmods = new ArrayBuffer[(Int, Int, String)]()
+    val collapsedNmods = new ArrayBuffer[EdgeSpec]()
     collapsePrepositionsUniversalNmodCase(sentence, dgi, collapsedNmods)
     collapsePrepositionsUniversalDueTo(sentence, dgi, collapsedNmods)
     collapsedNmods
@@ -155,7 +157,7 @@ object ToEnhancedDependencies {
   def collapsePrepositionsUniversalNmodCase(
     sentence:Sentence, 
     dgi:DirectedGraphIndex[String],
-    collapsedNmods: ArrayBuffer[(Int, Int, String)]): Unit = {
+    collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
     val toRemove = new ListBuffer[Edge[String]]
     var shouldRemove = false
@@ -169,7 +171,8 @@ object ToEnhancedDependencies {
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
-        collapsedNmods += ((prep.source, prep.destination, s"nmod_$mwe"))
+        val edgeSpec = (prep.source, prep.destination, s"nmod_$mwe")
+        collapsedNmods += edgeSpec
         shouldRemove = true
       }
     }
@@ -186,7 +189,7 @@ object ToEnhancedDependencies {
   def collapsePrepositionsUniversalDueTo(
     sentence:Sentence, 
     dgi:DirectedGraphIndex[String], 
-    collapsedNmods: ArrayBuffer[(Int, Int, String)]): Unit = {
+    collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
     val toRemove = new ListBuffer[Edge[String]]
     var shouldRemove = false
@@ -205,7 +208,8 @@ object ToEnhancedDependencies {
               // found the dep from "due" to "drought"
               val destination = rightDep.destination
               dgi.addEdge(source, destination, label)
-              collapsedNmods += Tuple3(source, destination, label)
+              val edgeSpec = (source, destination, label)
+              collapsedNmods += edgeSpec
               shouldRemove = true
             }
           }
