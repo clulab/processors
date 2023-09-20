@@ -237,7 +237,7 @@ object VeilApp extends App {
     }
   }
 
-  val processor = new CluProcessor()
+  val processor = new BalaurProcessor()
 
   veilText(processor)
   veilDocument(processor)
