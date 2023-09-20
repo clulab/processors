@@ -1,20 +1,12 @@
 package org.clulab.processors.examples
 
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintWriter
-import java.io.StringWriter
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.BalaurProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
 
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.io.PrintWriter
 import scala.util.Using
 
@@ -28,7 +20,7 @@ object ParallelProcessorExample {
     val outputDir = args(1)
     val extension = args(2)
     val threads = args(3).toInt
-    val parallel = args.lift(4).exists(_ == "true")
+    val parallel = args.lift(4).contains("true")
 
     val files = FileUtils.findFiles(inputDir, extension)
     val serFiles = files.sortBy(-_.length)

@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.utils.{FileUtils, Sourcer}
+import org.clulab.utils.FileUtils
 
 class TestLemmatizer extends CluTest {
 

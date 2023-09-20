@@ -1,7 +1,6 @@
 package org.clulab.processors.apps
 
 import org.clulab.processors.clu.BalaurProcessor
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.FileUtils
 
 import scala.util.Using

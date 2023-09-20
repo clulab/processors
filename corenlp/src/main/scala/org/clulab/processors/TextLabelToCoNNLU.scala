@@ -1,18 +1,15 @@
 package org.clulab.processors
 
-import java.io.{File, FileFilter, PrintWriter}
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
-import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
 import org.clulab.struct.GraphMap
+import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileFilter, PrintWriter}
 import scala.util.Using
 
 import TextLabelToCoNLLU._
-import org.clulab.struct.GraphMap
-import org.clulab.utils.Closer.AutoCloser
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format

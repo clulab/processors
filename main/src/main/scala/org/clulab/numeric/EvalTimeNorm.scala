@@ -3,7 +3,6 @@ package org.clulab.numeric
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.BalaurProcessor
-import org.clulab.utils.Closer.AutoCloser
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source

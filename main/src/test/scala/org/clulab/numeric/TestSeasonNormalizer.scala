@@ -23,8 +23,6 @@ class TestSeasonNormalizer extends Test {
 
   behavior of "Default seasonal BalaurProcessor"
 
-  val processor = new CluProcessor()
-
   it should "find autumn but not rainy season" in {
     val processor = new BalaurProcessor()
 
