@@ -3,9 +3,9 @@ package org.clulab.utils
 import java.io.{ FileInputStream, BufferedInputStream, PrintWriter, StringWriter }
 import java.util.Properties
 import java.util.regex.Pattern
-
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
+import scala.util.Using
 
 /**
  * Converts a command line to properties; and other useful String utils
@@ -36,15 +36,15 @@ object StringUtils {
         if ((key == PROPERTIES || key == PROPS) && ! value.isEmpty) {
           // a props file was specified. read props from there
           println(s"loading props from file ${value.get}")
-          val is = new BufferedInputStream(new FileInputStream(value.get))
           val propsFromFile = new Properties()
-          propsFromFile.load(is)
+          Using.resource(new BufferedInputStream(new FileInputStream(value.get))) { is =>
+            propsFromFile.load(is)
+          }
           // trim all values, they may have trailing spaces
           for (k <- propsFromFile.keySet().asScala) {
             val v = propsFromFile.getProperty(k.asInstanceOf[String]).trim
             result.setProperty(k.asInstanceOf[String], v)
           }
-          is.close()
         } else {
           result.setProperty(key, value.getOrElse("true"))
         }
@@ -141,9 +141,9 @@ object StringUtils {
 
   /** Format the given exception as a string and return the string. */
   def exceptionToString (ex: Exception): String = {
-    val sw = new StringWriter
-    ex.printStackTrace(new PrintWriter(sw))
-    sw.toString
+    StringUtils.viaPrintWriter { printWriter =>
+      ex.printStackTrace(printWriter)
+    }
   }
 
   /** Generates the stem of a word, according to the Porter algorithm */
@@ -182,4 +182,13 @@ object StringUtils {
     after(string, string.indexOf(char), all, keep)
 
   def med(source: String, target: String): Int = MED(source, target).getDistance
+
+  def viaPrintWriter(f: (PrintWriter) => Unit): String = {
+    val stringWriter = new StringWriter
+
+    Using.resource(new PrintWriter(stringWriter)) { printWriter =>
+      f(printWriter)
+    }
+    stringWriter.toString
+  }
 }

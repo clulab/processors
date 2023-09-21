@@ -74,19 +74,9 @@ package object numeric {
     //
     // initialize entities and norms
     //
-    for(s <- doc.sentences) {
-      if(s.entities.isEmpty) {
-        s.entities = Some(new Array[String](s.size))
-        for(i <- s.entities.get.indices) {
-          s.entities.get(i) = "O"
-        }
-      }
-      if(s.norms.isEmpty) {
-        s.norms = Some(new Array[String](s.size))
-        for(i <- s.norms.get.indices) {
-          s.norms.get(i) = ""
-        }
-      }
+    for (sentence <- doc.sentences) {
+      sentence.entities = sentence.entities.orElse(Some(Array.fill(sentence.size)("O")))
+      sentence.norms    = sentence.norms   .orElse(Some(Array.fill(sentence.size)("")))
     }
 
     //

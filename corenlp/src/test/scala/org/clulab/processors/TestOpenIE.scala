@@ -4,9 +4,7 @@ import org.clulab.processors.corenlp.CoreNLPProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.Test
-
-import java.io.{PrintWriter, StringWriter}
+import org.clulab.utils.{StringUtils, Test}
 
 import scala.collection.mutable
 
@@ -20,10 +18,9 @@ class TestOpenIE extends Test {
   private lazy val fastNLPDoc = fastNLP.annotate(text)
   private lazy val coreNLPDoc = coreNLP.annotate(text)
 
-  private val buffer = new StringWriter()
-  serializer.save(fastNLPDoc, new PrintWriter(buffer))
-  private val serialized = buffer.toString
-
+  private val serialized = StringUtils.viaPrintWriter { printWriter =>
+    serializer.save(fastNLPDoc, printWriter)
+  }
   private val deserializedDoc = serializer.load(serialized)
 
   def openIEBehavior(doc:Document): Unit = {

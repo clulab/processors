@@ -1,18 +1,18 @@
 package org.clulab.odin
 
-import scala.io.Source
-
 import org.clulab.TestUtils._
 import org.clulab.utils.Test
 
+import scala.io.Source
+import scala.util.Using
 
 class TestVariables extends Test {
 
   def readResource(filename: String): String = {
-    val source = Source.fromURL(getClass.getResource(filename))
-    val data = source.mkString
-    source.close()
-    data
+    Using.resource(Source.fromURL(getClass.getResource(filename))) { source =>
+      val data = source.mkString
+      data
+    }
   }
 
   "variables" should "allow for whitespace" in {

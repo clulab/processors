@@ -10,7 +10,6 @@ import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
-import org.clulab.struct.Edge
 import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
@@ -166,7 +165,7 @@ class BalaurProcessor protected (
 
   private def assignPosTags(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
-    sent.tags = Some(postprocessPartOfSpeechTags(sent.words, labels.map(_.head._1)))
+    sent.tags = Some(postprocessPartOfSpeechTags(sent.words, labels.map(_.head._1).toArray))
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
@@ -193,7 +192,7 @@ class BalaurProcessor protected (
       ner.find(sentence)
     }
 
-    val genericLabels = NamedEntity.patch(labels.map(_.head._1))
+    val genericLabels = NamedEntity.patch(labels.map(_.head._1).toArray)
 
     if(optionalNERLabels.isEmpty) {
       sent.entities = Some(genericLabels)
@@ -228,7 +227,7 @@ class BalaurProcessor protected (
 
   private def assignChunkLabels(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
     assert(labels.length == sent.words.length)
-    sent.chunks = Some(labels.map(_.head._1))
+    sent.chunks = Some(labels.map(_.head._1).toArray)
   }
 
   // The head has one score, the label has another.  Here the two scores are interpolated
@@ -260,10 +259,10 @@ class BalaurProcessor protected (
       // valid Dependencies remain.
       val sortedWordDependencies = wordDependencies.sortBy(-_.score)
 
-      sortedWordDependencies
+      sortedWordDependencies.toArray
     }
 
-    sentDependencies
+    sentDependencies.toArray
   }
 
   // sent = sentence, word = word
@@ -302,7 +301,7 @@ class BalaurProcessor protected (
 
   def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[Dependency] = {
     // These are already sorted by score, so head will extract the best one.
-    sentDependencies.map(_.head)
+    sentDependencies.map(_.head).toArray
   }
 }
 

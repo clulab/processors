@@ -1,16 +1,19 @@
 package org.clulab.learning
 
 import org.clulab.struct.Counter
-import java.io._
-import org.slf4j.LoggerFactory
-import java.util.Properties
 import org.clulab.utils.{Files, MathUtils, StringUtils}
 import org.clulab.struct.Lexicon
 import org.clulab.struct.Counters._
-import PerceptronClassifier.logger
-import scala.collection.mutable.ArrayBuffer
+import org.slf4j.LoggerFactory
+
+import java.io._
+import java.util.Properties
 import scala.Serializable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import scala.util.Using
+
+import PerceptronClassifier.logger
 
 /**
  * Multiclass perceptron classifier, in primal mode
@@ -101,7 +104,7 @@ class PerceptronClassifier[L, F] (
     // compute the scores for all class labels
     val predictions = new ArrayBuffer[(Int, Double)](labelLexicon.size)
     for(i <- 0 until labelLexicon.size) {
-      predictions += new Tuple2(i, dotProduct(weights(i), datum))
+      predictions += ((i, dotProduct(weights(i), datum)))
     }
 
     // sort predictions in descending order of scores
@@ -268,10 +271,10 @@ object PerceptronClassifier {
   val logger = LoggerFactory.getLogger(classOf[PerceptronClassifier[String, String]])
 
   def loadFrom[L, F](fileName:String):PerceptronClassifier[L, F] = {
-    val r = new BufferedReader(new FileReader(fileName))
-    val c = loadFrom[L, F](r)
-    r.close()
-    c
+    Using.resource(new BufferedReader(new FileReader(fileName))) { r =>
+      val c = loadFrom[L, F](r)
+      c
+    }
   }
 
   def loadFrom[L, F](r:Reader):PerceptronClassifier[L, F] = {

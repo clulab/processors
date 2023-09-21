@@ -1,19 +1,37 @@
 package org.clulab.embeddings
 
-import java.io._
 import org.clulab.scala.BufferedIterator
 import org.clulab.scala.WrappedArray._
 import org.clulab.utils.ClassLoaderObjectInputStream
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Logging
 import org.clulab.utils.Sourcer
 
 import java.nio.charset.StandardCharsets
+import java.io._
 import scala.collection.mutable.{HashMap => MutableHashMap}
 import scala.io.Source
+import scala.util.Using
 
 /**
- * Implements an word embedding map, where each embedding is stored as a distinct array
+ * Implements a word embedding map where each embedding is stored as a distinct array.
+ *
+ * This class accommodates glove embedding files, either with or without the header line
+ * that has sometimes been inserted into files to indicate the number of rows and columns
+ * of vector values and with an optional vector for unknown words.  An assortment of glove
+ * files packaged into jars is available from [[https://artifactory.clulab.org CLU Lab's Artifactory server]]
+ * and more can be downloaded in text format from the [[https://nlp.stanford.edu/projects/glove/ GloVe website]].
+ *
+ * The jarred variants make it possible to include word embeddings as a library dependency
+ * and to read the files as resources.  A resource flag is included in several methods for
+ * this eventuality.  The original text files can be extracted manually from the jars if
+ * need be.  Embeddings are read from the filesystem when resource = false, which is the
+ * default.  Some CLU Lab glove files in circulation have an empty word (blank string)
+ * inserted, usually as the first word in the file.  The associated vector can be used for
+ * unknown words in place of a zero or random vector and instead of leaving out words.
+ * The words in a glove file have (usually) had their case preserved, so for most accurate
+ * results, treat other words the same.
+ *
+ * A simple example is included in [[org.clulab.embeddings.ExplicitWordEmbeddingMap\$.main main]].
  */
 class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap.BuildType) extends WordEmbeddingMap {
   val map: ExplicitWordEmbeddingMap.ImplMapType = buildType.map
@@ -135,7 +153,7 @@ class ExplicitWordEmbeddingMap(protected val buildType: ExplicitWordEmbeddingMap
   }
 
   def save(filename: String): Unit = {
-    new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename))).autoClose { objectOutputStream =>
+    Using.resource(new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename)))) { objectOutputStream =>
       objectOutputStream.writeObject(map)
       objectOutputStream.writeObject(buildType.unknownArray)
     }
@@ -179,10 +197,10 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   protected def loadTxt(filename: String, resource: Boolean): BuildType = {
-    (
+    Using.resource(
       if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
       else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
-    ).autoClose { source =>
+    ) { source =>
       val lines = source.getLines()
 
       buildMatrix(lines)
@@ -190,7 +208,7 @@ object ExplicitWordEmbeddingMap extends Logging {
   }
 
   protected def loadBin(filename: String): BuildType = {
-    new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename))).autoClose { objectInputStream =>
+    Using.resource(new ClassLoaderObjectInputStream(this.getClass.getClassLoader, new BufferedInputStream(new FileInputStream(filename)))) { objectInputStream =>
       loadBin(objectInputStream)
     }
   }
@@ -246,5 +264,19 @@ object ExplicitWordEmbeddingMap extends Logging {
     if (wordCountOpt.isDefined)
       require(wordCountOpt.get == total, s"The matrix file should have had ${wordCountOpt.get} lines of words.")
     BuildType(map, unknownWeightsOpt)
+  }
+
+  def main(args: Array[String]): Unit = {
+    println("Syntax: <filename> <count> <word1 ...>")
+    val filename = args.lift(0).getOrElse("glove.840B.300d.10f.txt")
+    val count = args.lift(1).getOrElse("10").toInt
+    val argsWords = args.slice(2, args.length).toSet
+    val words = if (argsWords.isEmpty) Set("house") else argsWords
+    val wordEmbeddingMap = ExplicitWordEmbeddingMap(filename, resource = false)
+    val mostSimilarWords = wordEmbeddingMap.mostSimilarWords(words, count)
+
+    mostSimilarWords.zipWithIndex.foreach { case ((word, similarity), index) =>
+      println(s"$index $word $similarity")
+    }
   }
 }

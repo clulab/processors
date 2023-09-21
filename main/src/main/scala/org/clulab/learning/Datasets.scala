@@ -32,11 +32,11 @@ object Datasets {
 
       val trainFolds = new ArrayBuffer[(Int, Int)]
       if(startTest > 0)
-        trainFolds += Tuple2(0, startTest)
+        trainFolds += ((0, startTest))
       if(endTest < size)
-        trainFolds += Tuple2(endTest, size)
+        trainFolds += ((endTest, size))
 
-      folds += new DatasetFold(Tuple2(startTest, endTest), trainFolds.toList)
+      folds += new DatasetFold((startTest, endTest), trainFolds.toList)
     }
     folds.toList
   }
@@ -54,7 +54,7 @@ object Datasets {
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {
     val folds = new Array[(Int, Int)](1)
-    folds(0) = Tuple2(0, size)
+    folds(0) = (0, size)
     folds
   }
 
@@ -344,7 +344,7 @@ object Datasets {
       for(i <- fold.testFold._1 until fold.testFold._2) {
         val sys = classifier.classOf(dataset.mkDatum(i))
         val gold = dataset.labels(i)
-        output += Tuple2(dataset.labelLexicon.get(gold), sys)
+        output += ((dataset.labelLexicon.get(gold), sys))
       }
     }
 

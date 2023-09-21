@@ -1,10 +1,10 @@
 package org.clulab.sequences
 
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Reads the CoNLL-like column format
@@ -12,7 +12,7 @@ import scala.io.Source
 object ColumnReader {
   def readColumns(fn: String): Array[Array[Row]] = {
     // That which opens the file should also close it, none other.
-    Sourcer.sourceFromFilename(fn).autoClose { source =>
+    Using.resource(Sourcer.sourceFromFilename(fn)) { source =>
       readColumns(source: Source)
     }
   }

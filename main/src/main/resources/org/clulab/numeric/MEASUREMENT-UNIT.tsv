@@ -27,6 +27,7 @@ yd                  // yd::distance
 foot                // ft::length
 feet                // ft::length
 ft                  // ft::length
+ft.                 // ft::length
 inch                // in::length
 inches              // in::length
 in                  // in::length
@@ -63,7 +64,9 @@ ton                 // t::mass
 t                   // t::mass
 carat               // carat::mass
 pound               // lb::mass
+pounds              // lb::mass
 lb                  // lb::mass
+lbs                 // lb::mass
 ounce               // oz::mass
 oz                  // oz::mass
 fl oz               // oz::volume

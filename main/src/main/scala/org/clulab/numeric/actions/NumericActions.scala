@@ -1,13 +1,14 @@
 package org.clulab.numeric.actions
 
-import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer}
+import org.clulab.numeric.{SeasonNormalizer, UnitNormalizer, WeekNormalizer}
 import org.clulab.odin.{Actions, Mention, State}
 import org.clulab.numeric.mentions._
 import org.clulab.scala.WrappedArrayBuffer._
 
+import java.util.regex.Pattern
 import scala.collection.mutable.ArrayBuffer
 
-class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer) extends Actions {
+class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNormalizer, weekNormalizer: WeekNormalizer) extends Actions {
   //
   // local actions
   //
@@ -96,6 +97,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
   /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithUntilRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithUntilRef, "toDateRangeMentionWithUntilRef")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionWithWeek(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionWithWeek(weekNormalizer), "toDateRangeMentionWithWeek")
   }
 
   /** Constructs a DateRangeMention from a token pattern */
@@ -225,16 +231,48 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
       }
     }
 
-    val r1 = keepLongestMentions(mentions)
+    val r1 = postprocessNumericEntities(mentions)
+    val r2 = keepLongestMentions(r1)
 
     if(false) {
       println("mentions after cleanup:")
-      for (m <- r1) {
+      for (m <- r2) {
         println("\t" + m.text)
       }
       println()
     }
-    r1
+    r2
+  }
+
+  /** filter out season homonyms (fall, spring) **/
+  def postprocessNumericEntities(mentions: Seq[Mention]): Seq[Mention] = {
+
+    def prevWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+      val prevWords = words.slice(wordIndex - 2, wordIndex).map(_.toLowerCase)
+
+      prevWords.exists(NumericActions.preSeasons) ||
+          prevWords.containsSlice(NumericActions.inThe)
+    }
+
+    def contextWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+      val window = 5
+      val contextWords = words.slice(wordIndex - window, wordIndex + window).map(_.toLowerCase)
+
+      contextWords.exists(NumericActions.seasons) ||
+          contextWords.exists(NumericActions.yearPattern.matcher(_).matches)
+    }
+
+    val (seasonMentions, otherMentions) = mentions.partition(m => m.foundBy.contains("season"))
+    val (springFall, otherSeasons) = seasonMentions.partition(m => m.text.equalsIgnoreCase("spring") || m.text.equalsIgnoreCase("fall"))
+    val trueSeasons = springFall.filter { m =>
+      m.tags.get.head.startsWith("NN") && {
+        val words = m.sentenceObj.words
+        val wordIndex = m.tokenInterval.start
+
+        prevWordsMatch(words, wordIndex) || contextWordsMatch(words, wordIndex)
+      }
+    }
+    trueSeasons ++ otherSeasons ++ otherMentions
   }
 
   /** Keeps a date (or date range) mention only if it is not contained in another */
@@ -253,6 +291,14 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
 }
 
 object NumericActions {
+  val seasons: Set[String] = Set("spring", "summer", "fall", "autumn", "winter")
+  // Words that typically precede a season that might distinguish it from a similar verb
+  val preSeasons: Set[String] = Set("this", "last", "every")
+  // A common introduction to a season
+  val inThe: Array[String] = Array("in", "the")
+  // Match a 1 to 4 digit year
+  val yearPattern = Pattern.compile("[0-9]{2}|[0-9]{4}")
+
   def isNumeric(m: Mention): Boolean = {
     m.isInstanceOf[DateMention] ||
       m.isInstanceOf[DateRangeMention] ||

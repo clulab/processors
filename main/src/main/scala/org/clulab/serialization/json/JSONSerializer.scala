@@ -74,9 +74,10 @@ object JSONSerializer {
     }
 
     val s = json.extract[Sentence]
+    val preferredSize = s.words.length
     // build dependencies
     val graphs = (json \ "graphs").extract[JObject].obj.map { case (key, json) =>
-      key -> toDirectedGraph(json)
+      key -> toDirectedGraph(json, Some(preferredSize))
     }.toMap
     s.graphs = GraphMap(graphs)
     // build labels
@@ -88,12 +89,12 @@ object JSONSerializer {
     s
   }
 
-  def toDirectedGraph(json: JValue): DirectedGraph[String] = {
+  def toDirectedGraph(json: JValue, preferredSizeOpt: Option[Int] = None): DirectedGraph[String] = {
     val edges = (json \ "edges").extract[List[Edge[String]]]
     // The roots remain for backward compatibility, but they are ignored.
     val roots = (json \ "roots").extract[Set[Int]]
 
-    new DirectedGraph(edges)
+    new DirectedGraph(edges, preferredSizeOpt)
   }
 
   private def getStringOption(json: JValue, key: String): Option[String] = json \ key match {

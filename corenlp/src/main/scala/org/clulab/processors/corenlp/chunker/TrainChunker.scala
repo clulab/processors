@@ -1,11 +1,13 @@
 package org.clulab.processors.corenlp.chunker
 
+import edu.stanford.nlp.ling.{ CoreLabel, CoreAnnotations }
 import org.clulab.scala.WrappedArray._
+
 import java.io.FileInputStream
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable
 import scala.io.Source
-import edu.stanford.nlp.ling.{ CoreLabel, CoreAnnotations }
+import scala.util.Using
 
 object TrainChunker extends App {
 
@@ -63,9 +65,9 @@ object TrainChunker extends App {
 
   def readData(path: String): Array[Array[CoreLabel]] = {
     val is = new GZIPInputStream(new FileInputStream(path))
-    val source = Source.fromInputStream(is)
-    val text = source.mkString
-    source.close()
+    val text = Using.resource(Source.fromInputStream(is)) { source =>
+      source.mkString
+    }
     // sentences are separated by an empty line
     val sentences = text.split("\n\n")
     sentences.map { sent =>

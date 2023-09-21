@@ -1,0 +1,16 @@
+#
+# list of weeks and their date ranges, case insensitive so everything is lower case for simplicity
+# the comments after // are required by WeekNormalizer to get the week date ranges! Do not remove
+# the format for the date ranges must be MM-dd:MM-dd or MM:MM
+# note: multi-word phrases must be tokenized in the same way as our tokenizer. If not sure, try the phrases in ./shell first!
+#
+first week       // XXXX-XX-01 -- XXXX-XX-07
+1st week       // XXXX-XX-01 -- XXXX-XX-07
+second week      // XXXX-XX-08 -- XXXX-XX-14
+2nd week      // XXXX-XX-08 -- XXXX-XX-14
+third week       // XXXX-XX-15 -- XXXX-XX-21
+3rd week       // XXXX-XX-15 -- XXXX-XX-21
+fourth week      // XXXX-XX-22 -- XXXX-XX-28
+4th week      // XXXX-XX-22 -- XXXX-XX-28
+first two weeks  // XXXX-XX-01 -- XXXX-XX-14
+second two weeks // XXXX-XX-15 -- XXXX-XX-28

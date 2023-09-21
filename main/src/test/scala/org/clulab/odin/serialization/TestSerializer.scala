@@ -4,6 +4,8 @@ import org.clulab.TestUtils.jsonStringToDocument
 import org.clulab.odin.ExtractorEngine
 import org.clulab.utils.Test
 
+import scala.util.Using
+
 // See TestJSONSerializer for the test upon which this is based.
 class TestSerializer extends Test {
 
@@ -12,9 +14,10 @@ class TestSerializer extends Test {
   
     def serialize(anyOut: Any): Boolean = {
       val streamOut = new ByteArrayOutputStream()
-      val encoder = new ObjectOutputStream(streamOut)
-      encoder.writeObject(anyOut)
-  
+      Using.resource(new ObjectOutputStream(streamOut)) { encoder =>
+        encoder.writeObject(anyOut)
+      }
+
       val bytes = streamOut.toByteArray
       val streamIn = new ByteArrayInputStream(bytes)
       val decoder = new ObjectInputStream(streamIn) {
@@ -28,8 +31,10 @@ class TestSerializer extends Test {
           }
         }
       }
-      val anyIn = decoder.readObject()
-      decoder.close()
+      val anyIn = Using.resource(decoder) { decoder =>
+        decoder.readObject()
+      }
+
       anyIn == anyOut
     }
   }

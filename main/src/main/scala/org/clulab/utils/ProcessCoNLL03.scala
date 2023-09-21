@@ -4,6 +4,7 @@ import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.{ColumnReader, Row}
 
 import java.io.PrintWriter
+import scala.util.Using
 
 /**
  * Little utility that regenerates the POS tags and chunk labels for the CoNLL-03 dataset
@@ -14,18 +15,20 @@ object ProcessCoNLL03 extends App {
   val proc = new BalaurProcessor()
   val rows = ColumnReader.readColumns(args(0))
   println(s"Found ${rows.length} sentences.")
-  val pw = new PrintWriter(args(0) + ".reparsed")
-  for (row <- rows) {
-    val words = row.map(e => e.get(0))
-    if (row.length == 1 && words(0) == "-DOCSTART-") {
-      saveSent(pw, row)
-    } else {
-      val doc = proc.mkDocumentFromTokens(Seq(words))
-      proc.annotate(doc)
-      saveSent(pw, row, doc.sentences(0).tags, doc.sentences(0).chunks)
+
+  Using.resource(new PrintWriter(args(0) + ".reparsed")) { printWriter =>
+    for (row <- rows) {
+      val words = row.map(e => e.get(0))
+      if (row.length == 1 && words(0) == "-DOCSTART-") {
+        saveSent(printWriter, row)
+      }
+      else {
+        val doc = proc.mkDocumentFromTokens(Seq(words))
+        proc.annotate(doc)
+        saveSent(printWriter, row, doc.sentences(0).tags, doc.sentences(0).chunks)
+      }
     }
   }
-  pw.close()
 
   def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Array[String]] = None, chunks: Option[Array[String]] = None): Unit = {
     if (tags.isDefined) {

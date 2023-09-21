@@ -1,10 +1,10 @@
 package org.clulab.embeddings
 
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.InputStreamer
 import org.clulab.utils.Test
 
 import java.io.File
+import scala.util.Using
 
 class TestWordEmbeddingMap extends Test {
   val name = "/test_vectors"
@@ -150,7 +150,7 @@ class TestWordEmbeddingMap extends Test {
         val start = System.currentTimeMillis()
         val inputStreamer = new InputStreamer()
         val inputStream = inputStreamer.getFileAsStream(fileName + InputStreamer.txtExtension)
-        val glove = inputStream.autoClose { inputStream =>
+        val glove = Using.resource(inputStream) { inputStream =>
           ExplicitWordEmbeddingMap(inputStream, false)
         }
         val stop = System.currentTimeMillis()
@@ -162,7 +162,7 @@ class TestWordEmbeddingMap extends Test {
         val start = System.currentTimeMillis()
         val inputStreamer = new InputStreamer()
         val inputStream = inputStreamer.getFileAsStream(fileName + InputStreamer.binExtension)
-        val glove = inputStream.autoClose { inputStream =>
+        val glove = Using.resource(inputStream) { inputStream =>
           CompactWordEmbeddingMap(inputStream, true)
         }
         val stop = System.currentTimeMillis()
@@ -176,7 +176,7 @@ class TestWordEmbeddingMap extends Test {
       val start = System.currentTimeMillis()
       val inputStreamer = new InputStreamer()
       val inputStream = inputStreamer.getResourceAsStream(resourceName + InputStreamer.txtExtension)
-      val glove = inputStream.autoClose { inputStream =>
+      val glove = Using.resource(inputStream) { inputStream =>
         ExplicitWordEmbeddingMap(inputStream, false)
       }
       val stop = System.currentTimeMillis()
@@ -188,7 +188,7 @@ class TestWordEmbeddingMap extends Test {
       val start = System.currentTimeMillis()
       val inputStreamer = new InputStreamer()
       val inputStream = inputStreamer.getResourceAsStream(resourceName + InputStreamer.binExtension)
-      val glove = inputStream.autoClose { inputStream =>
+      val glove = Using.resource(inputStream) { inputStream =>
         CompactWordEmbeddingMap(inputStream, true)
       }
       val stop = System.currentTimeMillis()

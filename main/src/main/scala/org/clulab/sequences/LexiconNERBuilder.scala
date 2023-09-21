@@ -5,7 +5,6 @@
 
 package org.clulab.sequences
 
-import java.util.function.Consumer
 import org.clulab.scala.WrappedArray._
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.BooleanHashTrie
@@ -14,14 +13,15 @@ import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
 import org.clulab.utils.FileUtils
 import org.clulab.utils.Files
-import org.clulab.utils.Serializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import java.io.File
-import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
+import java.util.function.Consumer
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{HashMap => MutableHashMap, HashSet => MutableHashSet, Map => MutableMap, Set => MutableSet}
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Concrete subclasses are responsible for building various NERs.  The mapping is as follows:
@@ -107,7 +107,7 @@ trait ResourceKbSource {
   }
 
   def consume(resourceName: String, consumer: Consumer[String]): Unit = {
-    Serializer.using(Files.loadStreamFromClasspath(resourceName)) { bufferedReader =>
+    Using.resource(Files.loadStreamFromClasspath(resourceName)) { bufferedReader =>
       bufferedReader.lines.forEach(consumer)
     }
   }
@@ -146,7 +146,7 @@ trait FileKbSource {
   def consume(resourceName: String, baseDir: File, consumer: Consumer[String]): Unit = {
     val file = new File(baseDir, if (resourceName.startsWith("/")) resourceName.drop(1) else resourceName)
 
-    Serializer.using(Files.loadFile(file)) { bufferedReader =>
+    Using.resource(Files.loadFile(file)) { bufferedReader =>
       bufferedReader.lines.forEach(consumer)
     }
   }

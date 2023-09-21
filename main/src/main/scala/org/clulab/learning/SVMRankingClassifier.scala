@@ -1,18 +1,19 @@
 package org.clulab.learning
 
-import java.io._
-import java.util.Properties
-
+import org.clulab.struct.{Counter, Counters, Lexicon}
+import org.clulab.utils.Serializer
+import org.clulab.utils.StringUtils
 import org.slf4j.LoggerFactory
 
+import java.io._
+import java.util.Properties
 import scala.Serializable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.sys.process._
-import org.clulab.struct.{Counter, Counters, Lexicon}
-import org.clulab.utils.StringUtils
+import scala.util.Using
+
 import SVMRankingClassifier.logger
-import org.clulab.utils.Serializer
 
 /**
  * Wrapper for SVMrank: trains using svm_rank_learn but predicts using native Scala code
@@ -51,9 +52,9 @@ class SVMRankingClassifier[F] (
 
   def train(dataset:RankingDataset[F], spans:Option[Iterable[(Int, Int)]] = None): Unit = {
     val trainPath = workingDir + File.separator + trainFile
-    val trainWriter = new PrintWriter(trainPath)
-    val n = mkTrainFile(trainWriter, dataset, spans)
-    trainWriter.close()
+    val n = Using.resource(new PrintWriter(trainPath)) { trainWriter =>
+      mkTrainFile(trainWriter, dataset, spans)
+    }
     logger.debug("Created training file: " + trainPath)
 
     val cRank = cLight * n
@@ -230,7 +231,7 @@ class SVMRankingClassifier[F] (
 
   private def mkFullFold(size:Int): Iterable[(Int, Int)] = {
     val folds = new Array[(Int, Int)](1)
-    folds(0) = new Tuple2(0, size)
+    folds(0) = (0, size)
     folds
   }
 
@@ -338,38 +339,40 @@ class SVMRankingClassifier[F] (
     if (debugFile.nonEmpty) {
       var features = new ArrayBuffer[(String, Int, Double)]
 
-      val pw = new PrintWriter(debugFile)
-      for(f <- featureLexicon.get.keySet)  {
-        val idx = featureLexicon.get.get(f)
-        idx match {
-          case Some(x) => if (x < weights.get.size) { features.append ( (f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)) ) }
-          case _ =>
+      Using.resource(new PrintWriter(debugFile)) { pw =>
+        for (f <- featureLexicon.get.keySet) {
+          val idx = featureLexicon.get.get(f)
+          idx match {
+            case Some(x) => if (x < weights.get.size) {
+              features.append((f.toString, featureLexicon.get.get(f).getOrElse(-1), weights.get(x)))
+            }
+            case _ =>
+          }
         }
-      }
 
-      // Sort features
-      features = features.sortBy(- _._3)
+        // Sort features
+        features = features.sortBy(-_._3)
 
-      // Output features
-      for (i <- 0 until features.size) {
-        val feature = features(i)
-        var featureString = feature._1
-        for (j <- 0 until (20 - featureString.size)) featureString += " "       // Make featureString a constant length for formatting
-        pw.println (featureString + " \t weight: " + feature._3)
-      }
-
-      pw.println ("")
-      pw.println("Weights:")
-      var first = true
-      for(i <- 0 until weights.get.size) {
-        if(weights.get(i) != 0.0) {
-          if(! first) pw.print(" ")
-          pw.print(s"$i:${weights.get(i)}")
-          first = false
+        // Output features
+        for (i <- 0 until features.size) {
+          val feature = features(i)
+          var featureString = feature._1
+          for (j <- 0 until (20 - featureString.size)) featureString += " " // Make featureString a constant length for formatting
+          pw.println(featureString + " \t weight: " + feature._3)
         }
+
+        pw.println("")
+        pw.println("Weights:")
+        var first = true
+        for (i <- 0 until weights.get.size) {
+          if (weights.get(i) != 0.0) {
+            if (!first) pw.print(" ")
+            pw.print(s"$i:${weights.get(i)}")
+            first = false
+          }
+        }
+        pw.println()
       }
-      pw.println()
-      pw.close()
     }
   }
 }

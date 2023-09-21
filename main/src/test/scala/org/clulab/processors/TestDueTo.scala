@@ -28,7 +28,7 @@ class TestDueTo extends CluTest {
     "Rorer Group Inc. will report that third-quarter profit rose more than 15% from a year earlier, though the gain is wholly due to asset sales, Robert Cawthorn, chairman, president and chief executive officer, said.",
     "Mr. Cawthorn said the profit growth in the latest quarter was due to the sale of two Rorer drugs.",
     "Although this widow earns only twice the minimum wage, largely due to the earnings limit, she would have to earn an additional $4,930 to offset her catastrophic surtax of $496.",
-    "Past Colombian government tolerance of the \"narcotraficantes\" was due to the drug lords' history of wiping out leftists in the hinterlands.",
+    "Past Colombian government tolerance of the \"narcotraficantes\" was due to the drug lords' history of wiping out leftists in the hinterlands." // ,
 
     // due X to
 //    "As for joint ventures, Mr. Houghton said profit was \"essentially flat\" due primarily to a slow recovery at Samsung-Corning Co. in Korea following a strike at a major customer and the disruption of shipments to China.",

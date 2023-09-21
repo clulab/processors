@@ -3,10 +3,10 @@ package org.clulab.numeric
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.BalaurProcessor
-import org.clulab.utils.Closer.AutoCloser
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source
+import scala.util.Using
 
 object EvalTimeNorm {
 
@@ -29,7 +29,7 @@ object EvalTimeNorm {
       val gold = goldTimex(docId).toSet
       val resource = s"$timeNormEvalDir/$docId/$docId"
       val docStream = getClass.getResourceAsStream(resource)
-      val docText = Source.fromInputStream(docStream)(StandardCharsets.UTF_8).autoClose { source =>
+      val docText = Using.resource(Source.fromInputStream(docStream)(StandardCharsets.UTF_8)) { source =>
         // This ensures that line endings are LF.  FileUtils.getTextFromResource() will not.
         source.getLines().mkString("\n")
       }

@@ -3,11 +3,11 @@ package org.clulab.numeric
 import java.io.File
 
 import org.clulab.sequences.CommentedStandardKbSource
-import org.clulab.utils.Closer.AutoCloser
 import org.clulab.utils.Sourcer
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.Using
 
 class SeasonNormalizer(seasonsPath: String) {
   val normMapper = SeasonNormalizer.readNormsFromResource(seasonsPath)
@@ -16,6 +16,7 @@ class SeasonNormalizer(seasonsPath: String) {
   def adjustYearRange(seasonRange: SeasonRange, year: Seq[String]): (Seq[String], Seq[String]) = {
     val startMonthValue = seasonRange.startMonth.head.mkString(" ").toInt
     val endMonthValue = seasonRange.endMonth.head.mkString(" ").toInt
+    //println(s"startMonth = $startMonthValue; endMonth = $endMonthValue; year = ${year.mkString}")
     endMonthValue < startMonthValue match {
       case true if 12 - startMonthValue >= endMonthValue =>
         val yearEnd = year.mkString.toInt + 1
@@ -40,9 +41,9 @@ object SeasonNormalizer {
     val customResourcePath = new File(NumericEntityRecognizer.resourceDir, path)
 
     if (customResourcePath.exists)
-      Sourcer.sourceFromFile(customResourcePath).autoClose(readNormsFromSource)
+      Using.resource(Sourcer.sourceFromFile(customResourcePath))(readNormsFromSource)
     else
-      Sourcer.sourceFromResource(path).autoClose(readNormsFromSource)
+      Using.resource(Sourcer.sourceFromResource(path))(readNormsFromSource)
   }
 
   def readNormsFromSource(source: Source): Map[String, SeasonRange] = {

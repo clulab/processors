@@ -1,7 +1,7 @@
 package org.clulab.openie
 
 import java.io.InputStream
-
+import scala.util.Using
 
 object ResourceUtils {
 
@@ -13,10 +13,8 @@ object ResourceUtils {
   }
 
   def readResource(path: String): String = {
-    val stream = streamFromResource(path)
-    val source = scala.io.Source.fromInputStream(stream)
-    val data = source.mkString
-    source.close()
-    data
+    Using.resource(scala.io.Source.fromInputStream(streamFromResource(path))) { source =>
+      source.mkString
+    }
   }
 }

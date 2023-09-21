@@ -1,8 +1,8 @@
 package org.clulab.sequences
 
-import java.io.{FileWriter, PrintWriter}
-
+import java.io.PrintWriter
 import scala.io.Source
+import scala.util.Using
 
 /**
   * Transforms -LRB-, -LCB-, etc. tokens back into "(", "{", etc.
@@ -14,24 +14,24 @@ import scala.io.Source
 object NormalizeParens {
   def main(args: Array[String]): Unit = {
     val isConll = args(1) == "conll"
-    val pw = new PrintWriter(new FileWriter(args(0) + ".parens"))
-    for(line <- Source.fromFile(args(0)).getLines()){
-      if(line.trim.isEmpty) {
-        pw.println(line)
-      } else {
-        val tokens = line.split("\\s+")
-        if(isConll) {
-          assert(tokens.length > 3)
-          tokens(1) = norm(tokens(1))
-          tokens(2) = norm(tokens(2))
-          pw.println(tokens.mkString("\t"))
+    Using.resource(new PrintWriter(args(0) + ".parens")) { pw =>
+      for (line <- Source.fromFile(args(0)).getLines()) {
+        if (line.trim.isEmpty) {
+          pw.println(line)
         } else {
-          assert(tokens.length == 2)
-          pw.println(norm(tokens(0)) + "\t" + tokens(1))
+          val tokens = line.split("\\s+")
+          if (isConll) {
+            assert(tokens.length > 3)
+            tokens(1) = norm(tokens(1))
+            tokens(2) = norm(tokens(2))
+            pw.println(tokens.mkString("\t"))
+          } else {
+            assert(tokens.length == 2)
+            pw.println(norm(tokens(0)) + "\t" + tokens(1))
+          }
         }
       }
     }
-    pw.close()
   }
 
   def norm(s:String): String = {

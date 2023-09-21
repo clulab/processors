@@ -1,16 +1,16 @@
 package org.clulab.learning
 
-import java.util.zip.GZIPInputStream
-import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
-
-import org.slf4j.LoggerFactory
-
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.io.{BufferedSource, Source}
 import org.clulab.struct.Counter
 import org.clulab.struct.Lexicon
 import org.clulab.utils.Files
 import org.clulab.utils.Serializer
+import org.slf4j.LoggerFactory
+
+import java.io.{BufferedInputStream, FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream, PrintWriter}
+import java.util.zip.GZIPInputStream
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.io.{BufferedSource, Source}
+import scala.util.Using
 
 /**
  * Parent class for all datasets used for ranking problems
@@ -63,7 +63,7 @@ class BVFRankingDataset[F] extends RankingDataset[F] {
     for(d <- queryDatums) {
       d match {
         case bd:BVFDatum[Int, F] => {
-          b += new Tuple2[Int, Array[Int]](bd.label, featuresToArray(bd.features))
+          b += ((bd.label, featuresToArray(bd.features)))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non BVFDatum to a BVFRankingDataset!")
       }
@@ -155,10 +155,10 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
       d match {
         case rd:RVFDatum[Int, F] => {
           val fvs = featuresCounterToArray(d.featuresCounter)
-          b += new Tuple3[Int, Array[Int], Array[Double]](
+          b += ((
             rd.label,
             fvs.map(fv => fv._1),
-            fvs.map(fv => fv._2))
+            fvs.map(fv => fv._2)))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non RVFDatum to a RVFRankingDataset!")
       }
@@ -169,7 +169,7 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
   protected def featuresCounterToArray(fs:Counter[F]):Array[(Int, Double)] = {
     val fb = new ListBuffer[(Int, Double)]
     for(f <- fs.keySet) {
-      fb += new Tuple2[Int, Double](featureLexicon.add(f), fs.getCount(f))
+      fb += ((featureLexicon.add(f), fs.getCount(f)))
     }
     fb.sortBy(_._1).toArray
   }
@@ -451,29 +451,29 @@ object RVFRankingDataset {
                            featureLexicon:Lexicon[String],
                            fn:String): Unit = {
     var qid = 0
-    val os = new PrintWriter(new FileWriter(fn))
-    for(query <- queries) {
-      qid += 1
-      for(datum <- query) {
-        os.print(datum.label)
-        os.print(s" qid:$qid")
-        val fs = new ListBuffer[(Int, Double)]
-        val c = datum.featuresCounter
-        for(k <- c.keySet) {
-          val fi = featureLexicon.get(k)
-          if(fi.isDefined) {
-            // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
-            fs += new Tuple2(fi.get + 1, c.getCount(k))
+    Using.resource(new PrintWriter(fn)) { os =>
+      for (query <- queries) {
+        qid += 1
+        for (datum <- query) {
+          os.print(datum.label)
+          os.print(s" qid:$qid")
+          val fs = new ListBuffer[(Int, Double)]
+          val c = datum.featuresCounter
+          for (k <- c.keySet) {
+            val fi = featureLexicon.get(k)
+            if (fi.isDefined) {
+              // logger.debug(s"Feature [$k] converted to index ${fi.get + 1}")
+              fs += ((fi.get + 1, c.getCount(k)))
+            }
           }
+          val fss = fs.toList.sortBy(_._1)
+          for (t <- fss) {
+            os.print(s" ${t._1}:${t._2}")
+          }
+          os.println()
         }
-        val fss = fs.toList.sortBy(_._1)
-        for(t <- fss) {
-          os.print(s" ${t._1}:${t._2}")
-        }
-        os.println()
       }
     }
-    os.close()
   }
 
   def loadFrom[F](fileName:String):RVFRankingDataset[F] = {
@@ -499,11 +499,11 @@ class RVFKRankingDataset[F] extends RVFRankingDataset[F] {
       d match {
         case rd:RVFKDatum[Int, F] => {
           val fvs = featuresCounterToArray(d.featuresCounter)
-          b += new Tuple4[Int, Array[Int], Array[Double], String](
+          b += ((
             rd.label,
             fvs.map(fv => fv._1),
             fvs.map(fv => fv._2),
-            rd.kernel)
+            rd.kernel))
         }
         case _ => throw new RuntimeException("ERROR: you cannot add a non RVFKDatum to a RVFKRankingDataset!")
       }

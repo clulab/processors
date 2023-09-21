@@ -1,10 +1,11 @@
 package org.clulab.sequences
 
-import java.io.{BufferedReader, File, FileInputStream, InputStream}
-
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Counter
 import org.clulab.utils.Files
+
+import java.io.{BufferedReader, File}
+import scala.util.Using
 
 /**
   * Trait for all sequence taggers
@@ -27,13 +28,15 @@ trait SequenceTagger[L, F] extends Tagger[L] {
   def save(fn:File): Unit
 
   def loadFromFile(fn:File): Unit = {
-    val is = Files.loadFile(fn)
-    load(is)
+    Using.resource(Files.loadFile(fn)) { is =>
+      load(is)
+    }
   }
 
   def loadFromResource(rn:String): Unit = {
-    val is = Files.loadStreamFromClasspath(rn)
-    load(is)
+    Using.resource(Files.loadStreamFromClasspath(rn)) { is =>
+      load(is)
+    }
   }
 
   def load(is:BufferedReader): Unit

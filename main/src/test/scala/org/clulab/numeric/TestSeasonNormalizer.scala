@@ -37,6 +37,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities shouldNot contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms shouldNot contain (seasonDateRange)
+
   }
 
   behavior of "Custom seasonal BalaurProcessor"
@@ -56,5 +57,7 @@ class TestSeasonNormalizer extends Test {
     seasonEntities should contain (iDateRange)
     seasonNorms shouldNot contain (fallDateRange)
     seasonNorms should contain (seasonDateRange)
+
   }
+
 }
