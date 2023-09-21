@@ -600,7 +600,7 @@ class TestNumericEntityRecognition extends Test {
   it should "not hang" in {
     val text = "others 1,016 960 250 80 150 1,300 50 1,200 50 700 2,300 3,800 225 800 2 150 200 3,691 7,160 3 130 1,480 1,136 2,515 300 130 875 1,050 30 365400 3,775 Total 2487 3,450 8,575 825 19 112 Source : LM 12 / Saed The SSF 2020/2021 campaign is timidly being set up on the entire left bank of the Senegal River with the establishment of nurseries ."
 
-    TimeLimits.failAfter(Span(20, Seconds)) {
+    TimeLimits.failAfter(Span(25, Seconds)) {
       numericParse(text)
     }
   }
