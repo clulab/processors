@@ -2,7 +2,7 @@ package org.clulab.processors
 
 class TestUniversalEnhancedDependencies extends CluTest {
 
-  "CluProcessor" should "parse some basic sentences correctly" in {
+  "Processor" should "parse some basic sentences correctly" in {
     var doc = proc.annotate("Ras1 is associated with cancer.")
     // TODO: this should be nsubjpass (once we have a model trained on Genia)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubj") should be(true)

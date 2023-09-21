@@ -13,7 +13,7 @@ import org.clulab.utils.Test
 class TestParenthesesInCore extends Test {
   val fast = new FastNLPProcessor()
 
-  "CluProcessor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {
+  "Processor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {
     val doc = fast.mkDocument("Moreover, in von Willebrand factor-stimulated platelets, the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK), and two adhesion receptors, glycoprotein (Gp)Ib and GpIIb/IIIa(alpha-IIb-beta(3)), are involved. ")
     fast.tagPartsOfSpeech(doc)
     fast.lemmatize(doc)

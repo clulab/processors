@@ -1,13 +1,13 @@
 package org.clulab.processors
 
 /**
-  * Unit tests for CluProcessor
+  * Unit tests for BalaurProcessor
   * User: mihais
   * Date: 6/17/17
   */
-class TestCluProcessor extends CluTest {
+class TestProcessor extends CluTest {
 
-  "CluProcessor" should "tokenize raw text correctly" in {
+  "Processor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
     doc.clear()
 

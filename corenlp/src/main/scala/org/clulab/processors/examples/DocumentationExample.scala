@@ -8,7 +8,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator
 
 object DocumentationExample extends App {
   // Create the processor.  Any processor works here!
-  // Try FastNLPProcessor or our own CluProcessor.
+  // Try FastNLPProcessor or our own BalaurProcessor.
   val proc: Processor = new CoreNLPProcessor()
 
   // val proc: Processor = new FastNLPProcessor()

@@ -2,10 +2,10 @@ package org.clulab.processors
 
 import org.clulab.struct.DirectedGraph
 
-/** Makes sure that CluProcessor produces dependency graphs of correct sizes */
+/** Makes sure that Processor produces dependency graphs of correct sizes */
 class TestDepGraphSizes extends CluTest {
 
-  "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
+  "Processor" should "produce dependency graphs that have the same size as the sentence" in {
     // Document 3
     // val text = "Raise fertility on \n\n"
     // Document 11
