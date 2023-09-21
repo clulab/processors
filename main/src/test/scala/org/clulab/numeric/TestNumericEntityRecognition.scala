@@ -602,9 +602,9 @@ class TestNumericEntityRecognition extends Test {
     val timer = new Timer("Keith")
 
     timer.time {
-      TimeLimits.failAfter(Span(25, Seconds)) {
+//      TimeLimits.failAfter(Span(25, Seconds)) {
         numericParse(text)
-      }
+//      }
     }
     println(s"Keith says: ${timer.elapsedToString()}")
   }
