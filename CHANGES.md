@@ -1,3 +1,4 @@
++ **9.0.0** - Replace CluProcessor with BalaurProcessor
 + **8.5.4** - Add a webapp subproject
 + **8.5.3** - Allow document construction from text fragments containing multiple sentences
 + **8.5.3** - Build for Scala 3, use artifactory.clulab.org, streamline buffers
