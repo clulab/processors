@@ -4,12 +4,27 @@ import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
 
+import scala.::
+
+
+
+
 object ThompsonVM {
 
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
   // a partial group is the name and the start of a group, without the end
   type PartialGroups = List[(String, Int)]
+  type PartialMatches = List[PartialMatch]
+
+
+  case class PartialMatch(
+                           sentenceId: Int,
+                           startToken: Int,
+                           endToken: Int,
+                           ruleName: String
+                         )
+
 
   // enum
   object Direction extends Enumeration {
@@ -30,12 +45,14 @@ object ThompsonVM {
       dir: Direction,
       groups: NamedGroups,
       mentions: NamedMentions,
-      partialGroups: PartialGroups
+      partialGroups: PartialGroups,
+      partialMatches: PartialMatches
   ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
+
 
   private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     // at least one thread is done and the threads after the threadbundle can be dropped
@@ -288,6 +305,13 @@ case class SaveStart(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
+    override def execute(thread: SingleThread): Unit = {
+      // Create a PartialMatch object and add it to the PartialMatches list
+      val partialMatch = PartialMatch(thread.sent, thread.tok, thread.tok, name)
+      thread.partialMatches = partialMatch :: thread.partialMatches
+    }
+
+
   override def equals(other: Any): Boolean = {
     other match {
       case that: SaveStart => this.eq(that) ||
@@ -396,3 +420,4 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
     }
   }
 }
+

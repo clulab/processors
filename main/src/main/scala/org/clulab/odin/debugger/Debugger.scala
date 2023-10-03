@@ -1,4 +1,5 @@
 package org.clulab.odin.debugger
+import org.clulab.utils.Timer
 
 trait DebuggerTrait {
   def activate(): Unit
@@ -30,10 +31,14 @@ class Debugger protected () extends DebuggerTrait {
       finally {
         stack = stack.tail
       }
+      val execTime = stackFrame.stopTimer()
+      println(s"Execution time for stack frame: $execTime nanoseconds")
       result
     }
-    else
+    else {
+
       block
+    }
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
