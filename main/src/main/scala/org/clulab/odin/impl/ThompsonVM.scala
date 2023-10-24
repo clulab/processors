@@ -3,8 +3,10 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
+import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread}
 
 import scala.::
+import scala.util.parsing.json.JSON.headOptionTailToFunList
 
 
 
@@ -39,18 +41,21 @@ object ThompsonVM {
     def results: Seq[(NamedGroups, NamedMentions)]
   }
 
-  private case class SingleThread(
+  case class SingleThread(
       tok: Int,
       inst: Inst,
       dir: Direction,
       groups: NamedGroups,
       mentions: NamedMentions,
-      partialGroups: PartialGroups,
-      partialMatches: PartialMatches
+      partialGroups: PartialGroups
   ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
+
+    object partialMatches{
+      var lst = List[PartialMatch]()
+    }
   }
 
 
@@ -87,9 +92,9 @@ object ThompsonVM {
     ): Seq[Thread] = {
       @annotation.tailrec
       def loop(
-          is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-          ts: List[Thread]
-      ): Seq[Thread] = is match {
+                is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
+                ts: List[Thread]
+              ): Seq[Thread] = is match {
         case Nil => ts.reverse
         case (i, gs, ms, pgs) :: rest => i match {
           case i: Pass => loop((i.next, gs, ms, pgs) :: rest, ts)
@@ -104,6 +109,7 @@ object ThompsonVM {
           case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs) :: ts)
         }
       }
+
       // return threads produced by `inst`
       loop(List((inst, groups, mentions, partialGroups)), Nil)
     }
@@ -305,10 +311,10 @@ case class SaveStart(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-    override def execute(thread: SingleThread): Unit = {
+     def execute(thread: SingleThread): Unit = {
       // Create a PartialMatch object and add it to the PartialMatches list
-      val partialMatch = PartialMatch(thread.sent, thread.tok, thread.tok, name)
-      thread.partialMatches = partialMatch :: thread.partialMatches
+      val partialMatch = PartialMatch(thread.partialMatches.lst.head.sentenceId, thread.tok, thread.tok, name)
+      thread.partialMatches.lst = partialMatch :: thread.partialMatches.lst
     }
 
 
@@ -420,4 +426,5 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
     }
   }
 }
+
 
