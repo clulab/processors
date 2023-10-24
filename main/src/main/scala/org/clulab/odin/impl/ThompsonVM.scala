@@ -5,8 +5,12 @@ import org.clulab.struct.Interval
 import org.clulab.odin._
 import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread}
 
+<<<<<<< HEAD
 import scala.::
 import scala.util.parsing.json.JSON.headOptionTailToFunList
+=======
+//import scala.::
+>>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
 
 
 
@@ -47,7 +51,12 @@ object ThompsonVM {
       dir: Direction,
       groups: NamedGroups,
       mentions: NamedMentions,
+<<<<<<< HEAD
       partialGroups: PartialGroups
+=======
+      partialGroups: PartialGroups,
+      var partialMatches: PartialMatches
+>>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
   ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
@@ -59,7 +68,7 @@ object ThompsonVM {
   }
 
 
-  private case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
+  case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     // at least one thread is done and the threads after the threadbundle can be dropped
     def isDone: Boolean = bundles.exists(_.exists(_.isDone))
     // all bundles are done and we can retrieve the results
@@ -106,7 +115,7 @@ object ThompsonVM {
               loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
             case _ => sys.error("unable to close capture")
           }
-          case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs) :: ts)
+          case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
         }
       }
 
@@ -311,11 +320,19 @@ case class SaveStart(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
+<<<<<<< HEAD
      def execute(thread: SingleThread): Unit = {
       // Create a PartialMatch object and add it to the PartialMatches list
       val partialMatch = PartialMatch(thread.partialMatches.lst.head.sentenceId, thread.tok, thread.tok, name)
       thread.partialMatches.lst = partialMatch :: thread.partialMatches.lst
     }
+=======
+  def execute(thread: ThompsonVM.SingleThread): Unit = {
+    // Create a PartialMatch object and add it to the PartialMatches list
+    val partialMatch = ThompsonVM.PartialMatch(thread.partialMatches.head.sentenceId, thread.tok, thread.tok, name)
+    thread.partialMatches = partialMatch :: thread.partialMatches
+  }
+>>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
 
 
   override def equals(other: Any): Boolean = {
