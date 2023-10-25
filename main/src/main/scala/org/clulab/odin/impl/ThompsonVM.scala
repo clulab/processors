@@ -63,14 +63,7 @@ object ThompsonVM {
     } yield r
   }
 
-  def evaluate(
-      start: Inst,
-      tok: Int,
-      sent: Int,
-      doc: Document,
-      state: State
-  ): Seq[(NamedGroups, NamedMentions)] = {
-
+  case class Evaluator(start: Inst, tok: Int, sent: Int, doc: Document, state: State) {
     // Executes instruction on token and returns the produced threads.
     // Threads are created by following all no-Match instructions.
     def mkThreads(
@@ -144,7 +137,7 @@ object ThompsonVM {
           case bundles => Seq(ThreadBundle(bundles))
         }
       case Done => Seq(t)
-      case _ => Nil  // thread died with no match
+      case _ => Nil // thread died with no match
     }
 
     def retrieveMentions(
@@ -221,7 +214,7 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    def eval(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
+    final def eval(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
       if (threads.isEmpty) currentResult
       else {
         val (ts, nextResult) = handleDone(threads)
@@ -229,8 +222,22 @@ object ThompsonVM {
       }
     }
 
+    def eval(tok: Int, start: Inst): Option[Thread] = {
+      eval(mkThreads(tok, start))
+    }
+  }
+
+  def evaluate(
+      start: Inst,
+      tok: Int,
+      sent: Int,
+      doc: Document,
+      state: State
+  ): Seq[(NamedGroups, NamedMentions)] = {
+    val evaluator = Evaluator(start, tok, sent, doc, state)
+
     // evaluate pattern and return results
-    eval(mkThreads(tok, start)).map(_.results).getOrElse(Nil)
+    evaluator.eval(tok, start).map(_.results).getOrElse(Nil)
   }
 }
 
