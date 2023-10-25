@@ -3,14 +3,6 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
-import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread}
-
-import scala.::
-import scala.util.parsing.json.JSON.headOptionTailToFunList
-import scala.::
-
-
-
 
 object ThompsonVM {
 
