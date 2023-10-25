@@ -5,12 +5,9 @@ import org.clulab.struct.Interval
 import org.clulab.odin._
 import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread}
 
-<<<<<<< HEAD
 import scala.::
 import scala.util.parsing.json.JSON.headOptionTailToFunList
-=======
-//import scala.::
->>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
+import scala.::
 
 
 
@@ -51,20 +48,13 @@ object ThompsonVM {
       dir: Direction,
       groups: NamedGroups,
       mentions: NamedMentions,
-<<<<<<< HEAD
-      partialGroups: PartialGroups
-=======
       partialGroups: PartialGroups,
       var partialMatches: PartialMatches
->>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
   ) extends Thread {
     def isDone: Boolean = inst == Done
     def isReallyDone: Boolean = isDone
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
 
-    object partialMatches{
-      var lst = List[PartialMatch]()
-    }
   }
 
 
@@ -320,19 +310,12 @@ case class SaveStart(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-<<<<<<< HEAD
-     def execute(thread: SingleThread): Unit = {
-      // Create a PartialMatch object and add it to the PartialMatches list
-      val partialMatch = PartialMatch(thread.partialMatches.lst.head.sentenceId, thread.tok, thread.tok, name)
-      thread.partialMatches.lst = partialMatch :: thread.partialMatches.lst
-    }
-=======
+
   def execute(thread: ThompsonVM.SingleThread): Unit = {
     // Create a PartialMatch object and add it to the PartialMatches list
     val partialMatch = ThompsonVM.PartialMatch(thread.partialMatches.head.sentenceId, thread.tok, thread.tok, name)
     thread.partialMatches = partialMatch :: thread.partialMatches
   }
->>>>>>> deae650f893f2bb4c11a6af1164722c22796b2f4
 
 
   override def equals(other: Any): Boolean = {
