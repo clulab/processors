@@ -6,7 +6,7 @@ import org.clulab.utils.{Sourcer, Timers}
 import scala.util.Using
 
 object TokenClassifierTimerApp extends App {
-  val fileName = args.lift(0).getOrElse("../sentences.txt")
+  val fileName = args.lift(0).getOrElse("../corpora/sentences/sentences.txt")
 
   val processor = {
     val processor = new BalaurProcessor()
