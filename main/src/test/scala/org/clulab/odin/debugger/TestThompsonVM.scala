@@ -1,7 +1,11 @@
+package org.clulab.odin.debugger
+
 import org.clulab.odin.impl.ThompsonVM.PartialMatch
 import org.clulab.struct.Interval
+import org.clulab.utils.Test
 
-class ThompsonVMTest {
+
+class TestThompsonVM extends Test  {
       val partialMatch1 = PartialMatch(0, 1, 2, "Rule1")
       val partialMatch2 = PartialMatch(0, 2, 3, "Rule2")
       val partialMatch3 = PartialMatch(1, 0, 1, "Rule1")
