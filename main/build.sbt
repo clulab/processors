@@ -47,9 +47,10 @@ libraryDependencies ++= {
     "org.json4s"                 %% "json4s-core"              % json4sVersion, // Apache-2.0
     "org.json4s"                 %% "json4s-jackson"           % json4sVersion, // Apache-2.0
     // for machine learning
-    "org.clulab"                  % "deberta-onnx-model"          % "0.1.0",
-    // "org.clulab"                  % "roberta-onnx-model"          % "0.0.2",
-    "org.clulab"                 %% "scala-transformers-encoder"  % "0.5.0", // Apache-2.0
+    "org.clulab"                  % "deberta-onnx-model"          % "0.2.0",
+    // "org.clulab"                  % "electra-onnx-model"          % "0.2.0",
+    // "org.clulab"                  % "roberta-onnx-model"          % "0.2.0",
+    "org.clulab"                 %% "scala-transformers-encoder"  % "0.6.2", // Apache-2.0
     "de.bwaldvogel"               % "liblinear"                   % "2.30", // BSD-3
     "tw.edu.ntu.csie"             % "libsvm"                      % "3.23", // BSD
     // NLP tools used by CluProcessor
