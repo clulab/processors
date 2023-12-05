@@ -44,7 +44,7 @@ import java.io.*;
   * by calling one of the various stem(something) methods.
   */
 
-class PorterStemmer
+public class PorterStemmer
 {  private char[] b;
    private int i,     /* offset into b */
                i_end, /* offset to end of stemmed word */
@@ -354,6 +354,7 @@ class PorterStemmer
     * from the input.  You can retrieve the result with
     * getResultLength()/getResultBuffer() or toString().
     */
+   // The return type here is void!
    public void stem()
    {  k = i - 1;
       if (k > 1) { step1(); step2(); step3(); step4(); step5(); step6(); }

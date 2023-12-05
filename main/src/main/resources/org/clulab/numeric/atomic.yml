@@ -24,6 +24,14 @@ rules:
     pattern: |
       [word=/^(1\d\d\d|20\d\d)$/]
 
+  # weak possible years: 1d, 2d, 3d, 4d, 5d, 6d, 7d, 8d, 9d
+  - name: weakyear
+    label: WeakPossibleYear
+    priority: ${ rulepriority }
+    type: token
+    pattern: |
+      [word=/^[1-9]\d$/]
+
   # possible day values, from 1 to 31
   - name: day
     label: PossibleDay
