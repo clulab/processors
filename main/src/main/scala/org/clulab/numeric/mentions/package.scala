@@ -1,9 +1,11 @@
 package org.clulab.numeric
 
+import de.jollyday.config.FixedWeekdayInMonth
 import org.clulab.odin.{EventMention, Mention, RelationMention, TextBoundMention}
 import org.clulab.struct.Interval
 
 import java.util.regex.Pattern
+import java.time.{Month, YearMonth}
 
 package object mentions {
   val RANGE_SEP = " -- "
@@ -325,10 +327,30 @@ package object mentions {
         case _ => (None, None)
       }
 
+      val startDate = TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth, yearStart)
+      val endDate = TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
+      val dateRangeMention = DateRangeMention(m, startDate, endDate)
+
+      dateRangeMention
+
+    case m =>
+      throw new RuntimeException(s"ERROR: cannot convert mention of type ${m.getClass.toString} to DateRangeMention!")
+  }
+
+  def toDateRangeMentionWithWeek(weekNormalizer: WeekNormalizer)(mention: Mention): DateRangeMention =  mention match {
+    case m: DateRangeMention => m
+
+    case m: RelationMention =>
+      val weekNorm = getWeekRange(weekNormalizer)("week", m)
+      if (weekNorm.isEmpty)
+        throw new RuntimeException(s"ERROR: could not find argument week in mention ${m.raw.mkString(" ")}!")
+
+      val month = getArgWords("month", m)
+
       DateRangeMention(
         m,
-        TempEvalFormatter.mkDate(seasonNorm.get.startDay, seasonNorm.get.startMonth,yearStart),
-        TempEvalFormatter.mkDate(seasonNorm.get.endDay, seasonNorm.get.endMonth, yearEnd)
+        TempEvalFormatter.mkDate(weekNorm.get.startDay, month, None),
+        TempEvalFormatter.mkDate(weekNorm.get.endDay, month, None)
       )
 
     case m =>
@@ -890,6 +912,33 @@ package object mentions {
 
     if (wordsOpt.isEmpty) None
     else seasonNormalizer.norm(wordsOpt.get)
+  }
+
+  private def getWeekRange(weekNormalizer: WeekNormalizer)(argName: String, m:Mention): Option[WeekRange] = {
+    val wordsOpt = getArgWords(argName, m)
+
+    if (wordsOpt.isEmpty) None
+    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last week")) {getLastWeekRange(m)}
+    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last two weeks")) {getLastTwoWeeksRange(m)}
+    else weekNormalizer.norm(wordsOpt.get)
+  }
+
+  private def getLastWeekRange(m:Mention): Option[WeekRange] = {
+    val month = getArgWords("month", m)
+    val modifiedMonth = TempEvalFormatter.convertLiteralMonth(month.get.mkString(""))
+    val monthObj = Month.of(modifiedMonth)
+    val lastDay = monthObj.length(false)
+
+    Some(WeekRange(startDay = Some(Seq((lastDay - 6).toString)), endDay = Some(Seq(lastDay.toString))))
+  }
+
+  private def getLastTwoWeeksRange(m:Mention): Option[WeekRange] = {
+    val month = getArgWords("month", m)
+    val modifiedMonth = TempEvalFormatter.convertLiteralMonth(month.get.mkString(""))
+    val monthObj = Month.of(modifiedMonth)
+    val lastDay = monthObj.length(false)
+
+    Some(WeekRange(startDay = Some(Seq((lastDay - 13).toString)), endDay = Some(Seq(lastDay.toString))))
   }
 
   private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {

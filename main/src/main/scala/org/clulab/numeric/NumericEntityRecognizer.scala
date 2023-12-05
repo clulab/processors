@@ -30,6 +30,7 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
       // this needs to happen in place, otherwise Odin does not see these labels
       // we will restore the original Sentence.entities at the end in `extractFrom`
       sent.entities = Some(labels)
+      // println(s"ENTITIES: ${sent.entities.get.mkString(" ")}")
     }
 
     originalEntities
@@ -65,6 +66,7 @@ object NumericEntityRecognizer {
   // For the sake of SeasonNormalizer, this does have a leading /.
   val seasonPath = "/org/clulab/numeric/SEASON.tsv"
   val unitNormalizerPath = "/org/clulab/numeric/MEASUREMENT-UNIT.tsv"
+  val weekPath = "/org/clulab/numeric/WEEK.tsv"
 
   // this matches essential dictionaries such as month names
   def mkLexiconNer(seasonsPath: String): LexiconNER = {
@@ -101,11 +103,12 @@ object NumericEntityRecognizer {
     ExtractorEngine(rules, actions, actions.cleanupAction, ruleDir = Some(ruleDir))
   }
 
-  def apply(seasonPath: String = seasonPath, unitNormalizerPath: String = unitNormalizerPath): NumericEntityRecognizer = {
+  def apply(seasonPath: String = seasonPath, unitNormalizerPath: String = unitNormalizerPath, weekPath: String = weekPath): NumericEntityRecognizer = {
     val lexiconNer = mkLexiconNer(seasonPath)
     val seasonNormalizer = new SeasonNormalizer(seasonPath)
     val unitNormalizer = new UnitNormalizer(unitNormalizerPath)
-    val numericActions = new NumericActions(seasonNormalizer, unitNormalizer)
+    val weekNormalizer = new WeekNormalizer(weekPath)
+    val numericActions = new NumericActions(seasonNormalizer, unitNormalizer, weekNormalizer)
     val extractorEngine = mkExtractor(numericActions)
 
     new NumericEntityRecognizer(lexiconNer, numericActions, extractorEngine)
