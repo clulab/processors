@@ -94,6 +94,7 @@ object JSONSerializer {
     // The roots remain for backward compatibility, but they are ignored.
     val roots = (json \ "roots").extract[Set[Int]]
 
+    // The roots are not passed so that they are recalculated, correctly.
     new DirectedGraph(edges, preferredSizeOpt)
   }
 

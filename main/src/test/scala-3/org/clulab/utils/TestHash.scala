@@ -1,6 +1,7 @@
 package org.clulab.utils
 
-import org.clulab.odin.serialization.json._
+import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention}
+import org.clulab.odin.serialization.json.MentionOps
 import org.clulab.odin.{CrossSentenceMention, EventMention, RelationMention, TextBoundMention, _}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
@@ -40,12 +41,7 @@ class TestHash extends Test {
     actualHash should be (expectedHash)
   }
 
-  def getEquivalenceHash(mention: Mention): Int = mention match {
-    case mention: TextBoundMention     => mention.equivalenceHash
-    case mention: EventMention         => mention.equivalenceHash
-    case mention: RelationMention      => mention.equivalenceHash
-    case mention: CrossSentenceMention => mention.equivalenceHash
-  }
+  def getEquivalenceHash(mention: Mention): Int = MentionOps(mention).equivalenceHash
 
   def newCrossSentenceMention(mention: EventMention, anchor: Mention, neighbor: Mention): CrossSentenceMention = {
     new CrossSentenceMention(
