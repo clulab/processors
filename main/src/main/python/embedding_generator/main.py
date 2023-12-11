@@ -6,6 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_type', dest='model_type', type=str)
+parser.add_argument('--seed', dest='seed', type=int)
 parser.add_argument('--tokenizer', dest='tokenizer', type=str)
 parser.add_argument('--context_size', dest='context_size', type=int)
 parser.add_argument('--device', dest='device', type=str)
@@ -23,11 +24,18 @@ huggingface_dataset = args.huggingface_dataset # wikipedia
 huggingface_subpart = args.huggingface_subpart # wikipedia
 number_of_tokens = int(args.number_of_tokens) # 10000000
 output = str(args.output) # deberta_embd
+seed = -1 # 42
+
+if args.seed:
+    seed = int(args.seed) # deberta_embd
 
 torch.set_default_device(device)
 
 model = DebertaModel.from_pretrained(model_type).to(device)
 tokenizer = AutoTokenizer.from_pretrained(tokenizer)
+
+if seed != -1:
+    np.random.seed(seed)
 
 if huggingface_dataset:
     if huggingface_subpart:
@@ -38,7 +46,6 @@ else:
     dataset = load_dataset('json', data_files={'train': 'text_data.json'})
 
 tokens_so_far = 0
-crr = 0
 
 sum_tensors = {}
 crr_tensors = {}
@@ -49,7 +56,7 @@ print(len(dataset))
 
 while tokens_so_far < number_of_tokens:  # 10 million
 
-    index = np.random.randint(0, len(dataset))
+    index = np.random.randint(0, len(dataset['train']))
 
     text = dataset['train'][index]['text']
 
@@ -59,16 +66,12 @@ while tokens_so_far < number_of_tokens:  # 10 million
 
     if len(tokens) <= context + 1:
 
-        crr += 1
         tokens_so_far += len(tokens)
-
         sliced_output = {key: value[:, :] for key, value in tokenized.items()}
 
     else:
 
         i = np.random.randint(0, len(tokens) - context - 1)
-
-        crr += 1
         tokens_so_far += context
 
         sliced_output = {key: value[:, i:i+context] for key, value in tokenized.items()}
@@ -101,6 +104,7 @@ for unseen in tokenizer.get_vocab():
     crr += 1
     if crr%1000 == 0:
         print(crr)
+        break
     if tokenizer.vocab[unseen] not in sum_tensors.keys():
         unseen_tokens.append(unseen)
 

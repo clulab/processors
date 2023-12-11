@@ -28,15 +28,16 @@ The script is run via the command line, with several required and optional argum
 ### Optional Arguments
 - `--huggingface_dataset`: The Hugging Face dataset to use (default: `text_data.json`).
 - `--huggingface_subpart`: Specific subpart of the Hugging Face dataset (not mandatory).
+- `--seed`: Sets the random seed for reproducibility.
 
 ### Examples
 1. Using default dataset:
    ```
-   /home/gigi/hdd/DeBERTa/env/bin/python main.py --context_size 512 --model_type 'microsoft/deberta-base' --tokenizer 'microsoft/deberta-base' --device 'cuda' --number_of_tokens 1000
+   /home/gigi/hdd/DeBERTa/env/bin/python main.py --context_size 512 --model_type 'microsoft/deberta-base' --tokenizer 'microsoft/deberta-base' --device 'cuda' --number_of_tokens 1000 --seed 42
    ```
 2. Using a Hugging Face dataset:
    ```
-   /home/gigi/hdd/DeBERTa/env/bin/python main.py --context_size 512 --model_type 'microsoft/deberta-base' --tokenizer 'microsoft/deberta-base' --device 'cuda' --number_of_tokens 1000 --huggingface_dataset wikipedia --huggingface_subpart 20220301.en
+   /home/gigi/hdd/DeBERTa/env/bin/python main.py --context_size 512 --model_type 'microsoft/deberta-base' --tokenizer 'microsoft/deberta-base' --device 'cuda' --number_of_tokens 1000 --huggingface_dataset wikipedia --huggingface_subpart 20220301.en --seed 42
    ```
 
 ## Output
