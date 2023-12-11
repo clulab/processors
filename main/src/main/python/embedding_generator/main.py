@@ -104,7 +104,6 @@ for unseen in tokenizer.get_vocab():
     crr += 1
     if crr%1000 == 0:
         print(crr)
-        break
     if tokenizer.vocab[unseen] not in sum_tensors.keys():
         unseen_tokens.append(unseen)
 
