@@ -225,7 +225,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     Using.resource(new Output(new BufferedOutputStream(new FileOutputStream(filename)))) { output =>
       kryo.writeObject(output, mkTextFromMap())
       kryo.writeObject(output, array)
-      kryo.writeObject(output, buildType.unknownArray.orNull)
+      kryo.writeObjectOrNull(output, buildType.unknownArray.orNull, classOf[Array[Float]])
       kryo.writeObject(output, columns)
     }
   }
