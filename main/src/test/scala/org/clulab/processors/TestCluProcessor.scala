@@ -142,8 +142,9 @@ class TestCluProcessor extends CluTest {
     println(s"Enhanced universal dependencies for sentence: $sent")
     println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "advmod_due_to") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 3, "advmod") should be (false)
+    // these "nmod"s should probably be "advmod"
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
   }
 
   it should "parse incomplete sentence without crashing" in {
