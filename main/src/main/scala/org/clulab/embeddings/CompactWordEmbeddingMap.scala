@@ -225,7 +225,7 @@ class CompactWordEmbeddingMap(protected val buildType: CompactWordEmbeddingMap.B
     Using.resource(new Output(new BufferedOutputStream(new FileOutputStream(filename)))) { output =>
       kryo.writeObject(output, mkTextFromMap())
       kryo.writeObject(output, array)
-      kryo.writeObject(output, buildType.unknownArray.orNull)
+      kryo.writeObjectOrNull(output, buildType.unknownArray.orNull, classOf[Array[Float]])
       kryo.writeObject(output, columns)
     }
   }
@@ -236,12 +236,15 @@ object CompactWordEmbeddingMap extends Logging {
   // a particular binary format.
   val binIsSer    = false
   val binIsKryo   = !binIsSer
+  val UNK = "" // token for unknowns
+  // Glove uses ISO, but the huggingface datasets use UTF in text.
+  // We should have UTF after serialization.
+  val txtCharacterSet = StandardCharsets.ISO_8859_1.toString
+  // val txtCharacterSet = StandardCharsets.UTF_8.toString
 
   protected type ImplMapType = MutableHashMap[String, Int]
 
   case class BuildType(map: ImplMapType, array: Array[Float], unknownArray: Option[Array[Float]], columns: Int)
-
-  val UNK = "" // token for unknowns
 
   def apply(filename: String, resource: Boolean = true, cached: Boolean = false): CompactWordEmbeddingMap = {
     logger.trace("Started to load embedding matrix from file " + filename + "...")
@@ -264,13 +267,13 @@ object CompactWordEmbeddingMap extends Logging {
 
   def loadTxt(filename: String, resource: Boolean): BuildType = {
     loadTxt(
-        if (resource) Sourcer.sourceFromResource(filename, StandardCharsets.ISO_8859_1.toString)
-        else Sourcer.sourceFromFilename(filename, StandardCharsets.ISO_8859_1.toString)
+      if (resource) Sourcer.sourceFromResource(filename, txtCharacterSet)
+      else Sourcer.sourceFromFilename(filename, txtCharacterSet)
     )
   }
 
   def loadTxt(inputStream: InputStream): BuildType =
-      loadTxt(Source.fromInputStream(inputStream, StandardCharsets.ISO_8859_1.toString))
+      loadTxt(Source.fromInputStream(inputStream, txtCharacterSet))
 
   def loadTxt(source: Source): BuildType = {
     Using.resource(source) { source =>
@@ -480,24 +483,25 @@ object CompactWordEmbeddingMap extends Logging {
 }
 
 object CompactWordEmbeddingMapApp extends App {
-  val filename = "../glove.840B.300d.10f.txt"
+  val basename = "../glove.840B.300d.10f"
+  val filename = basename + ".txt"
   val buildType = Timers.getOrNew("load text").time {
     CompactWordEmbeddingMap.loadTxt(filename: String, resource = false)
   }
   val compactWordEmbeddingMap = new CompactWordEmbeddingMap(buildType)
 
   Timers.getOrNew("save ser").time {
-    compactWordEmbeddingMap.save("../glove.840B.300d.10f.ser")
+    compactWordEmbeddingMap.save(basename + ".ser")
   }
   Timers.getOrNew("save kryo").time {
-    compactWordEmbeddingMap.saveKryo("../glove.840B.300d.10f.kryo")
+    compactWordEmbeddingMap.saveKryo(basename + ".kryo")
   }
 
   Timers.getOrNew("load ser").time {
-    CompactWordEmbeddingMap.loadSer("../glove.840B.300d.10f.ser")
+    CompactWordEmbeddingMap.loadSer(basename + ".ser")
   }
   Timers.getOrNew("load kryo").time {
-    CompactWordEmbeddingMap.loadKryo("../glove.840B.300d.10f.kryo")
+    CompactWordEmbeddingMap.loadKryo(basename + ".kryo")
   }
 
   Timers.summarize()
