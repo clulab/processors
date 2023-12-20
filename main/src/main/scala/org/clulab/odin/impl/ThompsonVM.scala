@@ -3,6 +3,7 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
+import org.clulab.odin.debugger.Debugger
 
 object ThompsonVM {
 
@@ -73,7 +74,7 @@ object ThompsonVM {
         groups: NamedGroups = Map.empty,
         mentions: NamedMentions = Map.empty,
         partialGroups: PartialGroups = Nil
-    ): Seq[Thread] = {
+    ): Seq[Thread] = Debugger.debugTokInst(tok, inst) {
       @annotation.tailrec
       def loop(
                 is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],

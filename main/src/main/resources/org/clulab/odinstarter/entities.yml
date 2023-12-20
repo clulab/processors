@@ -12,3 +12,10 @@
   type: token
   pattern: |
     [entity='B-PER'] [entity='I-PER']*
+
+- name: word-from-text
+  priority: ${rulepriority}
+  label: Word
+  type: token
+  pattern: |
+    "nothing"
