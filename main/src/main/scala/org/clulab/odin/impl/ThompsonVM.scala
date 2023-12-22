@@ -111,7 +111,7 @@ object ThompsonVM {
         mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
         val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
-        val results = eval(mkThreads(startTok, i.start, LeftToRight))
+        val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
@@ -119,7 +119,7 @@ object ThompsonVM {
         }
       case i: MatchLookBehind =>
         val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
-        val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
+        val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
@@ -215,16 +215,16 @@ object ThompsonVM {
       }
 
     @annotation.tailrec
-    final def eval(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
+    final def evalThreads(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
       if (threads.isEmpty) currentResult
       else {
         val (ts, nextResult) = handleDone(threads)
-        eval(stepThreads(ts), nextResult orElse currentResult)
+        evalThreads(stepThreads(ts), nextResult orElse currentResult)
       }
     }
 
     def eval(tok: Int, start: Inst): Option[Thread] = {
-      eval(mkThreads(tok, start))
+      evalThreads(mkThreads(tok, start))
     }
   }
 
