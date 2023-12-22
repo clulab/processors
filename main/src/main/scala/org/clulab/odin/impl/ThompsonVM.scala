@@ -6,21 +6,18 @@ import org.clulab.odin._
 import org.clulab.odin.debugger.Debugger
 
 object ThompsonVM {
-
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
   // a partial group is the name and the start of a group, without the end
   type PartialGroups = List[(String, Int)]
   type PartialMatches = List[PartialMatch]
 
-
   case class PartialMatch(
-                           sentenceId: Int,
-                           startToken: Int,
-                           endToken: Int,
-                           ruleName: String
-                         )
-
+    sentenceId: Int,
+    startToken: Int,
+    endToken: Int,
+    ruleName: String
+  )
 
   // enum
   object Direction extends Enumeration {
@@ -36,50 +33,55 @@ object ThompsonVM {
   }
 
   case class SingleThread(
-      tok: Int,
-      inst: Inst,
-      dir: Direction,
-      groups: NamedGroups,
-      mentions: NamedMentions,
-      partialGroups: PartialGroups,
-      var partialMatches: PartialMatches
+    tok: Int,
+    inst: Inst,
+    dir: Direction,
+    groups: NamedGroups,
+    mentions: NamedMentions,
+    partialGroups: PartialGroups,
+    var partialMatches: PartialMatches
   ) extends Thread {
-    def isDone: Boolean = inst == Done
-    def isReallyDone: Boolean = isDone
-    def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
 
+    def isDone: Boolean = inst == Done
+
+    def isReallyDone: Boolean = isDone
+
+    def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
 
-
   case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
+
     // at least one thread is done and the threads after the threadbundle can be dropped
     def isDone: Boolean = bundles.exists(_.exists(_.isDone))
+
     // all bundles are done and we can retrieve the results
     def isReallyDone: Boolean = bundles.forall(_.head.isReallyDone)
+
     def results: Seq[(NamedGroups, NamedMentions)] = for {
-      ts <- bundles
-      t = ts.head
-      if t.isReallyDone
-      r <- t.results
-    } yield r
+      threads <- bundles
+      thread = threads.head if thread.isReallyDone
+      result <- thread.results
+    } yield result
   }
 
   case class Evaluator(start: Inst, tok: Int, sent: Int, doc: Document, state: State) {
+
     // Executes instruction on token and returns the produced threads.
     // Threads are created by following all no-Match instructions.
     def mkThreads(
-        tok: Int,
-        inst: Inst,
-        dir: Direction = LeftToRight,
-        groups: NamedGroups = Map.empty,
-        mentions: NamedMentions = Map.empty,
-        partialGroups: PartialGroups = Nil
+      tok: Int,
+      inst: Inst,
+      dir: Direction = LeftToRight,
+      groups: NamedGroups = Map.empty,
+      mentions: NamedMentions = Map.empty,
+      partialGroups: PartialGroups = Nil
     ): Seq[Thread] = Debugger.debugTokInst(tok, inst) {
+
       @annotation.tailrec
       def loop(
-                is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-                ts: List[Thread]
-              ): Seq[Thread] = is match {
+        is: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
+        ts: List[Thread]
+      ): Seq[Thread] = is match {
         case Nil => ts.reverse
         case (i, gs, ms, pgs) :: rest => i match {
           case i: Pass => loop((i.next, gs, ms, pgs) :: rest, ts)
@@ -142,11 +144,11 @@ object ThompsonVM {
     }
 
     def retrieveMentions(
-        state: State,
-        sentence: Int,
-        token: Int,
-        matcher: StringMatcher,
-        argument: Option[String]
+      state: State,
+      sentence: Int,
+      token: Int,
+      matcher: StringMatcher,
+      argument: Option[String]
     ): Seq[Mention] = {
       val mentions = for {
         mention <- state.mentionsFor(sentence, token)
@@ -167,9 +169,9 @@ object ThompsonVM {
     }
 
     def mkMentionCapture(
-        mentions: NamedMentions,
-        name: Option[String],
-        mention: Mention
+      mentions: NamedMentions,
+      name: Option[String],
+      mention: Mention
     ): NamedMentions = name match {
       case None => mentions
       case Some(name) =>
@@ -229,11 +231,11 @@ object ThompsonVM {
   }
 
   def evaluate(
-      start: Inst,
-      tok: Int,
-      sent: Int,
-      doc: Document,
-      state: State
+    start: Inst,
+    tok: Int,
+    sent: Int,
+    doc: Document,
+    state: State
   ): Seq[(NamedGroups, NamedMentions)] = Debugger.debugStart(tok) {
     val evaluator = Evaluator(start, tok, sent, doc, state)
 
