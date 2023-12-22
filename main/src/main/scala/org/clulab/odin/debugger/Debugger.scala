@@ -43,6 +43,19 @@ class Debugger protected () extends DebuggerTrait {
     }
   }
 
+  def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
+      (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+    if (active) {
+      println(mkMessage("beg"))
+      val result = debug(stackFrame)(block)
+      println(mkMessage("end"))
+      result
+    }
+    else {
+      block
+    }
+  }
+
   def debugDoc[ResultType, StackFrameType <: StackFrame](extractorEngine: ExtractorEngine, doc: Document)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
@@ -59,15 +72,7 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    if (active) {
-      println(mkMessage("beg"))
-      val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
-      result
-    }
-    else {
-      block
-    }
+    debugWithMessage(mkMessage)(stackFrame)(block)
   }
 
   def debugLoop[ResultType, StackFrameType <: StackFrame](loop: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -85,15 +90,7 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    if (active) {
-      println(mkMessage("beg"))
-      val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
-      result
-    }
-    else {
-      block
-    }
+    debugWithMessage(mkMessage)(stackFrame)(block)
   }
 
   def debugExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -111,15 +108,7 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    if (active) {
-      println(mkMessage("beg"))
-      val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
-      result
-    }
-    else {
-      block
-    }
+    debugWithMessage(mkMessage)(stackFrame)(block)
   }
 
   def debugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -137,22 +126,29 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    if (active) {
-      println(mkMessage("beg"))
-      val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
-      result
+    debugWithMessage(mkMessage)(stackFrame)(block)
+  }
+
+  def debugStart[ResultType, StackFrameType <: StackFrame](start: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
+    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(side: String): String = {
+      val tabs = "\t" * 4
+      val method = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
+      val obj = StringUtils.afterLast(StringUtils.beforeLast(stackFrame.sourceCode.enclosing.value, '.'), '.')
+      val message = s"""${tabs}${side} $obj.$method(start = $start)"""
+
+      message
     }
-    else {
-      block
-    }
+
+    debugWithMessage(mkMessage)(stackFrame)(block)
   }
 
   def debugTokInst[ResultType, StackFrameType <: StackFrame](tok: Int, inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(side: String): String = {
-      val tabs = "\t" * 4
+      val tabs = "\t" * 5
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -163,15 +159,7 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    if (active) {
-      println(mkMessage("beg"))
-      val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
-      result
-    }
-    else {
-      block
-    }
+    debugWithMessage(mkMessage)(stackFrame)(block)
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
@@ -239,6 +227,13 @@ object Debugger extends DebuggerTrait {
     val stackFrame = new StackFrame(sourceCode)
 
     instance.debugSentence(index, sentence)(stackFrame)(block)
+  }
+
+  def debugStart[ResultType](start: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    instance.debugStart(start)(stackFrame)(block)
   }
 
   def debugTokInst[ResultType](tok: Int, inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {

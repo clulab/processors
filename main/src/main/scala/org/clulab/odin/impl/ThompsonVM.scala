@@ -234,7 +234,7 @@ object ThompsonVM {
       sent: Int,
       doc: Document,
       state: State
-  ): Seq[(NamedGroups, NamedMentions)] = {
+  ): Seq[(NamedGroups, NamedMentions)] = Debugger.debugStart(tok) {
     val evaluator = Evaluator(start, tok, sent, doc, state)
 
     // evaluate pattern and return results
