@@ -8,7 +8,7 @@ import org.clulab.odin.debugger.Debugger
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
-  // a partial group is the name and the start of a group, without the end
+  // A PartialGroup is the name and the start of a group, without the end.
   type PartialGroups = List[(String, Int)]
   type PartialMatches = List[PartialMatch]
 
@@ -51,7 +51,7 @@ object ThompsonVM {
 
   case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
 
-    // at least one thread is done and the threads after the threadbundle can be dropped
+    // At least one Thread is done and the Threads after the ThreadBundle can be dropped.
     def isDone: Boolean = bundles.exists(_.exists(_.isDone))
 
     // all bundles are done and we can retrieve the results
@@ -140,7 +140,7 @@ object ThompsonVM {
           case bundles => Seq(ThreadBundle(bundles))
         }
       case Done => Seq(t)
-      case _ => Nil // thread died with no match
+      case _ => Nil // The Thread died with no match.
     }
 
     def retrieveMentions(
@@ -151,11 +151,10 @@ object ThompsonVM {
       argument: Option[String]
     ): Seq[Mention] = {
       val mentions = for {
-        mention <- state.mentionsFor(sentence, token)
-        if mention matches matcher
+        mention <- state.mentionsFor(sentence, token) if mention matches matcher
         result <- argument match {
           case None => Seq(mention)
-          case Some(name) if name equalsIgnoreCase "trigger" =>
+          case Some(name) if name.equalsIgnoreCase("trigger") =>
             mention match {
               case event: EventMention => Seq(event.trigger)
               case _ => Nil
@@ -163,8 +162,9 @@ object ThompsonVM {
           case Some(name) => mention.arguments.getOrElse(name, Nil)
         }
       } yield result
-      // the same mention may be the argument of many mentions
-      // so we may encounter it many times
+
+      // The same mention may be the argument of many mentions,
+      // so we may encounter it many times.
       mentions.distinct
     }
 
@@ -175,59 +175,61 @@ object ThompsonVM {
     ): NamedMentions = name match {
       case None => mentions
       case Some(name) =>
-        val ms = mentions.getOrElse(name, Vector.empty) :+ mention
-        mentions + (name -> ms)
+        val updateMentions = mentions.getOrElse(name, Vector.empty) :+ mention
+        mentions + (name -> updateMentions)
     }
 
-    def stepThreadBundle(t: ThreadBundle): Seq[Thread] = {
-      val bundles = for {
-        threads <- t.bundles
-        newThreads = stepThreads(threads)
-        if newThreads.nonEmpty
-        (survivingThreads, result) = handleDone(newThreads)
-      } yield result match {
-        case None => survivingThreads
-        case Some(r) => survivingThreads :+ r
-      }
-      bundles match {
-        case Seq() => Nil
-        case Seq(bundle) => bundle
-        case bundles => Seq(ThreadBundle(bundles))
+    def stepThreadBundle(threadBundle: ThreadBundle): Seq[Thread] = {
+      val threadBundles = for {
+        threads <- threadBundle.bundles
+        nextThreads = stepThreads(threads)
+        if nextThreads.nonEmpty
+        (survivors, resultOpt) = handleDone(nextThreads)
+      } yield survivors ++ resultOpt.toSeq
+
+      threadBundles match {
+        case Seq() => Nil // empty sequence
+        case Seq(bundle) => bundle // sequence of one
+        case bundles => Seq(ThreadBundle(bundles)) // sequence of more than one
       }
     }
 
-    def stepThread(t: Thread): Seq[Thread] = t match {
-      case t: SingleThread => stepSingleThread(t)
-      case t: ThreadBundle => stepThreadBundle(t)
+    def stepThread(thread: Thread): Seq[Thread] = thread match {
+      case singleThread: SingleThread => stepSingleThread(singleThread)
+      case threadBundle: ThreadBundle => stepThreadBundle(threadBundle)
     }
 
     def stepThreads(threads: Seq[Thread]): Seq[Thread] =
-      (threads flatMap stepThread).distinct
+        threads.flatMap(stepThread).distinct
 
-    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) =
-      threads find (_.isDone) match {
-        // no thread has finished, return them all
+    def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) = {
+      // TODO: Would indexWhere work better?  The test for equality is quite expensive.
+      threads.find(_.isDone) match {
+        // No thread has finished; return them all.
         case None => (threads, None)
-        // a threadbundle is done, but is it really done?
-        case Some(t: ThreadBundle) =>
-          val survivors = threads.takeWhile(_ != t)
-          if (t.isReallyDone) (survivors, Some(t)) else (survivors :+ t, None)
-        // a thread finished, drop all threads to its right but keep the ones to its left
-        case Some(t) => (threads.takeWhile(_ != t), Some(t))
+        // A ThreadBundle is done, but is it really done?
+        case Some(thread: ThreadBundle) =>
+          val survivors = threads.takeWhile(_ != thread)
+          if (thread.isReallyDone) (survivors, Some(thread))
+          else (survivors :+ thread, None)
+        // A Thread finished.  Drop all Threads to its right but keep the ones to its left.
+        case Some(thread: SingleThread) =>
+          val survivors = threads.takeWhile(_ != thread)
+          (survivors, Some(thread))
       }
+    }
 
     @annotation.tailrec
-    final def evalThreads(threads: Seq[Thread], currentResult: Option[Thread] = None): Option[Thread] = {
-      if (threads.isEmpty) currentResult
+    final def evalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
+      if (threads.isEmpty) result
       else {
-        val (ts, nextResult) = handleDone(threads)
-        evalThreads(stepThreads(ts), nextResult orElse currentResult)
+        val (nextThreads, nextResult) = handleDone(threads)
+        evalThreads(stepThreads(nextThreads), nextResult orElse result)
       }
     }
 
-    def eval(tok: Int, start: Inst): Option[Thread] = {
-      evalThreads(mkThreads(tok, start))
-    }
+    def eval(tok: Int, start: Inst): Option[Thread] =
+        evalThreads(mkThreads(tok, start))
   }
 
   def evaluate(
