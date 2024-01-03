@@ -143,7 +143,7 @@ class TestCluProcessor extends CluTest {
     println(doc.sentences.head.universalEnhancedDependencies.get)
 
     // these "nmod"s should probably be "advmod"
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true)
+    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "advmod_due_to") should be (true)
     doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
   }
 

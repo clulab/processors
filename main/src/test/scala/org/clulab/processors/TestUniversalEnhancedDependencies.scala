@@ -9,7 +9,7 @@ class TestUniversalEnhancedDependencies extends CluTest {
 
     doc = proc.annotate("Ras1 has phosphorylated Mek2.")
     // TODO: the first dep should be "nsubj" not "aux"...
-    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "aux") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "aux") should be(true)
 
     doc = proc.annotate("John has travelled to China.")
