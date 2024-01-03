@@ -469,7 +469,7 @@ class TestNumericEntityRecognition extends Test {
     ensure(sentence = "Target yields on average were set to 6.4, 7.9, and 7.1 t/ha in 2011WS , 2012DS , and 2013DS , respectively.", Interval(12,13), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="7.1 t/ha")
     ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(3, 4), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="9.0 t/ha")
     ensure(sentence = "was estimated at 9 and 10 t / ha", Interval(5, 9), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="10.0 t/ha")
-    ensure(sentence = "+ 100 kg ha-1 urea at 20 das + 50 kg ha-1 urea at 50 das", Interval(6, 7), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="20.0 kg/ha")
+    ensure(sentence = "+ 100 kg ha-1 urea at 20 das + 50 kg ha-1 urea at 50 das", Interval(0, 3), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="100.0 kg/ha")
     ensure(sentence = "yield will increase from 3600 in 2000-2009 to 4500 kg ha-1 in 2090-2099", Interval(4, 5), goldEntity="MEASUREMENT-AREAL-DENSITY", goldNorm="3600.0 kg/ha")
   }
 
