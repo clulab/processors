@@ -7,6 +7,7 @@ class TestHolidays extends Test {
   val processor = new CluProcessor()
   val badBefore = ignore
   val badAfter = ignore
+  val unstable = ignore
 
   def test(norm: String, text: String): Unit = {
     val (threw, contained) = try {
@@ -56,7 +57,7 @@ class TestHolidays extends Test {
 
   badAfter should "Thanksgiving (in) 2016" in {
     // Assumed this year, 2024-11-28 -> XXXX-11-28, which is wrong
-    test("2024-11-28", "E.F. then began transferring money under the promise she would be repaid when he returned to Virginia Beach to celebrate Thanksgiving in 2016.")
+    test("2016-11-24", "E.F. then began transferring money under the promise she would be repaid when he returned to Virginia Beach to celebrate Thanksgiving in 2016.")
   }
 
   it should "Thanksgiving 2016" in {
@@ -72,8 +73,9 @@ class TestHolidays extends Test {
     test("1998-04-10", "Northern Ireland’s Good Friday 1998 peace agreement contains provisions to protect and develop relations both on a north/south basis on the island of Ireland and on an east/west basis between the island and Great Britain.")
   }
 
-  it should "Good Friday" in {
+  unstable should "Good Friday" in {
     // Assumed this year, 2024-03-29
+    // It would fail next year, so ignore this test.
     test("XXXX-03-29", "Christians must, therefore, eschew vices such as alcoholism, stealing, fornication, adultery and robbery, he emphasised in his Good Friday sermon.")
   }
 
@@ -86,8 +88,9 @@ class TestHolidays extends Test {
     test("2023-04-07", "Bishop Heward-Mills gave the admonishment when he delivered a sermon on the “Cross” at the Church’s Good Friday 2023 Miracle Service, held at the Black Stars Square, in Accra.")
   }
 
-  it should "Good Friday again" in {
+  unstable should "Good Friday again" in {
     // Assumed this year, 2024-03-29
+    // It would fail next year, so ignore this test.
     test("XXXX-03-29", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
   }
 }
