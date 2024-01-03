@@ -53,7 +53,7 @@ libraryDependencies ++= {
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",  // for tokenization // BSD
     "org.clulab"                  % "lemport"                  % "0.9.10" exclude("org.scala-lang", "scala-library"), // Portuguese lemmatizer // LGPL-3.0
-    "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization // Apache-2.0
+    "de.jollyday"                 % "jollyday"                 % "0.4.9", // for holidays normalization, match stanford-nlp dependency // Apache-2.0
     // logging
     // The Scala interface is not used in processors.
     // "com.typesafe.scala-logging" %% "scala-logging"            % "3.9.4",
