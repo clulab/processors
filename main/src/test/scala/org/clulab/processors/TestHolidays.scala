@@ -8,6 +8,7 @@ class TestHolidays extends Test {
   val badBefore = ignore
   val badAfter = ignore
   val unstable = ignore
+  val notFound = ignore // not in JollyDay database
 
   def test(norm: String, text: String): Unit = {
     val (threw, contained) = try {
@@ -38,21 +39,25 @@ class TestHolidays extends Test {
     test("2017-XX-XX", "Watch Kwahu Easter 2017 as we countdown to 2018")
   }
 
-  it should "Easter Sunday 2023" in {
-    test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday, April 9, 2023, at 7pm.")
+  notFound should "Easter Sunday 2023" in {
+    // test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday, April 9, 2023, at 7pm.")
+    test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday 2023, at 7pm.")
   }
 
-  it should "Mother's Day 2022" in {
+  notFound should "Mother's Day 2022" in {
     // 2022-05-08 in CoreNLP
-    test("2022-05-XX", "The donation exercise which took place on Mother's Day, the 8th of May, 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
+    // test("2022-05-XX", "The donation exercise which took place on Mother's Day, the 8th of May, 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
+    test("2022-05-XX", "The donation exercise which took place on Mother's Day 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
   }
 
-  it should "Easter Sunday 1922" in {
-    test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday, April 16, 1922.")
+  notFound should "Easter Sunday 1922" in {
+    // test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday, April 16, 1922.")
+    test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday 1922.")
   }
 
-  it should "Pentecost Sunday 1922" in {
-    test("1922-06-04", "He was ordained deacon on Pentecost Sunday, June 4, 1922.")
+  notFound should "Pentecost Sunday 1922" in {
+    // test("1922-06-04", "He was ordained deacon on Pentecost Sunday, June 4, 1922.")
+    test("1922-06-04", "He was ordained deacon on Pentecost Sunday, 1922.")
   }
 
   badAfter should "Thanksgiving (in) 2016" in {
@@ -92,5 +97,10 @@ class TestHolidays extends Test {
     // Assumed this year, 2024-03-29
     // It would fail next year, so ignore this test.
     test("XXXX-03-29", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
+  }
+
+  // This is in the Stanford database of holidays, but not in JollyDay!
+  notFound should "Groundhog Day" in {
+    test("2023-02-02", "When did Groundhog Day 2023 take place?")
   }
 }

@@ -21,10 +21,16 @@ object HolidayNormalizer {
       // If year is None use current year as default.  This can lead to problems if the year is never filled in!
       // Do not run this code around around December 31 or January 1 because your results might be inconsistent.
       val year = yearOpt.map(_.mkString.toInt).getOrElse(LocalDate.now.getYear)
-      val generalHolidayOpt = holidayManager.getHolidays(year).asScala
+      val generalHolidayOpt = holidayManager
+          .getHolidays(year).asScala
           .filter(_.getDescription == holidayCanonical).headOption
       val holidayOpt = generalHolidayOpt.orElse {
-        val stateHolidays = stateKeys.flatMap(holidayManager.getHolidays(year, _).asScala)
+        val stateHolidays = stateKeys
+            .flatMap { stateKey =>
+              val holidays = holidayManager.getHolidays(year, stateKey)
+
+              holidays.asScala
+              }
             .filter(_.getDescription == holidayCanonical).distinct
 
         if (stateHolidays.length == 1) stateHolidays.headOption
