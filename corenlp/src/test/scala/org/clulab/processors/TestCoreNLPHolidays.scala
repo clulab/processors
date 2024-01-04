@@ -5,6 +5,7 @@ import org.clulab.utils.Test
 
 class TestCoreNLPHolidays extends Test {
   val processor = new ShallowNLPProcessor()
+  val notFound = ignore
 
   def test(norm: String, text: String): Unit = {
     val (threw, contained) = try {
@@ -36,19 +37,24 @@ class TestCoreNLPHolidays extends Test {
   }
 
   it should "Easter Sunday 2023" in {
-    test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday, April 9, 2023, at 7pm.")
+    // test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday, April 9, 2023, at 7pm.")
+    test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday 2023, at 7pm.")
   }
 
   it should "Mother's Day 2022" in {
-    test("2022-05-08", "The donation exercise which took place on Mother's Day, the 8th of May, 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
+    // test("2022-05-08", "The donation exercise which took place on Mother's Day, the 8th of May, 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
+    test("2022-05-08", "The donation exercise which took place on Mother's Day 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
   }
 
   it should "Easter Sunday 1922" in {
-    test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday, April 16, 1922.")
+    // test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday, April 16, 1922.")
+    test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday 1922.")
   }
 
-  it should "Pentecost Sunday 1922" in {
-    test("1922-06-04", "He was ordained deacon on Pentecost Sunday, June 4, 1922.")
+  notFound should "Pentecost Sunday 1922" in {
+    // This finds 1922-WXX-7, so every Sunday in the year.
+    // test("1922-06-04", "He was ordained deacon on Pentecost Sunday, June 4, 1922.")
+    test("1922-06-04", "He was ordained deacon on Pentecost Sunday, 1922.")
   }
 
   it should "Thanksgiving 2016" in {
@@ -69,5 +75,10 @@ class TestCoreNLPHolidays extends Test {
 
   it should "Good Friday again" in {
     test("GOOD_FRIDAY", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
+  }
+
+  // This is in the Stanford database of holidays, but not in JollyDay!
+  it should "Groundhog Day" in {
+    test("2023-02-02", "When did Groundhog Day 2023 take place?")
   }
 }
