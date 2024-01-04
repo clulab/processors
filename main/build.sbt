@@ -76,6 +76,14 @@ libraryDependencies ++= {
     "org.scala-lang.modules"     %% "scala-parser-combinators" % combinatorsVersion, // Apache-2.0
     "org.yaml"                    % "snakeyaml"                % "1.14", // Apache-2.0
     // progress bar for training
-    "me.tongfei"                  % "progressbar"              % "0.9.3" // MIT
+    "me.tongfei"                  % "progressbar"              % "0.9.3", // MIT
+
+//    "com.sun.xml.bind"            % "jaxb-impl"                % "3.0.0",
+//    "jakarta.xml.bind"            % "jakarta.xml.bind-api"     % "3.0.0"
+
+    "com.sun.xml.bind"            % "jaxb-ri"                  % "2.3.3",
+    "jakarta.xml.bind"            % "jakarta.xml.bind-api"     % "2.3.3"
+
+
   ) ++ parallelLibraries ++ scala2Libraries
 }
