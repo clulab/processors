@@ -1,13 +1,48 @@
 package org.clulab.numeric
 
+import de.jollyday.config.Configuration
+import de.jollyday.impl.DefaultHolidayManager
+import de.jollyday.parameter.UrlManagerParameter
 import de.jollyday.{HolidayCalendar, HolidayManager, ManagerParameters}
 
+import java.io.File
+import java.net.URL
 import java.time.LocalDate
+import java.util.Properties
 import scala.jdk.CollectionConverters._
+
+class CluXmlManager extends DefaultHolidayManager {
+  println("I got here!")
+
+  // This exposes the otherwise protected configuration.
+  def getConfiguration(): Configuration = configuration
+}
 
 object HolidayNormalizer {
   protected val normMapper: Map[String, NormAndUnitClass] = UnitNormalizer.readNormsFromResource("/org/clulab/numeric/HOLIDAY.tsv")
-  protected val holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.UNITED_STATES))
+  protected val holidayManager =
+      if (false) {
+        val managerProps = {
+          val properties = new Properties()
+
+          properties.setProperty("manager.impl", "org.clulab.numeric.CluXmlManager")
+          properties
+        }
+        val xmlPath = "/home/kwa/Projects/clulab/processors-project/processors/main/src/main/resources/CluHolidays_sutime.xml"
+        if (!new File(xmlPath).exists)
+          println("It is wrong!")
+        val holidayXmlUrl = new URL("file://" + xmlPath)
+        val urlManagerParameter = new UrlManagerParameter(holidayXmlUrl, managerProps)
+        val holidayManager = HolidayManager.getInstance(urlManagerParameter)
+
+        holidayManager
+      }
+      else {
+        val holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.UNITED_STATES))
+
+        holidayManager
+      }
+
   // Get keys for states in case there is ever a state-specific holiday.
   protected val stateKeys: Array[String] = holidayManager.getCalendarHierarchy.getChildren.keySet.asScala.toArray
 
