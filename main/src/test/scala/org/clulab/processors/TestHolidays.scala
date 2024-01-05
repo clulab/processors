@@ -35,8 +35,9 @@ class TestHolidays extends Test {
     test("2017-12-25", "Watch Kwahu Christmas 2017 as we countdown to 2018")
   }
 
-  it should "Easter 2017" in {
-    test("2017-XX-XX", "Watch Kwahu Easter 2017 as we countdown to 2018")
+  notFound should "Easter 2017" in {
+    // test("2017-XX-XX", "Watch Kwahu Easter 2017 as we countdown to 2018")
+    test("2017-04-16", "Watch Kwahu Easter 2017 as we countdown to 2018")
   }
 
   notFound should "Easter Sunday 2023" in {
