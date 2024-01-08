@@ -40,6 +40,7 @@
         <tns:ChristianHoliday type="GOOD_FRIDAY" descriptionPropertiesKey="christian.GOOD_FRIDAY"/>
         <tns:ChristianHoliday type="ASH_WEDNESDAY" descriptionPropertiesKey="christian.ASH_WEDNESDAY"/>
         <tns:ChristianHoliday type="MARDI_GRAS" descriptionPropertiesKey="christian.MARDI_GRAS"/>
+        <tns:ChristianHoliday type="PENTECOST" descriptionPropertiesKey="christian.PENTECOST" />
 
         <tns:Fixed month="JUNE" day="19" validFrom="2021" descriptionPropertiesKey="JUNETEENTH">
             <tns:MovingCondition substitute="SATURDAY" with="PREVIOUS" weekday="FRIDAY"/>
@@ -52,6 +53,5 @@
             <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="NOVEMBER"/>
         </tns:RelativeToWeekdayInMonth>
         <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1971" descriptionPropertiesKey="PRESIDENTS_DAY"/>
-        <tns:ChristianHoliday type="PENTECOST" />
     </tns:Holidays>
 </tns:Configuration>
