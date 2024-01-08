@@ -66,6 +66,7 @@
         <tns:Fixed month="FEBRUARY" day="14" descriptionPropertiesKey="VALENTINE"/>
         <tns:Fixed month="NOVEMBER" day="11" validFrom="1938" descriptionPropertiesKey="VETERANS"/>
         <tns:FixedWeekday which="SECOND" weekday="MONDAY" month="AUGUST" descriptionPropertiesKey="VICTORY"/>
+        <tns:Fixed month="FEBRUARY" day="22" validFrom="1879" validTo="1967" descriptionPropertiesKey="WASHINGTONS_BIRTHDAY"/>
         <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1968" descriptionPropertiesKey="WASHINGTONS_BIRTHDAY"/>
         <tns:Fixed month="JUNE" day="20" descriptionPropertiesKey="WEST_VIRGINIA"/>
         <tns:ChristianHoliday type="ASH_WEDNESDAY" descriptionPropertiesKey="christian.ASH_WEDNESDAY"/>
