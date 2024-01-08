@@ -28,7 +28,7 @@ object HolidayNormalizer {
           properties.setProperty("manager.impl", "org.clulab.numeric.CluXmlManager")
           properties
         }
-        val xmlPath = "/C:/Users/kwa/MyData/Projects/clulab/processors-project/processors/main/src/main/resources/CluHolidays_sutime.xml"
+        val xmlPath = "/home/kwa/Projects/clulab/processors-project/processors/main/src/main/resources/CluHolidays_sutime.xml"
         if (!new File(xmlPath).exists)
           println("It is wrong!")
         val holidayXmlUrl = new URL("file://" + xmlPath)
@@ -43,9 +43,6 @@ object HolidayNormalizer {
         holidayManager
       }
 
-  // Get keys for states in case there is ever a state-specific holiday.
-  protected val stateKeys: Array[String] = holidayManager.getCalendarHierarchy.getChildren.keySet.asScala.toArray
-
   /** Retrieves date (day and month) for a holiday */
   def norm(holidaySeq: Seq[String], yearOpt: Option [Seq[String]]): Option[(String, String)] = {
     val holidayName = holidaySeq.mkString(" ").toLowerCase()
@@ -56,21 +53,10 @@ object HolidayNormalizer {
       // If year is None use current year as default.  This can lead to problems if the year is never filled in!
       // Do not run this code around around December 31 or January 1 because your results might be inconsistent.
       val year = yearOpt.map(_.mkString.toInt).getOrElse(LocalDate.now.getYear)
-      val generalHolidayOpt = holidayManager
+      val allHolidays = holidayManager
           .getHolidays(year).asScala
-          .filter(_.getDescription == holidayCanonical).headOption
-      val holidayOpt = generalHolidayOpt.orElse {
-        val stateHolidays = stateKeys
-            .flatMap { stateKey =>
-              val holidays = holidayManager.getHolidays(year, stateKey)
-
-              holidays.asScala
-            }
-            .filter(_.getDescription == holidayCanonical).distinct
-
-        if (stateHolidays.length == 1) stateHolidays.headOption
-        else None
-      }
+      val holidayOpt = allHolidays
+          .filter(_.getPropertiesKey == holidayCanonical).headOption
       val normOpt = holidayOpt.map { holiday =>
         val date = holiday.getDate
 

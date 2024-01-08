@@ -11,120 +11,160 @@
 #                   flatMap(holidayManager.getHolidays(2021, _).asScala).map(_.getPropertiesKey)
 #
 #
-lincoln 's birthday						//	LINCOLN // Lincoln's Birthday
-lincoln birthday						//	LINCOLN // Lincoln's Birthday
-lincoln 's day  						//	LINCOLN // Lincoln's Birthday
-lincoln day     						//	LINCOLN // Lincoln's Birthday
-easter monday							//	christian.EASTER_MONDAY // Easter Monday
-bright monday							//	christian.EASTER_MONDAY // Easter Monday
-renewal monday							//	christian.EASTER_MONDAY // Easter Monday
-washington 's birthday                  //	WASHINGTONS_BIRTHDAY // Washington's Birthday
-washington birthday 					//	WASHINGTONS_BIRTHDAY // Washington's Birthday
-washington 's day   					//	WASHINGTONS_BIRTHDAY // Washington's Birthday
-washington day      					//	WASHINGTONS_BIRTHDAY // Washington's Birthday
-presidents day							//	PRESIDENTS_DAY // Presidents Day
-presidents ' day						//	PRESIDENTS_DAY // Presidents Day
-labour day								//	LABOUR_DAY // Labour day
-labor day								//	LABOUR_DAY // Labour day
-césar chávez 's birthday				//	CESAR_CHAVEZ // César Chávez's Birthday
-césar chávez birthday				    //	CESAR_CHAVEZ // César Chávez's Birthday
-cesar chavez 's birthday				//	CESAR_CHAVEZ // César Chávez's Birthday
-cesar chavez birthday				    //	CESAR_CHAVEZ // César Chávez's Birthday
-césar chávez 's day				        //	CESAR_CHAVEZ // César Chávez's Birthday
-césar chávez day				        //	CESAR_CHAVEZ // César Chávez's Birthday
-cesar chavez 's day				        //	CESAR_CHAVEZ // César Chávez's Birthday
-cesar chavez day				        //	CESAR_CHAVEZ // César Chávez's Birthday
-seward 's day							//	SEWARD // Seward's Day
-seward day  							//	SEWARD // Seward's Day
-christmas eve							//	CHRISTMAS_EVE // Christmas Eve
-christmas evening					    //	CHRISTMAS_EVE // Christmas Eve
-christmas vigil							//	CHRISTMAS_EVE // Christmas Eve
-day before christmas					//	CHRISTMAS_EVE // Christmas Eve
-night before christmas					//	CHRISTMAS_EVE // Christmas Eve
-mardi gras								//	christian.MARDI_GRAS // Mardi Gras
-fat tuesday								//	christian.MARDI_GRAS // Mardi Gras
-shrove tuesday							//	christian.MARDI_GRAS // Mardi Gras
-pancake tuesday							//	christian.MARDI_GRAS // Mardi Gras
-battle of bennington					//	BENNINGTON // Battle of Bennington
-battle of bennington day				//	BENNINGTON // Battle of Bennington
-bennington battle day					//	BENNINGTON // Battle of Bennington
-arbor day								//	ARBOR // Arbor Day
-arbour day								//	ARBOR // Arbor Day
-west virginia day						//	WEST_VIRGINIA // West Virginia Day
-election day							//	ELECTION_DAY // Election day
-polling day 							//	ELECTION_DAY // Election day
-statehood day							//	STATEHOOD // Statehood day
-admission day							//	STATEHOOD // Statehood day
-truman day								//	TRUMAN // Truman Day
-truman 's day							//	TRUMAN // Truman Day
-truman birthday							//	TRUMAN // Truman Day
-truman 's birthday						//	TRUMAN // Truman Day
-christmas								//	CHRISTMAS // Christmas
-christmas day   						//	CHRISTMAS // Christmas
-prince jonah kuhio kalanianaole day		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince jonah kuhio kalanianaole 's day	//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince jonah kūhiō kalanianaole day		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince jonah kūhiō kalanianaole 's day	//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince kuhio day                        //	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince kuhio 's day                     //	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince kūhiō day                        //	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-prince kūhiō 's day                     //	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-kuhio day                       		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-kuhio 's day                       		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-kūhiō day                       		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-kūhiō 's day                       		//	KALANIANAOLE // Prince Jonah Kuhio Kalanianaole Day
-independence day						//	INDEPENDENCE // Independence Day
-fourth of july						    //	INDEPENDENCE // Independence Day
-new years eve							//	NEW_YEARS_EVE // New Years Eve
-new year 's eve							//	NEW_YEARS_EVE // New Years Eve
-new year eve							//	NEW_YEARS_EVE // New Years Eve
-jefferson davis day						//	JEFFERSON_DAVIS // Jefferson Davis Day
-jefferson davis ' day					//	JEFFERSON_DAVIS // Jefferson Davis Day
-jefferson davis birthday      			//	JEFFERSON_DAVIS // Jefferson Davis Day
-jefferson davis ' birthday				//	JEFFERSON_DAVIS // Jefferson Davis Day
-lee-jackson day							//	LEE_JACKSON // Lee-Jackson Day
-patriots ' day							//	PATRIOT // Patriots' Day
-patriot 's day							//	PATRIOT // Patriots' Day
-patriots day							//	PATRIOT // Patriots' Day
-alaska day								//	ALASKA // Alaska Day
-victory day								//	VICTORY // Victory Day
-victory over japan day				    //	VICTORY // Victory Day
-vj day				                    //	VICTORY // Victory Day
-world war ii memorial day				//	VICTORY // Victory Day
-new year								//	NEW_YEAR // New Year
-new year day							//	NEW_YEAR // New Year
-new years day							//	NEW_YEAR // New Year
-new year 's day							//	NEW_YEAR // New Year
-veterans day							//	VETERANS // Veterans Day
-veterans ' day							//	VETERANS // Veterans Day
-armistice day							//	VETERANS // Veterans Day
-columbus day							//	COLUMBUS_DAY // Columbus Day
-columbus ' day							//	COLUMBUS_DAY // Columbus Day
-indigenous peoples day				    //	COLUMBUS_DAY // Columbus Day
-indigenous peoples ' day			    //	COLUMBUS_DAY // Columbus Day
-thanksgiving day						//	THANKSGIVING // Thanksgiving Day
-thanksgiving    						//	THANKSGIVING // Thanksgiving Day
-martin luther king, jr. day				//	MARTIN_LUTHER_KING // Martin Luther King, Jr. Day
-martin luther king jr. day				//	MARTIN_LUTHER_KING // Martin Luther King, Jr. Day
-mlk day                                 //	MARTIN_LUTHER_KING // Martin Luther King, Jr. Day
-king day                                //	MARTIN_LUTHER_KING // Martin Luther King, Jr. Day
-reverend dr. martin luther king jr. day //	MARTIN_LUTHER_KING // Martin Luther King, Jr. Day
-good friday								//	christian.GOOD_FRIDAY // Good Friday
-holy friday								//	christian.GOOD_FRIDAY // Good Friday
-great friday							//	christian.GOOD_FRIDAY // Good Friday
-great and holy friday					//	christian.GOOD_FRIDAY // Good Friday
-holy and great friday					//	christian.GOOD_FRIDAY // Good Friday
-casimir pulaski day						//	PULASKI // Casimir Pulaski Day
-casimir pulaski 's day					//	PULASKI // Casimir Pulaski Day
-memorial day							//	MEMORIAL // Memorial Day
-decoration day							//	MEMORIAL // Memorial Day
-service reduction day					//	SERVICE_REDUCTION // Service Reduction Day
-kamehameha day							//	KAMEHAMEHA // Kamehameha Day
-kamehameha 's day						//	KAMEHAMEHA // Kamehameha Day
-king kamehameha day						//	KAMEHAMEHA // Kamehameha Day
-king kamehameha 's day					//	KAMEHAMEHA // Kamehameha Day
-king kamehameha i day                   //	KAMEHAMEHA // Kamehameha Day
-pioneer day								//	PIONEER // Pioneer Day
-nevada day								//	NEVADA // Nevada Day
-juneteenth                              //  JUNETEENTH // Juneteenth
-juneteenth day                          //  JUNETEENTH // Juneteenth
+lincoln 's birthday						//	LINCOLN
+lincoln birthday						//	LINCOLN
+lincoln 's day  						//	LINCOLN
+lincoln day     						//	LINCOLN
+easter monday							//	christian.EASTER_MONDAY
+bright monday							//	christian.EASTER_MONDAY
+renewal monday							//	christian.EASTER_MONDAY
+clean monday                            //  christian.CLEAN_MONDAY
+washington 's birthday                  //	WASHINGTONS_BIRTHDAY
+washington birthday 					//	WASHINGTONS_BIRTHDAY
+washington 's day   					//	WASHINGTONS_BIRTHDAY
+washington day      					//	WASHINGTONS_BIRTHDAY
+presidents day							//	PRESIDENTS_DAY
+presidents ' day						//	PRESIDENTS_DAY
+labour day								//	LABOUR_DAY
+labor day								//	LABOUR_DAY
+césar chávez 's birthday				//	CESAR_CHAVEZ
+césar chávez birthday				    //	CESAR_CHAVEZ
+cesar chavez 's birthday				//	CESAR_CHAVEZ
+cesar chavez birthday				    //	CESAR_CHAVEZ
+césar chávez 's day				        //	CESAR_CHAVEZ
+césar chávez day				        //	CESAR_CHAVEZ
+cesar chavez 's day				        //	CESAR_CHAVEZ
+cesar chavez day				        //	CESAR_CHAVEZ
+seward 's day							//	SEWARD
+seward day  							//	SEWARD
+christmas eve							//	CHRISTMAS_EVE
+christmas evening					    //	CHRISTMAS_EVE
+christmas vigil							//	CHRISTMAS_EVE
+day before christmas					//	CHRISTMAS_EVE
+night before christmas					//	CHRISTMAS_EVE
+mardi gras								//	christian.MARDI_GRAS
+fat tuesday								//	christian.MARDI_GRAS
+shrove tuesday							//	christian.MARDI_GRAS
+pancake tuesday							//	christian.MARDI_GRAS
+battle of bennington					//	BENNINGTON
+battle of bennington day				//	BENNINGTON
+bennington battle day					//	BENNINGTON
+arbor day								//	ARBOR
+arbour day								//	ARBOR
+west virginia day						//	WEST_VIRGINIA
+election day							//	ELECTION_DAY
+polling day 							//	ELECTION_DAY
+statehood day							//	STATEHOOD
+admission day							//	STATEHOOD
+truman day								//	TRUMAN
+truman 's day							//	TRUMAN
+truman birthday							//	TRUMAN
+truman 's birthday						//	TRUMAN
+christmas								//	CHRISTMAS
+christmas day   						//	CHRISTMAS
+prince jonah kuhio kalanianaole day		//	KALANIANAOLE
+prince jonah kuhio kalanianaole 's day	//	KALANIANAOLE
+prince jonah kūhiō kalanianaole day		//	KALANIANAOLE
+prince jonah kūhiō kalanianaole 's day	//	KALANIANAOLE
+prince kuhio day                        //	KALANIANAOLE
+prince kuhio 's day                     //	KALANIANAOLE
+prince kūhiō day                        //	KALANIANAOLE
+prince kūhiō 's day                     //	KALANIANAOLE
+kuhio day                       		//	KALANIANAOLE
+kuhio 's day                       		//	KALANIANAOLE
+kūhiō day                       		//	KALANIANAOLE
+kūhiō 's day                       		//	KALANIANAOLE
+independence day						//	US_INDEPENDENCE
+fourth of july						    //	US_INDEPENDENCE
+new years eve							//	NEW_YEARS_EVE
+new year 's eve							//	NEW_YEARS_EVE
+new year eve							//	NEW_YEARS_EVE
+jefferson davis day						//	JEFFERSON_DAVIS
+jefferson davis ' day					//	JEFFERSON_DAVIS
+jefferson davis birthday      			//	JEFFERSON_DAVIS
+jefferson davis ' birthday				//	JEFFERSON_DAVIS
+lee-jackson day							//	LEE_JACKSON
+patriots ' day							//	PATRIOT
+patriot 's day							//	PATRIOT
+patriots day							//	PATRIOT
+alaska day								//	ALASKA
+victory day								//	VICTORY
+victory over japan day				    //	VICTORY
+vj day				                    //	VICTORY
+world war ii memorial day				//	VICTORY
+new year								//	NEW_YEAR
+new year day							//	NEW_YEAR
+new years day							//	NEW_YEAR
+new year 's day							//	NEW_YEAR
+veterans day							//	VETERANS
+veterans ' day							//	VETERANS
+armistice day							//	VETERANS
+columbus day							//	COLUMBUS_DAY
+columbus ' day							//	COLUMBUS_DAY
+indigenous peoples day				    //	COLUMBUS_DAY
+indigenous peoples ' day			    //	COLUMBUS_DAY
+thanksgiving day						//	THANKSGIVING
+thanksgiving    						//	THANKSGIVING
+martin luther king, jr. day				//	MARTIN_LUTHER_KING
+martin luther king jr. day				//	MARTIN_LUTHER_KING
+mlk day                                 //	MARTIN_LUTHER_KING
+king day                                //	MARTIN_LUTHER_KING
+reverend dr. martin luther king jr. day //	MARTIN_LUTHER_KING
+good friday								//	christian.GOOD_FRIDAY
+holy friday								//	christian.GOOD_FRIDAY
+great friday							//	christian.GOOD_FRIDAY
+great and holy friday					//	christian.GOOD_FRIDAY
+holy and great friday					//	christian.GOOD_FRIDAY
+casimir pulaski day						//	PULASKI
+casimir pulaski 's day					//	PULASKI
+memorial day							//	MEMORIAL
+decoration day							//	MEMORIAL
+service reduction day					//	SERVICE_REDUCTION
+kamehameha day							//	KAMEHAMEHA
+kamehameha 's day						//	KAMEHAMEHA
+king kamehameha day						//	KAMEHAMEHA
+king kamehameha 's day					//	KAMEHAMEHA
+king kamehameha i day                   //	KAMEHAMEHA
+pioneer day								//	PIONEER
+nevada day								//	NEVADA
+groundhog day                           //  GROUNDHOG
+valentines day                          //  VALENTINE
+valentine 's day                        //  VALENTINE
+st. patrick day                         //  ST_PATRICK
+saint patrick day                       //  ST_PATRICK
+st. patrick 's day                      //  ST_PATRICK
+saint patrick 's day                    //  ST_PATRICK
+april fools day                         //  APRIL_FOOLS
+april fool 's day                       //  APRIL_FOOLS
+april fools ' day                       //  APRIL_FOOLS
+st. george 's day                       //  ST_GEORGE
+may day                                 //  MAYDAY
+workers day                             //  MAYDAY
+workers ' day                           //  MAYDAY
+international workers day               //  MAYDAY
+international workers ' day             //  MAYDAY
+cinco de mayo                           //  CINCO_DE_MAYO
+st. john the baptist day                //  BAPTISTE
+saint john the baptist day              //  BAPTISTE
+bastille day                            //  BASTILLE
+halloween                               //  HALLOWEEN
+all hallows day                         //  ALL_HALLOW
+all hallows ' day                       //  ALL_HALLOW
+hallowmas                               //  ALL_HALLOW
+all saints day                          //  ALL_HALLOW
+all souls day                           //  ALL_SOULS
+all souls ' day                         //  ALL_SOULS
+guy fawkes day                          //  GUY_FAWKES
+canberra day                            //  CANBERRA
+mothers day                             //  MOTHERS_DAY
+mother 's day                           //  MOTHERS_DAY
+fathers day                             //  FATHERS_DAY
+father 's day                           //  FATHERS_DAY
+easter                                  //  christian.EASTER
+easter sunday                           //  christian.EASTER
+ash wednesday                           //  christian.ASH_WEDNESDAY
+juneteenth                              //  JUNETEENTH
+juneteenth day                          //  JUNETEENTH
+inauguration day                        //  INAUGURATION
+pentecost                               //  christian.PENTECOST
+pentecost sunday                        //  christian.PENTECOST

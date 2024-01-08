@@ -14,6 +14,7 @@ class TestHolidays extends Test {
     val (threw, contained) = try {
       val document = processor.annotate(text)
       val norms = document.sentences.head.norms.get
+      println(norms.mkString(", "))
       val contained = norms.contains(norm)
 
       (false, contained)
@@ -35,30 +36,27 @@ class TestHolidays extends Test {
     test("2017-12-25", "Watch Kwahu Christmas 2017 as we countdown to 2018")
   }
 
-  notFound should "Easter 2017" in {
-    // test("2017-XX-XX", "Watch Kwahu Easter 2017 as we countdown to 2018")
+  it should "Easter 2017" in {
     test("2017-04-16", "Watch Kwahu Easter 2017 as we countdown to 2018")
   }
 
-  notFound should "Easter Sunday 2023" in {
-    // test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday, April 9, 2023, at 7pm.")
+  it should "Easter Sunday 2023" in {
     test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday 2023, at 7pm.")
   }
 
-  notFound should "Mother's Day 2022" in {
-    // 2022-05-08 in CoreNLP
+  it should "Mother's Day 2022" in {
     // test("2022-05-XX", "The donation exercise which took place on Mother's Day, the 8th of May, 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
-    test("2022-05-XX", "The donation exercise which took place on Mother's Day 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
+    test("2022-05-08", "The donation exercise which took place on Mother's Day 2022, saw Naa Dzama and her Purple Angels Foundation visiting the young cancer warriors at the Korle-buOncology unit.")
   }
 
-  notFound should "Easter Sunday 1922" in {
+  it should "Easter Sunday 1922" in {
     // test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday, April 16, 1922.")
     test("1922-04-16", "He was subsequently received into the subdiaconate on Easter Sunday 1922.")
   }
 
-  notFound should "Pentecost Sunday 1922" in {
+  it should "Pentecost Sunday 1922" in {
     // test("1922-06-04", "He was ordained deacon on Pentecost Sunday, June 4, 1922.")
-    test("1922-06-04", "He was ordained deacon on Pentecost Sunday, 1922.")
+    test("1922-06-04", "He was ordained deacon on Pentecost Sunday 1922.")
   }
 
   badAfter should "Thanksgiving (in) 2016" in {
@@ -100,8 +98,30 @@ class TestHolidays extends Test {
     test("XXXX-03-29", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
   }
 
-  // This is in the Stanford database of holidays, but not in JollyDay!
-  notFound should "Groundhog Day" in {
+  it should "Groundhog Day" in {
     test("2023-02-02", "When did Groundhog Day 2023 take place?")
+  }
+
+  // This is a CluHoliday that is not yet in JollyDay (0.4.9).
+  it should "Presidents Day" in {
+    test("2023-02-20", "When was Presidents Day 2023?")
+  }
+
+  // This is a CluHoliday that is not yet in JollyDay (0.4.9).
+  it should "Juneteenth" in {
+    test("2023-06-19", "When was Juneteenth 2023?")
+  }
+
+  // This is a CluHoliday that is not yet in JollyDay (0.4.9).
+  it should "Election Day" in {
+    test("2023-11-07", "When will Election Day 2023 be?")
+  }
+
+  it should "All Souls' Day" in {
+    test("2019-11-02", "I didn't celebrate All Souls' Day 2019.")
+  }
+
+  it should "Pentecost" in {
+    test("2024-05-19", "When is Pentecost 2024?")
   }
 }

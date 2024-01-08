@@ -40,5 +40,18 @@
         <tns:ChristianHoliday type="GOOD_FRIDAY" descriptionPropertiesKey="christian.GOOD_FRIDAY"/>
         <tns:ChristianHoliday type="ASH_WEDNESDAY" descriptionPropertiesKey="christian.ASH_WEDNESDAY"/>
         <tns:ChristianHoliday type="MARDI_GRAS" descriptionPropertiesKey="christian.MARDI_GRAS"/>
+
+        <tns:Fixed month="JUNE" day="19" validFrom="2021" descriptionPropertiesKey="JUNETEENTH">
+            <tns:MovingCondition substitute="SATURDAY" with="PREVIOUS" weekday="FRIDAY"/>
+            <tns:MovingCondition substitute="SUNDAY" with="NEXT" weekday="MONDAY"/>
+        </tns:Fixed>
+        <!-- This is technically every other year and needs every="EVEN_YEARS" on the back,
+             but that messes everything up if the year is unknown and we run in an add year!
+             Besides, there are often local elections in odd years which we should allow. -->
+        <tns:RelativeToWeekdayInMonth weekday="TUESDAY" when="AFTER" descriptionPropertiesKey="ELECTION_DAY">
+            <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="NOVEMBER"/>
+        </tns:RelativeToWeekdayInMonth>
+        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1971" descriptionPropertiesKey="PRESIDENTS_DAY"/>
+        <tns:ChristianHoliday type="PENTECOST" />
     </tns:Holidays>
 </tns:Configuration>
