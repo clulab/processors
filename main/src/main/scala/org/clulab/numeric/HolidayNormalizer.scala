@@ -1,10 +1,8 @@
 package org.clulab.numeric
 
 import de.jollyday.parameter.UrlManagerParameter
-import de.jollyday.{HolidayCalendar, HolidayManager, ManagerParameters}
+import de.jollyday.HolidayManager
 
-import java.io.File
-import java.net.URL
 import java.time.LocalDate
 import java.util.Properties
 import scala.jdk.CollectionConverters._
@@ -12,12 +10,8 @@ import scala.jdk.CollectionConverters._
 object HolidayNormalizer {
   protected val normMapper: Map[String, NormAndUnitClass] = UnitNormalizer.readNormsFromResource("/org/clulab/numeric/HOLIDAY.tsv")
   protected val holidayManager = {
-    val xmlPath = "/home/kwa/Projects/clulab/processors-project/processors/main/src/main/resources/org/clulab/numeric/CluHolidays_sutime.xml"
-    if (!new File(xmlPath).exists)
-      println("It is wrong!")
-
-    // Get the resource as url, check the protocol or something
-    val holidayXmlUrl = new URL("file://" + xmlPath)
+    val holidayXmlUrl = getClass.getResource("/org/clulab/numeric/HOLIDAY.xml")
+    // println(holidayXmlUrl)
     val urlManagerParameter = new UrlManagerParameter(holidayXmlUrl, new Properties())
     val holidayManager = HolidayManager.getInstance(urlManagerParameter)
 
