@@ -42,16 +42,21 @@
         <tns:ChristianHoliday type="MARDI_GRAS" descriptionPropertiesKey="christian.MARDI_GRAS"/>
         <tns:ChristianHoliday type="PENTECOST" descriptionPropertiesKey="christian.PENTECOST" />
 
-        <tns:Fixed month="JUNE" day="19" validFrom="2021" descriptionPropertiesKey="JUNETEENTH">
-            <tns:MovingCondition substitute="SATURDAY" with="PREVIOUS" weekday="FRIDAY"/>
-            <tns:MovingCondition substitute="SUNDAY" with="NEXT" weekday="MONDAY"/>
-        </tns:Fixed>
         <!-- This is technically every other year and needs every="EVEN_YEARS" on the back,
              but that messes everything up if the year is unknown and we run in an add year!
              Besides, there are often local elections in odd years which we should allow. -->
         <tns:RelativeToWeekdayInMonth weekday="TUESDAY" when="AFTER" descriptionPropertiesKey="ELECTION_DAY">
             <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="NOVEMBER"/>
         </tns:RelativeToWeekdayInMonth>
+        <tns:Fixed month="JUNE" day="19" validFrom="2021" descriptionPropertiesKey="JUNETEENTH">
+            <tns:MovingCondition substitute="SATURDAY" with="PREVIOUS" weekday="FRIDAY"/>
+            <tns:MovingCondition substitute="SUNDAY" with="NEXT" weekday="MONDAY"/>
+        </tns:Fixed>
         <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1971" descriptionPropertiesKey="PRESIDENTS_DAY"/>
+
+        <tns:Fixed month="APRIL" day="5" descriptionPropertiesKey="FIRST_CONTACT_DAY"/>
+        <tns:Fixed month="MARCH" day="14" descriptionPropertiesKey="PI_DAY"/>
+        <tns:Fixed month="SEPTEMBER" day="8"  validFrom="1966" descriptionPropertiesKey="STAR_TREK_DAY"/>
+        <tns:Fixed month="MAY" day="4" descriptionPropertiesKey="STAR_WARS_DAY"/>
     </tns:Holidays>
 </tns:Configuration>

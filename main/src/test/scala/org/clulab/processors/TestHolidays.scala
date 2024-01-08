@@ -75,7 +75,13 @@ class TestHolidays extends Test {
     test("XXXX-03-29", "Christians must, therefore, eschew vices such as alcoholism, stealing, fornication, adultery and robbery, he emphasised in his Good Friday sermon.")
   }
 
-  badBefore should "2023 Good Frida" in {
+  unstable should "Good Friday again" in {
+    // Assumed this year, 2024-03-29
+    // It would fail next year, so ignore this test.
+    test("XXXX-03-29", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
+  }
+
+  badBefore should "2023 Good Friday" in {
     // Assumed this year, 2024-03-29 -> XXXX-03-29, which is wrong
     test("2023-04-07", "Bishop Heward-Mills gave the admonishment when he delivered a sermon on the “Cross” at the Church’s 2023 Good Friday Miracle Service, held at the Black Stars Square, in Accra.")
   }
@@ -86,12 +92,6 @@ class TestHolidays extends Test {
 
   it should "Groundhog Day 2023" in {
     test("2023-02-02", "When did Groundhog Day 2023 take place?")
-  }
-
-  unstable should "Good Friday again" in {
-    // Assumed this year, 2024-03-29
-    // It would fail next year, so ignore this test.
-    test("XXXX-03-29", "Christians across the globe on Friday, marked Good Friday, which is one of the significant pillars of their faith.")
   }
 
   // This is a CluHoliday that is not yet in JollyDay (0.4.9).
@@ -111,6 +111,10 @@ class TestHolidays extends Test {
 
   it should "Pentecost 2024" in {
     test("2024-05-19", "When is Pentecost 2024?")
+  }
+
+  it should "PI day 2015" in {
+    test("2015-03-14", "Pi Day 2015 was an event to remember!")
   }
 
   // This is a CluHoliday that is not yet in JollyDay (0.4.9).

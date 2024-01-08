@@ -49,6 +49,7 @@ election day							//	ELECTION_DAY
 polling day 							//	ELECTION_DAY
 fathers day                             //  FATHERS_DAY
 father 's day                           //  FATHERS_DAY
+first contact day                       //  FIRST_CONTACT_DAY
 groundhog day                           //  GROUNDHOG
 guy fawkes day                          //  GUY_FAWKES
 halloween                               //  HALLOWEEN
@@ -108,6 +109,7 @@ new year eve							//	NEW_YEARS_EVE
 patriots ' day							//	PATRIOT
 patriot 's day							//	PATRIOT
 patriots day							//	PATRIOT
+pi day                                  //  PI_DAY
 pioneer day								//	PIONEER
 presidents day							//	PRESIDENTS_DAY
 presidents ' day						//	PRESIDENTS_DAY
@@ -121,6 +123,8 @@ st. patrick day                         //  ST_PATRICK
 saint patrick day                       //  ST_PATRICK
 st. patrick 's day                      //  ST_PATRICK
 saint patrick 's day                    //  ST_PATRICK
+star trek day                           //  STAR_TREK_DAY
+star wars day                           //  STAR_WARS_DAY
 statehood day							//	STATEHOOD
 admission day							//	STATEHOOD
 thanksgiving day						//	THANKSGIVING
