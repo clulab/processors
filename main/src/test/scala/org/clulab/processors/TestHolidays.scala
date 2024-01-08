@@ -46,6 +46,10 @@ class TestHolidays extends Test {
     test("2017-04-16", "Watch Kwahu Easter 2017 as we countdown to 2018")
   }
 
+  it should "Easter Monday 1999" in {
+    test("1999-04-05", "Is Easter Monday 1999 a thing and when was it?")
+  }
+
   it should "Easter Sunday 2023" in {
     test("2023-04-09", "The live music event is scheduled to take place at the Solace Bar and Restaurant in Cape Coast on Easter Sunday 2023, at 7pm.")
   }

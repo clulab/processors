@@ -3,57 +3,80 @@
                    xmlns:tns="http://www.example.org/Holiday" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.example.org/Holiday /Holiday.xsd">
     <tns:Holidays>
-
-        <tns:Fixed month="JANUARY" day="1" descriptionPropertiesKey="NEW_YEAR"/>
-        <tns:Fixed month="JANUARY" day="20" descriptionPropertiesKey="INAUGURATION"/>
-        <tns:Fixed month="FEBRUARY" day="2" descriptionPropertiesKey="GROUNDHOG"/>
-        <tns:Fixed month="FEBRUARY" day="14" descriptionPropertiesKey="VALENTINE"/>
-        <tns:Fixed month="MARCH" day="17" descriptionPropertiesKey="ST_PATRICK"/>
-        <tns:Fixed month="APRIL" day="1" descriptionPropertiesKey="APRIL_FOOLS"/>
-        <tns:Fixed month="APRIL" day="23" descriptionPropertiesKey="ST_GEORGE"/>
-        <tns:Fixed month="MAY" day="1" descriptionPropertiesKey="MAYDAY"/>
-        <tns:Fixed month="MAY" day="5" descriptionPropertiesKey="CINCO_DE_MAYO"/>
-        <tns:Fixed month="JUNE" day="24" descriptionPropertiesKey="BAPTISTE"/>
-        <tns:Fixed month="JULY" day="4" validFrom="1776" descriptionPropertiesKey="US_INDEPENDENCE"/>
-        <tns:Fixed month="JULY" day="14" descriptionPropertiesKey="BASTILLE"/>
-        <tns:Fixed month="OCTOBER" day="31" descriptionPropertiesKey="HALLOWEEN"/>
+        <tns:Fixed month="OCTOBER" day="18" descriptionPropertiesKey="ALASKA"/>
         <tns:Fixed month="NOVEMBER" day="1" descriptionPropertiesKey="ALL_HALLOW"/>
         <tns:Fixed month="NOVEMBER" day="2" descriptionPropertiesKey="ALL_SOULS"/>
-        <tns:Fixed month="NOVEMBER" day="5" descriptionPropertiesKey="GUY_FAWKES"/>
-        <tns:Fixed month="NOVEMBER" day="11" validFrom="1938" descriptionPropertiesKey="VETERANS"/>
-        <tns:Fixed month="DECEMBER" day="25" descriptionPropertiesKey="CHRISTMAS"/>
-
-        <tns:Fixed month="MAY" day="30" validFrom="1869" validTo="1967" descriptionPropertiesKey="MEMORIAL"/>
-
-        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="JANUARY" validFrom="1986" descriptionPropertiesKey="MARTIN_LUTHER_KING"/>
-        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1968" descriptionPropertiesKey="WASHINGTONS_BIRTHDAY"/>
+        <tns:Fixed month="APRIL" day="1" descriptionPropertiesKey="APRIL_FOOLS"/>
+        <tns:FixedWeekday which="LAST" weekday="FRIDAY" month="APRIL" descriptionPropertiesKey="ARBOR"/>
+        <tns:Fixed month="JUNE" day="24" descriptionPropertiesKey="BAPTISTE"/>
+        <tns:Fixed month="JULY" day="14" descriptionPropertiesKey="BASTILLE"/>
+        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="AUGUST" descriptionPropertiesKey="BENNINGTON"/>
         <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="MARCH" descriptionPropertiesKey="CANBERRA"/>
-        <tns:FixedWeekday which="LAST" weekday="MONDAY" month="MAY" validFrom="1968" descriptionPropertiesKey="MEMORIAL"/>
-        <tns:FixedWeekday which="SECOND" weekday="SUNDAY" month="MAY" descriptionPropertiesKey="MOTHERS_DAY"/>
-        <tns:FixedWeekday which="THIRD" weekday="SUNDAY" month="JUNE" descriptionPropertiesKey="FATHERS_DAY"/>
-        <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="SEPTEMBER" validFrom="1895" descriptionPropertiesKey="LABOUR_DAY"/>
+        <tns:Fixed month="MARCH" day="31" descriptionPropertiesKey="CESAR_CHAVEZ"/>
+        <tns:Fixed month="DECEMBER" day="25" descriptionPropertiesKey="CHRISTMAS"/>
+        <tns:Fixed month="DECEMBER" day="24" descriptionPropertiesKey="CHRISTMAS_EVE"/>
+        <tns:Fixed month="MAY" day="5" descriptionPropertiesKey="CINCO_DE_MAYO"/>
         <tns:FixedWeekday which="SECOND" weekday="MONDAY" month="OCTOBER" validFrom="1934" descriptionPropertiesKey="COLUMBUS_DAY"/>
-        <tns:FixedWeekday which="FOURTH" weekday="THURSDAY" month="NOVEMBER" validFrom="1863" descriptionPropertiesKey="THANKSGIVING"/>
-
-        <tns:ChristianHoliday type="EASTER" descriptionPropertiesKey="christian.EASTER"/>
-        <tns:ChristianHoliday type="CLEAN_MONDAY" descriptionPropertiesKey="christian.CLEAN_MONDAY"/>
-        <tns:ChristianHoliday type="GOOD_FRIDAY" descriptionPropertiesKey="christian.GOOD_FRIDAY"/>
-        <tns:ChristianHoliday type="ASH_WEDNESDAY" descriptionPropertiesKey="christian.ASH_WEDNESDAY"/>
-        <tns:ChristianHoliday type="MARDI_GRAS" descriptionPropertiesKey="christian.MARDI_GRAS"/>
-        <tns:ChristianHoliday type="PENTECOST" descriptionPropertiesKey="christian.PENTECOST" />
-
         <!-- This is technically every other year and needs every="EVEN_YEARS" on the back,
              but that messes everything up if the year is unknown and we run in an add year!
              Besides, there are often local elections in odd years which we should allow. -->
         <tns:RelativeToWeekdayInMonth weekday="TUESDAY" when="AFTER" descriptionPropertiesKey="ELECTION_DAY">
             <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="NOVEMBER"/>
         </tns:RelativeToWeekdayInMonth>
+        <tns:FixedWeekday which="THIRD" weekday="SUNDAY" month="JUNE" descriptionPropertiesKey="FATHERS_DAY"/>
+        <tns:Fixed month="FEBRUARY" day="2" descriptionPropertiesKey="GROUNDHOG"/>
+        <tns:Fixed month="NOVEMBER" day="5" descriptionPropertiesKey="GUY_FAWKES"/>
+        <tns:Fixed month="OCTOBER" day="31" descriptionPropertiesKey="HALLOWEEN"/>
+        <tns:Fixed month="JANUARY" day="20" descriptionPropertiesKey="INAUGURATION"/>
+        <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="JUNE" descriptionPropertiesKey="JEFFERSON_DAVIS"/>
         <tns:Fixed month="JUNE" day="19" validFrom="2021" descriptionPropertiesKey="JUNETEENTH">
             <tns:MovingCondition substitute="SATURDAY" with="PREVIOUS" weekday="FRIDAY"/>
             <tns:MovingCondition substitute="SUNDAY" with="NEXT" weekday="MONDAY"/>
         </tns:Fixed>
+        <tns:Fixed month="MARCH" day="26" descriptionPropertiesKey="KALANIANAOLE"/>
+        <tns:Fixed month="JUNE" day="11" descriptionPropertiesKey="KAMEHAMEHA"/>
+        <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="SEPTEMBER" validFrom="1895" descriptionPropertiesKey="LABOUR_DAY"/>
+        <tns:RelativeToWeekdayInMonth weekday="FRIDAY" when="BEFORE" descriptionPropertiesKey="LEE_JACKSON">
+            <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="JANUARY" validFrom="1986" descriptionPropertiesKey="MARTIN_LUTHER_KING"/>
+        </tns:RelativeToWeekdayInMonth>
+        <tns:Fixed month="FEBRUARY" day="12" descriptionPropertiesKey="LINCOLN"/>
+        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="JANUARY" validFrom="1986" descriptionPropertiesKey="MARTIN_LUTHER_KING"/>
+        <tns:Fixed month="MAY" day="1" descriptionPropertiesKey="MAYDAY"/>
+        <tns:Fixed month="MAY" day="30" validFrom="1869" validTo="1967" descriptionPropertiesKey="MEMORIAL"/>
+        <tns:FixedWeekday which="LAST" weekday="MONDAY" month="MAY" validFrom="1968" descriptionPropertiesKey="MEMORIAL"/>
+        <tns:FixedWeekday which="SECOND" weekday="SUNDAY" month="MAY" descriptionPropertiesKey="MOTHERS_DAY"/>
+        <tns:FixedWeekday which="LAST" weekday="FRIDAY" month="OCTOBER" descriptionPropertiesKey="NEVADA"/>
+        <tns:Fixed month="JANUARY" day="1" descriptionPropertiesKey="NEW_YEAR"/>
+        <tns:Fixed month="DECEMBER" day="31" descriptionPropertiesKey="NEW_YEARS_EVE"/>
+        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="APRIL" descriptionPropertiesKey="PATRIOT"/>
+        <tns:Fixed month="JULY" day="24" descriptionPropertiesKey="PIONEER"/>
         <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1971" descriptionPropertiesKey="PRESIDENTS_DAY"/>
+        <tns:FixedWeekday which="FIRST" weekday="MONDAY" month="MARCH" descriptionPropertiesKey="PULASKI"/>
+        <tns:RelativeToWeekdayInMonth weekday="FRIDAY" when="BEFORE" descriptionPropertiesKey="SERVICE_REDUCTION">
+            <tns:FixedWeekday which="LAST" weekday="MONDAY" month="MAY"/>
+        </tns:RelativeToWeekdayInMonth>
+        <tns:FixedWeekday which="LAST" weekday="MONDAY" month="MARCH" descriptionPropertiesKey="SEWARD"/>
+        <tns:Fixed month="APRIL" day="23" descriptionPropertiesKey="ST_GEORGE"/>
+        <tns:Fixed month="MARCH" day="17" descriptionPropertiesKey="ST_PATRICK"/>
+        <!-- This is specific to Hawaii.  Other states have their own versions. -->
+        <tns:FixedWeekday which="THIRD" weekday="FRIDAY" month="AUGUST" descriptionPropertiesKey="STATEHOOD"/>
+        <tns:FixedWeekday which="FOURTH" weekday="THURSDAY" month="NOVEMBER" validFrom="1863" descriptionPropertiesKey="THANKSGIVING"/>
+        <tns:Fixed month="MAY" day="8" descriptionPropertiesKey="TRUMAN"/>
+        <tns:Fixed month="JULY" day="4" validFrom="1776" descriptionPropertiesKey="US_INDEPENDENCE"/>
+        <tns:Fixed month="FEBRUARY" day="14" descriptionPropertiesKey="VALENTINE"/>
+        <tns:Fixed month="NOVEMBER" day="11" validFrom="1938" descriptionPropertiesKey="VETERANS"/>
+        <tns:FixedWeekday which="SECOND" weekday="MONDAY" month="AUGUST" descriptionPropertiesKey="VICTORY"/>
+        <tns:FixedWeekday which="THIRD" weekday="MONDAY" month="FEBRUARY" validFrom="1968" descriptionPropertiesKey="WASHINGTONS_BIRTHDAY"/>
+        <tns:Fixed month="JUNE" day="20" descriptionPropertiesKey="WEST_VIRGINIA"/>
+        <tns:ChristianHoliday type="ASH_WEDNESDAY" descriptionPropertiesKey="christian.ASH_WEDNESDAY"/>
+        <tns:ChristianHoliday type="CLEAN_MONDAY" descriptionPropertiesKey="christian.CLEAN_MONDAY"/>
+        <tns:ChristianHoliday type="EASTER" descriptionPropertiesKey="christian.EASTER"/>
+        <tns:ChristianHoliday type="EASTER_MONDAY" descriptionPropertiesKey="christian.EASTER_MONDAY"/>
+        <tns:ChristianHoliday type="GOOD_FRIDAY" descriptionPropertiesKey="christian.GOOD_FRIDAY"/>
+        <tns:ChristianHoliday type="MARDI_GRAS" descriptionPropertiesKey="christian.MARDI_GRAS"/>
+        <tns:ChristianHoliday type="PENTECOST" descriptionPropertiesKey="christian.PENTECOST" />
 
+        <!-- These are very specific to the CLU Lab. -->
         <tns:Fixed month="APRIL" day="5" descriptionPropertiesKey="FIRST_CONTACT_DAY"/>
         <tns:Fixed month="MARCH" day="14" descriptionPropertiesKey="PI_DAY"/>
         <tns:Fixed month="SEPTEMBER" day="8"  validFrom="1966" descriptionPropertiesKey="STAR_TREK_DAY"/>

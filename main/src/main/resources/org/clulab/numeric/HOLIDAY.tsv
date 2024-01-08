@@ -53,6 +53,7 @@ first contact day                       //  FIRST_CONTACT_DAY
 groundhog day                           //  GROUNDHOG
 guy fawkes day                          //  GUY_FAWKES
 halloween                               //  HALLOWEEN
+inauguration day                        //  INAUGURATION
 jefferson davis day						//	JEFFERSON_DAVIS
 jefferson davis ' day					//	JEFFERSON_DAVIS
 jefferson davis birthday      			//	JEFFERSON_DAVIS
@@ -91,7 +92,6 @@ reverend dr. martin luther king jr. day //	MARTIN_LUTHER_KING
 may day                                 //  MAYDAY
 workers day                             //  MAYDAY
 workers ' day                           //  MAYDAY
-inauguration day                        //  INAUGURATION
 international workers day               //  MAYDAY
 international workers ' day             //  MAYDAY
 memorial day							//	MEMORIAL
