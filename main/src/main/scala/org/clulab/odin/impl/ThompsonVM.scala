@@ -77,7 +77,7 @@ object ThompsonVM {
       partialGroups: PartialGroups = Nil
     ): Seq[Thread] = Debugger.debugTokInst(tok, inst) {
 
-      // TODO: Why is the List while I see Seq and even Vector elsewhere?
+      // TODO: Why is this List while I see Seq and even Vector elsewhere?
       @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
@@ -95,6 +95,7 @@ object ThompsonVM {
               loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, threads)
             case _ => sys.error("unable to close capture")
           }
+          // Here we loop on rest.  Could that have different ms?
           case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: threads)
         }
       }
