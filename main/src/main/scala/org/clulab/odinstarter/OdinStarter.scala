@@ -1,12 +1,13 @@
 package org.clulab.odinstarter
 
-import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.Mention
+import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
 import java.io.File
+import java.nio.charset.StandardCharsets.UTF_8
 
 object OdinStarter extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
@@ -26,7 +27,7 @@ object OdinStarter extends App {
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
-  val extractorEngine = {
+  val (rules, ruleDirOpt) = {
     val masterResource = "/org/clulab/odinstarter/main.yml"
     // We usually want to reload rules during development,
     // so we try to load them from the filesystem first, then jar.
@@ -36,19 +37,55 @@ object OdinStarter extends App {
     if (masterFile.exists) {
       // Read rules from file in filesystem.
       val rules = FileUtils.getTextFromFile(masterFile)
-      ExtractorEngine(rules, ruleDir = Some(resourceDir))
+      val ruleDirOpt = Some(resourceDir)
+
+      (rules, ruleDirOpt)
     }
     else {
       // Read rules from resource in jar.
       val rules = FileUtils.getTextFromResource(masterResource)
-      ExtractorEngine(rules, ruleDir = None)
+      val ruleDirOpt = None
+
+      (rules, ruleDirOpt)
     }
   }
+  val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
+  val extractors = reader.read(rules)
+  val extractorEngine = new ExtractorEngine(extractors, identityAction)
   val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   for (mention <- mentions)
     printMention(mention)
+
+  for (extractor <- extractors)
+    visualize(extractor)
+
+  def visualize(extractor: Extractor): Unit = {
+    extractor match {
+      case extractor: TokenExtractor =>
+        val pattern: TokenPattern = extractor.pattern
+        val inst: Inst = pattern.start
+        // Visualize the parts.
+        println("There was an token extractor.")
+      case extractor: GraphExtractor =>
+        val pattern: GraphPattern = extractor.pattern
+        // val inst: Inst = // This would need to be done differently.
+        // Visualize the parts.
+        println("There was a graph extractor.")
+      case extractor: CrossSentenceExtractor =>
+        val anchorExtractor: TokenExtractor = extractor.anchorPattern
+        val anchorPattern: TokenPattern = anchorExtractor.pattern
+        val anchorInst: Inst = anchorPattern.start
+        // Visualize the parts.
+
+        val neighborExtractor: TokenExtractor = extractor.neighborPattern
+        val neighborPattern: TokenPattern = neighborExtractor.pattern
+        val neighborInst: Inst = neighborPattern.start
+        // Visualize the parts.
+        println("There was a cross-sentence extractor.")
+    }
+  }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val indent = "    " * depth
