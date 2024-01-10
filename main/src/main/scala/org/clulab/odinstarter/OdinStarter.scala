@@ -1,7 +1,7 @@
 package org.clulab.odinstarter
 
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
-import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, TokenExtractor, TokenPattern}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RelationGraphPattern, RuleReader, TokenExtractor, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
@@ -70,7 +70,16 @@ object OdinStarter extends App {
         println("There was an token extractor.")
       case extractor: GraphExtractor =>
         val pattern: GraphPattern = extractor.pattern
-        // val inst: Inst = // This would need to be done differently.
+
+        // These would need to be done differently.
+        pattern match {
+          case innerPattern: TriggerPatternGraphPattern =>
+            val pattern: TokenPattern = innerPattern.trigger
+            val inst: Inst = pattern.start
+            // Visualize the parts.
+          case innerPattern: RelationGraphPattern =>
+          case innerPattern: TriggerMentionGraphPattern =>
+        }
         // Visualize the parts.
         println("There was a graph extractor.")
       case extractor: CrossSentenceExtractor =>
