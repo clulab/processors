@@ -49,7 +49,7 @@ libraryDependencies ++= {
     // for machine learning
     "org.clulab"                  % "deberta-onnx-model"          % "0.1.0",
     //"org.clulab"                  % "roberta-onnx-model"          % "0.1.0",
-    "org.clulab"                 %% "scala-transformers-encoder"  % "0.6.3-SNAPSHOT", // Apache-2.0
+    "org.clulab"                 %% "scala-transformers-encoder"  % "0.7.0", // Apache-2.0
     "de.bwaldvogel"               % "liblinear"                   % "2.30", // BSD-3
     "tw.edu.ntu.csie"             % "libsvm"                      % "3.23", // BSD
     // NLP tools used by CluProcessor
