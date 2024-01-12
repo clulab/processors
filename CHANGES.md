@@ -1,5 +1,11 @@
 + **9.0.0** - Replace CluProcessor with BalaurProcessor
++ **8.5.4** - Revise holiday normalization, downgrade JollyDay library, add jaxb-ri for Java 11+
++ **8.5.4** - Generate hugging face embeddings for potential use in grounding
++ **8.5.4** - Improve pounds/lbs, date handling, seasons
++ **8.5.4** - Change to Using, adjust kryo generation, rearchitect json serialization
 + **8.5.4** - Add a webapp subproject
++ **8.5.4** - Include a sample Odin starter project
++ **8.5.4** - Handle contractions better, copy sentences into a document
 + **8.5.3** - Allow document construction from text fragments containing multiple sentences
 + **8.5.3** - Build for Scala 3, use artifactory.clulab.org, streamline buffers
 + **8.5.3** - Improve number parser with words such as "dozen", "grand"

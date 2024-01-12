@@ -55,7 +55,7 @@ libraryDependencies ++= {
     // NLP tools used by CluProcessor
     "org.antlr"                   % "antlr4-runtime"           % "4.9.2",  // for tokenization // BSD
     "org.clulab"                  % "lemport"                  % "0.9.10" exclude("org.scala-lang", "scala-library"), // Portuguese lemmatizer // LGPL-3.0
-    "de.jollyday"                 % "jollyday"                 % "0.5.10", // for holidays normalization // Apache-2.0
+    "de.jollyday"                 % "jollyday"                 % "0.4.9", // for holidays normalization, match stanford-nlp dependency // Apache-2.0
     // logging
     // The Scala interface is not used in processors.
     // "com.typesafe.scala-logging" %% "scala-logging"            % "3.9.4",
@@ -77,6 +77,8 @@ libraryDependencies ++= {
     "org.scala-lang.modules"     %% "scala-parser-combinators" % combinatorsVersion, // Apache-2.0
     "org.yaml"                    % "snakeyaml"                % "1.14", // Apache-2.0
     // progress bar for training
-    "me.tongfei"                  % "progressbar"              % "0.9.3" // MIT
+    "me.tongfei"                  % "progressbar"              % "0.9.3", // MIT
+    // This supports JollyDay on Java > 8.
+    "com.sun.xml.bind"            % "jaxb-ri"                  % "2.3.3"
   ) ++ parallelLibraries ++ scala2Libraries
 }

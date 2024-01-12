@@ -15,12 +15,10 @@ libraryDependencies ++= {
     // io7m.xom brings in XML but in such a way that the dependencies are mixed up
     // and one gets "* xml-apis:xml-apis is evicted for all versions" so we have none.
     "edu.stanford.nlp" % "stanford-corenlp" % corenlpV // GNU-v3+ (https://stanfordnlp.github.io/CoreNLP/)
-        exclude("de.jollyday", "jollyday")
         exclude("org.slf4j", "slf4j-api")
         exclude("org.apache.commons", "commons-lang3")
         exclude("com.io7m.xom", "xom"),
     "edu.stanford.nlp" % "stanford-corenlp" % corenlpV classifier "models"
-        exclude("de.jollyday", "jollyday")
         exclude("org.slf4j", "slf4j-api")
         exclude("org.apache.commons", "commons-lang3")
         exclude("com.io7m.xom", "xom")
