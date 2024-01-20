@@ -8,14 +8,16 @@ import org.clulab.utils.FileUtils
 
 import java.io.File
 
+case class GraphNode(name: String, label: String, children: Seq[GraphNode] = Seq.empty)
+
 object OdinStarter extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
-  // configuration is the subproject directory so that this resourceDir is accessible.
+  // configurati0on is the subproject directory so that this resourceDir is accessible.
   val resourceDir: File = new File("./src/main/resources")
   val customLexiconNer = { // i.e., Named Entity Recognizer
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
       // You can add additional kbs (knowledge bases) and caseInsensitiveMatchings here.
-      ("org/clulab/odinstarter/FOOD.tsv", true) // ,
+      ("org/clulab/odinstarter/FOOD.tsv", true) // Text to be parsed against the rules
       // ("org/clulab/odinstarter/RESTAURANTS.tsv", false)
     )
     val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
@@ -25,9 +27,10 @@ object OdinStarter extends App {
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
+
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
   val extractorEngine = {
-    val masterResource = "/org/clulab/odinstarter/main.yml"
+    val masterResource = "/org/clulab/odinstarter/main.yml"  // Loading the rules from main.yml
     // We usually want to reload rules during development,
     // so we try to load them from the filesystem first, then jar.
     // The resource must start with /, but the file probably shouldn't.
@@ -44,11 +47,40 @@ object OdinStarter extends App {
       ExtractorEngine(rules, ruleDir = None)
     }
   }
+
   val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
-  for (mention <- mentions)
+  // Initializing the graph by creating a root node for the graph
+  val rootNode = GraphNode("Root", "Root")
+
+  for (mention <- mentions) {
+    addMentionToGraphNode(rootNode, mention)
     printMention(mention)
+  }
+
+  visualizeGraph(rootNode, 2)
+
+  def addMentionToGraphNode(parentNode: GraphNode, mention: Mention): Unit = {
+    val node = GraphNode(mention.labels.headOption.getOrElse("None"), mention.text)
+
+    val updatedParentNode = parentNode.copy(children = parentNode.children :+ node)
+
+    // Recursively add children mentions
+    for ((argName, argMentions) <- mention.arguments; childMention <- argMentions) {
+      addMentionToGraphNode(updatedParentNode, childMention)
+    }
+  }
+
+  def visualizeGraph(node: GraphNode, depth: Int): Unit = {
+    val indent = "  " * depth
+    println(s"$indent${node.name}: ${node.label}")
+
+    // visualize children
+    for (child <- node.children) {
+      visualizeGraph(child, depth + 1)
+    }
+  }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val indent = "    " * depth
