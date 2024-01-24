@@ -1,23 +1,22 @@
 package org.clulab.odinstarter
 
-import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.Mention
+import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
 import java.io.File
-
-case class GraphNode(name: String, label: String, children: Seq[GraphNode] = Seq.empty)
+import java.nio.charset.StandardCharsets.UTF_8
 
 object OdinStarter extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
-  // configurati0on is the subproject directory so that this resourceDir is accessible.
+  // configuration is the subproject directory so that this resourceDir is accessible.
   val resourceDir: File = new File("./src/main/resources")
   val customLexiconNer = { // i.e., Named Entity Recognizer
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
       // You can add additional kbs (knowledge bases) and caseInsensitiveMatchings here.
-      ("org/clulab/odinstarter/FOOD.tsv", true) // Text to be parsed against the rules
+      ("org/clulab/odinstarter/FOOD.tsv", true) // ,
       // ("org/clulab/odinstarter/RESTAURANTS.tsv", false)
     )
     val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
@@ -27,10 +26,9 @@ object OdinStarter extends App {
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
-
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
-  val extractorEngine = {
-    val masterResource = "/org/clulab/odinstarter/main.yml"  // Loading the rules from main.yml
+  val (rules, ruleDirOpt) = {
+    val masterResource = "/org/clulab/odinstarter/main.yml"
     // We usually want to reload rules during development,
     // so we try to load them from the filesystem first, then jar.
     // The resource must start with /, but the file probably shouldn't.
@@ -39,48 +37,49 @@ object OdinStarter extends App {
     if (masterFile.exists) {
       // Read rules from file in filesystem.
       val rules = FileUtils.getTextFromFile(masterFile)
-      ExtractorEngine(rules, ruleDir = Some(resourceDir))
+      val ruleDirOpt = Some(resourceDir)
+
+      (rules, ruleDirOpt)
     }
     else {
       // Read rules from resource in jar.
       val rules = FileUtils.getTextFromResource(masterResource)
-      ExtractorEngine(rules, ruleDir = None)
+      val ruleDirOpt = None
+
+      (rules, ruleDirOpt)
     }
   }
-
+  val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
+  val extractors = reader.read(rules)
+  val extractorEngine = new ExtractorEngine(extractors, identityAction)
   val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
-  // Initializing the graph by creating a root node for the graph
-  val rootNode = GraphNode("Root", "Root")
-
-  for (mention <- mentions) {
-    addMentionToGraphNode(rootNode, mention)
+  for (mention <- mentions)
     printMention(mention)
-  }
 
-  visualizeGraph(rootNode, 2)
+  for (extractor <- extractors)
+    visualize(extractor)
 
-  def addMentionToGraphNode(parentNode: GraphNode, mention: Mention): Unit = {
-    val node = GraphNode(mention.labels.headOption.getOrElse("None"), mention.text)
-
-    val updatedParentNode = parentNode.copy(children = parentNode.children :+ node)
-
-    // Recursively add children mentions
-    for ((argName, argMentions) <- mention.arguments; childMention <- argMentions) {
-      addMentionToGraphNode(updatedParentNode, childMention)
+  def visualize(extractor: Extractor): Unit = {
+    extractor match {
+      case tokenExtractor: TokenExtractor => visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name)
+      case graphExtractor: GraphExtractor => println("There was a graph extractor.")
+      case crossSentenceExtractor: CrossSentenceExtractor =>
+        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)")
+        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)")
+      case _ => println("Unknown extractor type")
     }
   }
 
-  def visualizeGraph(node: GraphNode, depth: Int): Unit = {
-    val indent = "  " * depth
-    println(s"$indent${node.name}: ${node.label}")
-
-    // visualize children
-    for (child <- node.children) {
-      visualizeGraph(child, depth + 1)
+  private def visualizeExtractor(pattern: Inst, name: String): Unit = {
+    val instString = pattern.toString
+    println(s"There was an extractor: $name - Inst: $instString")
+    if (pattern.next != null) {
+      visualizeExtractor(pattern.next, s"$name (Next)")
     }
   }
+
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val indent = "    " * depth
