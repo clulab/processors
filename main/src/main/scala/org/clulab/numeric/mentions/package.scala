@@ -918,9 +918,13 @@ package object mentions {
     val wordsOpt = getArgWords(argName, m)
 
     if (wordsOpt.isEmpty) None
-    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last week")) {getLastWeekRange(m)}
-    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last two weeks")) {getLastTwoWeeksRange(m)}
-    else weekNormalizer.norm(wordsOpt.get)
+    else {
+      val wordSeq = wordsOpt.get.mkString(" ").toLowerCase()
+      if (wordSeq.equals("last week")) getLastWeekRange(m)
+      else if (wordSeq.equals("last two weeks")) getLastTwoWeeksRange(m)
+      else if (wordSeq.equals("last three weeks")) getLastThreeWeeksRange(m)
+      else weekNormalizer.norm(wordsOpt.get)
+    }
   }
 
   private def getLastWeekRange(m:Mention): Option[WeekRange] = {
@@ -939,6 +943,15 @@ package object mentions {
     val lastDay = monthObj.length(false)
 
     Some(WeekRange(startDay = Some(Seq((lastDay - 13).toString)), endDay = Some(Seq(lastDay.toString))))
+  }
+
+  private def getLastThreeWeeksRange(m:Mention): Option[WeekRange] = {
+    val month = getArgWords("month", m)
+    val modifiedMonth = TempEvalFormatter.convertLiteralMonth(month.get.mkString(""))
+    val monthObj = Month.of(modifiedMonth)
+    val lastDay = monthObj.length(false)
+
+    Some(WeekRange(startDay = Some(Seq((lastDay - 20).toString)), endDay = Some(Seq(lastDay.toString))))
   }
 
   private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {

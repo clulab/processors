@@ -101,7 +101,7 @@
   example: "First two weeks of May"
   action: mkDateRangeMentionWithWeek
   pattern: |
-    (?<week> /(?i)(first|second|last)/ /(?i)two/ /(?i)weeks/) /(?i)of/ @month:PossibleMonth
+    (?<week> /(?i)(first|second|last)/ /(?i)(two|three)/ /(?i)weeks/) /(?i)of/ @month:PossibleMonth
 
 - name: date-unbound-range-1
   priority: ${rulepriority}
