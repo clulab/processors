@@ -58,6 +58,15 @@
   pattern: |
     /(?i)between/ @month1:PossibleMonth /(?i)(and|to)/ @month2:PossibleMonth @year:PossibleYear
 
+- name: date-range-5-week
+  priority: ${rulepriority}
+  label: DateRange
+  type: token
+  example: "It took place between the second and third weeks of June"
+  action: mkDateRangeMentionBetweenWeeks
+  pattern: |
+    /(?i)between/ /(?i)the/? (?<week1> /(?i)(first|1st|second|2nd)/ /(?i)week/?) /(?i)(and|to)/ (?<week2> /(?i)(second|2nd|third|3rd|fourth|4th|last)/ /(?i)weeks?/) /(?i)of/ @month:PossibleMonth 
+
 - name: date-range-6
   priority: ${rulepriority}
   label: DateRange

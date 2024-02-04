@@ -422,6 +422,14 @@ class TestNumericEntityRecognition extends Test {
     ensure(sentence = "We applied it in Fall in 21", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "XX21-09-22 -- XX21-12-21")
     ensure(sentence = "We applied it in fall of 2021", Interval(4, 7), goldEntity= "DATE-RANGE", goldNorm = "2021-09-22 -- 2021-12-21")
   }
+
+  it should "recognize between-week date ranges" in {
+    ensure("It took place between the second and third weeks of June",
+      Interval(3, 11), "DATE-RANGE", "XXXX-06-08 -- XXXX-06-21")
+
+    ensure("It took place between the first and 4th weeks of May",
+      Interval(3, 11), "DATE-RANGE", "XXXX-05-01 -- XXXX-05-28")
+  }
   
   it should "recognize measurement units" in {
     ensure("It was 12 ha", Interval(2, 4), "MEASUREMENT-AREA", "12.0 ha")
