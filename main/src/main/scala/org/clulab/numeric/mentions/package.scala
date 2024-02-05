@@ -212,28 +212,27 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
 
-  def toDateRangeMentionBetweenWeeks(weekNormalizer: WeekNormalizer)(mention: Mention): DateRangeMention =  mention match {
-    case m: DateRangeMention => m
+  def toDateRangeMentionBetweenWeeks(weekNormalizer: WeekNormalizer)(mention: Mention): DateRangeMention =  {
 
-    case m: RelationMention =>
-      val w1Norm = getWeekRange(weekNormalizer)("week1", m)
-      if(w1Norm.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument week1 in mention [${m.raw.mkString(" ")}]!")
+    def throwRuntimeException(week: String): WeekRange = {
+      throw new RuntimeException(s"ERROR: could not find argument $week in mention [${mention.raw.mkString(" ")}]!")
+    }
 
-      val w2Norm = getWeekRange(weekNormalizer)("week2", m)
-      if(w2Norm.isEmpty)
-        throw new RuntimeException(s"ERROR: could not find argument week2 in mention [${m.raw.mkString(" ")}]!")
+    mention match {
+      case m: DateRangeMention => m
+      case m: RelationMention =>
+        val w1Norm = getWeekRange(weekNormalizer)("week1", m).getOrElse(throwRuntimeException("week1"))
+        val w2Norm = getWeekRange(weekNormalizer)("week2", m).getOrElse(throwRuntimeException("week2"))
+        val monthOpt = getArgWords("month", m)
 
-      val month = getArgWords("month", m)
-
-      DateRangeMention(
-        m,
-        TempEvalFormatter.mkDate(w1Norm.get.startDay, month, None),
-        TempEvalFormatter.mkDate(w2Norm.get.endDay, month, None)
-      )
-
-    case m =>
-      throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
+        DateRangeMention(
+          m,
+          TempEvalFormatter.mkDate(w1Norm.startDay, monthOpt, None),
+          TempEvalFormatter.mkDate(w2Norm.endDay, monthOpt, None)
+        )
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
+    }
   }
 
   def toDateRangeMentionWithMonth(mention: Mention): DateRangeMention =  mention match {
@@ -941,14 +940,16 @@ package object mentions {
   private def getWeekRange(weekNormalizer: WeekNormalizer)(argName: String, m:Mention): Option[WeekRange] = {
     val wordsOpt = getArgWords(argName, m)
 
-    if (wordsOpt.isEmpty) None
-    else {
-      val wordSeq = wordsOpt.get.mkString(" ").toLowerCase()
+    wordsOpt.flatMap { words =>
+      val wordSeq = words.mkString(" ").toLowerCase()
       //println(s"wordSeq = $wordSeq")
-      if (wordSeq.equals("last week")) getLastWeekRange(m)
-      else if (wordSeq.equals("last two weeks")) getLastTwoWeeksRange(m)
-      else if (wordSeq.equals("last three weeks")) getLastThreeWeeksRange(m)
-      else weekNormalizer.norm(wordsOpt.get)
+
+      wordSeq match {
+        case "last week" => getLastWeekRange(m)
+        case "last two weeks" => getLastTwoWeeksRange(m)
+        case "last three weeks" => getLastThreeWeeksRange(m)
+        case _ => weekNormalizer.norm(words)
+      }
     }
   }
 
