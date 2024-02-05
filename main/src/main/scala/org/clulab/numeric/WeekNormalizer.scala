@@ -24,12 +24,12 @@ class WeekNormalizer(weekPath: String) {
 object WeekNormalizer {
 
   def readNormsFromResource(path: String): Map[String, WeekRange] = {
-    val customResourcePath = new File(NumericEntityRecognizer.resourceDir, path)
+    val customFile = new File(NumericEntityRecognizer.resourceDir, path)
+    val source =
+        if (customFile.exists) Sourcer.sourceFromFile(customFile)
+        else Sourcer.sourceFromResource(path)
 
-    if (customResourcePath.exists)
-      Using.resource(Sourcer.sourceFromFile(customResourcePath))(readNormsFromSource)
-    else
-      Using.resource(Sourcer.sourceFromResource(path))(readNormsFromSource)
+    Using.resource(source)(readNormsFromSource)
   }
 
   def readNormsFromSource(source: Source): Map[String, WeekRange] = {
@@ -38,6 +38,7 @@ object WeekNormalizer {
     CommentedStandardKbSource.read(source) { (week, normOpt, unitClassOpt) =>
       assert(normOpt.isDefined) // We're insisting on this.
 
+      val weeks = week.split('|').map(_.trim).filter(_.nonEmpty)
       val norm = normOpt.get.split("--").map(_.trim)
       val (start, end) = norm match {
         case Array(start, end) => (start, end)
@@ -45,7 +46,10 @@ object WeekNormalizer {
       }
       val startDay = getDay(start)
       val endDay = getDay(end)
-      norms += week -> WeekRange(startDay, endDay)
+      val weekRange = WeekRange(startDay, endDay)
+      val entries = weeks.map(_ -> weekRange)
+
+      norms ++= entries
     }
     norms.toMap
   }
