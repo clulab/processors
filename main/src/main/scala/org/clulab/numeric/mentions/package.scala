@@ -212,6 +212,29 @@ package object mentions {
       throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
   }
 
+  def toDateRangeMentionBetweenWeeks(weekNormalizer: WeekNormalizer)(mention: Mention): DateRangeMention =  {
+
+    def throwRuntimeException(week: String): WeekRange = {
+      throw new RuntimeException(s"ERROR: could not find argument $week in mention [${mention.raw.mkString(" ")}]!")
+    }
+
+    mention match {
+      case m: DateRangeMention => m
+      case m: RelationMention =>
+        val w1Norm = getWeekRange(weekNormalizer)("week1", m).getOrElse(throwRuntimeException("week1"))
+        val w2Norm = getWeekRange(weekNormalizer)("week2", m).getOrElse(throwRuntimeException("week2"))
+        val monthOpt = getArgWords("month", m)
+
+        DateRangeMention(
+          m,
+          TempEvalFormatter.mkDate(w1Norm.startDay, monthOpt, None),
+          TempEvalFormatter.mkDate(w2Norm.endDay, monthOpt, None)
+        )
+      case m =>
+        throw new RuntimeException(s"ERROR: cannot convert mention of type [${m.getClass.toString}] to DateRangeMention!")
+    }
+  }
+
   def toDateRangeMentionWithMonth(mention: Mention): DateRangeMention =  mention match {
     case m: DateRangeMention => m
 
@@ -917,10 +940,17 @@ package object mentions {
   private def getWeekRange(weekNormalizer: WeekNormalizer)(argName: String, m:Mention): Option[WeekRange] = {
     val wordsOpt = getArgWords(argName, m)
 
-    if (wordsOpt.isEmpty) None
-    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last week")) {getLastWeekRange(m)}
-    else if (wordsOpt.get.mkString(" ").toLowerCase().equals("last two weeks")) {getLastTwoWeeksRange(m)}
-    else weekNormalizer.norm(wordsOpt.get)
+    wordsOpt.flatMap { words =>
+      val wordSeq = words.mkString(" ").toLowerCase()
+      //println(s"wordSeq = $wordSeq")
+
+      wordSeq match {
+        case "last week" => getLastWeekRange(m)
+        case "last two weeks" => getLastTwoWeeksRange(m)
+        case "last three weeks" => getLastThreeWeeksRange(m)
+        case _ => weekNormalizer.norm(words)
+      }
+    }
   }
 
   private def getLastWeekRange(m:Mention): Option[WeekRange] = {
@@ -939,6 +969,15 @@ package object mentions {
     val lastDay = monthObj.length(false)
 
     Some(WeekRange(startDay = Some(Seq((lastDay - 13).toString)), endDay = Some(Seq(lastDay.toString))))
+  }
+
+  private def getLastThreeWeeksRange(m:Mention): Option[WeekRange] = {
+    val month = getArgWords("month", m)
+    val modifiedMonth = TempEvalFormatter.convertLiteralMonth(month.get.mkString(""))
+    val monthObj = Month.of(modifiedMonth)
+    val lastDay = monthObj.length(false)
+
+    Some(WeekRange(startDay = Some(Seq((lastDay - 20).toString)), endDay = Some(Seq(lastDay.toString))))
   }
 
   private def getHoliday(holiday: Seq[String], year: Option[Seq[String]]): (Option[Seq[String]], Option[Seq[String]]) = {
