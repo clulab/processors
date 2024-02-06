@@ -22,7 +22,7 @@ import PostProcessor._
 class BalaurProcessor protected (
   val config: Config,
   val optionalNER: Option[LexiconNER],
-  numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
+  val numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
   wordTokenizer: Tokenizer,
   wordLemmatizer: Lemmatizer,
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
@@ -44,6 +44,25 @@ class BalaurProcessor protected (
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
     TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
   )
+
+  def copy(
+    configOpt: Option[Config] = None,
+    optionalNEROpt: Option[Option[LexiconNER]] = None,
+    numericEntityRecognizerOptOpt: Option[Option[NumericEntityRecognizer]] = None,
+    wordTokenizerOpt: Option[Tokenizer] = None,
+    wordLemmatizerOpt: Option[Lemmatizer] = None,
+    tokenClassifierOpt: Option[TokenClassifier] = None
+  ): BalaurProcessor = {
+    new BalaurProcessor(
+      configOpt.getOrElse(this.config),
+      optionalNEROpt.getOrElse(this.optionalNER),
+      numericEntityRecognizerOptOpt.getOrElse(this.numericEntityRecognizerOpt),
+      wordTokenizerOpt.getOrElse(this.wordTokenizer),
+      wordLemmatizerOpt.getOrElse(this.wordLemmatizer),
+      tokenClassifierOpt.getOrElse(this.tokenClassifier)
+    )
+  }
+
   val eisner = new EisnerEnsembleParser()
 
   override def getConf: Config = config
