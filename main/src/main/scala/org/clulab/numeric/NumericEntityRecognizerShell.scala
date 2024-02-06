@@ -1,23 +1,30 @@
 package org.clulab.numeric
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
 
 import java.io.File
 
-class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableProcessor(() => new CluProcessor(), true) {
+class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableProcessor(() => new BalaurProcessor(), true) {
 
-  override def get: CluProcessor = super.get.asInstanceOf[CluProcessor]
+  override def get: BalaurProcessor = {
+    val processor = super.get.asInstanceOf[BalaurProcessor]
+
+    // Other code will run without this check, but no Mentions will be produced,
+    // which would lead to confusion.
+    assert(processor.numericEntityRecognizerOpt.isDefined)
+    processor
+  }
 
   override def reload(): Unit = {
-    val cluProcessor = this.get
-    val numericEntityRecognizer = cluProcessor
-        .numericEntityRecognizer
-        .reloaded(new File(ruleDirOpt.get))
+    val balaurProcessor = this.get
+    val numericEntityRecognizerOpt = balaurProcessor
+        .numericEntityRecognizerOpt
+        .map(_.reloaded(new File(ruleDirOpt.get)))
+    val numericEntityRecognizerOptOpt = numericEntityRecognizerOpt.map(Option(_))
 
-    processorOpt = Some(cluProcessor.copy(numericEntityRecognizerOptOpt = Some(Some(numericEntityRecognizer))))
+    processorOpt = Some(balaurProcessor.copy(numericEntityRecognizerOptOpt = numericEntityRecognizerOptOpt))
   }
 }
 
@@ -27,7 +34,7 @@ class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends Reloadabl
   /** The actual work, including printing out the output */
   def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
-    val mentions = proc.get.numericEntityRecognizer.extractFrom(doc)
+    val mentions = proc.get.numericEntityRecognizerOpt.map(_.extractFrom(doc)).getOrElse(Seq.empty)
 
     setLabelsAndNorms(doc, mentions)
     displayMentions(mentions, doc)

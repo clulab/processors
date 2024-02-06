@@ -21,6 +21,8 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Date: 8/1/17
   */
 object ToEnhancedDependencies {
+  type EdgeSpec = (Int, Int, String)
+
   def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
     collapsePrepositionsStanford(sentence, dgi)
@@ -49,7 +51,7 @@ object ToEnhancedDependencies {
    * Replicates nmod_* accross conj dependencies
    * economic decline has led to violence and displacement => nmod_to from "led" to both "violence" and "displacement"
    */
-  def replicateCollapsedNmods(collapsedNmods: Seq[(Int, Int, String)],
+  def replicateCollapsedNmods(collapsedNmods: Seq[EdgeSpec],
                               dgi: DirectedGraphIndex[String]): Unit = {
     for(nmod <- collapsedNmods) {
       val conjs = dgi.findByHeadAndName(nmod._2, "conj")
@@ -136,16 +138,29 @@ object ToEnhancedDependencies {
     remove(toRemove, dgi)
   }
 
+  def collapsePrepositionsUniversal(
+    sentence:Sentence, 
+    dgi:DirectedGraphIndex[String]): Seq[EdgeSpec] = {
+
+    val collapsedNmods = new ArrayBuffer[EdgeSpec]()
+    collapsePrepositionsUniversalNmodCase(sentence, dgi, collapsedNmods)
+    collapsePrepositionsUniversalDueTo(sentence, dgi, collapsedNmods)
+    collapsedNmods
+  }
+
   /**
     * Collapses nmod + case into nmod_x (universal dependencies)
     *     Mary gave a book to Jane => nmod_to from 1 to 5
-    *     There was famine due to drought => nmod_due_to from 2 to 5
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def collapsePrepositionsUniversal(sentence:Sentence, dgi:DirectedGraphIndex[String]): Seq[(Int, Int, String)] = {
-    val collapsedNmods = new ArrayBuffer[(Int, Int, String)]()
+  def collapsePrepositionsUniversalNmodCase(
+    sentence:Sentence, 
+    dgi:DirectedGraphIndex[String],
+    collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
+
     val toRemove = new ListBuffer[Edge[String]]
+    var shouldRemove = false
     val preps = dgi.findByName("nmod")
     for(prep <- preps) {
       toRemove += prep
@@ -156,11 +171,53 @@ object ToEnhancedDependencies {
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
-        collapsedNmods += ((prep.source, prep.destination, s"nmod_$mwe"))
+        val edgeSpec = (prep.source, prep.destination, s"nmod_$mwe")
+        collapsedNmods += edgeSpec
+        shouldRemove = true
       }
     }
-    remove(toRemove, dgi)
-    collapsedNmods
+
+    if(shouldRemove) remove(toRemove, dgi)
+  }
+
+  /**
+    * Collapses nmod + case into nmod_x (universal dependencies)
+    *     There was famine due to drought => nmod_due_to from 2 to 5
+    * @param sentence The sentence to operate on
+    * @param dgi The directed graph of collapsed dependencies at this stage
+    */
+  def collapsePrepositionsUniversalDueTo(
+    sentence:Sentence, 
+    dgi:DirectedGraphIndex[String], 
+    collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
+
+    val toRemove = new ListBuffer[Edge[String]]
+    var shouldRemove = false
+    val preps = dgi.findByName("mwe")
+    for(prep <- preps) {
+      if(sentence.lemmas.get(prep.source) == "due" && sentence.lemmas.get(prep.destination) == "to") {
+        // found a "due to" MWE
+        for(leftDep <- dgi.findByModifier(prep.source)) {
+          // found the dep from "famine" to "due"
+          toRemove += leftDep
+          if(leftDep.source >= 0 && leftDep.relation.contains("mod")) {
+            val source = leftDep.source
+            val label = leftDep.relation + "_due_to"
+            
+            for(rightDep <- dgi.findByHead(prep.source).filterNot(_.relation == "mwe")) {
+              // found the dep from "due" to "drought"
+              val destination = rightDep.destination
+              dgi.addEdge(source, destination, label)
+              val edgeSpec = (source, destination, label)
+              collapsedNmods += edgeSpec
+              shouldRemove = true
+            }
+          }
+        }
+      }
+    }
+
+    if(shouldRemove) remove(toRemove, dgi)
   }
 
   def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {

@@ -1,6 +1,6 @@
 package org.clulab.processors
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
 import org.clulab.utils.Test
 
@@ -12,7 +12,7 @@ import org.clulab.utils.Test
   */
 class TestTokenizers extends Test {
   val shallow = new ShallowNLPProcessor(internStrings = false)
-  val clu = new CluProcessor()
+  val clu = new BalaurProcessor()
 
   "tokenizers" should "have similar outputs" in {
     val text =

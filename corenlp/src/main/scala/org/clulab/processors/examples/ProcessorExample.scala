@@ -26,7 +26,7 @@ object ProcessorExample {
     
     // other processors supported:
     // BioNLPProcessor, and FastBioNLPProcessor - for the biomedical domain
-    // CluProcessor - similar to FastNLPProcessor, but using tools licensed under the Apache license
+    // BalaurProcessor - similar to FastNLPProcessor, but using tools licensed under the Apache license
 
     // the actual work is done here
     val doc = proc.annotate("John Smith went to China. He visited Beijing, on January 10th, 2013.")

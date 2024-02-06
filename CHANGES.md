@@ -1,3 +1,4 @@
++ **9.0.0** - Replace CluProcessor with BalaurProcessor
 + **8.5.4** - Revise holiday normalization, downgrade JollyDay library, add jaxb-ri for Java 11+
 + **8.5.4** - Generate hugging face embeddings for potential use in grounding
 + **8.5.4** - Improve pounds/lbs, date handling, seasons

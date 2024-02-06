@@ -1,11 +1,9 @@
 package org.clulab.processors
 
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
-import org.clulab.utils.{FileUtils, StringUtils, Test}
-import org.clulab.utils.Sourcer.utf8
+import org.clulab.processors.fastnlp.FastNLPProcessor
+import org.clulab.utils.{FileUtils, Sourcer, StringUtils, Test}
 
 import java.io.File
-import scala.io.Source
 import scala.util.Using
 
 class TestRepeatability extends Test {
@@ -16,7 +14,7 @@ class TestRepeatability extends Test {
     }
   }
 
-  val processor: Processor = new FastNLPProcessorWithSemanticRoles()
+  val processor: Processor = new FastNLPProcessor()
 
   behavior of "processing a document twice"
 
@@ -24,7 +22,7 @@ class TestRepeatability extends Test {
     val inputDir = FileUtils.getSubprojectDir("./corenlp/src/test/resources/documents")
     val file = new File(inputDir + "/16_South Sudan - Key Message Update_ Thu, 2018-01-25.txt")
     val text = {
-      val text = Using.resource(Source.fromFile(file, utf8)) { source =>
+      val text = Using.resource(Sourcer.sourceFromFile(file)) { source =>
         source.mkString.replace("\r\n", "\n")
       }
 

@@ -1,8 +1,7 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
 import org.clulab.processors.shallownlp.ShallowNLPProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.Test
 
 /**
@@ -11,7 +10,7 @@ import org.clulab.utils.Test
  * Date: 1/7/14
  */
 class TestFastNLPProcessor extends Test {
-  var proc:Processor = new FastNLPProcessorWithSemanticRoles(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
+  var proc:Processor = new FastNLPProcessor(internStrings = true, withRelationExtraction = true, withDiscourse = ShallowNLPProcessor.WITH_DISCOURSE)
 
   "FastNLPProcessor" should "generate correct dependencies in test sentence 1" in {
     val doc = proc.annotate("John Smith went to China.")
@@ -81,13 +80,16 @@ class TestFastNLPProcessor extends Test {
     doc.sentences.head.universalBasicDependencies.get.hasEdge(16, 18, "appos") should be (true)
   }
 
+  /*
   it should "recognize semantic roles correctly" in {
     val doc = proc.annotate("John Doe visited China.")
 
     doc.sentences.head.semanticRoles.get.hasEdge(2, 1, "A0") should be (true)
     doc.sentences.head.semanticRoles.get.hasEdge(2, 3, "A1") should be (true)
   }
+  */
 
+  /*
   it should "create semantic dependencies of the correct length" in {
     val text = "John ate cake, zz zz zz."
     val doc = proc.annotate(text)
@@ -99,4 +101,5 @@ class TestFastNLPProcessor extends Test {
     sent.enhancedSemanticRoles.get.outgoingEdges.length should be(sent.size)
     sent.enhancedSemanticRoles.get.incomingEdges.length should be(sent.size)
   }
+  */
 }

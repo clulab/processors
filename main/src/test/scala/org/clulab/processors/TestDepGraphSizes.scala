@@ -2,10 +2,10 @@ package org.clulab.processors
 
 import org.clulab.struct.DirectedGraph
 
-/** Makes sure that CluProcessor produces dependency graphs of correct sizes */
-class TestDepGraphSizes extends FatdynetTest {
+/** Makes sure that Processor produces dependency graphs of correct sizes */
+class TestDepGraphSizes extends CluTest {
 
-  "CluProcessor" should "produce dependency graphs that have the same size as the sentence" in {
+  "Processor" should "produce dependency graphs that have the same size as the sentence" in {
     // Document 3
     // val text = "Raise fertility on \n\n"
     // Document 11
@@ -25,6 +25,7 @@ class TestDepGraphSizes extends FatdynetTest {
       checkGraph(sent, d2, "universalEnhancedDependencies")
       d2.size should be (size)
 
+      /*
       val d3 = sent.semanticRoles.get
       checkGraph(sent, d3, "semanticRoles")
       d3.size should be (size)
@@ -32,6 +33,7 @@ class TestDepGraphSizes extends FatdynetTest {
       val d4 = sent.enhancedSemanticRoles.get
       checkGraph(sent, d4, "enhancedSemanticRoles")
       d4.size should be (size)
+      */
     }
   }
 

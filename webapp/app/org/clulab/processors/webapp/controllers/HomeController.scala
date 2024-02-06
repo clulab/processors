@@ -2,7 +2,7 @@ package org.clulab.processors.webapp.controllers
 
 import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention, RelationMention, TextBoundMention}
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.webapp.serialization.WebSerializer
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Unordered}
@@ -33,7 +33,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val kbs = customLexiconNerConfigs.map(_.kb)
       val caseInsensitiveMatchings = customLexiconNerConfigs.map(_.caseInsensitiveMatching)
       val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
-      val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+      val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
 
       processor
     }

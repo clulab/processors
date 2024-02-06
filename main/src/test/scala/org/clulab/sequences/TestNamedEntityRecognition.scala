@@ -1,11 +1,10 @@
 package org.clulab.sequences
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.Test
 
 class TestNamedEntityRecognition extends Test {
-  val processor = new CluProcessor()
+  val processor = new BalaurProcessor()
 
   behavior of "named entity recognition"
 

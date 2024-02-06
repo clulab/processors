@@ -21,13 +21,11 @@ import java.io.ObjectOutputStream
 import scala.collection.mutable
 import scala.util.Using
 
-class TestLexiconNER extends FatdynetTest {
+class TestLexiconNER extends CluTest {
 
   def mkSentence(text: String): Sentence = {
     val doc = proc.mkDocument(text)
-
-    proc.mkConstEmbeddings(doc)
-    proc.lemmatize(doc)
+    proc.annotate(doc)
     doc.sentences.head
   }
 

@@ -1,7 +1,7 @@
 package org.clulab.sequences
 
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.processors.clu.{CluProcessor, SpanishCluProcessor, PortugueseCluProcessor}
+import org.clulab.processors.clu.BalaurProcessor
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.InputStream
@@ -24,7 +24,7 @@ object ColumnsToDocument {
   val WORD_POS_CONLLU = 1
   val TAG_POS_CONLLU = 3
 
-  var proc:Processor = new CluProcessor()
+  var proc:Processor = new BalaurProcessor()
   var prevLang: String = "en"
 
   def readFromFile(fn:String,
@@ -40,13 +40,15 @@ object ColumnsToDocument {
     if (lang != prevLang) {
       if (lang == "pt") {
         println("Using Portuguese processors")
-        this.proc = new PortugueseCluProcessor()
+        throw new RuntimeException(s"ERROR: language '$lang' not supported!")
+        //this.proc = new PortugueseCluProcessor()
       } else if (lang == "es") {
         println("Using Spanish processors")
-        this.proc = new SpanishCluProcessor()
+        //this.proc = new SpanishCluProcessor()
+        throw new RuntimeException(s"ERROR: language '$lang' not supported!")
       } else {
         println("Using English processors")
-        this.proc = new CluProcessor()
+        this.proc = new BalaurProcessor()
       }
       this.prevLang = lang
     }
@@ -67,13 +69,15 @@ object ColumnsToDocument {
     // redefine proc acording to the language used
     if (lang == "pt"){
       println("Using Portuguese processors")
-      this.proc = new PortugueseCluProcessor()
+      //this.proc = new PortugueseCluProcessor()
+      throw new RuntimeException(s"ERROR: language '$lang' not supported!")
     } else if(lang == "es") {
       println("Using Spanish processors")
-      this.proc = new SpanishCluProcessor()
+      //this.proc = new SpanishCluProcessor()
+      throw new RuntimeException(s"ERROR: language '$lang' not supported!")
     } else {
       println("Using English processors")
-      this.proc = new CluProcessor()
+      this.proc = new BalaurProcessor()
     }
 
     Using.resource(Source.fromInputStream(stream)) { source =>
