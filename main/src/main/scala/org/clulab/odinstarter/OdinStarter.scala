@@ -1,7 +1,7 @@
 package org.clulab.odinstarter
 
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
-import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
@@ -82,6 +82,11 @@ object OdinStarter extends App {
 
     println(s"There was an extractor: $name - Inst: $instString")
     inst match {
+      //case done: Done =>
+
+      case pass: Pass =>
+        pass.visualize()
+
       case split: Split =>
         if (!loopsOrDeadEnds(split.lhs))
           visualizeExtractor(split.lhs, s"$name (LHS)")
@@ -94,6 +99,23 @@ object OdinStarter extends App {
       case saveEnd: SaveEnd =>
         saveEnd.visualize()
 
+      case matchToken: MatchToken =>
+        matchToken.visualize()
+
+      case matchMention: MatchMention =>
+        matchMention.visualize()
+
+      case sentenceStart: MatchSentenceStart =>
+        sentenceStart.visualize()
+
+      case sentenceEnd: MatchSentenceEnd =>
+        sentenceEnd.visualize()
+
+      case lookAhead: MatchLookAhead =>
+        lookAhead.visualize()
+
+      case lookBehind: MatchLookBehind =>
+        lookBehind.visualize()
 
       case _ =>
     }

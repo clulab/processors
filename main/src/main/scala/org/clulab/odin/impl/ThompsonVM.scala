@@ -376,6 +376,9 @@ case class MatchMention(
     name: Option[String],
     arg: Option[String]
 ) extends Inst {
+
+  def visualize(): String = s"MatchMention with name $name"
+
   def dup() = copy()
   override def hashCode: Int = (m, name, arg, super.hashCode).##
 
