@@ -298,7 +298,7 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
   override def hashCode: Int = (lhs, rhs, super.hashCode).##
 
-  def visualize(): String = "Split.  Check out my LHS and RHS!"
+  def visualize(): String = s"$posId. Split.  Check out my LHS and RHS!"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -360,7 +360,7 @@ case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (c, super.hashCode).##
 
-  def visualize(): String = s"MatchToken($c)"
+  def visualize(): String = s"$posId. MatchToken($c) -> ${next.posId}"
 
   override def equals(other: Any): Boolean = {
     other match {
