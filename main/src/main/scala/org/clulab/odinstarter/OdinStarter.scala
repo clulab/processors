@@ -1,7 +1,7 @@
 package org.clulab.odinstarter
 
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
-import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, TokenExtractor, TokenPattern}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, GraphPattern, Inst, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
@@ -72,12 +72,33 @@ object OdinStarter extends App {
     }
   }
 
-  private def visualizeExtractor(pattern: Inst, name: String): Unit = {
-    val instString = pattern.toString
-    println(s"There was an extractor: $name - Inst: $instString")
-    if (pattern.next != null) {
-      visualizeExtractor(pattern.next, s"$name (Next)")
+  private def visualizeExtractor(inst: Inst, name: String): Unit = {
+
+    def loopsOrDeadEnds(nextInst: Inst): Boolean = {
+      nextInst == null || (nextInst.posId <= inst.posId && nextInst.posId != 0)
     }
+
+    val instString = inst.toString
+
+    println(s"There was an extractor: $name - Inst: $instString")
+    inst match {
+      case split: Split =>
+        if (!loopsOrDeadEnds(split.lhs))
+          visualizeExtractor(split.lhs, s"$name (LHS)")
+        if (!loopsOrDeadEnds(split.rhs))
+          visualizeExtractor(split.rhs, s"$name (RHS)")
+
+      case saveStart: SaveStart =>
+        saveStart.visualize()
+
+      case saveEnd: SaveEnd =>
+        saveEnd.visualize()
+
+
+      case _ =>
+    }
+    if (!loopsOrDeadEnds(inst.next))
+      visualizeExtractor(inst.next, s"$name (Next)")
   }
 
 
