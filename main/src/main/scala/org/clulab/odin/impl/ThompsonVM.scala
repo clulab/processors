@@ -246,6 +246,7 @@ object ThompsonVM {
 sealed trait Inst {
   var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
   var next: Inst = null // See deepcopy for the write.
+  def visualize(): String
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
@@ -296,6 +297,8 @@ case class Pass() extends Inst {
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
   override def hashCode: Int = (lhs, rhs, super.hashCode).##
+
+  def visualize(): String = "Split.  Check out my LHS and RHS!"
 
   override def equals(other: Any): Boolean = {
     other match {

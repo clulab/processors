@@ -78,45 +78,16 @@ object OdinStarter extends App {
       nextInst == null || (nextInst.posId <= inst.posId && nextInst.posId != 0)
     }
 
-    val instString = inst.toString
+    val visualization = inst.visualize()
 
-    println(s"There was an extractor: $name - Inst: $instString")
+    println(s"There was an extractor: $name - Inst: $visualization")
+
     inst match {
-      //case done: Done =>
-
-      case pass: Pass =>
-        pass.visualize()
-
       case split: Split =>
         if (!loopsOrDeadEnds(split.lhs))
           visualizeExtractor(split.lhs, s"$name (LHS)")
         if (!loopsOrDeadEnds(split.rhs))
           visualizeExtractor(split.rhs, s"$name (RHS)")
-
-      case saveStart: SaveStart =>
-        saveStart.visualize()
-
-      case saveEnd: SaveEnd =>
-        saveEnd.visualize()
-
-      case matchToken: MatchToken =>
-        matchToken.visualize()
-
-      case matchMention: MatchMention =>
-        matchMention.visualize()
-
-      case sentenceStart: MatchSentenceStart =>
-        sentenceStart.visualize()
-
-      case sentenceEnd: MatchSentenceEnd =>
-        sentenceEnd.visualize()
-
-      case lookAhead: MatchLookAhead =>
-        lookAhead.visualize()
-
-      case lookBehind: MatchLookBehind =>
-        lookBehind.visualize()
-
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.next))
