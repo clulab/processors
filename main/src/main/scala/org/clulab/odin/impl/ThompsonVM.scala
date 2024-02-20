@@ -283,14 +283,14 @@ sealed trait Inst {
 case object Done extends Inst {
   def dup() = this
 
-  def visualize(): String = "Done"
+  def visualize(): String = s"$posId. Done"
 }
 
 // no operation
 case class Pass() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = "Pass"
+  def visualize(): String = s"$posId. Pass"
 }
 
 // split execution
@@ -317,7 +317,7 @@ case class SaveStart(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-  def visualize(): String = s"SaveStart($name)"
+  def visualize(): String = s"$posId. SaveStart($name)"
 
   def execute(thread: ThompsonVM.SingleThread): Unit = {
     // Create a PartialMatch object and add it to the PartialMatches list
@@ -342,7 +342,7 @@ case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-  def visualize(): String = s"SaveEnd($name)"
+  def visualize(): String = s"$posId. SaveEnd($name)"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -380,7 +380,7 @@ case class MatchMention(
     arg: Option[String]
 ) extends Inst {
 
-  def visualize(): String = s"MatchMention with name $name"
+  def visualize(): String = s"$posId. MatchMention with name $name"
 
   def dup() = copy()
   override def hashCode: Int = (m, name, arg, super.hashCode).##
@@ -402,14 +402,14 @@ case class MatchMention(
 case class MatchSentenceStart() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = "MatchSentenceStart"
+  def visualize(): String = s"$posId. MatchSentenceStart"
 }
 
 // matches sentence end
 case class MatchSentenceEnd() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = "MatchSentenceEnd"
+  def visualize(): String = s"$posId. MatchSentenceEnd"
 }
 
 // zero-width look-ahead assertion
@@ -417,7 +417,7 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
-  def visualize(): String = s"MatchLookAhead ($start)"
+  def visualize(): String = s"$posId. MatchLookAhead ($start)"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -436,7 +436,7 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
-  def visualize(): String = s"MatchLookBehind ($start)"
+  def visualize(): String = s"$posId. MatchLookBehind ($start)"
 
   override def equals(other: Any): Boolean = {
     other match {
