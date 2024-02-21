@@ -75,7 +75,7 @@ object OdinStarter extends App {
   private def visualizeExtractor(inst: Inst, name: String): Unit = {
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
-      nextInst == null || (nextInst.posId <= inst.posId && nextInst.posId != 0)
+      nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
     }
 
     val visualization = inst.visualize()
@@ -88,10 +88,16 @@ object OdinStarter extends App {
           visualizeExtractor(split.lhs, s"$name (LHS)")
         if (!loopsOrDeadEnds(split.rhs))
           visualizeExtractor(split.rhs, s"$name (RHS)")
+      case lookAhead: MatchLookAhead =>
+        if (!loopsOrDeadEnds(lookAhead.start))
+          visualizeExtractor(lookAhead.start, s"$name (Start)")
+      case lookBehind: MatchLookBehind =>
+        if (!loopsOrDeadEnds(lookBehind.start))
+          visualizeExtractor(lookBehind.start, s"$name (Start)")
       case _ =>
     }
-    if (!loopsOrDeadEnds(inst.next))
-      visualizeExtractor(inst.next, s"$name (Next)")
+    if (!loopsOrDeadEnds(inst.getNext))
+      visualizeExtractor(inst.getNext, s"$name (Next)")
   }
 
 
