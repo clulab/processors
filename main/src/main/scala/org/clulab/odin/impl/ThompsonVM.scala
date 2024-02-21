@@ -244,7 +244,9 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
-  var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  protected var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  def setPosId(newPosId: Int): Unit = posId = newPosId
+  def getPosId: Int = posId
   var next: Inst = null // See deepcopy for the write.
   def visualize(): String
   def dup(): Inst
@@ -360,7 +362,7 @@ case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (c, super.hashCode).##
 
-  def visualize(): String = s"$posId. MatchToken($c) -> ${next.posId}"
+  def visualize(): String = s"$posId. MatchToken($c) -> ${next.getPosId}"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -417,7 +419,9 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
-  def visualize(): String = s"$posId. MatchLookAhead ($start)"
+  override def setPosId(newPosId: Int): Unit = posId = newPosId
+
+  def visualize(): String = s"$posId. MatchLookAhead.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -436,7 +440,7 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
-  def visualize(): String = s"$posId. MatchLookBehind ($start)"
+  def visualize(): String = s"$posId. MatchLookBehind.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {

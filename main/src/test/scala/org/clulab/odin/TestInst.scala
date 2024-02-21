@@ -66,8 +66,8 @@ class TestInst extends Test {
     hash1a should be (hash2a)
     inst1 should be (inst2)
 
-    inst1.posId = 27 // This makes hash codes different.
-    inst2.posId = 29
+    inst1.setPosId(27) // This makes hash codes different.
+    inst2.setPosId(29)
 
     val hash1b = inst1.##
     val hash2b = inst2.##
@@ -78,11 +78,11 @@ class TestInst extends Test {
 
   it should "distinguish between MatchToken and MatchToken" in {
     val inst1 = MatchToken(TokenWildcard)
-    inst1.posId = 27 // This makes hash codes different.
+    inst1.setPosId(27) // This makes hash codes different.
     val hash1 = inst1.##
 
     val inst2 = MatchToken(TokenWildcard)
-    inst2.posId = 29
+    inst2.setPosId(29)
     val hash2 = inst2.##
 
     hash1 should not be (hash2)

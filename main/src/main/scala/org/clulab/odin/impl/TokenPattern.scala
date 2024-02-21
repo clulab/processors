@@ -46,13 +46,19 @@ class TokenPattern(val start: Inst) {
         case Done :: tail =>
           // skip Done instruction
           assigner(id, tail)
-        case (head: Split) :: tail if head.posId == 0 =>
+        case (head: Split) :: tail if head.getPosId == 0 =>
           // only if posId hasn't been set
-          head.posId = id
+          head.setPosId(id)
           assigner(id + 1, head.lhs :: head.rhs :: tail)
-        case head :: tail if head.posId == 0 =>
+        case (head: MatchLookAhead) :: tail if head.getPosId ==  0 =>
+          head.setPosId(id)
+          assigner(id + 1, head.start :: head.next :: tail)
+        case (head: MatchLookBehind) :: tail if head.getPosId == 0 =>
+          head.setPosId(id)
+          assigner(id + 1, head.start :: head.next :: tail)
+        case head :: tail if head.getPosId == 0 =>
           // only if posId hasn't been set
-          head.posId = id
+          head.setPosId(id)
           assigner(id + 1, head.next :: tail)
         case head :: tail =>
           // skip if posId has been set already
