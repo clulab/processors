@@ -1,3 +1,4 @@
++ **8.5.?** - Adjust processing of weeks as in "The first two weeks of the month"
 + **8.5.4** - Revise holiday normalization, downgrade JollyDay library, add jaxb-ri for Java 11+
 + **8.5.4** - Generate hugging face embeddings for potential use in grounding
 + **8.5.4** - Improve pounds/lbs, date handling, seasons
