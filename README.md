@@ -1,7 +1,7 @@
 [![Build Status](https://jenkins.clulab.org/buildStatus/icon?job=processors%2Fmaster)](https://jenkins.clulab.org/job/processors) 
 [![Maven Central](https://img.shields.io/maven-central/v/org.clulab/processors-main_2.12)](https://mvnrepository.com/artifact/org.clulab/processors-main)
 
-This will provoke retesting in Jenkins.
+This will provoke retesting in Jenkins.  Update again because Jenkins was off.
 
 
 # What is it?
