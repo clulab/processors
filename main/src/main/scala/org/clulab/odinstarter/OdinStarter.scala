@@ -88,7 +88,6 @@ object OdinStarter extends App {
           visualizeExtractor(split.lhs, s"$name (LHS)")
         if (!loopsOrDeadEnds(split.rhs))
           visualizeExtractor(split.rhs, s"$name (RHS)")
-<<<<<<< HEAD
 
       case saveStart: SaveStart =>
         println(saveStart.visualize())
@@ -109,20 +108,12 @@ object OdinStarter extends App {
         println(sentenceEnd.visualize())
 
       case lookAhead: MatchLookAhead =>
-        println(lookAhead.visualize())
-
-      case lookBehind: MatchLookBehind =>
-        println(lookBehind.visualize())
-        //lookBehind.start.visualize()
-
-=======
-      case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
           visualizeExtractor(lookAhead.start, s"$name (Start)")
       case lookBehind: MatchLookBehind =>
         if (!loopsOrDeadEnds(lookBehind.start))
           visualizeExtractor(lookBehind.start, s"$name (Start)")
->>>>>>> b6e5cf7a938344f26b1db858f012f43016234870
+
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.getNext))
