@@ -1,5 +1,4 @@
 package org.clulab.odin.impl
-
 import org.clulab.processors.Document
 import org.clulab.odin._
 
@@ -144,9 +143,7 @@ trait TokenConstraintParsers extends StringMatcherParsers {
 }
 
 
-sealed trait TokenConstraint {
-  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
-}
+
 
 /** for numerical comparisons */
 sealed trait NumericExpression {
@@ -264,6 +261,9 @@ class TagConstraint(matcher: StringMatcher) extends TokenConstraint with Values 
 class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches entity(tok, sent, doc)
+
+  override def toString: String = s"$matcher"
+
 }
 
 class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
@@ -316,4 +316,24 @@ class ConjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends 
 class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) || rhs.matches(tok, sent, doc, state)
+}
+
+sealed trait TokenConstraint {
+  def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
+
+  override def toString: String = this match {
+    case wc: WordConstraint => s"WordConstraint(matcher =)"
+    case lc: LemmaConstraint => s"LemmaConstraint(matcher = )"
+    case tc: TagConstraint => s"TagConstraint(matcher = )"
+    case ec: EntityConstraint => s"EntityConstraint(matcher = )"
+    case cc: ChunkConstraint => s"ChunkConstraint(matcher = )"
+    case nc: NormConstraint => s"NormConstraint(matcher =)"
+    case ic: IncomingConstraint => s"IncomingConstraint(matcher = , graphName = )"
+    case oc: OutgoingConstraint => s"OutgoingConstraint(matcher = , graphName = )"
+    case mc: MentionConstraint => s"MentionConstraint(matcher = , arg = )"
+    case nc: NegatedConstraint => s"NegatedConstraint(constraint = )"
+    case cc: ConjunctiveConstraint => s"ConjunctiveConstraint(lhs = , rhs = )"
+    case dc: DisjunctiveConstraint => s"DisjunctiveConstraint(lhs = , rhs = )"
+    case _ => "Unknown TokenConstraint"
+  }
 }

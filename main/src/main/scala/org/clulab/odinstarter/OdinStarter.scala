@@ -94,28 +94,29 @@ object OdinStarter extends App {
           visualizeExtractor(split.rhs, s"$name (RHS)")
 
       case saveStart: SaveStart =>
-        saveStart.visualize()
+        println(saveStart.visualize())
 
       case saveEnd: SaveEnd =>
-        saveEnd.visualize()
+        println(saveEnd.visualize())
 
       case matchToken: MatchToken =>
-        matchToken.visualize()
+        println(matchToken.visualize())
 
       case matchMention: MatchMention =>
-        matchMention.visualize()
+        println(matchMention.visualize())
 
       case sentenceStart: MatchSentenceStart =>
-        sentenceStart.visualize()
+        println(sentenceStart.visualize())
 
       case sentenceEnd: MatchSentenceEnd =>
-        sentenceEnd.visualize()
+        println(sentenceEnd.visualize())
 
       case lookAhead: MatchLookAhead =>
-        lookAhead.visualize()
+        println(lookAhead.visualize())
 
       case lookBehind: MatchLookBehind =>
-        lookBehind.visualize()
+        println(lookBehind.visualize())
+        //lookBehind.start.visualize()
 
       case _ =>
     }
