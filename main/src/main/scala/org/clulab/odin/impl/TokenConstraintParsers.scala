@@ -246,6 +246,8 @@ object TokenWildcard extends TokenConstraint {
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches word(tok, sent, doc)
+
+  override def toString: String = s"$matcher"
 }
 
 class LemmaConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
@@ -320,20 +322,4 @@ class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends 
 
 sealed trait TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean
-
-  override def toString: String = this match {
-    case wc: WordConstraint => s"WordConstraint(matcher =)"
-    case lc: LemmaConstraint => s"LemmaConstraint(matcher = )"
-    case tc: TagConstraint => s"TagConstraint(matcher = )"
-    case ec: EntityConstraint => s"EntityConstraint(matcher = )"
-    case cc: ChunkConstraint => s"ChunkConstraint(matcher = )"
-    case nc: NormConstraint => s"NormConstraint(matcher =)"
-    case ic: IncomingConstraint => s"IncomingConstraint(matcher = , graphName = )"
-    case oc: OutgoingConstraint => s"OutgoingConstraint(matcher = , graphName = )"
-    case mc: MentionConstraint => s"MentionConstraint(matcher = , arg = )"
-    case nc: NegatedConstraint => s"NegatedConstraint(constraint = )"
-    case cc: ConjunctiveConstraint => s"ConjunctiveConstraint(lhs = , rhs = )"
-    case dc: DisjunctiveConstraint => s"DisjunctiveConstraint(lhs = , rhs = )"
-    case _ => "Unknown TokenConstraint"
-  }
 }
