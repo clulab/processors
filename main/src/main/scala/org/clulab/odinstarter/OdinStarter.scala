@@ -75,23 +75,20 @@ object OdinStarter extends App {
   private def visualizeExtractor(inst: Inst, name: String): Unit = {
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
-      nextInst == null || (nextInst.posId <= inst.posId && nextInst.posId != 0)
+      nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
     }
 
-    val instString = inst.toString
+    val visualization = inst.visualize()
 
-    println(s"There was an extractor: $name - Inst: $instString")
+    println(s"There was an extractor: $name - Inst: $visualization")
+
     inst match {
-      //case done: Done =>
-
-      case pass: Pass =>
-        pass.visualize()
-
       case split: Split =>
         if (!loopsOrDeadEnds(split.lhs))
           visualizeExtractor(split.lhs, s"$name (LHS)")
         if (!loopsOrDeadEnds(split.rhs))
           visualizeExtractor(split.rhs, s"$name (RHS)")
+<<<<<<< HEAD
 
       case saveStart: SaveStart =>
         println(saveStart.visualize())
@@ -118,10 +115,18 @@ object OdinStarter extends App {
         println(lookBehind.visualize())
         //lookBehind.start.visualize()
 
+=======
+      case lookAhead: MatchLookAhead =>
+        if (!loopsOrDeadEnds(lookAhead.start))
+          visualizeExtractor(lookAhead.start, s"$name (Start)")
+      case lookBehind: MatchLookBehind =>
+        if (!loopsOrDeadEnds(lookBehind.start))
+          visualizeExtractor(lookBehind.start, s"$name (Start)")
+>>>>>>> b6e5cf7a938344f26b1db858f012f43016234870
       case _ =>
     }
-    if (!loopsOrDeadEnds(inst.next))
-      visualizeExtractor(inst.next, s"$name (Next)")
+    if (!loopsOrDeadEnds(inst.getNext))
+      visualizeExtractor(inst.getNext, s"$name (Next)")
   }
 
 
