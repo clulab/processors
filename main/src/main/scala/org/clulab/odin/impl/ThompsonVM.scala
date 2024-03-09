@@ -368,11 +368,7 @@ case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (c, super.hashCode).##
 
-<<<<<<< HEAD
-  def visualize(): String = s"MatchToken matches ($c)"
-=======
   def visualize(): String = s"$posId. MatchToken($c) -> ${next.getPosId}"
->>>>>>> b6e5cf7a938344f26b1db858f012f43016234870
 
   override def equals(other: Any): Boolean = {
     other match {
