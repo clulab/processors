@@ -55,69 +55,71 @@ object OdinStarter extends App {
   val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
+  val sentence = mentions.head.sentenceObj.words.mkString(" ")
+
   for (mention <- mentions)
     printMention(mention)
 
   for (extractor <- extractors)
-    visualize(extractor)
+    visualize(extractor, sentence)
 
-  def visualize(extractor: Extractor): Unit = {
+  def visualize(extractor: Extractor, sentence: String): Unit = {
     extractor match {
-      case tokenExtractor: TokenExtractor => visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name)
+      case tokenExtractor: TokenExtractor => visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence)
       case graphExtractor: GraphExtractor => println("There was a graph extractor.")
       case crossSentenceExtractor: CrossSentenceExtractor =>
-        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)")
-        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)")
+        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence)
+        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence)
       case _ => println("Unknown extractor type")
     }
   }
 
-  private def visualizeExtractor(inst: Inst, name: String): Unit = {
+  private def visualizeExtractor(inst: Inst, name: String, sentence: String): Unit = {
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
     }
 
-    val visualization = inst.visualize()
+    val visualization = inst.visualize(sentence)
 
     println(s"There was an extractor: $name - Inst: $visualization")
 
     inst match {
       case split: Split =>
         if (!loopsOrDeadEnds(split.lhs))
-          visualizeExtractor(split.lhs, s"$name (LHS)")
+          visualizeExtractor(split.lhs, s"$name (LHS)", sentence)
         if (!loopsOrDeadEnds(split.rhs))
-          visualizeExtractor(split.rhs, s"$name (RHS)")
+          visualizeExtractor(split.rhs, s"$name (RHS)", sentence)
 
       case saveStart: SaveStart =>
-        println(saveStart.visualize())
+        println(saveStart.visualize(sentence))
 
       case saveEnd: SaveEnd =>
-        println(saveEnd.visualize())
+        println(saveEnd.visualize(sentence))
 
       case matchToken: MatchToken =>
-        println(matchToken.visualize())
+        println(matchToken.visualize(sentence))
 
       case matchMention: MatchMention =>
-        println(matchMention.visualize())
+        println(matchMention.visualize(sentence))
 
       case sentenceStart: MatchSentenceStart =>
-        println(sentenceStart.visualize())
+        println(sentenceStart.visualize(sentence))
 
       case sentenceEnd: MatchSentenceEnd =>
-        println(sentenceEnd.visualize())
+        println(sentenceEnd.visualize(sentence))
 
       case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
-          visualizeExtractor(lookAhead.start, s"$name (Start)")
+          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence)
       case lookBehind: MatchLookBehind =>
         if (!loopsOrDeadEnds(lookBehind.start))
-          visualizeExtractor(lookBehind.start, s"$name (Start)")
+          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence)
 
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.getNext))
-      visualizeExtractor(inst.getNext, s"$name (Next)")
+      visualizeExtractor(inst.getNext, s"$name (Next)", sentence)
   }
 
 

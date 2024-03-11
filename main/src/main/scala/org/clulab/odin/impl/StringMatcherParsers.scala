@@ -52,11 +52,11 @@ sealed trait StringMatcher {
 class ExactStringMatcher(string: String) extends StringMatcher {
   def matches(s: String): Boolean = string == s
 
-  override def toString: String = string
+  override def toString: String = s"$string"
 }
 
 class RegexStringMatcher(regex: Regex) extends StringMatcher {
   def matches(s: String): Boolean = regex.findFirstIn(s).nonEmpty
 
-  override def toString: String = s"Regex"
+  override def toString: String = s"the regex to match: $regex"
 }

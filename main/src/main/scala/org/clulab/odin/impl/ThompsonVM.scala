@@ -3,7 +3,10 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
-import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread}
+import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread, matchTokens}
+
+import scala.collection.mutable.HashMap
+import org.clulab.odin.impl.TokenConstraint
 
 import scala.::
 import scala.util.parsing.json.JSON.headOptionTailToFunList
@@ -19,7 +22,7 @@ object ThompsonVM {
   // a partial group is the name and the start of a group, without the end
   type PartialGroups = List[(String, Int)]
   type PartialMatches = List[PartialMatch]
-
+  val matchTokens = new HashMap[String, Int]
 
   case class PartialMatch(
                            sentenceId: Int,
@@ -118,6 +121,10 @@ object ThompsonVM {
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
         val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
+        val token = t.tok
+        val const = i.c
+        matchTokens(const.toString) = token
+        println(s"Match mentions in singlestepthread is $matchTokens")
         mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
         mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
@@ -251,7 +258,7 @@ sealed trait Inst {
   // See deepcopy, ProgramFragment.capture, and ProgramFragment.setOut for the writes.
   def setNext(newNext: Inst): Unit = next = newNext
   def getNext: Inst = next
-  def visualize(): String
+  def visualize(sentence: String): String
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
@@ -289,14 +296,14 @@ sealed trait Inst {
 case object Done extends Inst {
   def dup() = this
 
-  def visualize(): String = s"$posId. Done"
+  def visualize(sentence: String): String = s"$posId. Done"
 }
 
 // no operation
 case class Pass() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = s"$posId. Pass"
+  def visualize(sentence: String): String = s"$posId. Pass"
 }
 
 // split execution
@@ -304,7 +311,7 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
   override def hashCode: Int = (lhs, rhs, super.hashCode).##
 
-  def visualize(): String = s"$posId. Split.  Check out my LHS and RHS!"
+  def visualize(sentence: String): String = s"$posId. Split.  Check out my LHS and RHS!"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -325,7 +332,7 @@ case class SaveStart(name: String, newNext: Inst) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-  def visualize(): String = s"$posId. SaveStart($name)"
+  def visualize(sentence: String): String = s"$posId. SaveStart($name)"
 
   def execute(thread: ThompsonVM.SingleThread): Unit = {
     // Create a PartialMatch object and add it to the PartialMatches list
@@ -350,7 +357,7 @@ case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-  def visualize(): String = s"$posId. SaveEnd($name)"
+  def visualize(sentence: String): String = s"$posId. SaveEnd($name)"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -368,7 +375,18 @@ case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (c, super.hashCode).##
 
-  def visualize(): String = s"$posId. MatchToken($c) -> ${next.getPosId}"
+
+  def visualize(sentence: String): String = {
+    if(matchTokens.contains(c.toString)) {
+      val token: Int = matchTokens(c.toString)
+      val words: String = (sentence.split(" ")(token))
+      s"$posId. MatchToken($c matches $words) -> ${next.getPosId}"
+    }
+    else{
+      s"$posId. MatchToken($c) -> ${next.getPosId}"
+    }
+  }
+
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -388,7 +406,7 @@ case class MatchMention(
     arg: Option[String]
 ) extends Inst {
 
-  def visualize(): String = s"$posId. MatchMention with name $name"
+  def visualize(sentence: String): String = s"$posId. MatchMention with name $name"
 
   def dup() = copy()
   override def hashCode: Int = (m, name, arg, super.hashCode).##
@@ -410,14 +428,14 @@ case class MatchMention(
 case class MatchSentenceStart() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = s"$posId. MatchSentenceStart"
+  def visualize(sentence: String): String = s"$posId. MatchSentenceStart"
 }
 
 // matches sentence end
 case class MatchSentenceEnd() extends Inst {
   def dup() = copy()
 
-  def visualize(): String = s"$posId. MatchSentenceEnd"
+  def visualize(sentence: String): String = s"$posId. MatchSentenceEnd"
 }
 
 // zero-width look-ahead assertion
@@ -427,7 +445,7 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
 
   override def setPosId(newPosId: Int): Unit = posId = newPosId
 
-  def visualize(): String = s"$posId. MatchLookAhead.  Check out my start."
+  def visualize(sentence: String): String = s"$posId. MatchLookAhead.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -446,7 +464,7 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
-  def visualize(): String = s"$posId. MatchLookBehind.  Check out my start."
+  def visualize(sentence: String): String = s"$posId. MatchLookBehind.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {

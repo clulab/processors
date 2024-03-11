@@ -253,11 +253,15 @@ class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values
 class LemmaConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches lemma(tok, sent, doc)
+
+  override def toString: String = s"$matcher"
 }
 
 class TagConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches tag(tok, sent, doc)
+
+  override def toString: String = s"$matcher"
 }
 
 class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
@@ -313,6 +317,9 @@ class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
 class ConjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) && rhs.matches(tok, sent, doc, state)
+
+  override def toString: String = s"lhs is $lhs and rhs is $rhs"
+
 }
 
 class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
