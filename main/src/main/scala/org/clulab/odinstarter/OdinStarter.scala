@@ -65,16 +65,18 @@ object OdinStarter extends App {
 
   def visualize(extractor: Extractor, sentence: String): Unit = {
     extractor match {
-      case tokenExtractor: TokenExtractor => visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence)
+      case tokenExtractor: TokenExtractor =>
+        println(s"There was an extractor: ${tokenExtractor.name}")
+        visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
       case graphExtractor: GraphExtractor => println("There was a graph extractor.")
       case crossSentenceExtractor: CrossSentenceExtractor =>
-        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence)
-        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence)
+        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
+        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0)
       case _ => println("Unknown extractor type")
     }
   }
 
-  private def visualizeExtractor(inst: Inst, name: String, sentence: String): Unit = {
+  private def visualizeExtractor(inst: Inst, name: String, sentence: String, indent: Int): Unit = {
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
@@ -82,44 +84,51 @@ object OdinStarter extends App {
 
     val visualization = inst.visualize(sentence)
 
-    println(s"There was an extractor: $name - Inst: $visualization")
-
     inst match {
       case split: Split =>
-        if (!loopsOrDeadEnds(split.lhs))
-          visualizeExtractor(split.lhs, s"$name (LHS)", sentence)
-        if (!loopsOrDeadEnds(split.rhs))
-          visualizeExtractor(split.rhs, s"$name (RHS)", sentence)
+        println(split.visualize(sentence))
+        if (!loopsOrDeadEnds(split.lhs)) {
+          print(" " * (indent + 3)  + "(LHS)")
+          visualizeExtractor(split.lhs, s"$name (LHS)", sentence, indent + 3)
+        }
+        if (!loopsOrDeadEnds(split.rhs)) {
+          print(" " * (indent + 3)  + "(RHS)")
+          visualizeExtractor(split.rhs, s"$name (RHS)", sentence, indent + 3)
+        }
 
       case saveStart: SaveStart =>
-        println(saveStart.visualize(sentence))
+        println(" " * indent + saveStart.visualize(sentence))
 
       case saveEnd: SaveEnd =>
-        println(saveEnd.visualize(sentence))
+        println(" " * indent + saveEnd.visualize(sentence))
 
       case matchToken: MatchToken =>
-        println(matchToken.visualize(sentence))
+        println(" " * indent + matchToken.visualize(sentence))
 
       case matchMention: MatchMention =>
-        println(matchMention.visualize(sentence))
+        println(" " * indent + matchMention.visualize(sentence))
 
       case sentenceStart: MatchSentenceStart =>
-        println(sentenceStart.visualize(sentence))
+        println(" " * indent + sentenceStart.visualize(sentence))
 
       case sentenceEnd: MatchSentenceEnd =>
-        println(sentenceEnd.visualize(sentence))
+        println(" " * indent + sentenceEnd.visualize(sentence))
+
+      case pass: Pass =>
+        println(" " * indent + pass.visualize(sentence))
 
       case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
-          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence)
+          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence, indent)
+
       case lookBehind: MatchLookBehind =>
         if (!loopsOrDeadEnds(lookBehind.start))
-          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence)
+          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence, indent)
 
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.getNext))
-      visualizeExtractor(inst.getNext, s"$name (Next)", sentence)
+      visualizeExtractor(inst.getNext, s"$name (Next)", sentence, indent)
   }
 
 

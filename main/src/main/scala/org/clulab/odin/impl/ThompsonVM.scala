@@ -357,7 +357,7 @@ case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
-  def visualize(sentence: String): String = s"$posId. SaveEnd($name)"
+  def visualize(sentence: String): String = s"$posId. SaveEnd($name)\n"
 
   override def equals(other: Any): Boolean = {
     other match {
