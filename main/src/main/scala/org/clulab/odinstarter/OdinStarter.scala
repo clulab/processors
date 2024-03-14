@@ -66,9 +66,9 @@ object OdinStarter extends App {
   def visualize(extractor: Extractor, sentence: String): Unit = {
     extractor match {
       case tokenExtractor: TokenExtractor =>
-        println(s"There was an extractor: ${tokenExtractor.name}")
+        println(s"\nThere was an extractor: ${tokenExtractor.name}")
         visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
-      case graphExtractor: GraphExtractor => println("There was a graph extractor.")
+      case graphExtractor: GraphExtractor => println("\nThere was a graph extractor.")
       case crossSentenceExtractor: CrossSentenceExtractor =>
         visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
         visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0)
@@ -116,6 +116,8 @@ object OdinStarter extends App {
 
       case pass: Pass =>
         println(" " * indent + pass.visualize(sentence))
+
+      case Done => println(" " * indent + Done.visualize(sentence))
 
       case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
