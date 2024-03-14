@@ -13,9 +13,16 @@
   pattern: |
     [entity='B-PER'] [entity='I-PER']*
 
-- name: word-from-text
+- name: more-foods-from-lexicon
   priority: ${rulepriority}
-  label: Word
+  label: Food
   type: token
   pattern: |
-    "nothing"
+    (?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $
+
+- name: more-person-from-lexicon
+  priority: ${rulepriority}
+  label: Person
+  type: token
+  pattern: |
+    ^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)

@@ -3,14 +3,17 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
-import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread, matchTokens}
 
+import scala.collection.mutable.HashMap
+import org.clulab.odin.impl.TokenConstraint
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
   // A PartialGroup is the name and the start of a group, without the end.
   type PartialGroups = List[(String, Int)]
   type PartialMatches = List[PartialMatch]
+  val matchTokens = new HashMap[String, Int]
 
   case class PartialMatch(
     sentenceId: Int,
@@ -86,13 +89,13 @@ object ThompsonVM {
         case Nil => threads.reverse
         // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
         case (i, gs, ms, pgs) :: rest => i match {
-          case i: Pass => loop((i.next, gs, ms, pgs) :: rest, threads)
-          case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, threads)
-          case i: SaveStart => loop((i.next, gs, ms, (i.name, tok) :: pgs) :: rest, threads)
+          case i: Pass => loop((i.getNext, gs, ms, pgs) :: rest, ts)
+          case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
+          case i: SaveStart => loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
           case i: SaveEnd => pgs match {
             case (name, start) :: partials if name == i.name =>
               val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-              loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, threads)
+              loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
             case _ => sys.error("unable to close capture")
           }
           // Here we loop on rest.  Could that have different ms?
@@ -108,49 +111,41 @@ object ThompsonVM {
     // Advance the Thread by executing its instruction (Inst).
     // The Inst is expected to be a Match_ instruction.
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case inst: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && inst.c.matches(t.tok, sent, doc, state) =>
-        val nextTok =
-            if (t.dir == LeftToRight) t.tok + 1
-            else t.tok - 1
-        // Continue to the next Inst evaluated at nextTok.
-        mkThreads(nextTok, inst.next, t.dir, t.groups, t.mentions, t.partialGroups)
-      case inst: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
-        // Continue to next Inst, but keep the same tok.
-        mkThreads(t.tok, inst.next, t.dir, t.groups, t.mentions, t.partialGroups)
-      case inst: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        // Continue to next Inst, but keep the same tok.
-        mkThreads(t.tok, inst.next, t.dir, t.groups, t.mentions, t.partialGroups)
-      case inst: MatchLookAhead =>
-        val nextTok =
-            if (t.dir == LeftToRight) t.tok
-            else t.tok + 1
-        val resultsOpt = evalThreads(mkThreads(nextTok, inst.start, LeftToRight))
-
-        if (inst.negative == resultsOpt.isEmpty)
-          mkThreads(t.tok, inst.next, t.dir, t.groups, t.mentions, t.partialGroups)
-        else
+      case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
+        val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
+        val token = t.tok
+        val const = i.c
+        matchTokens(const.toString) = token
+        println(s"Match mentions in singlestepthread is $matchTokens")
+        mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+      case i: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
+        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+      case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
+        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+      case i: MatchLookAhead =>
+        val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
+        val results = eval(mkThreads(startTok, i.start, LeftToRight))
+        if (i.negative == results.isEmpty) {
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+        } else {
           Nil
-      case inst: MatchLookBehind =>
-        val nextTok =
-            if (t.dir == LeftToRight) t.tok - 1
-            else t.tok
-        val resultsOpt =
-            if (nextTok < 0) None
-            else evalThreads(mkThreads(nextTok, inst.start, RightToLeft))
-
-        if (inst.negative == resultsOpt.isEmpty)
-          mkThreads(t.tok, inst.next, t.dir, t.groups, t.mentions, t.partialGroups)
-        else
+        }
+      case i: MatchLookBehind =>
+        val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
+        val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
+        if (i.negative == results.isEmpty) {
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+        } else {
           Nil
-      case inst: MatchMention =>
-        val threadBundles = for {
-          mention <- retrieveMentions(state, sent, t.tok, inst.m, inst.arg)
-              if (t.dir == LeftToRight && t.tok == mention.start) || (t.dir == RightToLeft && t.tok == mention.end - 1)
-          captures = mkMentionCapture(t.mentions, inst.name, mention)
-          nextTok = if (t.dir == LeftToRight) mention.end else mention.start - 1
-        } yield mkThreads(nextTok, inst.next, t.dir, t.groups, captures, t.partialGroups)
-
-        threadBundles match {
+        }
+      case i: MatchMention =>
+        val bundles = for {
+          m <- retrieveMentions(state, sent, t.tok, i.m, i.arg)
+          if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
+          captures = mkMentionCapture(t.mentions, i.name, m)
+          nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
+        } yield mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
+        bundles match {
           case Seq() => Nil
           case Seq(bundle) => bundle
           case bundles => Seq(ThreadBundle(bundles))
@@ -264,11 +259,18 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
-  var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
-  var next: Inst = null // See deepcopy for the write.
+  protected var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  def setPosId(newPosId: Int): Unit = posId = newPosId
+  def getPosId: Int = posId
+  protected var next: Inst = null
+  // See deepcopy, ProgramFragment.capture, and ProgramFragment.setOut for the writes.
+  def setNext(newNext: Inst): Unit = next = newNext
+  def getNext: Inst = next
+  def visualize(sentence: String): String
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
+    // TODO: Add next to dup().
     if (next != null) inst.next = next.deepcopy()
     inst
   }
@@ -301,17 +303,23 @@ sealed trait Inst {
 // the pattern matched successfully
 case object Done extends Inst {
   def dup() = this
+
+  def visualize(sentence: String): String = s"$posId. Done"
 }
 
 // no operation
 case class Pass() extends Inst {
   def dup() = copy()
+
+  def visualize(sentence: String): String = s"$posId. Pass"
 }
 
 // split execution
 case class Split(lhs: Inst, rhs: Inst) extends Inst {
   def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
   override def hashCode: Int = (lhs, rhs, super.hashCode).##
+
+  def visualize(sentence: String): String = s"$posId. Split.  Check out my LHS and RHS!"
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -326,10 +334,13 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
 }
 
 // start capturing tokens
-case class SaveStart(name: String) extends Inst {
+case class SaveStart(name: String, newNext: Inst) extends Inst {
+  next = newNext
+
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
+  def visualize(sentence: String): String = s"$posId. SaveStart($name)"
 
   def execute(thread: ThompsonVM.SingleThread): Unit = {
     // Create a PartialMatch object and add it to the PartialMatches list
@@ -354,6 +365,8 @@ case class SaveEnd(name: String) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 
+  def visualize(sentence: String): String = s"$posId. SaveEnd($name)\n"
+
   override def equals(other: Any): Boolean = {
     other match {
       case that: SaveEnd => this.eq(that) ||
@@ -369,6 +382,19 @@ case class SaveEnd(name: String) extends Inst {
 case class MatchToken(c: TokenConstraint) extends Inst {
   def dup() = copy()
   override def hashCode: Int = (c, super.hashCode).##
+
+
+  def visualize(sentence: String): String = {
+    if(matchTokens.contains(c.toString)) {
+      val token: Int = matchTokens(c.toString)
+      val words: String = (sentence.split(" ")(token))
+      s"$posId. MatchToken($c matches $words) -> ${next.getPosId}"
+    }
+    else{
+      s"$posId. MatchToken($c) -> ${next.getPosId}"
+    }
+  }
+
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -387,6 +413,9 @@ case class MatchMention(
     name: Option[String],
     arg: Option[String]
 ) extends Inst {
+
+  def visualize(sentence: String): String = s"$posId. MatchMention with name $name"
+
   def dup() = copy()
   override def hashCode: Int = (m, name, arg, super.hashCode).##
 
@@ -406,17 +435,25 @@ case class MatchMention(
 // matches sentence start
 case class MatchSentenceStart() extends Inst {
   def dup() = copy()
+
+  def visualize(sentence: String): String = s"$posId. MatchSentenceStart"
 }
 
 // matches sentence end
 case class MatchSentenceEnd() extends Inst {
   def dup() = copy()
+
+  def visualize(sentence: String): String = s"$posId. MatchSentenceEnd"
 }
 
 // zero-width look-ahead assertion
 case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookAhead(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
+
+  override def setPosId(newPosId: Int): Unit = posId = newPosId
+
+  def visualize(sentence: String): String = s"$posId. MatchLookAhead.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {
@@ -434,6 +471,8 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
 case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
   def dup() = MatchLookBehind(start.deepcopy(), negative)
   override def hashCode: Int = (start, negative, super.hashCode).##
+
+  def visualize(sentence: String): String = s"$posId. MatchLookBehind.  Check out my start."
 
   override def equals(other: Any): Boolean = {
     other match {
