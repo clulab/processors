@@ -3,6 +3,7 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
+import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread, matchTokens}
 
 import scala.collection.mutable.HashMap
@@ -84,9 +85,9 @@ object ThompsonVM {
       @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-        threads: List[Thread]
+        ts: List[Thread]
       ): Seq[Thread] = internals match {
-        case Nil => threads.reverse
+        case Nil => ts.reverse
         // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
         case (i, gs, ms, pgs) :: rest => i match {
           case i: Pass => loop((i.getNext, gs, ms, pgs) :: rest, ts)
@@ -99,7 +100,7 @@ object ThompsonVM {
             case _ => sys.error("unable to close capture")
           }
           // Here we loop on rest.  Could that have different ms?
-          case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: threads)
+          case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
         }
       }
 
@@ -124,7 +125,7 @@ object ThompsonVM {
         mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
         val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
-        val results = eval(mkThreads(startTok, i.start, LeftToRight))
+        val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
@@ -132,7 +133,7 @@ object ThompsonVM {
         }
       case i: MatchLookBehind =>
         val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
-        val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
+        val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
         if (i.negative == results.isEmpty) {
           mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {

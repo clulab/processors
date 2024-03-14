@@ -60,7 +60,7 @@ class TestPartialMatch extends Test {
     ))
     val start: Inst = {
       val start = MatchToken(new WordConstraint(new ExactStringMatcher("This")))
-      start.next = Done
+      start.setNext(Done)
 
       start
     }
