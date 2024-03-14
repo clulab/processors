@@ -215,8 +215,7 @@ class CluProcessor protected (
       lazyTokenizer,               // tokenize
       lazyMtlPosChunkSrlp,         // tagPartsOfSpeech
       lazyMtlNer,                  // recognizeNamedEntities
-      // TODO: KWA Avoid this now while the debugger is being developed.
-//      lazyNumericEntityRecognizer, // ditto
+      lazyNumericEntityRecognizer, // ditto
       lazyMtlDepsHead,             // parse
       lazyMtlDepsLabel,            // parse
       lazyLemmatizer,              // lemmatize

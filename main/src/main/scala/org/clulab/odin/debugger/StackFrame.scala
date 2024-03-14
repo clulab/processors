@@ -2,7 +2,7 @@ package org.clulab.odin.debugger
 import org.clulab.utils.Timer
 import org.clulab.odin.impl.{TokenExtractor, TokenPattern}
 
-class StackFrame(val sourceCode: SourceCode) {
+class StackFrame(sourceCode: SourceCode) {
 
   override def toString: String = s"${getClass.getName}\t$sourceCode"
 

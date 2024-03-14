@@ -3,7 +3,6 @@ taxonomy:
   - Entity:
     - Food
     - Person
-    - Word
   - Event:
     - Eating
 
