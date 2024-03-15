@@ -52,8 +52,8 @@ class TestTokenExtractorDebugger extends Test {
     Rule("person-from-lexicon", "[entity='B-PER'] [entity='I-PER']*"),
     Rule("more-foods-from-lexicon", "(?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $"),
     Rule("more-person-from-lexicon", "^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)"),
-
-    Rule("a and b", "a{1, 3} | b+")
+    Rule("a and b", "a{1, 3} | b+"),
+    Rule("verb-tense", "[entity='B-PER'] [entity='I-PER']* (?= ate|eats|eating) [entity='B-FOOD'] [entity='I-FOOD']* ")
   )
   val sentence = "John eats cake."
   val document = processor.annotate(sentence)
