@@ -1,8 +1,129 @@
 package org.clulab.odin.debugger
+
 import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.impl.{Extractor, Inst}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.{StringUtils, Timer}
+
+import scala.collection.mutable.Buffer
+
+case class DebuggerRecord(
+  document: Document,
+  loop: Int,
+  extractor: Extractor,
+  sentenceIndex: Int,
+  sentence: Sentence,
+  start: Int,
+  tok: Int,
+  inst: Inst,
+  matches: Boolean
+)
+
+// TODO: This needs to be made tread-safe!
+// Each Odin instance could have its own, for example.
+class DebuggerContext(
+  protected var documentOpt: Option[Document] = None,
+  protected var loopOpt: Option[Int] = None,
+  protected var extractorOpt: Option[Extractor] = None,
+  protected var sentenceIndexOpt: Option[Int] = None,
+  protected var sentenceOpt: Option[Sentence] = None,
+  protected var startOpt: Option[Int] = None,
+  protected var tokOpt: Option[Int] = None,
+  protected var instOpt: Option[Inst] = None
+) {
+  def isComplete: Boolean = {
+    documentOpt.isDefined &&
+    loopOpt.isDefined &&
+    extractorOpt.isDefined &&
+    sentenceIndexOpt.isDefined &&
+    sentenceOpt.isDefined &&
+    startOpt.isDefined &&
+    tokOpt.isDefined &&
+    instOpt.isDefined
+  }
+
+  def setDocument(document: Document): Unit = {
+    assert(documentOpt.isEmpty)
+    documentOpt = Some(document)
+  }
+
+  def getDocumentOpt: Option[Document] = documentOpt
+
+  def resetDocument(): Unit = documentOpt = None
+
+  def setLoop(loop: Int): Unit = {
+    assert(documentOpt.nonEmpty)
+    assert(loopOpt.isEmpty)
+    loopOpt = Some(loop)
+  }
+
+  def getLoopOpt: Option[Int] = loopOpt
+
+  def resetLoop(): Unit = loopOpt = None
+
+  def setExtractor(extractor: Extractor): Unit = {
+    assert(loopOpt.nonEmpty)
+    assert(extractorOpt.isEmpty)
+    extractorOpt = Some(extractor)
+  }
+
+  def getExtractorOpt: Option[Extractor] = extractorOpt
+
+  def resetExtractor(): Unit = extractorOpt = None
+
+  def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
+    assert(loopOpt.nonEmpty)
+    assert(sentenceIndexOpt.isEmpty)
+    assert(sentenceOpt.isEmpty)
+    sentenceIndexOpt = Some(sentenceIndex)
+    sentenceOpt = Some(sentence)
+  }
+
+  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexOpt, sentenceOpt)
+
+  def resetSentence(): Unit = {
+    sentenceIndexOpt = None
+    sentenceOpt = None
+  }
+
+  def setStart(start: Int): Unit = {
+    assert(sentenceIndexOpt.nonEmpty)
+    assert(sentenceOpt.nonEmpty)
+    startOpt = Some(start)
+  }
+
+  def getStartOpt: Option[Int] = startOpt
+
+  def resetStart(): Unit = startOpt = None
+
+  def setTok(tok: Int): Unit = {
+    assert(startOpt.nonEmpty)
+    assert(tokOpt.isEmpty)
+    assert(instOpt.isEmpty)
+    tokOpt = Some(tok)
+    instOpt = Some(inst)
+  }
+
+  def getTokInstOpt: (Option[Int], Option[Inst]) = (tokOpt, instOpt)
+
+  def resetTokInst(): Unit = {
+    tokOpt = None
+    instOpt = None
+  }
+
+  def setInst(inst: Inst): Unit = {
+    assert(tokOpt.nonEmpty)
+    assert(instOpt.isEmpty)
+    instOpt = Some(inst)
+  }
+
+
+  def setMatches(matches: Boolean): DebuggerRecord = {
+    assert(isComplete)
+    DebuggerRecord(documentOpt.get, loopOpt.get, extractorOpt.get, sentenceIndexOpt.get, sentenceOpt.get,
+      startOpt.get, tokOpt.get, instOpt.get, matches)
+  }
+}
 
 trait DebuggerTrait {
   def activate(): Unit
@@ -17,6 +138,8 @@ class Debugger protected () extends DebuggerTrait {
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
+  protected val context = new DebuggerContext()
+  protected val transcript: Buffer[DebuggerRecord] = Buffer.empty
 
   def activate(): Unit = active = true
 
@@ -72,7 +195,11 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setDocument(doc)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetDocument()
+
+    result
   }
 
   def debugLoop[ResultType, StackFrameType <: StackFrame](loop: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -90,7 +217,10 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setLoop(loop)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetLoop()
+    result
   }
 
   def debugExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -108,7 +238,10 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setExtractor(extractor)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetExtractor()
+    result
   }
 
   def debugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -126,7 +259,10 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setSentence(index, sentence)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetSentence()
+    result
   }
 
   def debugStart[ResultType, StackFrameType <: StackFrame](start: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -141,7 +277,10 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setStart(start)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetStart()
+    result
   }
 
   def debugTokInst[ResultType, StackFrameType <: StackFrame](tok: Int, inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -159,7 +298,14 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    context.setTokInst(tok, inst)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetTokInst()
+    result
+  }
+
+  def debugMatches(matches: Boolean): Unit = {
+    transcript += context.setMatches(matches)
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
@@ -242,6 +388,8 @@ object Debugger extends DebuggerTrait {
 
     instance.debugTokInst(tok, inst)(stackFrame)(block)
   }
+
+  def debugMatches(matches: Boolean) = instance.debugMatches(matches)
 
   def showTrace(): Unit = {
     instance.showTrace()
