@@ -114,6 +114,8 @@ object ThompsonVM {
               }
               // Here we loop on rest.  Could that have different ms?
               case i =>
+                if (i == Done)
+                  Debugger.debugMatches(true)
                 loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
             }
           }
