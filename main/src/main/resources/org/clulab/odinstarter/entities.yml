@@ -4,7 +4,7 @@
   label: Food
   type: token
   pattern: |
-    [entity='B-FOOD'] [entity='I-FOOD']*
+    [entity='B-FOOD'] [entity='I-FOOD']+
 
 - name: person-from-lexicon
   priority: ${rulepriority}

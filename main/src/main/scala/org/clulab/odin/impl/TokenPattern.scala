@@ -3,6 +3,7 @@ package org.clulab.odin.impl
 import org.clulab.struct.Interval
 import org.clulab.processors.Document
 import org.clulab.odin._
+import org.clulab.odin.debugger.Debugger
 
 object TokenPattern {
   val GlobalCapture = "--GLOBAL--"
@@ -94,8 +95,9 @@ class TokenPattern(val start: Inst) {
     @annotation.tailrec
     def loop(i: Int): Seq[Result] = {
       if (i < n) {
-        val r = findPrefixOf(i, sent, doc, state)
-
+        val r = Debugger.debugStart(i) {
+          findPrefixOf(i, sent, doc, state)
+        }
         if (r.nonEmpty) r
         else loop(i + 1)
       }

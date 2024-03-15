@@ -1,5 +1,6 @@
 package org.clulab.odinstarter
 
+import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.CluProcessor
@@ -52,7 +53,7 @@ object OdinStarter extends App {
   val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
   val extractors = reader.read(rules)
   val extractorEngine = new ExtractorEngine(extractors, identityAction)
-  val document = processor.annotate("John eats cake.")
+  val document = processor.annotate("John and Jim eat pain au chocolat but not pizza.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   val sentence = mentions.head.sentenceObj.words.mkString(" ")
@@ -62,6 +63,80 @@ object OdinStarter extends App {
 
   for (extractor <- extractors)
     visualize(extractor, sentence)
+
+  // Find all matching MatchTokens and say what they matched.
+  def debugMatchTokens(): Unit = {
+    val transcript = Debugger.instance.transcript
+    val nameMatchTokenTokenSeq = transcript
+        .filter { debuggerRecord =>
+          debuggerRecord.matches && debuggerRecord.inst.isInstanceOf[MatchToken]
+        }
+        .map { debuggerRecord =>
+          (debuggerRecord.extractor.name, debuggerRecord.inst.asInstanceOf[MatchToken], debuggerRecord.sentence.words(debuggerRecord.tok))
+        }
+
+    nameMatchTokenTokenSeq.foreach(println)
+  }
+
+  def debugDoneRules(): Unit = {
+    val transcript = Debugger.instance.transcript
+    val nameSentencestartTokSeq = transcript
+        .filter { debuggerRecord =>
+          debuggerRecord.matches && debuggerRecord.inst.isInstanceOf[Done.type]
+        }
+        .map { debuggerRecord =>
+          (debuggerRecord.extractor.name, debuggerRecord.sentence, debuggerRecord.start, debuggerRecord.tok)
+        }
+
+    nameSentencestartTokSeq.foreach { case (name, sentence, start, tok) =>
+      val words = sentence.words.clone
+      words(start) = "[" + words(start)
+      words(tok - 1) = words(tok - 1) + "]"
+
+      println(s"""Rule $name matched sentence "${words.mkString(" ")}".""")
+    }
+  }
+
+  def hasWidth(inst: Inst): Boolean = {
+    inst.isInstanceOf[MatchToken] || inst.isInstanceOf[MatchMention] // What is the width of this?
+  }
+
+  def debugPartialMatches(): Unit = {
+    val transcript = Debugger.instance.transcript
+    val keyAndMinPosMaxPos = transcript
+        .groupBy { debuggerRecord =>
+          (debuggerRecord.document, debuggerRecord.loop, debuggerRecord.extractor, debuggerRecord.sentenceIndex, debuggerRecord.start)
+        }
+        .filter { case (key, debuggerRecords) =>
+          // We need to have something not SaveStart that matched and nothing that is Done.
+          // Some matches are zero-width and should be ignored.  Record this fact in the Inst.
+          // Alternatively, highlight empty string somewhere.
+          debuggerRecords.exists { debuggerRecord => !debuggerRecord.inst.isInstanceOf[SaveStart] && debuggerRecord.matches } &&
+          !debuggerRecords.exists { debuggerRecord => debuggerRecord.inst.isInstanceOf[Done.type] && debuggerRecord.matches }
+        }
+        .map { case (key, debuggerRecords) =>
+          val matchingToks = debuggerRecords.filter { debuggerRecord => debuggerRecord.matches && hasWidth(debuggerRecord.inst) }.map(_.tok)
+          val minPos = key._5
+          val maxPos = if (matchingToks.isEmpty) minPos else matchingToks.max + 1
+          key -> (minPos, maxPos)
+        }
+
+    keyAndMinPosMaxPos.foreach { case ((document, loop, extractor, sentenceIndex, start), (minPos, maxPos)) =>
+      val words = document.sentences(sentenceIndex).words.clone
+      if (maxPos > minPos) {
+        words(minPos) = ">" + words(minPos)
+        words(maxPos - 1) = words(maxPos - 1) + "<"
+      }
+      else
+        words(minPos) = "><" + words(minPos)
+
+      println(s"""Rule ${extractor.name} partially matched sentence "${words.mkString(" ")}".""")
+    }
+  }
+
+  debugMatchTokens()
+  debugDoneRules()
+  debugPartialMatches()
 
   def visualize(extractor: Extractor, sentence: String): Unit = {
     extractor match {
