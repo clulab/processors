@@ -29,7 +29,7 @@ class DebuggerContext(
   protected var sentenceOpt: Option[Sentence] = None,
   protected var startOpt: Option[Int] = None,
   protected var tokOpt: Option[Int] = None,
-  protected var instOpt: Option[Inst] = None
+  protected var insts: List[Inst] = List.empty
 ) {
   def isComplete: Boolean = {
     documentOpt.isDefined &&
@@ -39,7 +39,7 @@ class DebuggerContext(
     sentenceOpt.isDefined &&
     startOpt.isDefined &&
     tokOpt.isDefined &&
-    instOpt.isDefined
+    insts.nonEmpty
   }
 
   def setDocument(document: Document): Unit = {
@@ -89,6 +89,7 @@ class DebuggerContext(
   def setStart(start: Int): Unit = {
     assert(sentenceIndexOpt.nonEmpty)
     assert(sentenceOpt.nonEmpty)
+    assert(startOpt.isEmpty)
     startOpt = Some(start)
   }
 
@@ -100,28 +101,31 @@ class DebuggerContext(
     assert(startOpt.nonEmpty)
     assert(tokOpt.isEmpty)
     tokOpt = Some(tok)
+    assert(insts.isEmpty)
   }
 
   def getTokOpt: (Option[Int]) = tokOpt
 
-  def resetTok(): Unit = {
-    tokOpt = None
-  }
+  def resetTok(): Unit = tokOpt = None
 
   def setInst(inst: Inst): Unit = {
-    assert(tokOpt.nonEmpty)
-    assert(instOpt.isEmpty)
-    instOpt = Some(inst)
+    if (tokOpt.isEmpty)
+      println("How?")
+//    assert(tokOpt.nonEmpty)
+    // There can be multiple inst before we return.
+    insts = inst :: insts
   }
 
-  def getInstOpt: Option[Inst] = instOpt
+  def getInstOpt: Option[Inst] = insts.headOption
 
-  def resetInst(): Unit = instOpt = None
+  def getInstLength: Int = insts.length
+
+  def resetInst(): Unit = insts = insts.tail
 
   def setMatches(matches: Boolean): DebuggerRecord = {
-    assert(isComplete)
+//    assert(isComplete)
     DebuggerRecord(documentOpt.get, loopOpt.get, extractorOpt.get, sentenceIndexOpt.get, sentenceOpt.get,
-      startOpt.get, tokOpt.get, instOpt.get, matches)
+      startOpt.get, tokOpt.get, insts.head, matches)
   }
 }
 
@@ -306,8 +310,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugInst[ResultType, StackFrameType <: StackFrame](inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 6
+    def mkMessage(instCount: Int)(side: String): String = {
+      val tabs = "\t" * (5 + instCount)
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
           .replace("#", s"$extractorString.")
@@ -319,12 +323,29 @@ class Debugger protected () extends DebuggerTrait {
     }
 
     context.setInst(inst)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(mkMessage(context.getInstLength))(stackFrame)(block)
     context.resetInst()
     result
   }
 
   def debugMatches(matches: Boolean): Unit = {
+
+    def mkMessage(instCount: Int): String = {
+      val tabs = "\t" * ((5 + instCount) + 1)
+      val extractorString = "[]"
+//      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
+//          .replace("#", s"$extractorString.")
+//          .replace(' ', '.')
+//      val instString = inst.toString
+//      val message = s"""${tabs}${side} $where(inst = $instString)"""
+      val message = s"""${tabs}$matches"""
+
+      message
+    }
+
+    val message = mkMessage(context.getInstLength)
+
+    println(message)
     transcript += context.setMatches(matches)
   }
 
