@@ -22,13 +22,14 @@ case class DebuggerRecord(
 // TODO: This needs to be made tread-safe!
 // Each Odin instance could have its own, for example.
 class DebuggerContext(
+  protected var depth: Int = 0,
   protected var documentOpt: Option[Document] = None,
   protected var loopOpt: Option[Int] = None,
   protected var extractorOpt: Option[Extractor] = None,
   protected var sentenceIndexOpt: Option[Int] = None,
   protected var sentenceOpt: Option[Sentence] = None,
   protected var startOpt: Option[Int] = None,
-  protected var tokOpt: Option[Int] = None,
+  protected var toks: List[Int] = List.empty,
   protected var insts: List[Inst] = List.empty
 ) {
   def isComplete: Boolean = {
@@ -38,38 +39,52 @@ class DebuggerContext(
     sentenceIndexOpt.isDefined &&
     sentenceOpt.isDefined &&
     startOpt.isDefined &&
-    tokOpt.isDefined &&
+    toks.nonEmpty &&
     insts.nonEmpty
   }
+
+  def getDepth: Int = depth
 
   def setDocument(document: Document): Unit = {
     assert(documentOpt.isEmpty)
     documentOpt = Some(document)
+    depth += 1
   }
 
   def getDocumentOpt: Option[Document] = documentOpt
 
-  def resetDocument(): Unit = documentOpt = None
+  def resetDocument(): Unit = {
+    documentOpt = None
+    depth -= 1
+  }
 
   def setLoop(loop: Int): Unit = {
     assert(documentOpt.nonEmpty)
     assert(loopOpt.isEmpty)
     loopOpt = Some(loop)
+    depth += 1
   }
 
   def getLoopOpt: Option[Int] = loopOpt
 
-  def resetLoop(): Unit = loopOpt = None
+  def resetLoop(): Unit = {
+    loopOpt = None
+    depth -= 1
+  }
 
   def setExtractor(extractor: Extractor): Unit = {
     assert(loopOpt.nonEmpty)
     assert(extractorOpt.isEmpty)
     extractorOpt = Some(extractor)
+    depth += 1
   }
 
   def getExtractorOpt: Option[Extractor] = extractorOpt
 
-  def resetExtractor(): Unit = extractorOpt = None
+  def resetExtractor(): Unit = {
+    extractorOpt = None
+    depth -= 1
+  }
 
   def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
     assert(loopOpt.nonEmpty)
@@ -77,6 +92,7 @@ class DebuggerContext(
     assert(sentenceOpt.isEmpty)
     sentenceIndexOpt = Some(sentenceIndex)
     sentenceOpt = Some(sentence)
+    depth += 1
   }
 
   def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexOpt, sentenceOpt)
@@ -84,6 +100,7 @@ class DebuggerContext(
   def resetSentence(): Unit = {
     sentenceIndexOpt = None
     sentenceOpt = None
+    depth -= 1
   }
 
   def setStart(start: Int): Unit = {
@@ -91,41 +108,59 @@ class DebuggerContext(
     assert(sentenceOpt.nonEmpty)
     assert(startOpt.isEmpty)
     startOpt = Some(start)
+    depth += 1
   }
 
   def getStartOpt: Option[Int] = startOpt
 
-  def resetStart(): Unit = startOpt = None
-
-  def setTok(tok: Int): Unit = {
-    assert(startOpt.nonEmpty)
-    assert(tokOpt.isEmpty)
-    tokOpt = Some(tok)
-    assert(insts.isEmpty)
+  def resetStart(): Unit = {
+    startOpt = None
+    depth -= 1
   }
 
-  def getTokOpt: (Option[Int]) = tokOpt
+  def setTok(tok: Int): Unit = {
+    // If matches and go to next token, just in case there is a pass, then still have last tok
+    // can this be
+    assert(startOpt.nonEmpty)
+    toks = tok :: toks
+//    assert(insts.isEmpty)
+    depth += 1
+  }
 
-  def resetTok(): Unit = tokOpt = None
+  // TODO: Need to take recursion amount into account
+  // That should just be counted and put into context.
+
+  def getTokOpt: (Option[Int]) = toks.headOption
+
+  def getToksLength: Int = toks.length
+
+  def resetTok(): Unit = {
+    toks = toks.tail
+    depth -= 1
+  }
 
   def setInst(inst: Inst): Unit = {
-    if (tokOpt.isEmpty)
+    if (toks.isEmpty)
       println("How?")
 //    assert(tokOpt.nonEmpty)
     // There can be multiple inst before we return.
     insts = inst :: insts
+    depth += 1
   }
 
   def getInstOpt: Option[Inst] = insts.headOption
 
-  def getInstLength: Int = insts.length
+  def getInstsLength: Int = insts.length
 
-  def resetInst(): Unit = insts = insts.tail
+  def resetInst(): Unit = {
+    insts = insts.tail
+    depth -= 1
+  }
 
   def setMatches(matches: Boolean): DebuggerRecord = {
 //    assert(isComplete)
     DebuggerRecord(documentOpt.get, loopOpt.get, extractorOpt.get, sentenceIndexOpt.get, sentenceOpt.get,
-      startOpt.get, tokOpt.get, insts.head, matches)
+      startOpt.get, toks.head, insts.head, matches)
   }
 }
 
@@ -187,8 +222,8 @@ class Debugger protected () extends DebuggerTrait {
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 0
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
           .replace("#", s"$extractorString.")
@@ -199,8 +234,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setDocument(doc)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetDocument()
 
     result
@@ -209,8 +245,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugLoop[ResultType, StackFrameType <: StackFrame](loop: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 1
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
           .replace("#", s"$extractorString.")
@@ -221,8 +257,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setLoop(loop)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetLoop()
     result
   }
@@ -232,8 +269,8 @@ class Debugger protected () extends DebuggerTrait {
     // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 2
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = s"""["${extractor.name}"]"""
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -242,8 +279,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setExtractor(extractor)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetExtractor()
     result
   }
@@ -251,8 +289,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 3
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -263,8 +301,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setSentence(index, sentence)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetSentence()
     result
   }
@@ -272,8 +311,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugStart[ResultType, StackFrameType <: StackFrame](start: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 4
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val method = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
       val obj = StringUtils.afterLast(StringUtils.beforeLast(stackFrame.sourceCode.enclosing.value, '.'), '.')
       val message = s"""${tabs}${side} $obj.$method(start = $start)"""
@@ -281,8 +320,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setStart(start)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetStart()
     result
   }
@@ -290,8 +330,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugTok[ResultType, StackFrameType <: StackFrame](tok: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 5
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -301,8 +341,9 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setTok(tok)
-    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetTok()
     result
   }
@@ -310,8 +351,8 @@ class Debugger protected () extends DebuggerTrait {
   def debugInst[ResultType, StackFrameType <: StackFrame](inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(instCount: Int)(side: String): String = {
-      val tabs = "\t" * (5 + instCount)
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
           .replace("#", s"$extractorString.")
@@ -322,16 +363,17 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
+    val message = mkMessage(context.getDepth) _
     context.setInst(inst)
-    val result = debugWithMessage(mkMessage(context.getInstLength))(stackFrame)(block)
+    val result = debugWithMessage(message)(stackFrame)(block)
     context.resetInst()
     result
   }
 
   def debugMatches(matches: Boolean): Unit = {
 
-    def mkMessage(instCount: Int): String = {
-      val tabs = "\t" * ((5 + instCount) + 1)
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
 //      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
 //          .replace("#", s"$extractorString.")
@@ -343,7 +385,7 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    val message = mkMessage(context.getInstLength)
+    val message = mkMessage(context.getDepth)
 
     println(message)
     transcript += context.setMatches(matches)

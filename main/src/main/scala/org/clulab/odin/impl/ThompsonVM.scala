@@ -114,7 +114,6 @@ object ThompsonVM {
               }
               // Here we loop on rest.  Could that have different ms?
               case i =>
-                Debugger.debugMatches(true)
                 loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
             }
           }
@@ -139,7 +138,7 @@ object ThompsonVM {
             val token = t.tok
             val const = i.c
             matchTokens(const.toString) = token
-            println(s"Match mentions in singlestepthread is $matchTokens")
+//            println(s"Match mentions in singlestepthread is $matchTokens")
             mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
           }
           else Nil
@@ -311,7 +310,6 @@ object ThompsonVM {
 
     // evaluate pattern and return results
     val result = evaluator.eval(tok, start).map(_.results).getOrElse(Nil)
-    println(s"I'm done with seeding tok $tok")
     result
   }
 }
