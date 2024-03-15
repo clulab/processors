@@ -176,6 +176,7 @@ trait DebuggerTrait {
 
 class Debugger protected () extends DebuggerTrait {
   protected var active: Boolean = true // TODO: You can turn off debugging with this!
+  protected var quiet: Boolean = true // TODO: You can turn off the printing of messages with this.
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
@@ -210,9 +211,9 @@ class Debugger protected () extends DebuggerTrait {
   def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
-      println(mkMessage("beg"))
+      if (!quiet) println(mkMessage("beg"))
       val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
+      if (!quiet) println(mkMessage("end"))
       result
     }
     else {
@@ -389,8 +390,10 @@ class Debugger protected () extends DebuggerTrait {
 
     val message = mkMessage(context.getDepth)
 
-    println(message)
-    transcript += context.setMatches(matches)
+    if (active) {
+      if (!quiet) println(message)
+      transcript += context.setMatches(matches)
+    }
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
