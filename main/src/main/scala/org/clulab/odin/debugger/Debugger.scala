@@ -99,16 +99,13 @@ class DebuggerContext(
   def setTok(tok: Int): Unit = {
     assert(startOpt.nonEmpty)
     assert(tokOpt.isEmpty)
-    assert(instOpt.isEmpty)
     tokOpt = Some(tok)
-    instOpt = Some(inst)
   }
 
-  def getTokInstOpt: (Option[Int], Option[Inst]) = (tokOpt, instOpt)
+  def getTokOpt: (Option[Int]) = tokOpt
 
-  def resetTokInst(): Unit = {
+  def resetTok(): Unit = {
     tokOpt = None
-    instOpt = None
   }
 
   def setInst(inst: Inst): Unit = {
@@ -117,6 +114,9 @@ class DebuggerContext(
     instOpt = Some(inst)
   }
 
+  def getInstOpt: Option[Inst] = instOpt
+
+  def resetInst(): Unit = instOpt = None
 
   def setMatches(matches: Boolean): DebuggerRecord = {
     assert(isComplete)
@@ -283,7 +283,7 @@ class Debugger protected () extends DebuggerTrait {
     result
   }
 
-  def debugTokInst[ResultType, StackFrameType <: StackFrame](tok: Int, inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+  def debugTok[ResultType, StackFrameType <: StackFrame](tok: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(side: String): String = {
@@ -292,15 +292,35 @@ class Debugger protected () extends DebuggerTrait {
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
         .replace(' ', '.')
-      val instString = inst.toString
-      val message = s"""${tabs}${side} $where(tok = $tok, inst = $instString)"""
+      val message = s"""${tabs}${side} $where(tok = $tok)"""
 
       message
     }
 
-    context.setTokInst(tok, inst)
+    context.setTok(tok)
     val result = debugWithMessage(mkMessage)(stackFrame)(block)
-    context.resetTokInst()
+    context.resetTok()
+    result
+  }
+
+  def debugInst[ResultType, StackFrameType <: StackFrame](inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
+    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(side: String): String = {
+      val tabs = "\t" * 6
+      val extractorString = "[]"
+      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
+          .replace("#", s"$extractorString.")
+          .replace(' ', '.')
+      val instString = inst.toString
+      val message = s"""${tabs}${side} $where(inst = $instString)"""
+
+      message
+    }
+
+    context.setInst(inst)
+    val result = debugWithMessage(mkMessage)(stackFrame)(block)
+    context.resetInst()
     result
   }
 
@@ -382,11 +402,18 @@ object Debugger extends DebuggerTrait {
     instance.debugStart(start)(stackFrame)(block)
   }
 
-  def debugTokInst[ResultType](tok: Int, inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+  def debugTok[ResultType](tok: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    instance.debugTokInst(tok, inst)(stackFrame)(block)
+    instance.debugTok(tok)(stackFrame)(block)
+  }
+
+  def debugInst[ResultType](inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    instance.debugInst(inst)(stackFrame)(block)
   }
 
   def debugMatches(matches: Boolean) = instance.debugMatches(matches)

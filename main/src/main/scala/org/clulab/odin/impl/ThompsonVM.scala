@@ -79,7 +79,7 @@ object ThompsonVM {
       groups: NamedGroups = Map.empty,
       mentions: NamedMentions = Map.empty,
       partialGroups: PartialGroups = Nil
-    ): Seq[Thread] = Debugger.debugTokInst(tok, inst) {
+    ): Seq[Thread] = Debugger.debugTok(tok) {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
       @annotation.tailrec
@@ -92,36 +92,37 @@ object ThompsonVM {
         internals match {
           case Nil => ts.reverse
           // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
-          case (i, gs, ms, pgs) :: rest => i match {
-            case i: Pass =>
-              Debugger.debugMatches(true)
-              loop((i.getNext, gs, ms, pgs) :: rest, ts)
-            case i: Split =>
-              Debugger.debugMatches(true)
-              loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
-            case i: SaveStart =>
-              Debugger.debugMatches(true)
-              loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
-            case i: SaveEnd => pgs match {
-              case (name, start) :: partials if name == i.name =>
+          case (i, gs, ms, pgs) :: rest =>
+            i match {
+              case i: Pass =>
                 Debugger.debugMatches(true)
-                val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-                loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
-              case _ =>
-                Debugger.debugMatches(false)
-                sys.error("unable to close capture")
+                loop((i.getNext, gs, ms, pgs) :: rest, ts)
+              case i: Split =>
+                Debugger.debugMatches(true)
+                loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
+              case i: SaveStart =>
+                Debugger.debugMatches(true)
+                loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
+              case i: SaveEnd => pgs match {
+                case (name, start) :: partials if name == i.name =>
+                  Debugger.debugMatches(true)
+                  val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
+                  loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
+                case _ =>
+                  Debugger.debugMatches(false)
+                  sys.error("unable to close capture")
+              }
+              // Here we loop on rest.  Could that have different ms?
+              case i =>
+                Debugger.debugMatches(true)
+                loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
             }
-            // Here we loop on rest.  Could that have different ms?
-            case i =>
-              Debugger.debugMatches(true)
-              loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
-          }
         }
-
-        // Return the Threads produced by inst.
-        // Notice that tok and dir are not in the list.  They always come from method arguments.
-        loop(List((inst, groups, mentions, partialGroups)), Nil)
       }
+
+      // Return the Threads produced by inst.
+      // Notice that tok and dir are not in the list.  They always come from method arguments.
+      loop(List((inst, groups, mentions, partialGroups)), Nil)
     }
 
     // Advance the Thread by executing its instruction (Inst).
