@@ -19,7 +19,7 @@ case class DebuggerRecord(
   matches: Boolean
 )
 
-// TODO: This needs to be made tread-safe!
+// TODO: This needs to be made thread-safe!
 // Each Odin instance could have its own, for example.
 class DebuggerContext(
   protected var depth: Int = 0,
@@ -107,6 +107,8 @@ class DebuggerContext(
     assert(sentenceIndexOpt.nonEmpty)
     assert(sentenceOpt.nonEmpty)
     assert(startOpt.isEmpty)
+    assert(toks.isEmpty)
+    assert(insts.isEmpty)
     startOpt = Some(start)
     depth += 1
   }
@@ -178,7 +180,7 @@ class Debugger protected () extends DebuggerTrait {
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
   protected val context = new DebuggerContext()
-  protected val transcript: Buffer[DebuggerRecord] = Buffer.empty
+  val transcript: Buffer[DebuggerRecord] = Buffer.empty
 
   def activate(): Unit = active = true
 
