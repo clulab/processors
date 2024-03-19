@@ -90,6 +90,11 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
   }
 
   /** Constructs a DateRangeMention from a token pattern */
+  def mkDateRangeMentionBetweenWeeks(mentions: Seq[Mention], state: State): Seq[Mention] = {
+    convert(mentions, toDateRangeMentionBetweenWeeks(weekNormalizer), "toDateRangeMentionBetweenWeeks")
+  }
+
+  /** Constructs a DateRangeMention from a token pattern */
   def mkDateRangeMentionWithSinceRef(mentions: Seq[Mention], state: State): Seq[Mention] = {
     convert(mentions, toDateRangeMentionWithSinceRef, "toDateRangeMentionWithSinceRef")
   }
