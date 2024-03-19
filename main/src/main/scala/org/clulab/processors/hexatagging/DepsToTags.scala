@@ -7,5 +7,9 @@ object DepsToTags {
     val depsFileName = "../dynet/en/deps/universal/wsj/train.labels"
     val sents = ColumnReader.readColumns(depsFileName)
     println(s"Read ${sents.length} sentences.")
+
+    for(sent <- sents) {
+      val depTree = DependencyTree.toTree(sent)
+    }
   }
 }
