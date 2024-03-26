@@ -1,5 +1,6 @@
 package org.clulab.odin.serialization
 
+import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.{Extractor, RuleReader}
 import org.clulab.odin.{Actions, ExtractorEngine, identityAction}
 import org.clulab.processors.{Document, Sentence}
@@ -31,7 +32,7 @@ class TestTokenExtractorDebugger extends Test {
 
   def visualize(extractor: Extractor, sentence: Sentence): Unit = {
     // Consult the debugger.  Eyeball output for now?
-    ???
+    Debugger.visualize(extractor, sentence.words.mkString(" "))
   }
 
   def test(rule: Rule, document: Document): Unit = {
