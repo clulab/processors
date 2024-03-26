@@ -255,7 +255,7 @@ object Debugger extends DebuggerTrait {
     extractor match {
       case tokenExtractor: TokenExtractor =>
         println(s"\nThere was an extractor: ${tokenExtractor.name}")
-        visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
+        visualizeExtractor(tokenExtractor.pattern.start, "", sentence, 0)
       case graphExtractor: GraphExtractor => println("\nThere was a graph extractor.")
       case crossSentenceExtractor: CrossSentenceExtractor =>
         visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
@@ -264,60 +264,50 @@ object Debugger extends DebuggerTrait {
     }
   }
 
-  private def visualizeExtractor(inst: Inst, name: String, sentence: String, indent: Int): Unit = {
+  private def visualizeExtractor(inst: Inst, name: String, sentence: String, depth: Int): Unit = {
+    val indent = " " * (depth * 3) + name
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
     }
 
-    val visualization = inst.visualize(sentence)
+    val visualization = indent + inst.visualize(sentence)
+    println(visualization)
 
     inst match {
       case split: Split =>
-        println(split.visualize(sentence))
-        if (!loopsOrDeadEnds(split.lhs)) {
-          print(" " * (indent + 3) + "(LHS)")
-          visualizeExtractor(split.lhs, s"$name (LHS)", sentence, indent + 3)
-        }
-        if (!loopsOrDeadEnds(split.rhs)) {
-          print(" " * (indent + 3) + "(RHS)")
-          visualizeExtractor(split.rhs, s"$name (RHS)", sentence, indent + 3)
-        }
+        if (!loopsOrDeadEnds(split.lhs))
+          visualizeExtractor(split.lhs, "(LHS) ", sentence, depth + 1)
+        if (!loopsOrDeadEnds(split.rhs))
+          visualizeExtractor(split.rhs, "(RHS) ", sentence, depth + 1)
 
       case saveStart: SaveStart =>
-        println(" " * indent + saveStart.visualize(sentence))
 
       case saveEnd: SaveEnd =>
-        println(" " * indent + saveEnd.visualize(sentence))
 
       case matchToken: MatchToken =>
-        println(" " * indent + matchToken.visualize(sentence))
 
       case matchMention: MatchMention =>
-        println(" " * indent + matchMention.visualize(sentence))
 
       case sentenceStart: MatchSentenceStart =>
-        println(" " * indent + sentenceStart.visualize(sentence))
 
       case sentenceEnd: MatchSentenceEnd =>
-        println(" " * indent + sentenceEnd.visualize(sentence))
 
       case pass: Pass =>
-        println(" " * indent + pass.visualize(sentence))
 
-      case Done => println(" " * indent + Done.visualize(sentence))
+      case Done =>
 
       case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
-          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence, indent)
+          visualizeExtractor(lookAhead.start, "(Start) ", sentence, depth + 1)
 
       case lookBehind: MatchLookBehind =>
         if (!loopsOrDeadEnds(lookBehind.start))
-          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence, indent)
+          visualizeExtractor(lookBehind.start, "(Start) ", sentence, depth + 1)
 
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.getNext))
-      visualizeExtractor(inst.getNext, s"$name (Next)", sentence, indent)
+      visualizeExtractor(inst.getNext, name, sentence, depth)
   }
 }
