@@ -54,7 +54,12 @@ class TestTokenExtractorDebugger extends Test {
     Rule("more-foods-from-lexicon", "(?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $"),
     Rule("more-person-from-lexicon", "^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)"),
     Rule("a and b", "a{1, 3} | b+"),
-    Rule("verb-tense", "[entity='B-PER'] [entity='I-PER']* (?= ate|eats|eating) [entity='B-FOOD'] [entity='I-FOOD']* ")
+    Rule("verb-tense", "[entity='B-PER'] [entity='I-PER']* (?= ate|eats|eating) [entity='B-FOOD'] [entity='I-FOOD']* "),
+    Rule("optional-word-followed-by-c-and-d", "(?:word1 word2)? (?=c.*d)"),
+    Rule("food-verb-food", "[entity='B-FOOD'] [entity='I-FOOD']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
+    Rule("person-and-food", "[entity='B-PER'] [entity='I-PER']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
+    Rule("food-or-person", "(?:[entity='B-FOOD'] [entity='I-FOOD']* | [entity='B-PER'] [entity='I-PER']*)"),
+    Rule("food-followed-by-person", "[entity='B-FOOD'] [entity='I-FOOD']* (?= [entity='B-PER'])")
   )
   val sentence = "John eats cake."
   val document = processor.annotate(sentence)
