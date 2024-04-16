@@ -127,8 +127,17 @@ object ThompsonVM {
         val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
         val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
         if (i.negative == results.isEmpty) {
-          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-        } else {
+          type PartialGroups = List[(String, Int)]
+          type PartialMatches = List[PartialMatch]
+          val partialGroups = List(("", t.tok))
+          println(s"Partial match for negative MatchLookAhead at index ${t.tok}")
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, partialGroups)
+        }
+        else if (results.isEmpty){
+          println(s"Partial match for MatchLookAhead at index ${t.tok}")
+          Nil
+        }
+        else {
           Nil
         }
       case i: MatchLookBehind =>
