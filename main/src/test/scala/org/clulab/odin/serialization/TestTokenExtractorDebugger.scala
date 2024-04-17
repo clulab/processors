@@ -49,23 +49,24 @@ class TestTokenExtractorDebugger extends Test {
   }
 
   val rules = Seq(
-    Rule("foods-from-lexicon", "[entity='B-FOOD'] [entity='I-FOOD']*"),
-    Rule("person-from-lexicon", "[entity='B-PER'] [entity='I-PER']*"),
-    Rule("more-foods-from-lexicon", "(?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $"),
-    Rule("more-person-from-lexicon", "^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)"),
-    Rule("a and b", "a{1, 3} | b+"),
-    Rule("verb-tense", "[entity='B-PER'] [entity='I-PER']* (?= ate|eats|eating) [entity='B-FOOD'] [entity='I-FOOD']* "),
-    Rule("optional-word-followed-by-c-and-d", "(word1 | word2)? (c|d)"),
-    Rule("food-verb-food", "[entity='B-FOOD'] [entity='I-FOOD']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
-    Rule("person-and-food", "[entity='B-PER'] [entity='I-PER']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
-    Rule("food-or-person", "([entity='B-FOOD'] [entity='I-FOOD']* | [entity='B-PER'] [entity='I-PER']*)"),
-    Rule("food-followed-by-person", "[entity='B-FOOD'] [entity='I-FOOD']* (?= [entity='B-PER'])"),
-    Rule("no-person-at-start", "(?<![entity='B-PER']) [entity='B-FOOD'] [entity='I-FOOD']*"), //negative lookbehind
-    Rule("3-letter-person-name", "[entity ='B-PER']{3} [entity='B-FOOD'] [entity='I-FOOD']*"),
-    Rule("2-to-6-letter-food", "[entity='B-PER'] [entity='I-PER']* [entity='B-FOOD']{2,6}"),
-    Rule("partial-match-1", "[entity='B-PER'] [entity='I-PER']* (?= walk|walking)")
+//    Rule("foods-from-lexicon", "[entity='B-FOOD'] [entity='I-FOOD']*"),
+//    Rule("person-from-lexicon", "[entity='B-PER'] [entity='I-PER']*"),
+//    Rule("more-foods-from-lexicon", "(?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $"),
+//    Rule("more-person-from-lexicon", "^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)"),
+//    Rule("a and b", "a{1, 3} | b+"),
+//    Rule("verb-tense", "[entity='B-PER'] [entity='I-PER']* (?= ate|eats|eating) [entity='B-FOOD'] [entity='I-FOOD']* "),
+//    Rule("optional-word-followed-by-c-and-d", "(word1 | word2)? (c|d)"),
+//    Rule("food-verb-food", "[entity='B-FOOD'] [entity='I-FOOD']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
+//    Rule("person-and-food", "[entity='B-PER'] [entity='I-PER']* (?= eats|ate|eating) [entity='B-FOOD'] [entity='I-FOOD']*"),
+//    Rule("food-or-person", "([entity='B-FOOD'] [entity='I-FOOD']* | [entity='B-PER'] [entity='I-PER']*)"),
+//    Rule("food-followed-by-person", "[entity='B-FOOD'] [entity='I-FOOD']* (?= [entity='B-PER'])"),
+//    Rule("no-person-at-start", "(?<![entity='B-PER']) [entity='B-FOOD'] [entity='I-FOOD']*"), //negative lookbehind
+//    Rule("3-letter-person-name", "[entity ='B-PER']{3} [entity='B-FOOD'] [entity='I-FOOD']*"),
+//    Rule("2-to-6-letter-food", "[entity='B-PER'] [entity='I-PER']* [entity='B-FOOD']{2,6}"),
+//    Rule("partial-match-1", "[entity='B-PER'] [entity='I-PER']* (?= walk|walking)"),
+    Rule("partial-match-2", "[word='A']{4}")
   )
-  val sentence = "John eats cake."
+  val sentence = "B A A C A A A D A A A A E"
   val document = processor.annotate(sentence)
 
   rules.foreach(test(_, document))

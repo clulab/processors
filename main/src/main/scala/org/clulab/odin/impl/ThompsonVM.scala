@@ -79,7 +79,7 @@ object ThompsonVM {
       groups: NamedGroups = Map.empty,
       mentions: NamedMentions = Map.empty,
       partialGroups: PartialGroups = Nil
-    ): Seq[Thread] = Debugger.debugTokInst(tok, inst) {
+    ): Seq[Thread] = Debugger.debugTok(tok) {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
       @annotation.tailrec
@@ -126,20 +126,13 @@ object ThompsonVM {
       case i: MatchLookAhead =>
         val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
         val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
-        if (i.negative == results.isEmpty) {
-          type PartialGroups = List[(String, Int)]
-          type PartialMatches = List[PartialMatch]
-          val partialGroups = List(("", t.tok))
-          println(s"Partial match for negative MatchLookAhead at index ${t.tok}")
-          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, partialGroups)
+        val matches = i.negative == results.isEmpty
+
+        //Debugger.debugMatches(matches)
+        if (matches) {
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         }
-        else if (results.isEmpty){
-          println(s"Partial match for MatchLookAhead at index ${t.tok}")
-          Nil
-        }
-        else {
-          Nil
-        }
+        else Nil
       case i: MatchLookBehind =>
         val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
         val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))

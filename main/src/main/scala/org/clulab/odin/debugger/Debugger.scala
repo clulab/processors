@@ -1,8 +1,170 @@
 package org.clulab.odin.debugger
+
 import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.{StringUtils, Timer}
+
+import scala.collection.mutable.Buffer
+
+case class DebuggerRecord(
+                           document: Document,
+                           loop: Int,
+                           extractor: Extractor,
+                           sentenceIndex: Int,
+                           sentence: Sentence,
+                           start: Int,
+                           tok: Int,
+                           inst: Inst,
+                           matches: Boolean
+                         )
+
+// TODO: This needs to be made thread-safe!
+// Each Odin instance could have its own, for example.
+class DebuggerContext(
+                       protected var depth: Int = 0,
+                       protected var documentOpt: Option[Document] = None,
+                       protected var loopOpt: Option[Int] = None,
+                       protected var extractorOpt: Option[Extractor] = None,
+                       protected var sentenceIndexOpt: Option[Int] = None,
+                       protected var sentenceOpt: Option[Sentence] = None,
+                       protected var startOpt: Option[Int] = None,
+                       protected var toks: List[Int] = List.empty,
+                       protected var insts: List[Inst] = List.empty
+                     ) {
+  def isComplete: Boolean = {
+    documentOpt.isDefined &&
+      loopOpt.isDefined &&
+      extractorOpt.isDefined &&
+      sentenceIndexOpt.isDefined &&
+      sentenceOpt.isDefined &&
+      startOpt.isDefined &&
+      toks.nonEmpty &&
+      insts.nonEmpty
+  }
+
+  def getDepth: Int = depth
+
+  def setDocument(document: Document): Unit = {
+    assert(documentOpt.isEmpty)
+    documentOpt = Some(document)
+    depth += 1
+  }
+
+  def getDocumentOpt: Option[Document] = documentOpt
+
+  def resetDocument(): Unit = {
+    documentOpt = None
+    depth -= 1
+  }
+
+  def setLoop(loop: Int): Unit = {
+    assert(documentOpt.nonEmpty)
+    assert(loopOpt.isEmpty)
+    loopOpt = Some(loop)
+    depth += 1
+  }
+
+  def getLoopOpt: Option[Int] = loopOpt
+
+  def resetLoop(): Unit = {
+    loopOpt = None
+    depth -= 1
+  }
+
+  def setExtractor(extractor: Extractor): Unit = {
+    assert(loopOpt.nonEmpty)
+    assert(extractorOpt.isEmpty)
+    extractorOpt = Some(extractor)
+    depth += 1
+  }
+
+  def getExtractorOpt: Option[Extractor] = extractorOpt
+
+  def resetExtractor(): Unit = {
+    extractorOpt = None
+    depth -= 1
+  }
+
+  def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
+    assert(loopOpt.nonEmpty)
+    assert(sentenceIndexOpt.isEmpty)
+    assert(sentenceOpt.isEmpty)
+    sentenceIndexOpt = Some(sentenceIndex)
+    sentenceOpt = Some(sentence)
+    depth += 1
+  }
+
+  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexOpt, sentenceOpt)
+
+  def resetSentence(): Unit = {
+    sentenceIndexOpt = None
+    sentenceOpt = None
+    depth -= 1
+  }
+
+  def setStart(start: Int): Unit = {
+    assert(sentenceIndexOpt.nonEmpty)
+    assert(sentenceOpt.nonEmpty)
+    assert(startOpt.isEmpty)
+    assert(toks.isEmpty)
+    assert(insts.isEmpty)
+    startOpt = Some(start)
+    depth += 1
+  }
+
+  def getStartOpt: Option[Int] = startOpt
+
+  def resetStart(): Unit = {
+    startOpt = None
+    depth -= 1
+  }
+
+  def setTok(tok: Int): Unit = {
+    // If matches and go to next token, just in case there is a pass, then still have last tok
+    // can this be
+    assert(startOpt.nonEmpty)
+    toks = tok :: toks
+    //    assert(insts.isEmpty)
+    depth += 1
+  }
+
+  // TODO: Need to take recursion amount into account
+  // That should just be counted and put into context.
+
+  def getTokOpt: (Option[Int]) = toks.headOption
+
+  def getToksLength: Int = toks.length
+
+  def resetTok(): Unit = {
+    toks = toks.tail
+    depth -= 1
+  }
+
+  def setInst(inst: Inst): Unit = {
+    if (toks.isEmpty)
+      println("How?")
+    //    assert(tokOpt.nonEmpty)
+    // There can be multiple inst before we return.
+    insts = inst :: insts
+    depth += 1
+  }
+
+  def getInstOpt: Option[Inst] = insts.headOption
+
+  def getInstsLength: Int = insts.length
+
+  def resetInst(): Unit = {
+    insts = insts.tail
+    depth -= 1
+  }
+
+  def setMatches(matches: Boolean): DebuggerRecord = {
+    //    assert(isComplete)
+    DebuggerRecord(documentOpt.get, loopOpt.get, extractorOpt.get, sentenceIndexOpt.get, sentenceOpt.get,
+      startOpt.get, toks.head, insts.head, matches)
+  }
+}
 
 trait DebuggerTrait {
   def activate(): Unit
@@ -14,9 +176,12 @@ trait DebuggerTrait {
 
 class Debugger protected () extends DebuggerTrait {
   protected var active: Boolean = true // TODO: You can turn off debugging with this!
+  protected var quiet: Boolean = false // TODO: You can turn off the printing of messages with this.
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
+  protected val context = new DebuggerContext()
+  val transcript: Buffer[DebuggerRecord] = Buffer.empty
 
   def activate(): Unit = active = true
 
@@ -35,7 +200,7 @@ class Debugger protected () extends DebuggerTrait {
         stack = stack.tail
       }
       val execTime = stackFrame.stopTimer()
-//      println(s"Execution time for stack frame: $execTime nanoseconds")
+      //      println(s"Execution time for stack frame: $execTime nanoseconds")
       result
     }
     else {
@@ -44,11 +209,11 @@ class Debugger protected () extends DebuggerTrait {
   }
 
   def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
-      (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+                                                                (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
-      println(mkMessage("beg"))
+      if (!quiet) println(mkMessage("beg"))
       val result = debug(stackFrame)(block)
-      println(mkMessage("end"))
+      if (!quiet) println(mkMessage("end"))
       result
     }
     else {
@@ -57,14 +222,14 @@ class Debugger protected () extends DebuggerTrait {
   }
 
   def debugDoc[ResultType, StackFrameType <: StackFrame](extractorEngine: ExtractorEngine, doc: Document)
-      (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+                                                        (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 0
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
+        .replace("#", s"$extractorString.")
       val docString = StringUtils.afterLast(doc.toString, '.')
       val textString = doc.text.getOrElse(doc.sentences.map { sentence => sentence.words.mkString(" ") }.mkString(" "))
       val message = s"""${tabs}${side} $where(doc = $docString("$textString"))"""
@@ -72,25 +237,34 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setDocument(doc)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetDocument()
+
+    result
   }
 
   def debugLoop[ResultType, StackFrameType <: StackFrame](loop: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 1
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
-          .replace(' ', '.')
+        .replace("#", s"$extractorString.")
+        .replace(' ', '.')
       val loopString = loop.toString
       val message = s"""${tabs}${side} $where(loop = $loopString)"""
 
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setLoop(loop)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetLoop()
+    result
   }
 
   def debugExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
@@ -98,8 +272,8 @@ class Debugger protected () extends DebuggerTrait {
     // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 2
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = s"""["${extractor.name}"]"""
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -108,14 +282,18 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setExtractor(extractor)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetExtractor()
+    result
   }
 
   def debugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 3
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
@@ -126,14 +304,18 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setSentence(index, sentence)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetSentence()
+    result
   }
 
   def debugStart[ResultType, StackFrameType <: StackFrame](start: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 4
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val method = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
       val obj = StringUtils.afterLast(StringUtils.beforeLast(stackFrame.sourceCode.enclosing.value, '.'), '.')
       val message = s"""${tabs}${side} $obj.$method(start = $start)"""
@@ -141,25 +323,77 @@ class Debugger protected () extends DebuggerTrait {
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setStart(start)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetStart()
+    result
   }
 
-  def debugTokInst[ResultType, StackFrameType <: StackFrame](tok: Int, inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+  def debugTok[ResultType, StackFrameType <: StackFrame](tok: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
     // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(side: String): String = {
-      val tabs = "\t" * 5
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val extractorString = "[]"
+      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
+        .replace("#", s"$extractorString.")
+        .replace(' ', '.')
+      val message = s"""${tabs}${side} $where(tok = $tok)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    context.setTok(tok)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetTok()
+    result
+  }
+
+  def debugInst[ResultType, StackFrameType <: StackFrame](inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
+    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
       val extractorString = "[]"
       val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
         .replace("#", s"$extractorString.")
         .replace(' ', '.')
       val instString = inst.toString
-      val message = s"""${tabs}${side} $where(tok = $tok, inst = $instString)"""
+      val message = s"""${tabs}${side} $where(inst = $instString)"""
 
       message
     }
 
-    debugWithMessage(mkMessage)(stackFrame)(block)
+    val message = mkMessage(context.getDepth) _
+    context.setInst(inst)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetInst()
+    result
+  }
+
+  def debugMatches(matches: Boolean): Unit = {
+
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
+      val extractorString = "[]"
+      //      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
+      //          .replace("#", s"$extractorString.")
+      //          .replace(' ', '.')
+      //      val instString = inst.toString
+      //      val message = s"""${tabs}${side} $where(inst = $instString)"""
+      val message = s"""${tabs}$matches"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth)
+
+    if (active) {
+      if (!quiet) println(message)
+      transcript += context.setMatches(matches)
+    }
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
@@ -236,12 +470,21 @@ object Debugger extends DebuggerTrait {
     instance.debugStart(start)(stackFrame)(block)
   }
 
-  def debugTokInst[ResultType](tok: Int, inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+  def debugTok[ResultType](tok: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    instance.debugTokInst(tok, inst)(stackFrame)(block)
+    instance.debugTok(tok)(stackFrame)(block)
   }
+
+  def debugInst[ResultType](inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    instance.debugInst(inst)(stackFrame)(block)
+  }
+
+  def debugMatches(matches: Boolean) = instance.debugMatches(matches)
 
   def showTrace(): Unit = {
     instance.showTrace()
