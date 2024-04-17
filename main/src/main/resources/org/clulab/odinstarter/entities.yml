@@ -1,28 +1,34 @@
-
-- name: foods-from-lexicon
+- name: four-As
   priority: ${rulepriority}
-  label: Food
+  label: Phrase
   type: token
   pattern: |
-    [entity='B-FOOD'] [entity='I-FOOD']+
+    [word='A']{4}
 
-- name: person-from-lexicon
-  priority: ${rulepriority}
-  label: Person
-  type: token
-  pattern: |
-    [entity='B-PER'] [entity='I-PER']*
-
-- name: more-foods-from-lexicon
-  priority: ${rulepriority}
-  label: Food
-  type: token
-  pattern: |
-    (?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $
-
-- name: more-person-from-lexicon
-  priority: ${rulepriority}
-  label: Person
-  type: token
-  pattern: |
-    ^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)
+#- name: foods-from-lexicon
+#  priority: ${rulepriority}
+#  label: Food
+#  type: token
+#  pattern: |
+#    [entity='B-FOOD'] [entity='I-FOOD']+
+#
+#- name: person-from-lexicon
+#  priority: ${rulepriority}
+#  label: Person
+#  type: token
+#  pattern: |
+#    [entity='B-PER'] [entity='I-PER']*
+#
+#- name: more-foods-from-lexicon
+#  priority: ${rulepriority}
+#  label: Food
+#  type: token
+#  pattern: |
+#    (?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $
+#
+#- name: more-person-from-lexicon
+#  priority: ${rulepriority}
+#  label: Person
+#  type: token
+#  pattern: |
+#    ^ @theme:Food [entity='B-PER'] [entity='I-PER']* (?= goodbye)
