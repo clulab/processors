@@ -53,7 +53,7 @@ object OdinStarter extends App {
   val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
   val extractors = reader.read(rules)
   val extractorEngine = new ExtractorEngine(extractors, identityAction)
-  val document = processor.annotate("B A A C A A A D")
+  val document = processor.annotate("B A A C A A A D A A A A E")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   val sentence = document.sentences.head.words.mkString(" ") // mentions.head.sentenceObj.words.mkString(" ")
