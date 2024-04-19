@@ -16,6 +16,6 @@ rules:
       # used in the entities.yml rules
       rulepriority: "1"
 
-#  - import: org/clulab/odinstarter/events.yml
-#    vars:
-#      rulepriority: "2"
+  - import: org/clulab/odinstarter/events.yml
+    vars:
+      rulepriority: "2"
