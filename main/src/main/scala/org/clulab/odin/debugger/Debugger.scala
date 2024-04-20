@@ -181,7 +181,7 @@ class Debugger protected () extends DebuggerTrait {
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
   protected val context = new DebuggerContext()
-  val transcript: Buffer[DebuggerRecord] = Buffer.empty
+  val transcript: Buffer[DebuggerRecord] = Buffer.empty // The dictionary to keep track of the insts
 
   def activate(): Unit = active = true
 

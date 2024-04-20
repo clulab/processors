@@ -63,10 +63,10 @@ class TestTokenExtractorDebugger extends Test {
 //    Rule("no-person-at-start", "(?<![entity='B-PER']) [entity='B-FOOD'] [entity='I-FOOD']*"), //negative lookbehind
 //    Rule("3-letter-person-name", "[entity ='B-PER']{3} [entity='B-FOOD'] [entity='I-FOOD']*"),
 //    Rule("2-to-6-letter-food", "[entity='B-PER'] [entity='I-PER']* [entity='B-FOOD']{2,6}"),
-//    Rule("partial-match-1", "[entity='B-PER'] [entity='I-PER']* (?= walk|walking)"),
-    Rule("partial-match-2", "[word='A']{4}")
+    Rule("partial-match-1", "[entity='B-PER'] [entity='I-PER']* (?= walk|walking)"),
+//    Rule("partial-match-2", "[word='A']{4}")
   )
-  val sentence = "B A A C A A A D A A A A E"
+  val sentence = "John eats cake."
   val document = processor.annotate(sentence)
 
   rules.foreach(test(_, document))

@@ -17,11 +17,11 @@ object ThompsonVM {
   val matchTokens = new HashMap[String, Int]
 
   case class PartialMatch(
-    sentenceId: Int,
-    startToken: Int,
-    endToken: Int,
-    ruleName: String
-  )
+                           sentenceId: Int,
+                           startToken: Int,
+                           endToken: Int,
+                           ruleName: String
+                         )
 
   // enum
   object Direction extends Enumeration {
@@ -37,14 +37,14 @@ object ThompsonVM {
   }
 
   case class SingleThread(
-    tok: Int,
-    inst: Inst,
-    dir: Direction,
-    groups: NamedGroups,
-    mentions: NamedMentions,
-    partialGroups: PartialGroups,
-    var partialMatches: PartialMatches
-  ) extends Thread {
+                           tok: Int,
+                           inst: Inst,
+                           dir: Direction,
+                           groups: NamedGroups,
+                           mentions: NamedMentions,
+                           partialGroups: PartialGroups,
+                           var partialMatches: PartialMatches
+                         ) extends Thread {
 
     def isDone: Boolean = inst == Done
 
@@ -73,20 +73,20 @@ object ThompsonVM {
     // Executes instruction on token and returns the produced threads.
     // Threads are created by following all no-Match instructions.
     def mkThreads(
-      tok: Int,
-      inst: Inst,
-      dir: Direction = LeftToRight,
-      groups: NamedGroups = Map.empty,
-      mentions: NamedMentions = Map.empty,
-      partialGroups: PartialGroups = Nil
-    ): Seq[Thread] = Debugger.debugTok(tok) {
+                   tok: Int,
+                   inst: Inst,
+                   dir: Direction = LeftToRight,
+                   groups: NamedGroups = Map.empty,
+                   mentions: NamedMentions = Map.empty,
+                   partialGroups: PartialGroups = Nil
+                 ): Seq[Thread] = Debugger.debugTok(tok) {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
       @annotation.tailrec
       def loop(
-        internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-        ts: List[Thread]
-      ): Seq[Thread] = internals match {
+                internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
+                ts: List[Thread]
+              ): Seq[Thread] = internals match {
         case Nil => ts.reverse
         // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
         case (i, gs, ms, pgs) :: rest => i match {
@@ -132,7 +132,10 @@ object ThompsonVM {
         if (matches) {
           mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         }
-        else Nil
+        else {
+          println(s"Partial Match at MatchLookAhead at index ${t.tok}")
+          Nil
+        }
       case i: MatchLookBehind =>
         val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
         val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
@@ -158,12 +161,12 @@ object ThompsonVM {
     }
 
     def retrieveMentions(
-      state: State,
-      sentence: Int,
-      token: Int,
-      matcher: StringMatcher,
-      argument: Option[String]
-    ): Seq[Mention] = {
+                          state: State,
+                          sentence: Int,
+                          token: Int,
+                          matcher: StringMatcher,
+                          argument: Option[String]
+                        ): Seq[Mention] = {
       val mentions = for {
         mention <- state.mentionsFor(sentence, token) if mention matches matcher
         result <- argument match {
@@ -183,10 +186,10 @@ object ThompsonVM {
     }
 
     def mkMentionCapture(
-      mentions: NamedMentions,
-      name: Option[String],
-      mention: Mention
-    ): NamedMentions = name match {
+                          mentions: NamedMentions,
+                          name: Option[String],
+                          mention: Mention
+                        ): NamedMentions = name match {
       case None => mentions
       case Some(name) =>
         val updateMentions = mentions.getOrElse(name, Vector.empty) :+ mention
@@ -214,7 +217,7 @@ object ThompsonVM {
     }
 
     def stepThreads(threads: Seq[Thread]): Seq[Thread] =
-        threads.flatMap(stepThread).distinct
+      threads.flatMap(stepThread).distinct
 
     def handleDone(threads: Seq[Thread]): (Seq[Thread], Option[Thread]) = {
       // TODO: Would indexWhere work better?  The test for equality is quite expensive.
@@ -243,16 +246,16 @@ object ThompsonVM {
     }
 
     def eval(tok: Int, start: Inst): Option[Thread] =
-        evalThreads(mkThreads(tok, start))
+      evalThreads(mkThreads(tok, start))
   }
 
   def evaluate(
-    start: Inst,
-    tok: Int,
-    sent: Int,
-    doc: Document,
-    state: State
-  ): Seq[(NamedGroups, NamedMentions)] = Debugger.debugStart(tok) {
+                start: Inst,
+                tok: Int,
+                sent: Int,
+                doc: Document,
+                state: State
+              ): Seq[(NamedGroups, NamedMentions)] = Debugger.debugStart(tok) {
     val evaluator = Evaluator(start, tok, sent, doc, state)
 
     // evaluate pattern and return results
@@ -296,8 +299,8 @@ sealed trait Inst {
     other match {
       case that: Inst => this.eq(that) ||
         this.canEqual(that) &&
-        shortEquals(that) // &&
-        // this.nextOpt == that.nextOpt // Do not go all the way down!
+          shortEquals(that) // &&
+      // this.nextOpt == that.nextOpt // Do not go all the way down!
       case _ => false
     }
   }
@@ -330,9 +333,9 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
     other match {
       case that: Split => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.lhs == that.lhs &&
-        this.rhs == that.rhs
+          super.shortEquals(that) &&
+          this.lhs == that.lhs &&
+          this.rhs == that.rhs
       case _ => false
     }
   }
@@ -358,8 +361,8 @@ case class SaveStart(name: String, newNext: Inst) extends Inst {
     other match {
       case that: SaveStart => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.name == that.name
+          super.shortEquals(that) &&
+          this.name == that.name
       case _ => false
     }
   }
@@ -376,8 +379,8 @@ case class SaveEnd(name: String) extends Inst {
     other match {
       case that: SaveEnd => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.name == that.name
+          super.shortEquals(that) &&
+          this.name == that.name
       case _ => false
     }
   }
@@ -405,8 +408,8 @@ case class MatchToken(c: TokenConstraint) extends Inst {
     other match {
       case that: MatchToken => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.c == that.c
+          super.shortEquals(that) &&
+          this.c == that.c
       case _ => false
     }
   }
@@ -414,10 +417,10 @@ case class MatchToken(c: TokenConstraint) extends Inst {
 
 // matches mention by label using string matcher
 case class MatchMention(
-    m: StringMatcher,
-    name: Option[String],
-    arg: Option[String]
-) extends Inst {
+                         m: StringMatcher,
+                         name: Option[String],
+                         arg: Option[String]
+                       ) extends Inst {
 
   def visualize(sentence: String): String = s"$posId. MatchMention with name $name" + visualizeNext
 
@@ -428,10 +431,10 @@ case class MatchMention(
     other match {
       case that: MatchMention => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.m == that.m &&
-        this.name == that.name &&
-        this.arg == that.arg
+          super.shortEquals(that) &&
+          this.m == that.m &&
+          this.name == that.name &&
+          this.arg == that.arg
       case _ => false
     }
   }
@@ -464,9 +467,9 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
     other match {
       case that: MatchLookAhead => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.start == that.start &&
-        this.negative == that.negative
+          super.shortEquals(that) &&
+          this.start == that.start &&
+          this.negative == that.negative
       case _ => false
     }
   }
@@ -483,12 +486,11 @@ case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
     other match {
       case that: MatchLookBehind => this.eq(that) ||
         this.canEqual(that) &&
-        super.shortEquals(that) &&
-        this.start == that.start &&
-        this.negative == that.negative
+          super.shortEquals(that) &&
+          this.start == that.start &&
+          this.negative == that.negative
       case _ => false
     }
   }
 }
-
 
