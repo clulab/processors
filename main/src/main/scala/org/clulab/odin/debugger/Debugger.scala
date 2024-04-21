@@ -494,25 +494,48 @@ object Debugger extends DebuggerTrait {
     instance.showDeepest()
   }
 
+  type InstToDebuggerRecords = Map[Inst, Seq[DebuggerRecord]]
+
   def visualize(extractor: Extractor, sentence: String): Unit = {
+    println(s"The length of the instance transcript is ${instance.transcript.length}")
+    val transcript = instance.transcript
+      .toSeq.filter { debuggerRecord =>
+      // Only worry about this extractor and sentence's records and only matches.
+      // TODO: Wouldn't it me nice if these were sorted?
+      debuggerRecord.extractor == extractor && debuggerRecord.sentence == sentence && debuggerRecord.matches
+    }
+    println(s"The length of the transcript is ${transcript.length}")
+    val instToDebuggerRecords: InstToDebuggerRecords = transcript.groupBy(_.inst)
+    for(record <- instToDebuggerRecords){
+     println(s"The record has ${record.toString()}")
+    }
     extractor match {
       case tokenExtractor: TokenExtractor =>
         println(s"\nThere was an extractor: ${tokenExtractor.name}")
-        visualizeExtractor(tokenExtractor.pattern.start, "", sentence, 0)
+        visualizeExtractor(tokenExtractor.pattern.start, "", sentence, 0, instToDebuggerRecords)
       case graphExtractor: GraphExtractor => println("\nThere was a graph extractor.")
       case crossSentenceExtractor: CrossSentenceExtractor =>
-        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
-        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0)
+        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0, instToDebuggerRecords)
+        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0, instToDebuggerRecords)
       case _ => println("Unknown extractor type")
     }
   }
 
-  private def visualizeExtractor(inst: Inst, name: String, sentence: String, depth: Int): Unit = {
+  private def visualizeExtractor(inst: Inst, name: String, sentence: String, depth: Int, instToDebuggerRecords: InstToDebuggerRecords): Unit = {
+    val debuggerRecords = instToDebuggerRecords.get(inst).getOrElse(Seq.empty)
+
     val indent = " " * (depth * 3) + name
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
     }
+
+    val matchVisualization = debuggerRecords.map { debuggerRecord =>
+      val tok = debuggerRecord.tok
+      val word = debuggerRecord.sentence.words.lift(tok).getOrElse("<EOS>")
+
+      s"$tok: $word"
+    }.mkString(", which matches(", ", ", ")")
 
     val visualization = indent + inst.visualize(sentence)
     println(visualization)
@@ -520,9 +543,9 @@ object Debugger extends DebuggerTrait {
     inst match {
       case split: Split =>
         if (!loopsOrDeadEnds(split.lhs))
-          visualizeExtractor(split.lhs, "(LHS) ", sentence, depth + 1)
+          visualizeExtractor(split.lhs, "(LHS) ", sentence, depth + 1, instToDebuggerRecords)
         if (!loopsOrDeadEnds(split.rhs))
-          visualizeExtractor(split.rhs, "(RHS) ", sentence, depth + 1)
+          visualizeExtractor(split.rhs, "(RHS) ", sentence, depth + 1, instToDebuggerRecords)
 
       case saveStart: SaveStart =>
 
@@ -542,15 +565,15 @@ object Debugger extends DebuggerTrait {
 
       case lookAhead: MatchLookAhead =>
         if (!loopsOrDeadEnds(lookAhead.start))
-          visualizeExtractor(lookAhead.start, "(Start) ", sentence, depth + 1)
+          visualizeExtractor(lookAhead.start, "(Start) ", sentence, depth + 1, instToDebuggerRecords)
 
       case lookBehind: MatchLookBehind =>
         if (!loopsOrDeadEnds(lookBehind.start))
-          visualizeExtractor(lookBehind.start, "(Start) ", sentence, depth + 1)
+          visualizeExtractor(lookBehind.start, "(Start) ", sentence, depth + 1, instToDebuggerRecords)
 
       case _ =>
     }
     if (!loopsOrDeadEnds(inst.getNext))
-      visualizeExtractor(inst.getNext, name, sentence, depth)
+      visualizeExtractor(inst.getNext, name, sentence, depth, instToDebuggerRecords)
   }
 }

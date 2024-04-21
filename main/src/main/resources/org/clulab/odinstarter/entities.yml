@@ -1,4 +1,11 @@
 
+- name: four-As
+  priority: ${rulepriority}
+  label: Food
+  type: token
+  pattern: |
+    [word='A']{4}
+
 - name: foods-from-lexicon
   priority: ${rulepriority}
   label: Food
