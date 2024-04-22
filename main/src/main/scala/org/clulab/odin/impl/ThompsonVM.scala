@@ -106,7 +106,7 @@ object ThompsonVM {
                 val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
                 loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
               case _ =>
-                Debugger.debugMatches(true)
+                Debugger.debugMatches(false)
                 sys.error("unable to close capture")
             }
             // Here we loop on rest.  Could that have different ms?
