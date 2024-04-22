@@ -82,25 +82,39 @@ object ThompsonVM {
                  ): Seq[Thread] = Debugger.debugTok(tok) {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
-      @annotation.tailrec
+      //@annotation.tailrec
       def loop(
                 internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
                 ts: List[Thread]
               ): Seq[Thread] = internals match {
         case Nil => ts.reverse
         // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
-        case (i, gs, ms, pgs) :: rest => i match {
-          case i: Pass => loop((i.getNext, gs, ms, pgs) :: rest, ts)
-          case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
-          case i: SaveStart => loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
-          case i: SaveEnd => pgs match {
-            case (name, start) :: partials if name == i.name =>
-              val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-              loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
-            case _ => sys.error("unable to close capture")
+        case (i, gs, ms, pgs) :: rest => Debugger.debugInst(i) {
+          i match {
+            case i: Pass =>
+              Debugger.debugMatches(true)
+              loop((i.getNext, gs, ms, pgs) :: rest, ts)
+            case i: Split =>
+              Debugger.debugMatches(true)
+              loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
+            case i: SaveStart =>
+              Debugger.debugMatches(true)
+              loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
+            case i: SaveEnd => pgs match {
+              case (name, start) :: partials if name == i.name =>
+                Debugger.debugMatches(true)
+                val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
+                loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
+              case _ =>
+                Debugger.debugMatches(true)
+                sys.error("unable to close capture")
+            }
+            // Here we loop on rest.  Could that have different ms?
+            case i =>
+              if (i == Done)
+                Debugger.debugMatches(true)
+              loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
           }
-          // Here we loop on rest.  Could that have different ms?
-          case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, List.empty[PartialMatch]) :: ts)
         }
       }
 
@@ -111,54 +125,81 @@ object ThompsonVM {
 
     // Advance the Thread by executing its instruction (Inst).
     // The Inst is expected to be a Match_ instruction.
-    def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
-      case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
-        val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
-        val token = t.tok
-        val const = i.c
-        matchTokens(const.toString) = token
-        println(s"Match mentions in singlestepthread is $matchTokens")
-        mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-      case i: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
-        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-      case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-      case i: MatchLookAhead =>
-        val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
-        val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
-        val matches = i.negative == results.isEmpty
+    def stepSingleThread(t: SingleThread): Seq[Thread] =  Debugger.debugTok(t.tok) { Debugger.debugInst(t.inst) {
+      t.inst match {
+        case i: MatchToken =>
+          val matches = doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state)
+          Debugger.debugMatches(matches)
+          if (matches) {
+            val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
+            val token = t.tok
+            val const = i.c
+            matchTokens(const.toString) = token
+            println(s"Match mentions in singlestepthread is $matchTokens")
+            mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+          }
+          else Nil
+        case i: MatchSentenceStart =>
+          val matches = (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1)
+          Debugger.debugMatches(matches)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+          }
+          else Nil
+        case i: MatchSentenceEnd =>
+          val matches = t.tok == doc.sentences(sent).size
+          Debugger.debugMatches(matches)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+          }
+          else Nil
+        case i: MatchLookAhead =>
+          val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
+          val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
+          val matches = i.negative == results.isEmpty
 
-        //Debugger.debugMatches(matches)
-        if (matches) {
-          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-        }
-        else {
-          println(s"Partial Match at MatchLookAhead at index ${t.tok}")
+          Debugger.debugMatches(matches)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+          }
+          else {
+            Nil
+          }
+        case i: MatchLookBehind =>
+          val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
+          val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
+          val matches = i.negative == results.isEmpty
+
+          Debugger.debugMatches(matches)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
+          }
+          else Nil
+        case i: MatchMention =>
+          val bundles = retrieveMentions(state, sent, t.tok, i.m, i.arg).flatMap { m =>
+            val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
+
+            Debugger.debugMatches(matches)
+            if (matches) {
+              val captures = mkMentionCapture(t.mentions, i.name, m)
+              val nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
+              Some(mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups))
+            }
+            else None
+          }
+          bundles match {
+            case Seq() => Nil
+            case Seq(bundle) => bundle
+            case bundles => Seq(ThreadBundle(bundles))
+          }
+        case Done =>
+          Debugger.debugMatches(true)
+          Seq(t)
+        case _ =>
+          Debugger.debugMatches(false)
           Nil
-        }
-      case i: MatchLookBehind =>
-        val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
-        val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
-        if (i.negative == results.isEmpty) {
-          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
-        } else {
-          Nil
-        }
-      case i: MatchMention =>
-        val bundles = for {
-          m <- retrieveMentions(state, sent, t.tok, i.m, i.arg)
-          if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
-          captures = mkMentionCapture(t.mentions, i.name, m)
-          nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
-        } yield mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
-        bundles match {
-          case Seq() => Nil
-          case Seq(bundle) => bundle
-          case bundles => Seq(ThreadBundle(bundles))
-        }
-      case Done => Seq(t)
-      case _ => Nil // The Thread died with no match.
-    }
+      }
+    }}
 
     def retrieveMentions(
                           state: State,
@@ -255,11 +296,13 @@ object ThompsonVM {
                 sent: Int,
                 doc: Document,
                 state: State
-              ): Seq[(NamedGroups, NamedMentions)] = Debugger.debugStart(tok) {
+              ): Seq[(NamedGroups, NamedMentions)] =  {
     val evaluator = Evaluator(start, tok, sent, doc, state)
 
     // evaluate pattern and return results
-    evaluator.eval(tok, start).map(_.results).getOrElse(Nil)
+    val result = evaluator.eval(tok, start).map(_.results).getOrElse(Nil)
+
+    result
   }
 }
 

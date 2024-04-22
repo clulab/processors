@@ -176,7 +176,7 @@ trait DebuggerTrait {
 
 class Debugger protected () extends DebuggerTrait {
   protected var active: Boolean = true // TODO: You can turn off debugging with this!
-  protected var quiet: Boolean = false // TODO: You can turn off the printing of messages with this.
+  protected var quiet: Boolean = true // TODO: You can turn off the printing of messages with this.
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
@@ -496,8 +496,7 @@ object Debugger extends DebuggerTrait {
 
   type InstToDebuggerRecords = Map[Inst, Seq[DebuggerRecord]]
 
-  def visualize(extractor: Extractor, sentence: String): Unit = {
-    println(s"The length of the instance transcript is ${instance.transcript.length}")
+  def visualize(extractor: Extractor, sentence: Sentence): Unit = {
     val transcript = instance.transcript
       .toSeq.filter { debuggerRecord =>
       // Only worry about this extractor and sentence's records and only matches.
@@ -521,10 +520,12 @@ object Debugger extends DebuggerTrait {
     }
   }
 
-  private def visualizeExtractor(inst: Inst, name: String, sentence: String, depth: Int, instToDebuggerRecords: InstToDebuggerRecords): Unit = {
+  private def visualizeExtractor(inst: Inst, name: String, sentence: Sentence, depth: Int, instToDebuggerRecords: InstToDebuggerRecords): Unit = {
     val debuggerRecords = instToDebuggerRecords.get(inst).getOrElse(Seq.empty)
 
     val indent = " " * (depth * 3) + name
+
+    val sentenceString = sentence.getSentenceText
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
@@ -537,7 +538,7 @@ object Debugger extends DebuggerTrait {
       s"$tok: $word"
     }.mkString(", which matches(", ", ", ")")
 
-    val visualization = indent + inst.visualize(sentence)
+    val visualization = indent + inst.visualize(sentenceString) + matchVisualization
     println(visualization)
 
     inst match {
