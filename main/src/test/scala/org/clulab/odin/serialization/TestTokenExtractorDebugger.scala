@@ -32,7 +32,7 @@ class TestTokenExtractorDebugger extends Test {
 
   def visualize(extractor: Extractor, sentence: Sentence): Unit = {
     // Consult the debugger.  Eyeball output for now?
-    Debugger.visualize(extractor, sentence.words.mkString(" "))
+    Debugger.visualize(extractor, sentence)
   }
 
   def test(rule: Rule, document: Document): Unit = {

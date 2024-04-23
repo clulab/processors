@@ -7,7 +7,7 @@ import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread, matchTokens}
 
 import scala.collection.mutable.HashMap
-import org.clulab.odin.impl.TokenConstraint
+
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
@@ -106,7 +106,7 @@ object ThompsonVM {
                 val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
                 loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
               case _ =>
-                Debugger.debugMatches(true)
+                Debugger.debugMatches(false)
                 sys.error("unable to close capture")
             }
             // Here we loop on rest.  Could that have different ms?
