@@ -7,7 +7,7 @@ import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.ThompsonVM.{PartialMatch, SingleThread, matchTokens}
 
 import scala.collection.mutable.HashMap
-import org.clulab.odin.impl.TokenConstraint
+
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
