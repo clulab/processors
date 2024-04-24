@@ -40,6 +40,7 @@ object TokenPattern {
 class TokenPattern(val start: Inst) {
   import TokenPattern._
 
+
   private def assignIds(): Unit = {
     def assigner(id: Int, instructions: List[Inst]): Unit = {
       instructions match {

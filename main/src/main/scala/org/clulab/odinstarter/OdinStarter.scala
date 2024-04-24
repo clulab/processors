@@ -54,7 +54,8 @@ object OdinStarter extends App {
   val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
   val extractors = reader.read(rules)
   val extractorEngine = new ExtractorEngine(extractors, identityAction)
-  val document = processor.annotate("John eats cake.")
+  val document = processor.annotate("John eats cake and Jane eats pain au chocolat. Nick has A A batteries")
+  //val document = processor.annotate("B A A C A A A D A A A A E")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   val sentence = document.sentences.head.words.mkString(" ")  // mentions.head.sentenceObj.words.mkString(" ")
@@ -63,6 +64,7 @@ object OdinStarter extends App {
   for (mention <- mentions)
     printMention(mention)
 
+  print("Rule view of the visualization:")
   for (extractor <- extractors)
     visualize(extractor, sentence)
 
@@ -119,7 +121,7 @@ object OdinStarter extends App {
       words(tok - 1) = words(tok - 1) + "]"
 
 
-      println(s"""Rule $name matched sentence "${words.mkString(" ")}".""")
+      println(s"""Rule $name matched the sentence "${words.mkString(" ")}".""")
 
     }
 
@@ -187,14 +189,14 @@ object OdinStarter extends App {
         words(minPos) = "><" + words(minPos)
 
 
-      println(s"""Rule ${extractor.name} partially matched sentence "${words.mkString(" ")}".""")
+      println(s"""Rule: ${extractor.name} partially matched the sentence "${words.mkString(" ")}".""")
 
     }
 
   }
 
-
-  debugMatchTokens()
+  println("\nSentence View:")
+  //debugMatchTokens()
 
   debugDoneRules()
 
@@ -207,11 +209,11 @@ object OdinStarter extends App {
 
       case tokenExtractor: TokenExtractor =>
 
-        println(s"\nThere was an extractor: ${tokenExtractor.name}")
-
+        println(s"\nRule: ${tokenExtractor.name}")
+        println("Visualization:")
         visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
 
-      case graphExtractor: GraphExtractor => println("\nThere was a graph extractor.")
+      case graphExtractor: GraphExtractor => //println("\nThere was a graph extractor.")
 
       case crossSentenceExtractor: CrossSentenceExtractor =>
 

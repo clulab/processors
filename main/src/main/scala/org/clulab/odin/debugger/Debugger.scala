@@ -505,8 +505,18 @@ object Debugger extends DebuggerTrait {
     }
     println(s"The length of the transcript is ${transcript.length}")
     val instToDebuggerRecords: InstToDebuggerRecords = transcript.groupBy(_.inst)
+    var isPartialMatch = true
     for(record <- instToDebuggerRecords){
-     println(s"The record has ${record.toString()}")
+      val inst = record.toString().split(":")(0).substring(22)
+      println(s"record is ${record.toString()}")
+      if(inst.equals("Done")){
+        isPartialMatch = false
+      }
+    }
+    if(isPartialMatch){
+      println(s"partial match on ${sentence.getSentenceText}")
+      println(s"extractor is ${extractor.name}")
+      println(s"extractor label is ${extractor.label}")
     }
     extractor match {
       case tokenExtractor: TokenExtractor =>
@@ -535,7 +545,7 @@ object Debugger extends DebuggerTrait {
       val tok = debuggerRecord.tok
       val word = debuggerRecord.sentence.words.lift(tok).getOrElse("<EOS>")
 
-      s"$tok: $word"
+      println(s"inside match visualization = ${tok}: ${word}")
     }.mkString(", which matches(", ", ", ")")
 
     val visualization = indent + inst.visualize(sentenceString) + matchVisualization
