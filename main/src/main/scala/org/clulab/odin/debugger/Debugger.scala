@@ -503,20 +503,19 @@ object Debugger extends DebuggerTrait {
       // TODO: Wouldn't it me nice if these were sorted?
       debuggerRecord.extractor == extractor && debuggerRecord.sentence == sentence && debuggerRecord.matches
     }
-    println(s"The length of the transcript is ${transcript.length}")
+    //println(s"The length of the transcript is ${transcript.length}")
     val instToDebuggerRecords: InstToDebuggerRecords = transcript.groupBy(_.inst)
     var isPartialMatch = true
     for(record <- instToDebuggerRecords){
       val inst = record.toString().split(":")(0).substring(22)
-      println(s"record is ${record.toString()}")
+      //println(s"record is ${record.toString()}")
       if(inst.equals("Done")){
         isPartialMatch = false
       }
     }
     if(isPartialMatch){
-      println(s"partial match on ${sentence.getSentenceText}")
-      println(s"extractor is ${extractor.name}")
-      println(s"extractor label is ${extractor.label}")
+      println(s"\npartial match on ${sentence.getSentenceText}")
+      println(s"rule name: is ${extractor.name}")
     }
     extractor match {
       case tokenExtractor: TokenExtractor =>
