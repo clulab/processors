@@ -54,7 +54,7 @@ object OdinStarter extends App {
   val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
   val extractors = reader.read(rules)
   val extractorEngine = new ExtractorEngine(extractors, identityAction)
-  val document = processor.annotate("John eats cake and Jane eats pain au chocolat. Nick has A A batteries")
+  val document = processor.annotate("John eats cake and Jane eats pain au chocolat, while Nick has A A batteries")
   //val document = processor.annotate("B A A C A A A D A A A A E")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
@@ -64,7 +64,8 @@ object OdinStarter extends App {
   for (mention <- mentions)
     printMention(mention)
 
-  print("Rule view of the visualization:")
+  println(s"Sentence: ${sentence}")
+  print("Rule view:")
   for (extractor <- extractors)
     visualize(extractor, sentence)
 
@@ -121,7 +122,7 @@ object OdinStarter extends App {
       words(tok - 1) = words(tok - 1) + "]"
 
 
-      println(s"""Rule $name matched the sentence "${words.mkString(" ")}".""")
+      println(s"""Rule $name matched the sentence "${words.mkString(" ")}"""")
 
     }
 
@@ -303,14 +304,14 @@ object OdinStarter extends App {
 
 
       case lookAhead: MatchLookAhead =>
-
+        println(" " * indent + lookAhead.visualize(sentence))
         if (!loopsOrDeadEnds(lookAhead.start))
 
           visualizeExtractor(lookAhead.start, s"$name (Start)", sentence, indent)
 
 
       case lookBehind: MatchLookBehind =>
-
+        println(" " * indent + lookBehind.visualize(sentence))
         if (!loopsOrDeadEnds(lookBehind.start))
 
           visualizeExtractor(lookBehind.start, s"$name (Start)", sentence, indent)
