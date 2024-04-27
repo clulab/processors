@@ -496,94 +496,126 @@ object Debugger extends DebuggerTrait {
 
   type InstToDebuggerRecords = Map[Inst, Seq[DebuggerRecord]]
 
-  def visualize(extractor: Extractor, sentence: Sentence): Unit = {
-    val transcript = instance.transcript
-      .toSeq.filter { debuggerRecord =>
-      // Only worry about this extractor and sentence's records and only matches.
-      // TODO: Wouldn't it me nice if these were sorted?
-      debuggerRecord.extractor == extractor && debuggerRecord.sentence == sentence && debuggerRecord.matches
-    }
-    //println(s"The length of the transcript is ${transcript.length}")
-    val instToDebuggerRecords: InstToDebuggerRecords = transcript.groupBy(_.inst)
-    var isPartialMatch = true
-    for(record <- instToDebuggerRecords){
-      val inst = record.toString().split(":")(0).substring(22)
-      //println(s"record is ${record.toString()}")
-      if(inst.equals("Done")){
-        isPartialMatch = false
-      }
-    }
-    if(isPartialMatch){
-      println(s"\npartial match on ${sentence.getSentenceText}")
-      println(s"rule name: is ${extractor.name}")
-    }
-    extractor match {
-      case tokenExtractor: TokenExtractor =>
-        println(s"\nThere was an extractor: ${tokenExtractor.name}")
-        visualizeExtractor(tokenExtractor.pattern.start, "", sentence, 0, instToDebuggerRecords)
-      case graphExtractor: GraphExtractor => println("\nThere was a graph extractor.")
-      case crossSentenceExtractor: CrossSentenceExtractor =>
-        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0, instToDebuggerRecords)
-        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0, instToDebuggerRecords)
-      case _ => println("Unknown extractor type")
-    }
+  def visualize(extractor: Extractor, sentence: String): Unit = {
+
+  extractor match {
+
+    case tokenExtractor: TokenExtractor =>
+
+      println(s"\nRule: ${tokenExtractor.name}")
+      println("Visualization:")
+      visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
+
+    case graphExtractor: GraphExtractor => //println("\nThere was a graph extractor.")
+
+    case crossSentenceExtractor: CrossSentenceExtractor =>
+
+      visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
+
+      visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0)
+
+    case _ => println("Unknown extractor type")
+
   }
 
-  private def visualizeExtractor(inst: Inst, name: String, sentence: Sentence, depth: Int, instToDebuggerRecords: InstToDebuggerRecords): Unit = {
-    val debuggerRecords = instToDebuggerRecords.get(inst).getOrElse(Seq.empty)
+}
 
-    val indent = " " * (depth * 3) + name
 
-    val sentenceString = sentence.getSentenceText
+  private def visualizeExtractor(inst: Inst, name: String, sentence: String, indent: Int): Unit = {
+
 
     def loopsOrDeadEnds(nextInst: Inst): Boolean = {
+
       nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
+
     }
 
-    val matchVisualization = debuggerRecords.map { debuggerRecord =>
-      val tok = debuggerRecord.tok
-      val word = debuggerRecord.sentence.words.lift(tok).getOrElse("<EOS>")
 
-      println(s"inside match visualization = ${tok}: ${word}")
-    }.mkString(", which matches(", ", ", ")")
+    val visualization = inst.visualize(sentence)
 
-    val visualization = indent + inst.visualize(sentenceString) + matchVisualization
-    println(visualization)
 
     inst match {
+
       case split: Split =>
-        if (!loopsOrDeadEnds(split.lhs))
-          visualizeExtractor(split.lhs, "(LHS) ", sentence, depth + 1, instToDebuggerRecords)
-        if (!loopsOrDeadEnds(split.rhs))
-          visualizeExtractor(split.rhs, "(RHS) ", sentence, depth + 1, instToDebuggerRecords)
+
+        println(split.visualize(sentence))
+
+        if (!loopsOrDeadEnds(split.lhs)) {
+
+          print(" " * (indent + 3) + "(LHS)")
+
+          visualizeExtractor(split.lhs, s"$name (LHS)", sentence, indent + 3)
+
+        }
+
+        if (!loopsOrDeadEnds(split.rhs)) {
+
+          print(" " * (indent + 3) + "(RHS)")
+
+          visualizeExtractor(split.rhs, s"$name (RHS)", sentence, indent + 3)
+
+        }
+
 
       case saveStart: SaveStart =>
 
+        println(" " * indent + saveStart.visualize(sentence))
+
+
       case saveEnd: SaveEnd =>
+
+        println(" " * indent + saveEnd.visualize(sentence))
+
 
       case matchToken: MatchToken =>
 
+        println(" " * indent + matchToken.visualize(sentence))
+
+
       case matchMention: MatchMention =>
+
+        println(" " * indent + matchMention.visualize(sentence))
+
 
       case sentenceStart: MatchSentenceStart =>
 
+        println(" " * indent + sentenceStart.visualize(sentence))
+
+
       case sentenceEnd: MatchSentenceEnd =>
+
+        println(" " * indent + sentenceEnd.visualize(sentence))
+
 
       case pass: Pass =>
 
-      case Done =>
+        println(" " * indent + pass.visualize(sentence))
+
+
+      case Done => println(" " * indent + Done.visualize(sentence))
+
 
       case lookAhead: MatchLookAhead =>
+        println(" " * indent + lookAhead.visualize(sentence))
         if (!loopsOrDeadEnds(lookAhead.start))
-          visualizeExtractor(lookAhead.start, "(Start) ", sentence, depth + 1, instToDebuggerRecords)
+
+          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence, indent)
+
 
       case lookBehind: MatchLookBehind =>
+        println(" " * indent + lookBehind.visualize(sentence))
         if (!loopsOrDeadEnds(lookBehind.start))
-          visualizeExtractor(lookBehind.start, "(Start) ", sentence, depth + 1, instToDebuggerRecords)
+
+          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence, indent)
+
 
       case _ =>
+
     }
+
     if (!loopsOrDeadEnds(inst.getNext))
-      visualizeExtractor(inst.getNext, name, sentence, depth, instToDebuggerRecords)
+
+      visualizeExtractor(inst.getNext, s"$name (Next)", sentence, indent)
+
   }
 }

@@ -66,8 +66,11 @@ object OdinStarter extends App {
 
   println(s"Sentence: ${sentence}")
   print("Rule view:")
-  for (extractor <- extractors)
-    visualize(extractor, sentence)
+  for (extractor <- extractors) {
+    //visualize(extractor, sentence)
+    //println("Visualize in the debuggger:")
+    Debugger.visualize(extractor, document.sentences.head.words.mkString(" "))
+  }
 
   // Find all matching MatchTokens and say what they matched.
 
@@ -204,128 +207,6 @@ object OdinStarter extends App {
   debugPartialMatches()
 
 
-  def visualize(extractor: Extractor, sentence: String): Unit = {
-
-    extractor match {
-
-      case tokenExtractor: TokenExtractor =>
-
-        println(s"\nRule: ${tokenExtractor.name}")
-        println("Visualization:")
-        visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
-
-      case graphExtractor: GraphExtractor => //println("\nThere was a graph extractor.")
-
-      case crossSentenceExtractor: CrossSentenceExtractor =>
-
-        visualizeExtractor(crossSentenceExtractor.anchorPattern.pattern.start, s"${crossSentenceExtractor.name} (Anchor)", sentence, 0)
-
-        visualizeExtractor(crossSentenceExtractor.neighborPattern.pattern.start, s"${crossSentenceExtractor.name} (Neighbor)", sentence, 0)
-
-      case _ => println("Unknown extractor type")
-
-    }
-
-  }
-
-
-  private def visualizeExtractor(inst: Inst, name: String, sentence: String, indent: Int): Unit = {
-
-
-    def loopsOrDeadEnds(nextInst: Inst): Boolean = {
-
-      nextInst == null || (nextInst.getPosId <= inst.getPosId && nextInst.getPosId != 0)
-
-    }
-
-
-    val visualization = inst.visualize(sentence)
-
-
-    inst match {
-
-      case split: Split =>
-
-        println(split.visualize(sentence))
-
-        if (!loopsOrDeadEnds(split.lhs)) {
-
-          print(" " * (indent + 3) + "(LHS)")
-
-          visualizeExtractor(split.lhs, s"$name (LHS)", sentence, indent + 3)
-
-        }
-
-        if (!loopsOrDeadEnds(split.rhs)) {
-
-          print(" " * (indent + 3) + "(RHS)")
-
-          visualizeExtractor(split.rhs, s"$name (RHS)", sentence, indent + 3)
-
-        }
-
-
-      case saveStart: SaveStart =>
-
-        println(" " * indent + saveStart.visualize(sentence))
-
-
-      case saveEnd: SaveEnd =>
-
-        println(" " * indent + saveEnd.visualize(sentence))
-
-
-      case matchToken: MatchToken =>
-
-        println(" " * indent + matchToken.visualize(sentence))
-
-
-      case matchMention: MatchMention =>
-
-        println(" " * indent + matchMention.visualize(sentence))
-
-
-      case sentenceStart: MatchSentenceStart =>
-
-        println(" " * indent + sentenceStart.visualize(sentence))
-
-
-      case sentenceEnd: MatchSentenceEnd =>
-
-        println(" " * indent + sentenceEnd.visualize(sentence))
-
-
-      case pass: Pass =>
-
-        println(" " * indent + pass.visualize(sentence))
-
-
-      case Done => println(" " * indent + Done.visualize(sentence))
-
-
-      case lookAhead: MatchLookAhead =>
-        println(" " * indent + lookAhead.visualize(sentence))
-        if (!loopsOrDeadEnds(lookAhead.start))
-
-          visualizeExtractor(lookAhead.start, s"$name (Start)", sentence, indent)
-
-
-      case lookBehind: MatchLookBehind =>
-        println(" " * indent + lookBehind.visualize(sentence))
-        if (!loopsOrDeadEnds(lookBehind.start))
-
-          visualizeExtractor(lookBehind.start, s"$name (Start)", sentence, indent)
-
-
-      case _ =>
-
-    }
-
-    if (!loopsOrDeadEnds(inst.getNext))
-
-      visualizeExtractor(inst.getNext, s"$name (Next)", sentence, indent)
-
-  }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val indent = "    " * depth
