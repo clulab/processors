@@ -67,8 +67,6 @@ object OdinStarter extends App {
   println(s"Sentence: ${sentence}")
   print("Rule view:")
   for (extractor <- extractors) {
-    //visualize(extractor, sentence)
-    //println("Visualize in the debuggger:")
     Debugger.visualize(extractor, document.sentences.head.words.mkString(" "))
   }
 

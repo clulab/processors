@@ -496,14 +496,56 @@ object Debugger extends DebuggerTrait {
 
   type InstToDebuggerRecords = Map[Inst, Seq[DebuggerRecord]]
 
+  def printTranscript(): Unit = {
+    Debugger.instance.transcript.foreach { record =>
+      // Perform operations on each record
+      val start = record.start
+      val tok = record.tok
+      val inst = record.inst.toString()
+      println(s"inst is ${inst} start is ${start}, tok is ${tok}")
+    }
+  }
+
   def visualize(extractor: Extractor, sentence: String): Unit = {
+
+    var offsets = Array[(Int, Int)]()
 
   extractor match {
 
     case tokenExtractor: TokenExtractor =>
 
+      //
+      val transcript = Debugger.instance.transcript
+
+      val nameSentencestartTokSeq = transcript
+
+        .filter { debuggerRecord =>
+
+          debuggerRecord.matches && debuggerRecord.inst.isInstanceOf[Done.type]
+
+        }
+
+        .map { debuggerRecord =>
+
+          (debuggerRecord.extractor.name, debuggerRecord.sentence, debuggerRecord.start, debuggerRecord.tok)
+
+        }
+
+
+      nameSentencestartTokSeq.foreach { case (name, sentence, start, tok) =>
+        if(name.equals(tokenExtractor.name)){
+          offsets :+= (start, tok -1)
+        }
+      }
+      //
       println(s"\nRule: ${tokenExtractor.name}")
       println("Visualization:")
+      print(s"Span: ")
+      val differences = offsets.map { case (a, b) => s"$a - $b" }.mkString(", ")
+      differences.foreach(print)
+      println()
+
+      //printTranscript()
       visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
 
     case graphExtractor: GraphExtractor => //println("\nThere was a graph extractor.")
