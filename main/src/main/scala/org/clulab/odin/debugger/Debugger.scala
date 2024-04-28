@@ -540,10 +540,14 @@ object Debugger extends DebuggerTrait {
       //
       println(s"\nRule: ${tokenExtractor.name}")
       println("Visualization:")
-      print(s"Span: ")
-      val differences = offsets.map { case (a, b) => s"$a - $b" }.mkString(", ")
-      differences.foreach(print)
-      println()
+      // currently printing token offsets only if there is a complete match,
+      // not for partial matches
+      if(offsets.length > 1) {
+        print(s"Span: ")
+        val differences = offsets.map { case (a, b) => s"$a - $b" }.mkString(", ")
+        differences.foreach(print)
+        println()
+      }
 
       //printTranscript()
       visualizeExtractor(tokenExtractor.pattern.start, tokenExtractor.name, sentence, 0)
