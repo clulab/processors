@@ -42,7 +42,7 @@ object DepsToTags {
   def printTags(writer: PrintWriter, sent: Array[Row], tags: Array[String]) {
     assert(tags.length == sent.length)
     for(i <- sent.indices) {
-      for(j <- 0 until 3) {
+      for(j <- 0 until 1) {
         writer.print(sent(i).get(j))
         writer.print("\t")
       }
@@ -52,9 +52,9 @@ object DepsToTags {
   }
 
   def main(args: Array[String]): Unit = {
-    //val depsFileName = "dynet/en/deps/universal/wsj/train.labels"
+    val depsFileName = "dynet/en/deps/universal/wsj/train.labels"
     //val depsFileName = "dynet/en/deps/universal/wsj/dev.labels"
-    val depsFileName = "dynet/en/deps/universal/wsj/test.labels"
+    //val depsFileName = "dynet/en/deps/universal/wsj/test.labels"
     val sents = ColumnReader.readColumns(depsFileName)
     println(s"Read ${sents.length} sentences.")
 
