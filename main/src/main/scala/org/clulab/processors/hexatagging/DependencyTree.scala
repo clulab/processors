@@ -62,14 +62,20 @@ class DependencyTree(
       leftMods(i).toBHT(stack, leftLabels(i))
       val left = stack.pop()
       val right = stack.pop()
-      stack.push(new NonTerminalBHT("R", left, right))
+      val nonTerm = new NonTerminalBHT("R", left, right)
+      left.parent = Some(nonTerm)
+      right.parent = Some(nonTerm)
+      stack.push(nonTerm)
     }
 
     for(i <- rightMods.indices) {
       rightMods(i).toBHT(stack, rightLabels(i))
-      val right = stack.pop()
+      val right = stack.pop() // there is a bug in Alg 1 in the paper here
       val left = stack.pop()
-      stack.push(new NonTerminalBHT("L", left, right))
+      val nonTerm = new NonTerminalBHT("L", left, right)
+      right.parent = Some(nonTerm)
+      left.parent = Some(nonTerm)
+      stack.push(nonTerm)
     }
   }
 }
