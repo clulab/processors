@@ -44,7 +44,7 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
   }
 }
 
-class NonTerminalBHT(val label: String, val left: BHT, val right: BHT) extends BHT {
+class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends BHT {
 
   override def firstPosition: Int = left.firstPosition
   override def lastPosition: Int = right.lastPosition
