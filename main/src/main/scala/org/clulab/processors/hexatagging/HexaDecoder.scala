@@ -42,8 +42,8 @@ class HexaDecoder {
         println(s"Pushing $bht onto the stack.")
         stack.push(bht)
       } else if(termTag.startsWith(HexaTags.TERMINAL_RIGHT_CHILD)) {
-        // pop the subtree on the top of the stack
-        // replace the dummy node in the subtree with the terminal node
+        // pop the subtree on the top of the stack,
+        // replace the dummy node in the subtree with the terminal node, and
         // push the subtree back to the stack
         val top = stack.pop()
         assert(! top.isTerminal)
@@ -65,7 +65,27 @@ class HexaDecoder {
       // 2. then process the next non-terminal tag, unless we reached eos
       //
       if(i < termTags.length - 1) {
+        val nonTermTag = nonTermTags(i).head._1
 
+        if(nonTermTag.startsWith(HexaTags.NONTERM_LEFT_CHILD)) {
+          // create a new node labeled R (respectively, L),
+          // attach the top element in the stack as its left child, and 
+          // attach a dummy node as its right child
+
+          TODO
+        } else if(nonTermTag.startsWith(HexaTags.NONTERM_RIGHT_CHILD)) {
+          // pop the top element of the stack, 
+          // attach it as the new node’s left child, and 
+          // set a dummy node as the node’s right child;
+          // pop another subtree of the stack, 
+          // identify the dummy node in the subtree, and 
+          // replace it with the newly created subtree; 
+          // push the subtree back to the stack
+
+          TODO
+        } else {
+          throw new RuntimeException(s"ERROR: unknown non-terminal tag $nonTermTag!")
+        }
       }
     }
     assert(stack.size == 1) // must have 1 element on the stack at the end
