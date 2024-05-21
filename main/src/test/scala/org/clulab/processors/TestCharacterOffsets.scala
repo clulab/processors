@@ -2,7 +2,7 @@ package org.clulab.processors
 
 import org.clulab.TestUtils
 
-class TestCharacterOffsets extends FatdynetTest {
+class TestCharacterOffsets extends CluTest {
 
   "the tokenizer" should "generate correct character offsets in a single sentence" in {
     val doc = proc.mkDocument("John Doe went to China on January 15th, 2001.", keepText = true)

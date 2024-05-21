@@ -1,9 +1,8 @@
 package org.clulab.processors
 
-import org.clulab.dynet.Utils
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.corenlp.CoreNLPProcessor
-import org.clulab.processors.fastnlp.FastNLPProcessorWithSemanticRoles
+import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.utils.CliReader
 import org.clulab.utils.ExitMenuItem
 import org.clulab.utils.HelpMenuItem
@@ -24,10 +23,10 @@ import java.io.PrintWriter
   */
 class ProcessorShell extends Shell {
   val core = new PromptedReloadableProcessor("(core)>>> ", () => new CoreNLPProcessor()) // this uses the slower constituent parser
-  val fast = new PromptedReloadableProcessor("(fast)>>> ", () => new FastNLPProcessorWithSemanticRoles()) // this uses the faster dependency parser
-  val clu = new PromptedReloadableProcessor("(clu)>>> ", () => new CluProcessor(), true)
+  val fast = new PromptedReloadableProcessor("(fast)>>> ", () => new FastNLPProcessor()) // this uses the faster dependency parser
+  val balaur = new PromptedReloadableProcessor("(balaur)>>> ", () => new BalaurProcessor(), true)
 
-  var proc = clu // Note that the initial proc does not get initialized.
+  var proc = balaur // Note that the initial proc does not get initialized.
 
   val lineReader = new CliReader(proc.prompt, "user.home", ".processorshellhistory")
   val printWriter = new PrintWriter(System.out)
@@ -44,7 +43,7 @@ class ProcessorShell extends Shell {
 
   def prepareFast(): Unit = prepareProcessor("Preparing FastNLPProcessor...", fast)
 
-  def prepareClu(): Unit = prepareProcessor("Preparing CluProcessor...", clu)
+  def prepareBalaur(): Unit = prepareProcessor("Preparing BalaurProcessor...", balaur)
 
   override def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
@@ -63,7 +62,7 @@ class ProcessorShell extends Shell {
       new HelpMenuItem(":help", "show commands"),
       new SafeMainMenuItem(":core", "use CoreNLPProcessor", prepareCore),
       new SafeMainMenuItem(":fast", "use FastNLPProcessor", prepareFast),
-      new SafeMainMenuItem(":clu", "use CluProcessor", prepareClu),
+      new SafeMainMenuItem(":balaur", "use BalaurProcessor", prepareBalaur),
       // new SafeMainMenuItem(":reload", "reload rules for current processor from filesystem", reload),
       new ExitMenuItem(":exit", "exit system")
     )

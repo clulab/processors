@@ -59,6 +59,22 @@ class DirectedGraphIndex[E](
     findByName(label).filter(_.destination == modifier)
   }
 
+  def findByModifier(modifier:Int): Seq[Edge[E]] = {
+    val edges = new ListBuffer[Edge[E]]
+    for(e <- incomingEdges(modifier)) {
+      edges += new Edge[E](e._1, modifier, e._2)
+    }
+    edges
+  }
+
+  def findByHead(head:Int): Seq[Edge[E]] = {
+    val edges = new ListBuffer[Edge[E]]
+    for(e <- outgoingEdges(head)) {
+      edges += new Edge[E](head, e._1, e._2)
+    }
+    edges
+  }
+
   def findByHeadAndPattern(head:Int, pattern:Regex): Seq[Edge[E]] = {
     val edges = new ListBuffer[Edge[E]]
     if(head < outgoingEdges.length) {

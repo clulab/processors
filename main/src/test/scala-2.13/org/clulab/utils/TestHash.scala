@@ -1,8 +1,8 @@
 package org.clulab.utils
 
-import org.clulab.odin.{CrossSentenceMention, EventMention, ExtractorEngine, Mention}
+import org.clulab.odin.{CrossSentenceMention, EventMention, RelationMention, TextBoundMention, _}
 import org.clulab.odin.serialization.json.MentionOps
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.struct.{DirectedGraph, Edge}
 
@@ -16,7 +16,7 @@ class TestHash extends Test {
 
     LexiconNER(kbs, caseInsensitiveMatchings, None)
   }
-  val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
   val extractorEngine = {
     val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
 

@@ -1,34 +1,27 @@
 package org.clulab.processors
 
-import org.clulab.utils.Sourcer
+import org.clulab.utils.FileUtils
 
-import scala.util.Using
+class TestLemmatizer extends CluTest {
 
-class TestLemmatizer extends FatdynetTest {
+  behavior of "the lemmatizer"
 
-  "the lemmatizer" should "not crash when processing this weird file" in {
-    val sb = new StringBuilder
-    Using.resource(Sourcer.sourceFromResource("/CORD19_DOC_2762.txt")) { source =>
-      for (line <- source.getLines()) {
-        sb.append(line)
-        sb.append("\n")
-      }
-    }
+  it should "not crash when processing this weird file" in {
+    val resourceName = "/CORD19_DOC_2762.txt"
+    val text = FileUtils.getTextFromResource(resourceName)
 
-    val text = sb.toString()
     println("Trying to parse file:")
     println(text)
 
     // if this does not crash we declare success
     val doc = annotate(text)
-    doc.sentences.length > 0 should be (true)
+    doc.sentences should not be empty
   }
 
-  def annotate(text:String): Document = {
+  def annotate(text: String): Document = {
     val doc = proc.mkDocument(text)
-    proc.mkConstEmbeddings(doc)
-    proc.tagPartsOfSpeech(doc)
-    proc.lemmatize(doc)
+
+    proc.annotate(doc)
     doc
   }
 }

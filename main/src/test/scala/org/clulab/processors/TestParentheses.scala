@@ -7,9 +7,9 @@ package org.clulab.processors
   * So, we'll keep parens NOT normalized since this is more common, and normalize them inside the constituent parser
   *     (see CoreNLPProcessor)
   */
-class TestParentheses extends FatdynetTest {
+class TestParentheses extends CluTest {
 
-  "CluProcessor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {
+  "Processor" should "tokenize, lemmatize, and POS tag parentheses correctly" in {
     // TODO: add back when we have a POS tagger
     /*
     val doc = proc.mkDocument("Moreover, in von Willebrand factor-stimulated platelets, the tyrosine phosphorylation of pp60(c-src) is closely associated with the activation of phosphatidylinositol 3-kinase (PIK), and two adhesion receptors, glycoprotein (Gp)Ib and GpIIb/IIIa(alpha-IIb-beta(3)), are involved. ")

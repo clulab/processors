@@ -1,7 +1,7 @@
 package org.clulab.processors
 
 
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.fastnlp.FastNLPProcessor
 import org.clulab.struct.GraphMap
 import org.clulab.utils.StringUtils
@@ -115,7 +115,7 @@ object TextToCoNLLU {
 
     val proc =
       if (props.get("proc").exists(_ == "corenlp")) new FastNLPProcessor()
-      else new CluProcessor()
+      else new BalaurProcessor()
     val isCoreNLP = props.get("proc").exists(_ == "corenlp")
     val converter = new TextToCoNLLU(proc, isCoreNLP)
 
