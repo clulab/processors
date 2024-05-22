@@ -46,15 +46,30 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
 
 class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends BHT {
 
-  override def firstPosition: Int = left.firstPosition
-  override def lastPosition: Int = right.lastPosition
+  override def firstPosition: Int = 
+    if(left != null) left.firstPosition
+    else -1
+    
+  override def lastPosition: Int = 
+    if(right != null) right.lastPosition
+    else -1
 
   override def isTerminal(): Boolean = false
   override def toString(offset: Int): String = {
     val sb = new StringBuilder()
     sb.append(s"${addOffset(offset)}$label ($firstPosition, $lastPosition)\n")
-    sb.append(left.toString(offset + 2))
-    sb.append(right.toString(offset + 2))
+    if(left != null) {
+      sb.append(left.toString(offset + 2))
+    } else {
+      sb.append(addOffset(offset + 2))
+      sb.append("dummy\n")
+    }
+    if(right != null) {
+      sb.append(right.toString(offset + 2))
+    } else {
+      sb.append(addOffset(offset + 2))
+      sb.append("dummy\n")
+    }
     sb.toString()
   }
 
