@@ -1,10 +1,13 @@
 package org.clulab.processors.hexatagging
 
 trait BHT {
-  def isTerminal(): Boolean
+  def isTerminal():Boolean
 
   def firstPosition:Int // inclusive
   def lastPosition:Int // inclusive
+  
+  def headPosition:Int
+  def dependencyLabel:String
 
   var parent:Option[BHT] = None
 
@@ -27,6 +30,9 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
 
   override def firstPosition: Int = node
   override def lastPosition: Int = node
+
+  override def headPosition: Int = node
+  override def dependencyLabel: String = label
 
   override def setHexaTags(termTags: Array[String], nonTermTags: Array[String]): Unit = {
     assert(parent.isDefined)
@@ -54,10 +60,34 @@ class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends B
     if(right != null) right.lastPosition
     else -1
 
+  override def headPosition: Int = {
+    if(label == "L") {
+      if(left != null) left.headPosition
+      else -1
+    } else if(label == "R") {
+      if(right != null) right.headPosition
+      else -1
+    } else {
+      throw new RuntimeException(s"ERROR: unexpected non-terminal label: $label!")
+    }
+  }
+
+  override def dependencyLabel: String = {
+    if(label == "L") {
+      if(left != null) left.dependencyLabel
+      else "dummy"
+    } else if(label == "R") {
+      if(right != null) right.dependencyLabel
+      else "dummy"
+    } else {
+      throw new RuntimeException(s"ERROR: unexpected non-terminal label: $label!")
+    }
+  }
+
   override def isTerminal(): Boolean = false
   override def toString(offset: Int): String = {
     val sb = new StringBuilder()
-    sb.append(s"${addOffset(offset)}$label ($firstPosition, $lastPosition)\n")
+    sb.append(s"${addOffset(offset)}$label ($firstPosition, $lastPosition) ($headPosition, $dependencyLabel)\n")
     if(left != null) {
       sb.append(left.toString(offset + 2))
     } else {
