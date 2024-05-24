@@ -3,16 +3,40 @@ package org.clulab.processors.hexatagging
 import scala.collection.mutable.Stack
 import _root_.org.clulab.struct.Terminal
 import org.clulab.struct.NonTerminal
+import org.clulab.struct.Edge
+import scala.collection.mutable.HashSet
 
 class HexaDecoder {
+  /**
+    * Produces the best dependency tree given the provided hexa tags
+    *
+    * @param termTags Array of terminal hexa tags
+    * @param nonTermTags Array of non-terminal hexa tags
+    * @return The dependency tree represented as 
+    *   a list of edges (source = linguistic head, destination = modifier) and 
+    *   a set of root nodes
+    */
   def decode(
     termTags: Array[Array[(String, Float)]], 
     nonTermTags: Array[Array[(String, Float)]]
-  ): BHT = {
+  ): (BHT, List[Edge[String]], Set[Int]) = {
     val stack = new Stack[BHT]
     decode(stack, termTags, nonTermTags)
     val bht = stack.pop()
-    bht
+    val deps = bht.toDependencies()
+    val roots = findRoots(deps, termTags.length)
+    (bht, deps, roots)
+  }
+
+  def findRoots(deps: List[Edge[String]], sentLen:Int): Set[Int] = {
+    val mods = deps.map(_.destination).toSet
+    val roots = new HashSet[Int]
+    for(i <- 0 until sentLen) {
+      if(! mods.contains(i)) {
+        roots += i
+      }
+    }
+    roots.toSet
   }
 
   def decode(
@@ -159,7 +183,11 @@ object HexaDecoder {
       Array(("eos", 1.0f))
     )
     val decoder = new HexaDecoder()
-    val bht = decoder.decode(termTags, nonTermTags)
+    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags)
+
     println(bht)
+    println("Dependencies:")
+    deps.mkString("\n")
+    println("Roots: " + roots.mkString(", "))
   }
 }

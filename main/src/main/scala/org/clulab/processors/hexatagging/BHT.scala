@@ -1,5 +1,8 @@
 package org.clulab.processors.hexatagging
 
+import org.clulab.struct.Edge
+import scala.collection.mutable.ListBuffer
+
 trait BHT {
   def isTerminal():Boolean
 
@@ -22,6 +25,8 @@ trait BHT {
   def toString(offset: Int): String
 
   def setHexaTags(termTags: Array[String], nonTermTags: Array[String])
+
+  def toDependencies(): List[Edge[String]]
 }
 
 class TerminalBHT(val node: Int, val label: String) extends BHT {
@@ -47,6 +52,10 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
 
     assert(termTags(node) == null)
     termTags(node) = hexaTag
+  }
+
+  override def toDependencies(): List[Edge[String]] = {
+    throw new RuntimeException("ERROR: cannot convert a TerminalBHT to dependencies!")
   }
 }
 
@@ -124,5 +133,10 @@ class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends B
     // println(s"NONTERM HEXATAGS: ${nonTermTags.mkString(" ")}")
     left.setHexaTags(termTags, nonTermTags)
     right.setHexaTags(termTags, nonTermTags)
+  }
+
+  override def toDependencies(): List[Edge[String]] = {
+    val deps = new ListBuffer[Edge[String]]
+    deps.toList
   }
 }
