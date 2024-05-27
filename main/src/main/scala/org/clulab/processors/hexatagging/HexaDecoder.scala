@@ -168,28 +168,3 @@ class HexaDecoder {
     }
   }
 }
-
-object HexaDecoder {
-  def main(args: Array[String]) {
-    // She reads fascinating papers
-    val termTags = Array(
-      Array(("tl-nsubj", 1.0f)),
-      Array(("tr-root", 1.0f)),
-      Array(("tl-nmod", 1.0f)),
-      Array(("tr-dobj", 1.0f))
-    )
-    val nonTermTags = Array(
-      Array(("nl-R", 1.0f)),
-      Array(("nl-L", 1.0f)),
-      Array(("nr-R", 1.0f)),
-      Array(("eos", 1.0f))
-    )
-    val decoder = new HexaDecoder()
-    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags)
-
-    println(bht)
-    println(s"Dependencies (${deps.size}):")
-    println(deps.mkString("\n"))
-    println("Roots: " + roots.mkString(", "))
-  }
-}
