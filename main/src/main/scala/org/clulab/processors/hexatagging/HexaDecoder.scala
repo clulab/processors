@@ -5,6 +5,7 @@ import _root_.org.clulab.struct.Terminal
 import org.clulab.struct.NonTerminal
 import org.clulab.struct.Edge
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.ListBuffer
 
 class HexaDecoder {
   /**
@@ -23,12 +24,13 @@ class HexaDecoder {
     val stack = new Stack[BHT]
     decode(stack, termTags, nonTermTags)
     val bht = stack.pop()
-    val deps = bht.toDependencies()
+    val deps = new ListBuffer[Edge[String]]
+    bht.toDependencies(deps)
     val roots = findRoots(deps, termTags.length)
-    (bht, deps, roots)
+    (bht, deps.toList, roots)
   }
 
-  def findRoots(deps: List[Edge[String]], sentLen:Int): Set[Int] = {
+  def findRoots(deps: Seq[Edge[String]], sentLen:Int): Set[Int] = {
     val mods = deps.map(_.destination).toSet
     val roots = new HashSet[Int]
     for(i <- 0 until sentLen) {
@@ -186,8 +188,8 @@ object HexaDecoder {
     val (bht, deps, roots) = decoder.decode(termTags, nonTermTags)
 
     println(bht)
-    println("Dependencies:")
-    deps.mkString("\n")
+    println(s"Dependencies (${deps.size}):")
+    println(deps.mkString("\n"))
     println("Roots: " + roots.mkString(", "))
   }
 }

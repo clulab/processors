@@ -26,7 +26,7 @@ trait BHT {
 
   def setHexaTags(termTags: Array[String], nonTermTags: Array[String])
 
-  def toDependencies(): List[Edge[String]]
+  def toDependencies(deps: ListBuffer[Edge[String]]): Unit
 }
 
 class TerminalBHT(val node: Int, val label: String) extends BHT {
@@ -54,8 +54,8 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
     termTags(node) = hexaTag
   }
 
-  override def toDependencies(): List[Edge[String]] = {
-    throw new RuntimeException("ERROR: cannot convert a TerminalBHT to dependencies!")
+  override def toDependencies(deps: ListBuffer[Edge[String]]): Unit = {
+    // nothing to do for terminals
   }
 }
 
@@ -135,8 +135,28 @@ class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends B
     right.setHexaTags(termTags, nonTermTags)
   }
 
-  override def toDependencies(): List[Edge[String]] = {
-    val deps = new ListBuffer[Edge[String]]
-    deps.toList
+  /**
+    * Produces the dependency tree corresponding to this BHT
+    *
+    * @return The dependency tree represented as 
+    *   a list of edges (source = linguistic head, destination = modifier) and 
+    *   a set of root nodes
+    */
+  override def toDependencies(deps: ListBuffer[Edge[String]]): Unit = {
+    if(isInstanceOf[NonTerminalBHT] && left != null && right != null) {
+      // head is the left child
+      if(label == "L") {
+        val dep = new Edge[String](left.headPosition, right.headPosition, right.dependencyLabel)
+        deps += dep
+      } 
+      // head is the right child
+      else if(label == "R") {
+        val dep = new Edge[String](right.headPosition, left.headPosition, left.dependencyLabel)
+        deps += dep
+      }
+
+      left.toDependencies(deps)
+      right.toDependencies(deps)
+    }
   }
 }
