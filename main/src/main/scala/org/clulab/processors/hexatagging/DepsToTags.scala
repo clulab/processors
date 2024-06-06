@@ -81,3 +81,4 @@ object DepsToTags {
     nonTermTagsWriter.close()
   }
 }
+

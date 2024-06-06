@@ -58,7 +58,7 @@ class DependencyTree(
   def toBHT(stack: Stack[BHT], label: String): Unit = {
     stack.push(new TerminalBHT(node, label))
 
-    for(i <- leftMods.indices) {
+    for(i <- leftMods.length - 1 to 0 by -1) {
       leftMods(i).toBHT(stack, leftLabels(i))
       val left = stack.pop()
       val right = stack.pop()
@@ -93,8 +93,8 @@ object DependencyTree {
     var subtrees = new HashMap[Int, DependencyTree]()
 
     for(i <- sent.indices) {
-      val head = sent(i).get(4).toInt
-      val label = sent(i).get(3)
+      val head = sent(i).get(4).toInt // absolute head position
+      val label = sent(i).get(3) // dependency label
       val modTree = subtrees.getOrElseUpdate(i, new DependencyTree(i))
 
       if(head == -1) {

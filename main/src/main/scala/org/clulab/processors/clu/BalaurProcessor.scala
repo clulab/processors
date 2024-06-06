@@ -18,6 +18,7 @@ import org.clulab.odin.Mention
 
 import BalaurProcessor._
 import PostProcessor._
+import org.clulab.processors.hexatagging.HexaDecoder
 
 class BalaurProcessor protected (
   val config: Config,
@@ -64,6 +65,7 @@ class BalaurProcessor protected (
   }
 
   val eisner = new EisnerEnsembleParser()
+  val hexaDecoder = new HexaDecoder()
 
   override def getConf: Config = config
 
@@ -156,10 +158,15 @@ class BalaurProcessor protected (
         assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
         assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
         assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
-        assignDependencyLabels(
-          allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
-          allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
-          sent)
+        //assignDependencyLabels(
+        //  allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
+        //  allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
+        //  sent)
+        assignDependencyLabelsUsingHexaTags(
+          allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
+          allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK)), 
+          sent
+        )
       } catch {
         case e: EncoderMaxTokensRuntimeException => 
           // this sentence exceeds the maximum number of tokens for the encoder
@@ -284,6 +291,19 @@ class BalaurProcessor protected (
     sentDependencies.toArray
   }
 
+  private def assignDependencyLabelsUsingHexaTags(
+    termTags: Array[Array[PredictionScore]],
+    nonTermTags: Array[Array[PredictionScore]],
+    sent: Sentence): Unit = {
+
+    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, verbose = true)
+    println(bht)
+    println(s"Dependencies (${deps.size}):")
+    println(deps.mkString("\n"))
+    println("Roots: " + roots.mkString(", "))
+  }
+  
+
   // sent = sentence, word = word
   private def assignDependencyLabels(
       sentHeadPredictionScores: Array[Array[PredictionScore]],
@@ -336,6 +356,8 @@ object BalaurProcessor {
   val CHUNKING_TASK = "Chunking"
   val DEPS_HEAD_TASK = "Deps Head"
   val DEPS_LABEL_TASK = "Deps Label"
+  val HEXA_TERM_TASK = "Hexa Term"
+  val HEXA_NONTERM_TASK = "Hexa NonTerm"
 
   val PARSING_INTERPOLATION_LAMBDA = 0.6f
   val PARSING_TOPK = 5
@@ -346,7 +368,9 @@ object BalaurProcessor {
     POS_TASK -> 1,
     CHUNKING_TASK -> 2,
     DEPS_HEAD_TASK -> 3,
-    DEPS_LABEL_TASK -> 4
+    DEPS_LABEL_TASK -> 4,
+    HEXA_TERM_TASK -> 3, // the hexa tasks replace the DEPS_* tasks
+    HEXA_NONTERM_TASK -> 4
   )
 
   def mkTokenizer(lang: String): Tokenizer = {

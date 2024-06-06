@@ -19,10 +19,11 @@ class HexaDecoder {
     */
   def decode(
     termTags: Array[Array[(String, Float)]], 
-    nonTermTags: Array[Array[(String, Float)]]
+    nonTermTags: Array[Array[(String, Float)]],
+    verbose: Boolean = false
   ): (BHT, List[Edge[String]], Set[Int]) = {
     val stack = new Stack[BHT]
-    decode(stack, termTags, nonTermTags)
+    decodeInternal(stack, termTags, nonTermTags, verbose)
     val bht = stack.pop()
     val deps = new ListBuffer[Edge[String]]
     bht.toDependencies(deps)
@@ -41,14 +42,25 @@ class HexaDecoder {
     roots.toSet
   }
 
-  def decode(
+  private def decodeInternal(
     stack: Stack[BHT], 
     termTags: Array[Array[(String, Float)]], // assumes sorted in descending order of scores
     nonTermTags: Array[Array[(String, Float)]], // assumes sorted in descending order of scores
-    verbose: Boolean = false
+    verbose: Boolean
   ): Unit = {
     assert(termTags.length > 1) // this decoder assumes at least 2 words in the sentence
     assert(termTags.length == nonTermTags.length)
+
+    if(verbose) {
+      val howMany = 1
+      print(s"Top $howMany terminal tags:")
+      for(i <- termTags.indices) print(s" [${termTags(i).slice(0, howMany).mkString(", ")}]")
+      println()
+      print(s"Top $howMany nonterm tags:")
+      for(i <- nonTermTags.indices) print(s" [${nonTermTags(i).slice(0, howMany).mkString(", ")}]")
+      println()
+    }
+
     for(i <- termTags.indices) {
       //
       // 1. first process the current terminal tag
@@ -148,6 +160,7 @@ class HexaDecoder {
         }
       }
     }
+
     assert(stack.size == 1) // must have 1 element on the stack at the end
   }
 
