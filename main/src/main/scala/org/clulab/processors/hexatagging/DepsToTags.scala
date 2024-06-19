@@ -54,7 +54,8 @@ object DepsToTags {
   def main(args: Array[String]): Unit = {
     //val depsFileName = "dynet/en/deps/universal/wsj/train.labels"
     //val depsFileName = "dynet/en/deps/universal/wsj/dev.labels"
-    val depsFileName = "dynet/en/deps/universal/wsj/test.labels"
+    //val depsFileName = "dynet/en/deps/universal/wsj/test.labels"
+    val depsFileName = "dynet/en/deps/universal/combined/wsjtrain-wsjdev-geniatrain-geniadev.labels"
     val sents = ColumnReader.readColumns(depsFileName)
     println(s"Read ${sents.length} sentences.")
 
