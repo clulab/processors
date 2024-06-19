@@ -103,6 +103,7 @@ class HexaDecoder {
         // replace the dummy node in the subtree with the terminal node, and
         // push the subtree back to the stack
         val top = stack.pop()
+        // this should never happen because we alternate between processing terms and non-terms
         assert(! top.isTerminal)
         val term = new TerminalBHT(i, termTag.substring(HexaTags.TERMINAL_RIGHT_CHILD.length + 1))
         val parentOfDummy = findParentWithDummyChild(top)
@@ -143,6 +144,7 @@ class HexaDecoder {
           // create a new node labeled R (respectively, L),
           // attach the top element in the stack as its left child, and 
           // attach a dummy node as its right child
+          // push it on the stack
 
           val top = stack.pop()
           val label = nonTermTag.substring(HexaTags.NONTERM_LEFT_CHILD.length + 1)
@@ -171,12 +173,14 @@ class HexaDecoder {
           stack.push(top2)
           if(verbose) println(s"Pushing:\n${top2}onto the stack.")
         } else {
+          // this should never happen
           throw new RuntimeException(s"ERROR: unknown non-terminal tag $nonTermTag!")
         }
       }
     }
 
     if(stack.size != 1){
+      // this means the top element on the stack is incomplete, i.e., it covers only part of the sentence
       throw new RuntimeException("ERROR: must have exactly one element in the stack at the end!")
     }
   }
