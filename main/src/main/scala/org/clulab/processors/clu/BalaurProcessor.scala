@@ -298,16 +298,18 @@ class BalaurProcessor protected (
     val verbose = false
 
     // bht is used just for debugging purposes here
-    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, verbose)
-    if(verbose) {
+    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, 10, verbose)
+    if(verbose && bht.nonEmpty) {
       println(bht)
-      println(s"Dependencies (${deps.size}):")
+      println(s"Dependencies (${deps.get.size}):")
       println(deps.mkString("\n"))
-      println("Roots: " + roots.mkString(", "))
+      println("Roots: " + roots.get.mkString(", "))
     }
 
-    val depGraph = new DirectedGraph[String](deps, Some(sent.size), Some(roots))
-    sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+    if(deps.nonEmpty && roots.nonEmpty) {
+      val depGraph = new DirectedGraph[String](deps.get, Some(sent.size), Some(roots.get))
+      sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+    }
 
     // TODO: add UNIVERSAL_ENHANCED and HYBRID_DEPENDENCIES
   }

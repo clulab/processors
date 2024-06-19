@@ -7,6 +7,7 @@ import org.clulab.struct.Edge
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 import java.io.PrintStream
+import scala.collection.mutable.ArrayBuffer
 
 class HexaDecoder {
   /**
@@ -21,23 +22,65 @@ class HexaDecoder {
   def decode(
     termTags: Array[Array[(String, Float)]], 
     nonTermTags: Array[Array[(String, Float)]],
+    topK: Int = 10, 
     verbose: Boolean = false
-  ): (BHT, List[Edge[String]], Set[Int]) = {
-    try {
-      val stack = new Stack[BHT]
-      // TODO try top K paths: https://machinelearningmastery.com/beam-search-decoder-natural-language-processing/
-      decodeInternal(stack, termTags, nonTermTags, verbose)
-      val bht = stack.pop()
-      val deps = new ListBuffer[Edge[String]]
-      bht.toDependencies(deps)
-      val roots = findRoots(deps, termTags.length)
-      (bht, deps.toList, roots)
-    } catch {
-      case e: Throwable =>
-        System.err.println("Failed to decode the following sentence:")
-        printTags(System.err, termTags, nonTermTags, 2)
-        throw e
+  ): (Option[BHT], Option[List[Edge[String]]], Option[Set[Int]]) = {
+
+    // terms must start with TERMINAL_LEFT_CHILD
+    termTags(0) = termTags(0).filter(_._1.startsWith(HexaTags.TERMINAL_LEFT_CHILD))
+    // non-terms must start with NONTERM_LEFT_CHILD
+    nonTermTags(0) = nonTermTags(0).filter(_._1.startsWith(HexaTags.NONTERM_LEFT_CHILD))
+
+    val termPaths = TopKPaths.findTopK(termTags, topK)
+    val nonTermPaths = TopKPaths.findTopK(nonTermTags, topK)
+    val pathPairs = mergePaths(termPaths, nonTermPaths, topK)
+
+    var bestBht: Option[BHT] = None
+    var bestDeps: Option[List[Edge[String]]] = None
+    var bestRoots: Option[Set[Int]] = None
+
+    for(i <- pathPairs.indices if bestBht.isEmpty) {
+      val termSeq = pathPairs(i).termPath.sequence
+      val nonTermSeq = pathPairs(i).nonTermPath.sequence
+      try {
+        val stack = new Stack[BHT]
+        decodeInternal(stack, termSeq, nonTermSeq, verbose)
+        val bht = stack.pop()
+        val deps = new ListBuffer[Edge[String]]
+        bht.toDependencies(deps)
+        val roots = findRoots(deps, termTags.length)
+
+        // success!
+        bestBht = Some(bht)
+        bestDeps = Some(deps.toList)
+        bestRoots = Some(roots) 
+      } catch {
+        case e: Throwable =>
+          System.err.println("Failed to decode the following sentence:")
+          printTags(System.err, termSeq, nonTermSeq)
+          throw e
+      }
     }
+
+    (bestBht, bestDeps, bestRoots)
+  }
+
+  class PathPair(val score: Float, val termPath: Path[String], val nonTermPath: Path[String])
+
+  // TODO: optimize me, should not be quadratic
+  private def mergePaths(
+    termPaths: Seq[Path[String]], 
+    nonTermPaths: Seq[Path[String]], 
+    topK: Int): Seq[PathPair] = {
+    val pairs = new ArrayBuffer[PathPair]
+    for(i <- termPaths.indices) {
+      for(j <- nonTermPaths.indices) {
+        val score = termPaths(i).score + nonTermPaths(j).score
+        val pair = new PathPair(score, termPaths(i), nonTermPaths(j))
+        pairs += pair
+      }
+    }
+    pairs.sortBy(- _.score).slice(0, topK)
   }
 
   def findRoots(deps: Seq[Edge[String]], sentLen:Int): Set[Int] = {
@@ -52,45 +95,34 @@ class HexaDecoder {
   }
 
   private def printTags(pw: PrintStream, 
-    termTags: Array[Array[(String, Float)]], 
-    nonTermTags: Array[Array[(String, Float)]],
-    howMany: Int) {
-    pw.print(s"Top $howMany terminal tags:")
-    for(i <- termTags.indices) pw.print(s" [${termTags(i).slice(0, howMany).mkString(", ")}]")
-    pw.println()
-    pw.print(s"Top $howMany nonterm tags:")
-    for(i <- nonTermTags.indices) pw.print(s" [${nonTermTags(i).slice(0, howMany).mkString(", ")}]")
-    pw.println()
+    termTags: Seq[String], 
+    nonTermTags: Seq[String]) {
+    pw.println(s"Terminal tags: ${termTags.mkString(", ")}")
+    pw.println(s"Nonterm tags: ${nonTermTags.mkString(", ")}")
   }
 
   private def decodeInternal(
     stack: Stack[BHT], 
-    termTags: Array[Array[(String, Float)]], // assumes sorted in descending order of scores
-    nonTermTags: Array[Array[(String, Float)]], // assumes sorted in descending order of scores
+    termTags: Seq[String], 
+    nonTermTags: Seq[String], 
     verbose: Boolean
   ): Unit = {
+    // these should always be true
     assert(termTags.length > 1) // this decoder assumes at least 2 words in the sentence
     assert(termTags.length == nonTermTags.length)
 
     if(verbose) {
-      printTags(System.out, termTags, nonTermTags, 1)
+      printTags(System.out, termTags, nonTermTags)
     }
 
     for(i <- termTags.indices) {
       //
       // 1. first process the current terminal tag
       //
-      val termTag: String = 
-        // if the stack is empty, we can't use a TERMINAL_RIGHT_CHILD
-        if(stack.isEmpty) {
-          val tagOpt = termTags(i).find(_._1.startsWith(HexaTags.TERMINAL_LEFT_CHILD))
-          if(tagOpt.isEmpty) {
-            throw new RuntimeException(s"ERROR: expected a ${HexaTags.TERMINAL_LEFT_CHILD}!")
-          }
-          tagOpt.get._1
-        } else {
-          termTags(i).head._1
-        }
+      val termTag = termTags(i) 
+      if(termTag.startsWith(HexaTags.TERMINAL_RIGHT_CHILD) && stack.isEmpty) {
+        throw new RuntimeException(s"ERROR: expected a ${HexaTags.TERMINAL_LEFT_CHILD}!")
+      }
       if(verbose) println(s"Processing terminal tag: $termTag")
       
       if(termTag.startsWith(HexaTags.TERMINAL_LEFT_CHILD)) {
@@ -127,17 +159,11 @@ class HexaDecoder {
           throw new RuntimeException("ERROR: cannot have an empty stack when processing non-terminal tags!")
         }
 
+        val nonTermTag = nonTermTags(i)
         // if the stack has only 1 element, we must process a NONTERM_LEFT_CHILD
-        val nonTermTag = 
-          if(stack.length == 1) {
-            val tagOpt = nonTermTags(i).find(_._1.startsWith(HexaTags.NONTERM_LEFT_CHILD))
-            if(tagOpt.isEmpty) {
-              throw new RuntimeException(s"ERROR: expected a ${HexaTags.NONTERM_LEFT_CHILD}!")
-            }
-            tagOpt.get._1
-          } else {
-            nonTermTags(i).head._1
-          }
+        if(nonTermTag.startsWith(HexaTags.NONTERM_RIGHT_CHILD) && stack.length == 1) {
+          throw new RuntimeException(s"ERROR: expected a ${HexaTags.NONTERM_LEFT_CHILD}!")
+        }
         if(verbose) println(s"Processing non-terminal tag: $nonTermTag")
 
         if(nonTermTag.startsWith(HexaTags.NONTERM_LEFT_CHILD)) {
