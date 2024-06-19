@@ -25,6 +25,7 @@ class HexaDecoder {
   ): (BHT, List[Edge[String]], Set[Int]) = {
     try {
       val stack = new Stack[BHT]
+      // TODO try top K paths: https://machinelearningmastery.com/beam-search-decoder-natural-language-processing/
       decodeInternal(stack, termTags, nonTermTags, verbose)
       val bht = stack.pop()
       val deps = new ListBuffer[Edge[String]]
