@@ -295,12 +295,21 @@ class BalaurProcessor protected (
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]],
     sent: Sentence): Unit = {
+    val verbose = false
 
-    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, verbose = true)
-    println(bht)
-    println(s"Dependencies (${deps.size}):")
-    println(deps.mkString("\n"))
-    println("Roots: " + roots.mkString(", "))
+    // bht is used just for debugging purposes here
+    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, verbose)
+    if(verbose) {
+      println(bht)
+      println(s"Dependencies (${deps.size}):")
+      println(deps.mkString("\n"))
+      println("Roots: " + roots.mkString(", "))
+    }
+
+    val depGraph = new DirectedGraph[String](deps, Some(sent.size), Some(roots))
+    sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+
+    // TODO: add UNIVERSAL_ENHANCED and HYBRID_DEPENDENCIES
   }
   
 

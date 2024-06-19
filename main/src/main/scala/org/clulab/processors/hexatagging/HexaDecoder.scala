@@ -6,6 +6,7 @@ import org.clulab.struct.NonTerminal
 import org.clulab.struct.Edge
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
+import java.io.PrintStream
 
 class HexaDecoder {
   /**
@@ -22,13 +23,20 @@ class HexaDecoder {
     nonTermTags: Array[Array[(String, Float)]],
     verbose: Boolean = false
   ): (BHT, List[Edge[String]], Set[Int]) = {
-    val stack = new Stack[BHT]
-    decodeInternal(stack, termTags, nonTermTags, verbose)
-    val bht = stack.pop()
-    val deps = new ListBuffer[Edge[String]]
-    bht.toDependencies(deps)
-    val roots = findRoots(deps, termTags.length)
-    (bht, deps.toList, roots)
+    try {
+      val stack = new Stack[BHT]
+      decodeInternal(stack, termTags, nonTermTags, verbose)
+      val bht = stack.pop()
+      val deps = new ListBuffer[Edge[String]]
+      bht.toDependencies(deps)
+      val roots = findRoots(deps, termTags.length)
+      (bht, deps.toList, roots)
+    } catch {
+      case e: Throwable =>
+        System.err.println("Failed to decode the following sentence:")
+        printTags(System.err, termTags, nonTermTags, 2)
+        throw e
+    }
   }
 
   def findRoots(deps: Seq[Edge[String]], sentLen:Int): Set[Int] = {
@@ -42,6 +50,18 @@ class HexaDecoder {
     roots.toSet
   }
 
+  private def printTags(pw: PrintStream, 
+    termTags: Array[Array[(String, Float)]], 
+    nonTermTags: Array[Array[(String, Float)]],
+    howMany: Int) {
+    pw.print(s"Top $howMany terminal tags:")
+    for(i <- termTags.indices) pw.print(s" [${termTags(i).slice(0, howMany).mkString(", ")}]")
+    pw.println()
+    pw.print(s"Top $howMany nonterm tags:")
+    for(i <- nonTermTags.indices) pw.print(s" [${nonTermTags(i).slice(0, howMany).mkString(", ")}]")
+    pw.println()
+  }
+
   private def decodeInternal(
     stack: Stack[BHT], 
     termTags: Array[Array[(String, Float)]], // assumes sorted in descending order of scores
@@ -52,13 +72,7 @@ class HexaDecoder {
     assert(termTags.length == nonTermTags.length)
 
     if(verbose) {
-      val howMany = 1
-      print(s"Top $howMany terminal tags:")
-      for(i <- termTags.indices) print(s" [${termTags(i).slice(0, howMany).mkString(", ")}]")
-      println()
-      print(s"Top $howMany nonterm tags:")
-      for(i <- nonTermTags.indices) print(s" [${nonTermTags(i).slice(0, howMany).mkString(", ")}]")
-      println()
+      printTags(System.out, termTags, nonTermTags, 1)
     }
 
     for(i <- termTags.indices) {
@@ -161,7 +175,9 @@ class HexaDecoder {
       }
     }
 
-    assert(stack.size == 1) // must have 1 element on the stack at the end
+    if(stack.size != 1){
+      throw new RuntimeException("ERROR: must have exactly one element in the stack at the end!")
+    }
   }
 
   private def findParentWithDummyChild(bht: BHT): NonTerminalBHT = {
