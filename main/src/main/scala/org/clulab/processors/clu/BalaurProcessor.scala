@@ -298,7 +298,7 @@ class BalaurProcessor protected (
     val verbose = false
 
     // bht is used just for debugging purposes here
-    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, 1, verbose)
+    val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, 100, verbose)
     if(verbose && bht.nonEmpty) {
       println(bht)
       println(s"Dependencies (${deps.get.size}):")

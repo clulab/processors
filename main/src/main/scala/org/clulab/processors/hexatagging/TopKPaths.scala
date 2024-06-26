@@ -6,6 +6,7 @@ import org.clulab.struct.HeapElement
 import org.clulab.struct.MinHeap
 import org.clulab.struct.MinHeapIterator
 import org.clulab.utils.Ops.ObjectOps
+import org.clulab.utils.MathUtils
 
 class Path[L](val score: Float, val sequence: Seq[L]) extends HeapElement {
   def append(elem: L, elemScore: Float): Path[L] = {
@@ -31,43 +32,43 @@ object TopKPaths {
     * Assumes tags are sorted in descending order of scores
     * @return a sequence of paths sorted in descending order of scores
     */
-  def findTopK(tags: Array[Array[(String, Float)]], k: Int): Seq[Path[String]] = {
+  def findTopK(tags: Array[Array[(String, Float)]], k: Int, applySoftmax: Boolean = true): Seq[Path[String]] = {
     //println(s"Inside findTopK ${tags.length} x ${tags(0).length}, k = $k")
     var pathHeap = new MinHeap(k)
     pathHeap.insert(Path[String]())
 
     for(i <- tags.indices) {
-      val p = pathHeap.extractMin().get.asInstanceOf[Path[String]]
-      val newP = p.append(tags(i)(0)._1, tags(i)(0)._2)
-      //println(s"newP = $newP")
-      pathHeap.insert(newP)
-    }
+      // logits for token i
+      val scores = tags(i).map(_._2)
+      // probs
+      val probs = 
+        if(applySoftmax) MathUtils.denseSoftmaxFloat(scores)
+        else scores
+      // log probs
+      val logProbs = probs.map(Math.log(_).toFloat)
 
-    /*
-    for(i <- tags.indices) {
       val newHeap = new MinHeap(k)
 
       val it = new MinHeapIterator(pathHeap)
       while(it.hasNext) {
-        val p: Path[String] = it.next()
+        val p = it.next().asInstanceOf[Path[String]]
         var stillWorking = true
         // each column in the lattice must be sorted in descending order of scores
-        for(j <- 0 until 1 if stillWorking) {
-          val newP = p.append(tags(i)(j)._1, tags(i)(j)._2)
-          println(s"newP = $newP")
+        for(j <- 0 until tags(i).length if stillWorking) {
+          val newP = p.append(tags(i)(j)._1, logProbs(j))
+          //println(s"newP = $newP")
           // if insert fails it means the old path + the new elem < the min score already in the heap
-          // since columns are sorted in descending order of scores, we can then stop
+          // since columns are sorted in descending order of scores, we can stop here
           stillWorking = newHeap.insert(newP)
         }
       }
 
       pathHeap = newHeap
     }
-    */
 
     val paths = pathHeap.toSortedSeq.map(_.asInstanceOf[Path[String]])
     //println(paths.head)
-    //System.exit(1)
+    //println(paths.size)
     paths
   }
 }

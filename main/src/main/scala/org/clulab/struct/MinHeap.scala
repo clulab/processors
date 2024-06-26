@@ -98,7 +98,7 @@ class MinHeapIterator[HeapElement](heap: MinHeap) extends Iterator[HeapElement] 
   var position = 0
   val elements = heap.elementSequence
 
-  def hasNext: Boolean = position < size
+  def hasNext: Boolean = position < elements.size
     
   def next(): HeapElement = {
     if(position >= elements.size) {
