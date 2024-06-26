@@ -12,6 +12,11 @@ class MinHeap(val maxSize:Int = -1) {
     if (size == 0) None else Some(heap(0))
   }
 
+  def elementSequence: Seq[HeapElement] = heap.slice(0, size)
+
+  def isEmpty: Boolean = size == 0
+  def nonEmpty: Boolean = size > 0
+
   def insert(value: HeapElement): Boolean = {
     // special cases if size == maxSize
     if(maxSize > 0 && size == maxSize) {
@@ -81,6 +86,29 @@ class MinHeap(val maxSize:Int = -1) {
     val temp = heap(i)
     heap(i) = heap(j)
     heap(j) = temp
+  }
+
+  /** Returns the heap as a sequence of elements, sorted in descending order of scores */
+  def toSortedSeq: Seq[HeapElement] = {
+    heap.slice(0, size).sortBy(- _.score)
+  }
+}
+
+class MinHeapIterator[HeapElement](heap: MinHeap) extends Iterator[HeapElement] {
+  var position = 0
+  val elements = heap.elementSequence
+
+  def hasNext: Boolean = position < size
+    
+  def next(): HeapElement = {
+    if(position >= elements.size) {
+      throw new RuntimeException("ERROR: MinHeapIterator.next() outside of bounds!")
+    }
+
+    val crt = elements(position).asInstanceOf[HeapElement]
+    position += 1
+
+    crt
   }
 }
 
