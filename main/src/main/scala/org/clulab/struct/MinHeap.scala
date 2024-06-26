@@ -12,17 +12,18 @@ class MinHeap(val maxSize:Int = -1) {
     if (size == 0) None else Some(heap(0))
   }
 
-  def insert(value: HeapElement): Unit = {
+  def insert(value: HeapElement): Boolean = {
     // special cases if size == maxSize
     if(maxSize > 0 && size == maxSize) {
       // do not insert if the new element is smaller than getMin
       if(value.score < getMin.get.score) {
-        return
+        return false // we return false when nothing was inserted
       } 
       // remove the smallest and then insert
       else {
         heap(0) = value
         heapifyDown(0)
+        return true
       }
     } else {
       // normal insert; we have room to grow
@@ -32,6 +33,7 @@ class MinHeap(val maxSize:Int = -1) {
       heap(size) = value
       size += 1
       heapifyUp(size - 1)
+      return true
     }
   }
 

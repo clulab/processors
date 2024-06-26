@@ -27,12 +27,12 @@ class TestMinHeap extends Test {
   it should "keep correct top K" in {
     val minHeap = new MinHeap(3)
 
-    minHeap.insert(FHE(3))
-    minHeap.insert(FHE(1))
-    minHeap.insert(FHE(6))
-    minHeap.insert(FHE(5))
-    minHeap.insert(FHE(2))
-    minHeap.insert(FHE(4))
+    minHeap.insert(FHE(3)) should be (true)
+    minHeap.insert(FHE(1)) should be (true)
+    minHeap.insert(FHE(6)) should be (true)
+    minHeap.insert(FHE(5)) should be (true)
+    minHeap.insert(FHE(2)) should be (false)
+    minHeap.insert(FHE(4)) should be (true)
 
     minHeap.extractMin().get.score should be (4) 
     minHeap.extractMin().get.score should be (5) 
