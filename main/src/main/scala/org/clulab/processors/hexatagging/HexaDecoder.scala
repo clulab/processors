@@ -22,7 +22,7 @@ class HexaDecoder {
   def decode(
     termTags: Array[Array[(String, Float)]], 
     nonTermTags: Array[Array[(String, Float)]],
-    topK: Int = 10, 
+    topK: Int, 
     verbose: Boolean = false
   ): (Option[BHT], Option[List[Edge[String]]], Option[Set[Int]]) = {
 
@@ -38,6 +38,7 @@ class HexaDecoder {
     var bestBht: Option[BHT] = None
     var bestDeps: Option[List[Edge[String]]] = None
     var bestRoots: Option[Set[Int]] = None
+    var successIteration = -1
 
     for(i <- pathPairs.indices if bestBht.isEmpty) {
       val termSeq = pathPairs(i).termPath.sequence
@@ -54,14 +55,15 @@ class HexaDecoder {
         bestBht = Some(bht)
         bestDeps = Some(deps.toList)
         bestRoots = Some(roots) 
+        successIteration = i
       } catch {
-        case e: Throwable =>
-          System.err.println("Failed to decode the following sentence:")
-          printTags(System.err, termSeq, nonTermSeq)
-          throw e
+        case e: Throwable => // try again with a different set of paths
+          // System.err.println(s"Failed to decode the following sentence with beam $i:")
+          // printTags(System.err, termSeq, nonTermSeq)
       }
     }
 
+    // if(successIteration > 0) println(s"success iteration = $successIteration")
     (bestBht, bestDeps, bestRoots)
   }
 
