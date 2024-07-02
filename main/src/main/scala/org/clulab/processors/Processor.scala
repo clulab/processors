@@ -1,6 +1,7 @@
 package org.clulab.processors
 
 import org.clulab.struct.Internalizer
+import org.clulab.processors.clu.BalaurProcessor
 
 /**
   * User: mihais
@@ -167,4 +168,8 @@ object Processor {
   }
 
   def clearStrings(): Unit = in.get.clear()
+
+  def apply(): Processor = {
+    new BalaurProcessor()
+  }
 }

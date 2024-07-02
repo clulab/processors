@@ -25,13 +25,13 @@ class HexaDecoderTest extends Test {
     val (bht, deps, roots) = decoder.decode(termTags, nonTermTags, 10)
 
     println(bht)
-    println(s"Dependencies (${deps.size}):")
-    println(deps.mkString("\n"))
-    println("Roots: " + roots.mkString(", "))
+    println(s"Dependencies (${deps.get.size}):")
+    println(deps.get.mkString("\n"))
+    println("Roots: " + roots.get.mkString(", "))
 
-    roots.size should be (1)
-    roots.toList.head should be (1)
-    val depArray = deps.toArray
+    roots.get.size should be (1)
+    roots.get.toList.head should be (1)
+    val depArray = deps.get.toArray
     depArray.length should be (3)
     depArray(0) should be (new Edge[String](1, 3, "dobj"))
     depArray(1) should be (new Edge[String](1, 0, "nsubj"))
@@ -56,13 +56,13 @@ class HexaDecoderTest extends Test {
     val (bht, deps, roots) = decoder.decode(termTags, nonTermTags, 10, verbose=true)
 
     println(bht)
-    println(s"Dependencies (${deps.size}):")
+    println(s"Dependencies (${deps.get.size}):")
     println(deps.mkString("\n"))
-    println("Roots: " + roots.mkString(", "))
+    println("Roots: " + roots.get.mkString(", "))
 
-    roots.size should be (1)
-    roots.toList.head should be (3)
-    val depArray = deps.toArray
+    roots.get.size should be (1)
+    roots.get.toList.head should be (3)
+    val depArray = deps.get.toArray
     depArray.length should be (3)
     depArray(0) should be (new Edge[String](3, 0, "nsubj"))
     depArray(1) should be (new Edge[String](3, 1, "cop"))
