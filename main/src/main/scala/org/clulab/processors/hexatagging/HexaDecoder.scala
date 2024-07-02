@@ -2,8 +2,7 @@ package org.clulab.processors.hexatagging
 
 import scala.collection.mutable.Stack
 import _root_.org.clulab.struct.Terminal
-import org.clulab.struct.NonTerminal
-import org.clulab.struct.Edge
+import org.clulab.struct.{NonTerminal, Edge, MinHeap, HeapElement}
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 import java.io.PrintStream
@@ -67,22 +66,27 @@ class HexaDecoder {
     (bestBht, bestDeps, bestRoots)
   }
 
-  class PathPair(val score: Float, val termPath: Path[String], val nonTermPath: Path[String])
+  class PathPair(
+    val score: Float, 
+    val termPath: Path[String], 
+    val nonTermPath: Path[String]) extends HeapElement
 
-  // TODO: optimize me, should not be quadratic
   private def mergePaths(
-    termPaths: Seq[Path[String]], 
-    nonTermPaths: Seq[Path[String]], 
+    termPaths: Seq[Path[String]], // must be sorted in descending order of scores
+    nonTermPaths: Seq[Path[String]], // must be sorted in descending order of scores
     topK: Int): Seq[PathPair] = {
-    val pairs = new ArrayBuffer[PathPair]
+    val pairHeap = new MinHeap(topK)  
     for(i <- termPaths.indices) {
-      for(j <- nonTermPaths.indices) {
+      var stillWorking = true
+      for(j <- nonTermPaths.indices if stillWorking) {
         val score = termPaths(i).score + nonTermPaths(j).score
         val pair = new PathPair(score, termPaths(i), nonTermPaths(j))
-        pairs += pair
+        // if insert fails it means the new pair's score < the min score already in the heap
+        // since columns are sorted in descending order of scores, we can stop here
+        stillWorking = pairHeap.insert(pair)
       }
     }
-    pairs.sortBy(- _.score).slice(0, topK)
+    pairHeap.toSortedSeq.map(_.asInstanceOf[PathPair])
   }
 
   def findRoots(deps: Seq[Edge[String]], sentLen:Int): Set[Int] = {
