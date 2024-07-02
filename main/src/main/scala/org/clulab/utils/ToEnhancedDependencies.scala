@@ -245,11 +245,16 @@ object ToEnhancedDependencies {
     
     for(i <- 0 until sentence.size - 1) {
       if(lemmas(i) == "due" && lemmas(i + 1) == "to" && tags(i) == "IN") {
-        val dueMod = dgi.findByHead(i)
-        val toHead = dgi.findByModifier(i + 1)
-        if(dueMod.size == 1 && toHead.size == 1 && dueMod.head.destination == toHead.head.source) {
+        val toHeads = dgi.findByModifier(i + 1)
+        var found = false
+        for(toHead <- toHeads if ! found) {
+          if(toHead.source == i && toHead.relation == "mwe") {
+            found = true
+          }
+        }
+        if(! found) {
+          toRemove ++= toHeads
           dgi.addEdge(i, i + 1, "mwe")
-          toRemove += toHead.head
         }
       }
     }
