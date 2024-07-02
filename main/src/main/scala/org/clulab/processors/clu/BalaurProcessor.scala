@@ -309,9 +309,14 @@ class BalaurProcessor protected (
     if(deps.nonEmpty && roots.nonEmpty) {
       val depGraph = new DirectedGraph[String](deps.get, Some(sent.size), Some(roots.get))
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
-    }
 
-    // TODO: add UNIVERSAL_ENHANCED and HYBRID_DEPENDENCIES
+      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
+      sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+
+      // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
+      // however, this processor produces only syntactic dependencies
+      sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+    }
   }
   
 

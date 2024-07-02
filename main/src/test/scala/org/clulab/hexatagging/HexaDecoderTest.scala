@@ -22,7 +22,7 @@ class HexaDecoderTest extends Test {
       Array(("eos", 1.0f))
     )
 
-    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags)
+    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags, 10)
 
     println(bht)
     println(s"Dependencies (${deps.size}):")
@@ -53,7 +53,7 @@ class HexaDecoderTest extends Test {
       Array(("eos", 1.0f))
     )
 
-    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags, verbose=true)
+    val (bht, deps, roots) = decoder.decode(termTags, nonTermTags, 10, verbose=true)
 
     println(bht)
     println(s"Dependencies (${deps.size}):")

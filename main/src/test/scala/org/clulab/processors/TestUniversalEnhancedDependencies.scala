@@ -3,14 +3,14 @@ package org.clulab.processors
 class TestUniversalEnhancedDependencies extends CluTest {
 
   "CluProcessor" should "parse some basic sentences correctly" in {
-    var doc = proc.annotate("Cake is associated with cancer.") // TODO: this fails if the subject is "Ras1"...
+    var doc = proc.annotate("Ras1 is associated with cancer.") 
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubjpass") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "auxpass") should be(true)
 
     doc = proc.annotate("Ras1 has phosphorylated Mek2.")
-    // TODO: the first dep should be "nsubj" not "aux"...
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 1, "aux") should be(true)
+    doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 3, "dobj") should be(true)
 
     doc = proc.annotate("John has travelled to China.")
     doc.sentences.head.universalBasicDependencies.get.hasEdge(2, 0, "nsubj") should be(true)
