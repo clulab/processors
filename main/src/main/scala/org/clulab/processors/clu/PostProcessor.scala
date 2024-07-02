@@ -3,6 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.Sentence
 
 import java.util.regex.Pattern
+import org.clulab.struct.Edge
 
 object PostProcessor {
   //
@@ -47,4 +48,5 @@ object PostProcessor {
       }
     }
   }
+
 }

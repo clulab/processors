@@ -35,6 +35,7 @@ object ToEnhancedDependencies {
 
   def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
+    collapseMWEs(sentence, dgi)
     val collapsedNmods = collapsePrepositionsUniversal(sentence, dgi)
     replicateCollapsedNmods(collapsedNmods, dgi)
     raiseSubjects(dgi)
@@ -182,8 +183,9 @@ object ToEnhancedDependencies {
 
   /**
     * Collapses nmod + case into nmod_x (universal dependencies)
-    *     There was famine due to drought => nmod_due_to from 2 to 5
-    * @param sentence The sentence to operate on
+    *     1) There was famine due to drought: amod 2 to 3, nmod 3 to 5 => nmod_due_to from 2 to 5
+    *     2) They ate cake due to hunger => xcomp from 1 to 3, nmod 3 to 5 => nmod_due_to from 1 to 5
+    * @param sentence The sentence to operate on; tags must be defined
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversalDueTo(
@@ -191,6 +193,7 @@ object ToEnhancedDependencies {
     dgi:DirectedGraphIndex[String], 
     collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
+    val tags = sentence.tags.get
     val toRemove = new ListBuffer[Edge[String]]
     var shouldRemove = false
     val preps = dgi.findByName("mwe")
@@ -200,19 +203,53 @@ object ToEnhancedDependencies {
         for(leftDep <- dgi.findByModifier(prep.source)) {
           // found the dep from "famine" to "due"
           toRemove += leftDep
-          if(leftDep.source >= 0 && leftDep.relation.contains("mod")) {
+          if(leftDep.source >= 0) { // && leftDep.relation.contains("mod")) { // we may other labels here, e.g.: xcomp
             val source = leftDep.source
-            val label = leftDep.relation + "_due_to"
             
             for(rightDep <- dgi.findByHead(prep.source).filterNot(_.relation == "mwe")) {
               // found the dep from "due" to "drought"
               val destination = rightDep.destination
+              val tag = tags(destination)
+              val labelPrefix = 
+                if(tag.startsWith("JJ")) "amod"
+                else if(tag.startsWith("RB")) "advmod"
+                else "nmod"
+              val label = labelPrefix + "_due_to"
               dgi.addEdge(source, destination, label)
               val edgeSpec = (source, destination, label)
               collapsedNmods += edgeSpec
               shouldRemove = true
             }
           }
+        }
+      }
+    }
+
+    if(shouldRemove) remove(toRemove, dgi)
+  }
+
+  /**
+    * Creates mwe dependencies between clear MWEs such as "due to"
+    *
+    * @param sentence lemmas and POS tags must be present
+    * @param dgi
+    */
+  def collapseMWEs(
+    sentence:Sentence, 
+    dgi:DirectedGraphIndex[String]): Unit = {
+
+    val lemmas = sentence.lemmas.get
+    val tags = sentence.tags.get
+    val toRemove = new ListBuffer[Edge[String]]
+    var shouldRemove = true
+    
+    for(i <- 0 until sentence.size - 1) {
+      if(lemmas(i) == "due" && lemmas(i + 1) == "to" && tags(i) == "IN") {
+        val dueMod = dgi.findByHead(i)
+        val toHead = dgi.findByModifier(i + 1)
+        if(dueMod.size == 1 && toHead.size == 1 && dueMod.head.destination == toHead.head.source) {
+          dgi.addEdge(i, i + 1, "mwe")
+          toRemove += toHead.head
         }
       }
     }

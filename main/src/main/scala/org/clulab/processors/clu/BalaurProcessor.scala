@@ -307,9 +307,11 @@ class BalaurProcessor protected (
     }
 
     if(deps.nonEmpty && roots.nonEmpty) {
-      val depGraph = new DirectedGraph[String](deps.get, Some(sent.size), Some(roots.get))
+      // basic dependencies that replicate treebank annotations
+      val depGraph = new DirectedGraph[String](deps.get, Some(sent.size), roots)
       sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
+      // enhanced dependencies as defined by Manning
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
       sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
 
