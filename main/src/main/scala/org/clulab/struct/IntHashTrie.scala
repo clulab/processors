@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
   * Date: 5/12/15
   */
 @SerialVersionUID(1000L)
-class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolean = true) extends Serializable {
+class IntHashTrie(val caseInsensitive: Boolean = true) extends Serializable {
   /** Stores the first layer, i.e., the entry points in the trie */
   val entries = new mutable.HashMap[String, IntTrieNode]()
 
@@ -23,7 +23,6 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
       val thatString = that.toString(labels)
 
       this.caseInsensitive == that.caseInsensitive &&
-      this.internStrings == that.internStrings &&
       thisString == thatString
     }
   }
@@ -46,10 +45,7 @@ class IntHashTrie(val caseInsensitive: Boolean = true, val internStrings: Boolea
   def entriesSize: Int = entries.size
 
   protected def in(s: String):String = {
-    val casedS = if (caseInsensitive) s.toLowerCase else s
-    val internedS = if (internStrings) Processor.internString(casedS) else casedS
-
-    internedS
+    if (caseInsensitive) s.toLowerCase else s
   }
 
   def add(tokens: Array[String], completePath: Int, overwrite: Boolean): Unit = {

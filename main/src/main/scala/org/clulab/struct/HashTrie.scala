@@ -1,8 +1,8 @@
 package org.clulab.struct
 
 @SerialVersionUID(1000L)
-class HashTrie(caseInsensitive: Boolean = true, internStrings: Boolean = true)
-    extends BooleanHashTrie("", caseInsensitive, internStrings) {
+class HashTrie(caseInsensitive: Boolean = true)
+    extends BooleanHashTrie("", caseInsensitive) {
 
   def find(sequence:Array[String], label: String, outsideLabel: String): Array[String] =
       if (caseInsensitive) findNormalized(sequence.map(_.toLowerCase), label, outsideLabel)

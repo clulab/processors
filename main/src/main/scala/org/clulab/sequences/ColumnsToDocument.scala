@@ -127,7 +127,7 @@ object ColumnsToDocument {
         val offset = bits(0) // we assume token offsets are always in column 0!
         if(! filterOutContractions || ! offset.contains("-")) {
           words += bits(wordPos)
-          labels += in(bits(labelPos))
+          labels += bits(labelPos)
           startOffsets += charOffset
           charOffset = bits(wordPos).length
           endOffsets += charOffset
@@ -173,6 +173,4 @@ object ColumnsToDocument {
   }
 
   def annotateNil(doc:Document): Unit = {}
-
-  private def in(s:String):String = Processor.internString(s)
 }

@@ -64,7 +64,6 @@ class BalaurProcessor protected (
     )
   }
 
-  val eisner = new EisnerEnsembleParser()
   val hexaDecoder = new HexaDecoder()
 
   override def getConf: Config = config
@@ -158,10 +157,6 @@ class BalaurProcessor protected (
         assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
         assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
         assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
-        //assignDependencyLabels(
-        //  allLabelsAndScores(TASK_TO_INDEX(DEPS_HEAD_TASK)), 
-        //  allLabelsAndScores(TASK_TO_INDEX(DEPS_LABEL_TASK)), 
-        //  sent)
         assignDependencyLabelsUsingHexaTags(
           allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
           allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK)), 
@@ -319,47 +314,7 @@ class BalaurProcessor protected (
       // however, this processor produces only syntactic dependencies
       sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
     }
-  }
-  
-
-  // sent = sentence, word = word
-  private def assignDependencyLabels(
-      sentHeadPredictionScores: Array[Array[PredictionScore]],
-      sentLabelPredictionScores: Array[Array[PredictionScore]],
-      sent: Sentence): Unit = {
-    // prepare the input dependency table
-    val sentDependencies = interpolateHeadsAndLabels(sentHeadPredictionScores, sentLabelPredictionScores, PARSING_INTERPOLATION_LAMBDA)
-    val startingDependencies = eisner.toDependencyTable(sentDependencies, PARSING_TOPK)
-    // the actual Eisner parsing algorithm
-    val topOpt = eisner.parse(startingDependencies)
-    // convert back to relative (or absolute) heads
-    val bestDependencies = topOpt
-        .map(eisner.generateOutput)
-        .getOrElse(greedilyGenerateOutput(sentDependencies))
-
-    parserPostProcessing(sent, bestDependencies)
-
-    //println("Sentence: " + sent.words.mkString(", "))
-    //println("bestDeps: " + bestDeps.mkString(", "))
-
-    // construct the dependency graphs to be stored in the sentence object
-    val (roots, nonRootIndices) = bestDependencies.indices.partition(bestDependencies(_).isRoot)
-    val edges = nonRootIndices.map(bestDependencies(_).toEdge)
-    val depGraph = new DirectedGraph[String](edges.toList, Some(sent.size), Some(roots.toSet))
-    sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
-
-    val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
-    sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
-
-    // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
-    // however, this processor produces only syntactic dependencies
-    sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
-  }
-
-  def greedilyGenerateOutput(sentDependencies: Array[Array[Dependency]]): Array[Dependency] = {
-    // These are already sorted by score, so head will extract the best one.
-    sentDependencies.map(_.head).toArray
-  }
+  }  
 }
 
 object BalaurProcessor {
@@ -385,9 +340,7 @@ object BalaurProcessor {
     NER_TASK -> 0,
     POS_TASK -> 1,
     CHUNKING_TASK -> 2,
-    DEPS_HEAD_TASK -> 3,
-    DEPS_LABEL_TASK -> 4,
-    HEXA_TERM_TASK -> 3, // the hexa tasks replace the DEPS_* tasks
+    HEXA_TERM_TASK -> 3, 
     HEXA_NONTERM_TASK -> 4
   )
 

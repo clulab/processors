@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
  * Date: 5/12/15
  */
 @SerialVersionUID(1000L)
-class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, val internStrings: Boolean = true) extends Serializable {
+class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true) extends Serializable {
   /** Stores the first layer, i.e., the entry points in the trie */
   protected val entries = new mutable.HashMap[String, BooleanTrieNode]()
   val bLabel: String = "B-" + label
@@ -26,7 +26,6 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
 
       val result = this.label == that.label &&
       this.caseInsensitive == that.caseInsensitive &&
-      this.internStrings == that.internStrings &&
       thisString == thatString
 
       if (!result)
@@ -53,10 +52,7 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true, va
   def entriesSize: Int = entries.size
 
   protected def in(s: String): String = {
-    val casedS = if (caseInsensitive) s.toLowerCase else s
-    val internedS = if (internStrings) Processor.internString(casedS) else casedS
-
-    internedS
+    if (caseInsensitive) s.toLowerCase else s
   }
 
   def add(tokens: Array[String]): Unit = {
@@ -207,7 +203,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
   }
 }
 
-class DebugBooleanHashTrie(label: String, caseInsensitive: Boolean = true, internStrings: Boolean = true) extends BooleanHashTrie(label, caseInsensitive, internStrings) {
+class DebugBooleanHashTrie(label: String, caseInsensitive: Boolean = true) extends BooleanHashTrie(label, caseInsensitive) {
   val uniqueStrings = new mutable.HashSet[String]()
   var addedTokensCount: Int = 0
   var addedCount: Int = 0

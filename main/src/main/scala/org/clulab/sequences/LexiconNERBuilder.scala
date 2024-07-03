@@ -38,7 +38,6 @@ import scala.util.Using
   */
 abstract class LexiconNERBuilder() {
   val logger: Logger = LoggerFactory.getLogger(classOf[LexiconNER])
-  val INTERN_STRINGS: Boolean = false
 
   def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
     entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
@@ -292,9 +291,9 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
 
   protected def newMatcher(label: String, caseInsensitive: Boolean): BooleanHashTrie =
     if (LexiconNER.USE_DEBUG)
-      new DebugBooleanHashTrie(label, caseInsensitive, internStrings = INTERN_STRINGS)
+      new DebugBooleanHashTrie(label, caseInsensitive)
     else
-      new BooleanHashTrie(label, caseInsensitive, internStrings = INTERN_STRINGS)
+      new BooleanHashTrie(label, caseInsensitive)
 
   override def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],
       entityValidator: EntityValidator, lexicalVariationEngine: LexicalVariations, useLemmasForMatching: Boolean,
@@ -391,7 +390,7 @@ class SlowLexiconNERBuilder() extends LexiconNERBuilder() {
 class FastLexiconNERBuilder(val useCompact: Boolean) extends LexiconNERBuilder() {
 
   protected def newMatcher(label: String, caseInsensitive: Boolean) =
-      new IntHashTrie(caseInsensitive = caseInsensitive, internStrings = INTERN_STRINGS)
+      new IntHashTrie(caseInsensitive = caseInsensitive)
 
   // The Strings here are for filenames.
   override def build(standardKbSources: Seq[StandardKbSource], overrideKbSourcesOpt: Option[Seq[OverrideKbSource]],

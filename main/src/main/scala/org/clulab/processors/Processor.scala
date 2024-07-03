@@ -1,6 +1,5 @@
 package org.clulab.processors
 
-import org.clulab.struct.Internalizer
 import org.clulab.processors.clu.BalaurProcessor
 
 /**
@@ -155,20 +154,6 @@ trait Processor {
 }
 
 object Processor {
-  /**
-   * Used to (optionally) intern all the strings generated during annotation.
-   * This is local to each thread to avoid concurrency issues in multi-threaded programs.
-   */
-  private val in = new ThreadLocal[Internalizer[String]]
-
-  def internString (s:String): String = {
-    if (in.get() == null)
-      in.set(new Internalizer[String])
-    in.get.intern(s)
-  }
-
-  def clearStrings(): Unit = in.get.clear()
-
   def apply(): Processor = {
     new BalaurProcessor()
   }
