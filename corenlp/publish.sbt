@@ -1,1 +1,0 @@
-Compile / packageBin / mainClass := None
