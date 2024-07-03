@@ -17,29 +17,14 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(main, corenlp, openie)
-  .dependsOn(main, corenlp, openie) // so that we can import from the console
+  .aggregate(main, openie)
+  .dependsOn(main, openie) // so that we can import from the console
   .settings(
     publish / skip := true
   )
 
 lazy val main = project
 
-lazy val corenlp = project
-  .dependsOn(main % "compile -> compile; test -> test")
-
 lazy val openie = project
   .dependsOn(main % "compile -> compile; test -> test")
 
-lazy val webapp = project
-  .enablePlugins(PlayScala)
-  .dependsOn(main % "compile -> compile; test -> test")
-  .settings(
-    // scala3 doesn't have play and is ruled out completely.
-    // scala213 dies at runtime thinking it needs something from scala11.
-    // scala212 works!
-    // scala211 isn't compiling and complains on twirlCompileTemplates.
-    crossScalaVersions := Seq(scala212)
-  )
-
-addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
