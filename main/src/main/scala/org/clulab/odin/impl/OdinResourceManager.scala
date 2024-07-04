@@ -27,6 +27,7 @@ object OdinResourceManager {
     new OdinResourceManager(embeddings)
   }
 
+  /*
   def getInputStream(p: String): BufferedInputStream = {
     //println(s"Path to resources is $p")
     val url = RuleReader.mkURL(p)
@@ -39,10 +40,12 @@ object OdinResourceManager {
     val url = RuleReader.mkURL(path)
     Source.fromURL(url)
   }
+  */
 
   def buildResources(resourcesMap: Map[String, String]): Map[String, Option[OdinResource]] = {
     val pairs = resourcesMap map {
       case (embeddings, p) if embeddings.toLowerCase startsWith "embeddings" =>
+        /*
         //val source = getSource(p)
         val is = getInputStream(p)
 
@@ -53,8 +56,13 @@ object OdinResourceManager {
         //val pair = ("embeddings", Some(new EmbeddingsResource(source)))
         val pair = ("embeddings", Some(new EmbeddingsResource(is)))
         //source.close()
+        */
+
+        // TODO: open the resource with static embeddings here
+        val pair = ("embeddings", Some(new EmbeddingsResource()))
         pair
       }
+
       pairs.toMap.withDefaultValue(None)
     }
 }
