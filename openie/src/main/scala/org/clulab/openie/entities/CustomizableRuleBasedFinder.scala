@@ -130,7 +130,7 @@ class CustomizableRuleBasedFinder(
 
 object CustomizableRuleBasedFinder {
 
-  def fromConfig(config: Config = ConfigFactory.load()): CustomizableRuleBasedFinder = {
+  def fromConfig(config: Config = ConfigFactory.load("openie")): CustomizableRuleBasedFinder = {
     val entityRulesPath: String = config.getString("CustomRuleBasedEntityFinder.entityRulesPath")
     val entityRules = ResourceUtils.readResource(entityRulesPath)
     val entityEngine = ExtractorEngine(entityRules)

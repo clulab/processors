@@ -65,7 +65,7 @@ object StopWordManager {
   def apply(stopwordsPath: String, transparentPath: String, tagSet: TagSet, stopNER: Set[String]) =
     new StopWordManager(stopwordsPath, transparentPath, tagSet, stopNER)
 
-  def fromConfig(config: Config = ConfigFactory.load(), tagSet: TagSet = new EnglishTagSet): StopWordManager = {
+  def fromConfig(config: Config = ConfigFactory.load("openie"), tagSet: TagSet = new EnglishTagSet): StopWordManager = {
     val stopWordsPath: String = config.getString("filtering.stops")
     val transparentPath: String = config.getString("filtering.transparent")
     val stopNER: Set[String] = config.getStringList("filtering.stopNER").asScala.toSet
