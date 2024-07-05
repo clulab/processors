@@ -1,3 +1,4 @@
++ **10.0.0** - Complete reorganization. Added BalaurProcessor. Removed CoreNLP and GloVe.
 + **9.0.0** - Replace CluProcessor with BalaurProcessor
 + **8.5.?** - Adjust processing of weeks as in "The first two weeks of the month"
 + **8.5.4** - Revise holiday normalization, downgrade JollyDay library, add jaxb-ri for Java 11+
