@@ -1,5 +1,5 @@
-name := "processors-lib"
-description := "processors-lib"
+name := "processors"
+description := "processors"
 
 pomIncludeRepository := { (repo: MavenRepository) =>
   repo.root.startsWith("https://artifactory.clulab.org")

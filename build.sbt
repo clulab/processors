@@ -17,12 +17,22 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(library)
-  .dependsOn(library) // so that we can import from the console
+  .aggregate(library, webapp)
+  .dependsOn(library, webapp) // so that we can import from the console
   .settings(
     publish / skip := true
   )
 
 lazy val library = project
 
+lazy val webapp = project
+  .enablePlugins(PlayScala)
+  .dependsOn(library % "compile -> compile; test -> test")
+  .settings(
+    // scala3 doesn't have play and is ruled out completely.
+    // scala213 dies at runtime thinking it needs something from scala11.
+    // scala212 works!
+    // scala211 isn't compiling and complains on twirlCompileTemplates.
+    crossScalaVersions := Seq(scala212)
+  )
 
