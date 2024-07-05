@@ -1,6 +1,6 @@
 # Processors on M1 Macs
 
-This library works natively on M1 Macs due to the fact that our [DyNet wrapper](https://github.com/clulab/fatdynet) includes native support for M1 processors starting with version `0.4.1`.
+This library works natively on M1 Macs.
 
 To install one (or more!) Java Virtual Machines (JVM) on Macs we recommend [sdkman](https://sdkman.io). The steps to follow (instructions by [Gus Hahn-Powell](https://linguistics.arizona.edu/user/gus-hahn-powell)) are the following:
 
