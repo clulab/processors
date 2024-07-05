@@ -157,4 +157,8 @@ object Processor {
   def apply(): Processor = {
     new BalaurProcessor()
   }
+
+  def mkProcessor(): Processor = {
+    apply()
+  }
 }
