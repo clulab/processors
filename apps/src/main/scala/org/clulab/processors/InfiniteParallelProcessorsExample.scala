@@ -13,7 +13,7 @@ import scala.collection.parallel.ParSeq
 import scala.util.Using
 import org.clulab.processors.clu.BalaurProcessor
 
-object InfiniteParallelProcessorExample {
+object InfiniteParallelProcessorsExample {
 
   class ProcessorProvider(reuseProcessor: Boolean) {
     protected val processorOpt: Option[Processor] =

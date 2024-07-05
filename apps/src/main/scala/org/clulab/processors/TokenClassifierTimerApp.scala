@@ -1,4 +1,4 @@
-package org.clulab.processors.apps
+package org.clulab.processors
 
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.{Sourcer, Timers}
