@@ -6,13 +6,13 @@ nav_order: 2
 
 # Installation
 
-This software requires `Java` 8 or 11 in order to run as intended and `Scala` [2.11](https://www.scala-lang.org/download/2.11.12.html) or [2.12](https://www.scala-lang.org/download/2.12.15.html) along with Java in order to recompile it.  `Scala` is often installed as part of [sbt](https://www.scala-sbt.org/download.html), the Scala Build Tool, which one would need to build the project or incorporate it into a different `Scala` project.  `sbt` will be configured to use a compatible version of `Scala` automatically.
+This software requires `Java` larger than 8 and `Scala` larger than 2.11.  `Scala` is often installed as part of [sbt](https://www.scala-sbt.org/download.html), the Scala Build Tool, which one would need to build the project or incorporate it into a different `Scala` project.  `sbt` will be configured to use a compatible version of `Scala` automatically.
 
 Beyond that, the bulk of this software is available in compiled jars on [Maven Central](https://search.maven.org/search?q=g:org.clulab%20a:processors*) and in source code at [GitHub](https://github.com/clulab/processors).
 
 ## Use with Maven
 
-To use `processors` with [Maven](https://maven.apache.org/index.html), typically to build a Java project, simply add the dependencies below to your `pom.xml` file.  Replace `x.x.x` with an actual version number; the latest stable version is `8.4.8`.
+To use `processors` with [Maven](https://maven.apache.org/index.html), typically to build a Java project, simply add the dependencies below to your `pom.xml` file.  Replace `x.x.x` with an actual version number; the latest stable version is `10.0.0`.
 
 Please note that some of the transitive dependencies for this project, including [processors-models](http://artifactory.cs.arizona.edu:8081/artifactory/webapp/#/artifacts/browse/tree/General/sbt-release/org/clulab/processors-models), are not available at Maven Central because of size limitations there. However, all but quite recent versions of Maven fetch these transitive dependencies automatically, so no additional configuration is usually needed. All you need are these:
 
