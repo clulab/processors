@@ -25,6 +25,9 @@ lazy val root = (project in file("."))
 
 lazy val library = project
 
+lazy val apps = project
+  .dependsOn(library % "compile -> compile; test -> test")
+
 lazy val webapp = project
   .enablePlugins(PlayScala)
   .dependsOn(library % "compile -> compile; test -> test")
@@ -36,3 +39,5 @@ lazy val webapp = project
     crossScalaVersions := Seq(scala212)
   )
 
+addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
+  
