@@ -2,6 +2,10 @@ package org.clulab.processors.hexatagging
 
 import org.clulab.sequences.Row
 
+/**
+  * App to convert universal deps to hexa tags
+  * Leave this app here! It is necessary for library development.
+  */
 object DepsToTagsApp {
   def main(args: Array[String]): Unit = {
     var sent = Array(
