@@ -8,7 +8,7 @@ import org.clulab.utils.{Sourcer, StringUtils, Test}
 import scala.util.Using
 
 class TestMkCombinedDocument extends Test {
-  val sentences = Using.resource(Sourcer.sourceFromFilename("./main/src/test/resources/org/clulab/processors/sentences10.txt")) { source =>
+  val sentences = Using.resource(Sourcer.sourceFromFilename("./library/src/test/resources/org/clulab/processors/sentences10.txt")) { source =>
     source.getLines().toArray
   }
   val manySentenceLengths = Array(

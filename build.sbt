@@ -17,12 +17,12 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(main)
-  .dependsOn(main) // so that we can import from the console
+  .aggregate(library)
+  .dependsOn(library) // so that we can import from the console
   .settings(
     publish / skip := true
   )
 
-lazy val main = project
+lazy val library = project
 
 

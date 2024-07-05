@@ -129,7 +129,7 @@ class TestLexiconNER extends CluTest {
       testNer(ner2)
 
       val ner3 = {
-        val baseDir = new File("./main/src/test/resources")
+        val baseDir = new File("./library/src/test/resources")
         assert(baseDir.exists)
         val caseInsensitives = caseInsensitivesOpt.getOrElse {
           kbs.map(_ => caseInsensitive)

@@ -8,7 +8,7 @@ package org.clulab.utils
  */
 class TestArgsToProperties extends Test {
   // NOTE we are reading from the filesystem on purpose, that is the test
-  val props = StringUtils.argsToProperties(List("-props", "main/src/test/resources/org/clulab/utils/test.properties").toArray)
+  val props = StringUtils.argsToProperties(List("-props", "library/src/test/resources/org/clulab/utils/test.properties").toArray)
 
   "properties" should "contain p1 with value /some/path" in {
     val p1 = props.getProperty("p1")
@@ -28,7 +28,7 @@ class TestArgsToProperties extends Test {
   }
   */
 
-  val propertiesMap = StringUtils.argsToMap(List("-props", "main/src/test/resources/org/clulab/utils/test.properties").toArray)
+  val propertiesMap = StringUtils.argsToMap(List("-props", "library/src/test/resources/org/clulab/utils/test.properties").toArray)
 
   "properties as a map" should "contain p1 with value /some/path" in {
     val p1 = propertiesMap("p1")
