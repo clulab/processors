@@ -17,7 +17,7 @@ object DepsToTagsApp {
       Row(Array("reads", "", "", "root", "-1")),
       Row(Array("fascinating", "", "", "amod", "4")),
       Row(Array("great", "", "", "amod", "4")),
-      Row(Array("papers", "", "", "dobj", "1")),
+      Row(Array("papers", "", "", "dobj", "1"))
     )
     generateAndPrint(sent)
   }

@@ -7,6 +7,7 @@ import java.io.PrintWriter
 
 /**
   * An interactive shell for BalaurProcessor
+  * Leave this app here! It is necessary for library development
   * User: mihais
   * Date: 7/5/2023
   */

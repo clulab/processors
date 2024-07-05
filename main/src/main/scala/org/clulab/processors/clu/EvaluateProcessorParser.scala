@@ -5,6 +5,7 @@ import org.clulab.struct.DirectedGraph
 
 /**
   * Evaluates UAS and LAS for the parser included in a processor
+  * Leave this app here! It is needed for library development
   */
 object EvaluateProcessorParser extends App {
   val TEST_FILE_NAME = "dynet/en/deps/universal/wsj/test.labels"
