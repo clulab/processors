@@ -3,7 +3,7 @@ package org.clulab.processors
 import org.clulab.serialization.json4StopGraph.JSONSerializer
 import org.clulab.utils.Menu
 
-class ProcessorJsonShell extends ProcessorShell {
+class ProcessorsJsonShell extends ProcessorsShell {
   val serializer = new JSONSerializer(printWriter)
 
   override def work(text: String): Unit = {
@@ -15,6 +15,6 @@ class ProcessorJsonShell extends ProcessorShell {
   override def mkMenu(): Menu = super.mkMenu().withGreeting("Welcome to the ProcessorJsonShell!")
 }
 
-object ProcessorJsonShell extends App {
-  new ProcessorJsonShell().shell()
+object ProcessorsJsonShell extends App {
+  new ProcessorsJsonShell().shell()
 }

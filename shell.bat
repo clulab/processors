@@ -1,1 +1,1 @@
-sbt "runMain org.clulab.processors.ProcessorShell"
+sbt "runMain org.clulab.processors.ProcessorsShell"

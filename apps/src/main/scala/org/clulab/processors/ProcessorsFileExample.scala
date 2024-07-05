@@ -10,7 +10,7 @@ import org.clulab.processors.clu.BalaurProcessor
  * User: mihais
  * Date: 4/16/14
  */
-object ProcessorFileExample {
+object ProcessorsFileExample {
   val proc = new BalaurProcessor()
 
   def main(args:Array[String]): Unit = {
