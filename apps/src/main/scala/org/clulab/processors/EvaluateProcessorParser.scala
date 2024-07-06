@@ -1,14 +1,14 @@
-package org.clulab.processors.clu
+package org.clulab.processors
 
 import org.clulab.sequences.ColumnReader
 import org.clulab.struct.DirectedGraph
+import org.clulab.processors.clu.BalaurProcessor
 
 /**
   * Evaluates UAS and LAS for the parser included in a processor
-  * Leave this app here! It is needed for library development
   */
 object EvaluateProcessorParser extends App {
-  val TEST_FILE_NAME = "dynet/en/deps/universal/wsj/test.labels"
+  val TEST_FILE_NAME = "data/en/deps/universal/wsj/test.labels"
   val sents = ColumnReader.readColumns(TEST_FILE_NAME)
   val proc = new BalaurProcessor()
 
