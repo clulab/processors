@@ -1,13 +1,6 @@
 name := "processors"
 description := "processors"
 
-pomIncludeRepository := { (repo: MavenRepository) =>
-  repo.root.startsWith("https://artifactory.clulab.org")
-}
-
-// for processors-models
-resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
-
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
