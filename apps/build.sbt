@@ -1,13 +1,6 @@
 name := "processors-apps"
 description := "processors-apps"
 
-pomIncludeRepository := { (repo: MavenRepository) =>
-  repo.root.startsWith("https://artifactory.clulab.org")
-}
-
-// for processors-models
-resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
-
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -41,5 +34,6 @@ libraryDependencies ++= {
 
   Seq(
     // "org.clulab"                  % "deberta-onnx-model"          % "0.4.0", // TODO: update me!
+    "org.clulab"                     % "processors-model"            % "0.3.0"
   ) ++ parallelLibraries ++ scala2Libraries
 }
