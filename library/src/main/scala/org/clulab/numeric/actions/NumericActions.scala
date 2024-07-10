@@ -232,7 +232,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
     if(false) {
       println("mentions before cleanup:")
       for (m <- mentions) {
-        println("\t" + m.text)
+        println("\t" + m.label + ", " + m.text)
       }
     }
 
@@ -242,7 +242,7 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
     if(false) {
       println("mentions after cleanup:")
       for (m <- r2) {
-        println("\t" + m.text)
+        println("\t" + m.label + ", " + m.text)
       }
       println()
     }

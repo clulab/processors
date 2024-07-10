@@ -11,6 +11,9 @@ object PostProcessor {
   //
   val VERSUS_PATTERN = Pattern.compile("""(?i)^vs\.?$""")
 
+  // Matches agricultural season short hands such as "2021DS" or "2021WS"
+  val WET_OR_DRY_SEASON = Pattern.compile("""(?i)[0-9]+(ds|ws)""")
+
   /** POS tag corrections, in place */
   def postprocessPartOfSpeechTags(words: Array[String], tags: Array[String]): Array[String] = {
 
@@ -18,6 +21,10 @@ object PostProcessor {
     words.indices.foreach { index =>
       if (tags(index) != "CC" && VERSUS_PATTERN.matcher(words(index)).matches) {
         tags(index) = "CC" // "versus" seems like a CC to me. but maybe not...
+      }
+
+      if(WET_OR_DRY_SEASON.matcher(words(index)).matches) {
+        tags(index) = "CD" // such years should be CDs because our grammars expect it
       }
     }
 
