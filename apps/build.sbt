@@ -33,7 +33,6 @@ libraryDependencies ++= {
   }
 
   Seq(
-    // "org.clulab"                  % "deberta-onnx-model"          % "0.4.0", // TODO: update me!
-    "org.clulab"                     % "processors-model"            % "0.3.0"
+    "org.clulab"                     % "processors-model"            % "0.3.1"
   ) ++ parallelLibraries ++ scala2Libraries
 }
