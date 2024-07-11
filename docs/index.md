@@ -28,6 +28,10 @@ If you use Odin, our event extraction framework, please cite this paper:
 
 Marco A. Valenzuela-Escarcega, Gustave Hahn-Powell, Thomas Hicks, and Mihai Surdeanu. A Domain-independent Rule-based Framework for Event Extraction. In *Proceedings of the 53rd Annual Meeting of the Association for Computational Linguistics and the 7th International Joint Conference on Natural Language Processing of the Asian Federation of Natural Language Processing: Software Demonstrations (ACL-IJCNLP)*, 2015. [[pdf]](http://surdeanu.info/mihai/papers/acl2015.pdf) [[bib]](http://surdeanu.info/mihai/papers/acl2015.bib)
 
+If you use the syntactic parser in `BalaurProcessor` please cite the original algorithm:
+
+Amini, Afra, Tianyu Liu, and Ryan Cotterell. Hexatagging: Projective Dependency Parsing as Tagging. In *Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics Volume 2: Short Papers*, 2023. [[pdf]](https://aclanthology.org/2023.acl-short.124.pdf)
+
 If you use anything else in this package, please link to this page.
 
 
