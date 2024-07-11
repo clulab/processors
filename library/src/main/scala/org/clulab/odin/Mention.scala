@@ -187,7 +187,7 @@ trait Mention extends Equals with Ordered[Mention] with Serializable {
       "can't compare mentions if they belong to different documents")
     if (this.sentence < that.sentence) -1
     else if (this.sentence > that.sentence) 1
-    else this.tokenInterval compare that.tokenInterval
+    else this.tokenInterval.compare(that.tokenInterval)
   }
 
   def precedes(that: Mention): Boolean = this.compare(that) < 0
@@ -546,7 +546,7 @@ class CrossSentenceMention(
   /** returns a string that contains the mention */
   override def text: String = {
     val SEP = " . . . "
-    anchor precedes neighbor match {
+    anchor.precedes(neighbor) match {
       case true =>
         s"${anchor.text}$SEP${neighbor.text}"
       case false =>

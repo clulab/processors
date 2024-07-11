@@ -43,12 +43,13 @@ class HexaDecoder {
       val termSeq = pathPairs(i).termPath.sequence
       val nonTermSeq = pathPairs(i).nonTermPath.sequence
       try {
+        @annotation.nowarn("cat=deprecation")
         val stack = new Stack[BHT]
         decodeInternal(stack, termSeq, nonTermSeq, verbose)
         val bht = stack.pop()
         val deps = new ListBuffer[Edge[String]]
         bht.toDependencies(deps)
-        val roots = findRoots(deps, termTags.length)
+        val roots = findRoots(deps.toSeq, termTags.length)
 
         // success!
         bestBht = Some(bht)
@@ -102,12 +103,13 @@ class HexaDecoder {
 
   private def printTags(pw: PrintStream, 
     termTags: Seq[String], 
-    nonTermTags: Seq[String]) {
+    nonTermTags: Seq[String]): Unit = {
     pw.println(s"Terminal tags: ${termTags.mkString(", ")}")
     pw.println(s"Nonterm tags: ${nonTermTags.mkString(", ")}")
   }
 
   private def decodeInternal(
+    @annotation.nowarn("cat=deprecation")
     stack: Stack[BHT], 
     termTags: Seq[String], 
     nonTermTags: Seq[String], 

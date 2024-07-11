@@ -248,32 +248,32 @@ object TokenWildcard extends TokenConstraint {
 
 class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches word(tok, sent, doc)
+    matcher.matches(word(tok, sent, doc))
 }
 
 class LemmaConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches lemma(tok, sent, doc)
+    matcher.matches(lemma(tok, sent, doc))
 }
 
 class TagConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches tag(tok, sent, doc)
+    matcher.matches(tag(tok, sent, doc))
 }
 
 class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches entity(tok, sent, doc)
+    matcher.matches(entity(tok, sent, doc))
 }
 
 class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches chunk(tok, sent, doc)
+    matcher.matches(chunk(tok, sent, doc))
 }
 
 class NormConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
-    matcher matches norm(tok, sent, doc)
+    matcher.matches(norm(tok, sent, doc))
 }
 
 class IncomingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {
@@ -289,17 +289,17 @@ class OutgoingConstraint(matcher: StringMatcher, graphName: String) extends Toke
 // checks that a token is inside a mention
 class MentionConstraint(matcher: StringMatcher, arg: Option[String]) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean = {
-    val mentions = state.mentionsFor(sent, tok).filter(_ matches matcher)
+    val mentions = state.mentionsFor(sent, tok).filter(_.matches(matcher))
     val results = arg match {
       case None => mentions
-      case Some(name) if name equalsIgnoreCase "trigger" => mentions.flatMap {
+      case Some(name) if name.equalsIgnoreCase("trigger") => mentions.flatMap {
         case e: EventMention => Some(e.trigger)
         case _ => None
       }
       case Some(name) => mentions.flatMap(_.arguments.getOrElse(name, Nil))
     }
     // we only need to know if there is at least one mention that matches
-    results.exists(_.tokenInterval contains tok)
+    results.exists(_.tokenInterval.contains(tok))
   }
 }
 

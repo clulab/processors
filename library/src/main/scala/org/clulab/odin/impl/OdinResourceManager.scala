@@ -44,7 +44,7 @@ object OdinResourceManager {
 
   def buildResources(resourcesMap: Map[String, String]): Map[String, Option[OdinResource]] = {
     val pairs = resourcesMap map {
-      case (embeddings, p) if embeddings.toLowerCase startsWith "embeddings" =>
+      case (embeddings, p) if embeddings.toLowerCase.startsWith("embeddings") =>
         /*
         //val source = getSource(p)
         val is = getInputStream(p)

@@ -38,11 +38,11 @@ class State(val lookUpTable: MentionLUT) {
 
   /** Returns all mentions for a given sentence and token that match a given label */
   def mentionsFor(sent: Int, tok: Int, label: String): Seq[Mention] =
-    mentionsFor(sent, tok).filter(_ matches label)
+    mentionsFor(sent, tok).filter(_.matches(label))
 
   /** Checks for the existence of a label among all mentions for a given sentence and token */
   def hasMentionsFor(sent: Int, tok: Int, label: String): Boolean =
-    mentionsFor(sent, tok).exists(_ matches label)
+    mentionsFor(sent, tok).exists(_.matches(label))
 
   /** Returns all mentions for a given sentence and token that match any of the given labels */
   def mentionsFor(sent: Int, tok: Int, labels: Seq[String]): Seq[Mention] =

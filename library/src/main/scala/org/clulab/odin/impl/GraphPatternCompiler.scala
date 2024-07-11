@@ -23,7 +23,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
 
   def triggerMentionGraphPattern: Parser[GraphPattern] =
     javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern) ^^ {
-      case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName equalsIgnoreCase "trigger" =>
+      case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName.equalsIgnoreCase("trigger") =>
         new TriggerMentionGraphPattern(anchorLabel, arguments, config)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
         // if anchorName is not "trigger" then return a RelationMention
@@ -36,7 +36,7 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
       "{" ~> int <~ "}" |||
       "{" ~ opt(int) ~ "," ~ opt(int) ~ ( "}" ||| "}?" )
     ) ~ "=" ~ disjunctiveGraphPattern ^^ {
-      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name equalsIgnoreCase "trigger" =>
+      case name ~ _ ~ _ ~ _ ~ _ ~ _ if name.equalsIgnoreCase("trigger") =>
         sys.error(s"'$name' is not a valid argument name")
       // no quantifier
       case name ~ ":" ~ label ~ None ~ "=" ~ pat =>

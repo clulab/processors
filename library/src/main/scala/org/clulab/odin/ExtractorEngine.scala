@@ -42,7 +42,7 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
       // extract mentions using extractors (each extractor applies its own action)
       val extractedMentions = for {
         extractor <- extractors
-        if extractor.priority matches i
+        if extractor.priority.matches(i)
         mention <- extractor.findAllIn(document, state)
       } yield mention
       // apply globalAction and filter resulting mentions

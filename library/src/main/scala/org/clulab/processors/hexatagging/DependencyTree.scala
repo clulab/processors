@@ -55,6 +55,7 @@ class DependencyTree(
     for(i <- 0 until offset) sb.append(' ')
   }
 
+  @annotation.nowarn("cat=deprecation")
   def toBHT(stack: Stack[BHT], label: String): Unit = {
     stack.push(new TerminalBHT(node, label))
 

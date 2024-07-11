@@ -1,10 +1,11 @@
 val scala211 = "2.11.12" // up to 2.11.12
-val scala212 = "2.12.18" // up to 2.12.18
-val scala213 = "2.13.12" // up to 2.13.12
+val scala212 = "2.12.19" // up to 2.12.19
+val scala213 = "2.13.14" // up to 2.13.14
 val scala30  = "3.0.2"   // up to 3.0.2
 val scala31  = "3.1.3"   // up to 3.1.3
 val scala32  = "3.2.2"   // up to 3.2.2
-val scala33  = "3.3.1"   // up to 3.3.1
+val scala33  = "3.3.3"   // up to 3.3.3
+val scala34  = "3.4.2"   // up to 3.4.2
 
 val scala3   = scala31
 
@@ -17,8 +18,8 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(library, webapp)
-  .dependsOn(library, webapp) // so that we can import from the console
+  .aggregate(library)
+  .dependsOn(library)
   .settings(
     publish / skip := true
   )
@@ -40,4 +41,3 @@ lazy val webapp = project
   )
 
 addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
-  

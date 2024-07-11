@@ -142,10 +142,10 @@ object ThompsonVM {
     ): Seq[Mention] = {
       val mentions = for {
         mention <- state.mentionsFor(sentence, token)
-        if mention matches matcher
+        if mention.matches(matcher)
         result <- argument match {
           case None => Seq(mention)
-          case Some(name) if name equalsIgnoreCase "trigger" =>
+          case Some(name) if name.equalsIgnoreCase("trigger") =>
             mention match {
               case event: EventMention => Seq(event.trigger)
               case _ => Nil

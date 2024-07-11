@@ -289,9 +289,11 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
 object RVFRankingDataset {
   val logger = LoggerFactory.getLogger(classOf[RVFRankingDataset[String]])
 
+  def isZipped(name: String): Boolean = name.endsWith(".gz")
+
   def mkDatasetFromSvmRankResource(path: String): RVFRankingDataset[String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -301,7 +303,7 @@ object RVFRankingDataset {
 
   /** reads dataset from a file */
   def mkDatasetFromSvmRankFormat(filename: String): RVFRankingDataset[String] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
@@ -370,7 +372,7 @@ object RVFRankingDataset {
 
   def mkDatumsFromSvmRankResource(path: String): Iterable[Iterable[Datum[Int, String]]] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -380,7 +382,7 @@ object RVFRankingDataset {
 
   /** reads dataset from a file */
   def mkDatumsFromSvmRankFormat(filename: String): Iterable[Iterable[Datum[Int, String]]] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {

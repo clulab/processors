@@ -12,6 +12,7 @@ object DepsToTags {
     val depTree = DependencyTree.toTree(sent)
     println(depTree)
     // creates the BHT from the dependency tree
+    @annotation.nowarn("cat=deprecation")
     val stack = new Stack[BHT]
     depTree.toBHT(stack, "root")
     val bht = stack.pop()
@@ -39,7 +40,7 @@ object DepsToTags {
     (termTags, nonTermTags)
   }
 
-  def printTags(writer: PrintWriter, sent: Array[Row], tags: Array[String]) {
+  def printTags(writer: PrintWriter, sent: Array[Row], tags: Array[String]): Unit = {
     assert(tags.length == sent.length)
     for(i <- sent.indices) {
       for(j <- 0 until 1) {

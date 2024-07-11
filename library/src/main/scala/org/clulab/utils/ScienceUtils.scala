@@ -88,7 +88,7 @@ class ScienceUtils {
 
   /** Tell whether the given parentheses-bounded string contains a bibliographic reference or not. */
   private def stringHasBibRef (stringInParens: String): Boolean = {
-    stringInParens contains "XREF_BIBR"
+    stringInParens.contains("XREF_BIBR")
   }
 
   /**

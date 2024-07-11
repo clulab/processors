@@ -1,5 +1,7 @@
 package org.clulab.struct
 
+import org.clulab.scala.WrappedArray._
+
 trait HeapElement {
   def score: Float
 }
@@ -33,7 +35,7 @@ class MinHeap(val maxSize:Int = -1) {
     } else {
       // normal insert; we have room to grow
       if (size == heap.length) {
-        heap = if (heap.isEmpty) new Array[HeapElement](1) else heap ++ Array.ofDim[HeapElement](heap.length)
+        heap = if (heap.isEmpty) new Array[HeapElement](1) else Array.concat(heap, Array.ofDim[HeapElement](heap.length))
       }
       heap(size) = value
       size += 1
