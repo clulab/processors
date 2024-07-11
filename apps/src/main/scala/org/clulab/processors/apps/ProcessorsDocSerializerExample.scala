@@ -1,7 +1,8 @@
-package org.clulab.processors
+package org.clulab.processors.apps
+
+import org.clulab.processors.{Document, Processor}
 
 import java.io.PrintWriter
-
 import org.clulab.serialization.DocumentSerializer
 
 /**

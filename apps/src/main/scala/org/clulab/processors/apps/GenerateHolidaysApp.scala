@@ -1,4 +1,4 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
 import de.jollyday.{HolidayCalendar, HolidayManager, ManagerParameters}
 import org.joda.time.LocalDate
