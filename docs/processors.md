@@ -27,7 +27,7 @@ Most of the examples here use Scala. However, this software can be used as is fr
 
 ### Annotating entire documents
 
-This code is also available in the `org.clulab.processors.ProcessorsScalaExample` object.
+This code is also available in the `org.clulab.processors.apps.ProcessorsScalaExample` object.
 
 ```scala
 package org.clulab.processors
@@ -163,7 +163,7 @@ As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json
 
 ## Using processors from Java
 
-Scala is (largely) compatible with Java, so this library can be directly used from Java. The code below shows an example. This code is also available in the `org.clulab.processors.ProcessorsJavaExample` class.
+Scala is (largely) compatible with Java, so this library can be directly used from Java. The code below shows an example. This code is also available in the `org.clulab.processors.apps.ProcessorsJavaExample` class.
 
 ```java
 package org.clulab.processors;
