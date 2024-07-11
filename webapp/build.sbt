@@ -9,6 +9,7 @@ libraryDependencies ++= Seq(
   // For play 2.8.19, need scalatestplus-play 5.1.0 and Scalatest 3.1.x.
   // So, if we test, then we rule out Scala 2.11.
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0"  % Test, // up to 5.1.0
+  "ch.qos.logback"          % "logback-classic"    % "1.2.8",         // up to 1.5.6; less than 1.2 is vulnerable
   "org.clulab"              % "processors-model"   % "0.3.1"
 )
 

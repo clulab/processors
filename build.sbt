@@ -18,8 +18,9 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(library)
-  .dependsOn(library)
+  // Skip webapp because it only works for particular Scala versions.
+  .aggregate(library, apps)
+  .dependsOn(library, apps)
   .settings(
     publish / skip := true
   )
