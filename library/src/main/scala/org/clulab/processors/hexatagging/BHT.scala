@@ -14,11 +14,7 @@ trait BHT {
 
   var parent:Option[BHT] = None
 
-  protected def addOffset(offset: Int): String = {
-    val sb = new StringBuilder()
-    for(i <- 0 until offset) sb.append(' ')
-    sb.toString()
-  }
+  protected def addOffset(offset: Int): String = " " * offset
 
   override def toString(): String = toString(0) 
 
