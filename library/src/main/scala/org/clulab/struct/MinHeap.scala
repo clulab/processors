@@ -19,6 +19,16 @@ class MinHeap(val maxSize:Int = -1) {
   def isEmpty: Boolean = size == 0
   def nonEmpty: Boolean = size > 0
 
+  def stretch(array: Array[HeapElement], stretch: Int): Array[HeapElement] = {
+    val newArray = Array.ofDim[HeapElement](heap.length + stretch)
+
+    Array.copy(src = array, srcPos = 0, dest = newArray, destPos = 0, length = array.length)
+    newArray
+  }
+
+  def stretch(array: Array[HeapElement]): Array[HeapElement] =
+      stretch(array, array.length)
+
   def insert(value: HeapElement): Boolean = {
     // special cases if size == maxSize
     if(maxSize > 0 && size == maxSize) {
@@ -35,7 +45,7 @@ class MinHeap(val maxSize:Int = -1) {
     } else {
       // normal insert; we have room to grow
       if (size == heap.length) {
-        heap = if (heap.isEmpty) new Array[HeapElement](1) else Array.concat(heap, Array.ofDim[HeapElement](heap.length))
+        heap = if (heap.isEmpty) new Array[HeapElement](1) else stretch(heap)
       }
       heap(size) = value
       size += 1

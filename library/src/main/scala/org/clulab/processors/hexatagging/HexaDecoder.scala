@@ -101,9 +101,11 @@ class HexaDecoder {
     roots.toSet
   }
 
-  private def printTags(pw: PrintStream, 
+  private def printTags(
+    pw: PrintStream,
     termTags: Seq[String], 
-    nonTermTags: Seq[String]): Unit = {
+    nonTermTags: Seq[String]
+  ): Unit = {
     pw.println(s"Terminal tags: ${termTags.mkString(", ")}")
     pw.println(s"Nonterm tags: ${nonTermTags.mkString(", ")}")
   }
