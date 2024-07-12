@@ -20,7 +20,7 @@ class MinHeap(val maxSize:Int = -1) {
   def nonEmpty: Boolean = size > 0
 
   def stretch(array: Array[HeapElement], stretch: Int): Array[HeapElement] = {
-    val newArray = Array.ofDim[HeapElement](heap.length + stretch)
+    val newArray = Array.ofDim[HeapElement](array.length + stretch)
 
     Array.copy(src = array, srcPos = 0, dest = newArray, destPos = 0, length = array.length)
     newArray
