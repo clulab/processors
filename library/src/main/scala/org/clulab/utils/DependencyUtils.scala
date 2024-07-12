@@ -188,7 +188,7 @@ object DependencyUtils {
   def findHeadsStrict(span: Interval, sent: Sentence): Seq[Int] = sent.dependencies match {
     case None => Nil
     case Some(graph) =>
-      val stopTags = "(.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
+      val stopTags = "(\\.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
       val heads = findHeads(span, graph)
       heads.filter(x => !(sent.tags.get(x).matches(stopTags)))
   }
