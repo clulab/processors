@@ -23,7 +23,7 @@ object Veil {
   * @param veiledLetters a sequence of ranges which specify by index which letters in the original text to veil
   *                      when a document is created with mkDocument(processor)
   *
-  * See [[VeilApp.veilText]] for an example.
+  * See VeilApp.veilText for an example.
   */
 class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   /** This is a set containing veiled letter indices.
@@ -67,7 +67,7 @@ class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   * @param veiledWords a sequence of (integer, range) pairs which specify by sentence index and then word index range
   *                    which words of a document to veil during annotation with annotate(processor)
   *
-  * See [[VeilApp.veilDocument]] for an example.
+  * See VeilApp.veilDocument for an example.
   */
 class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)]) extends Veil {
   /** This is an array of sets, each containing veiled word indices for each sentence.
