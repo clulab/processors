@@ -1,12 +1,10 @@
 package org.clulab.processors.hexatagging
 
 import scala.collection.mutable.Stack
-import _root_.org.clulab.struct.Terminal
-import org.clulab.struct.{NonTerminal, Edge, MinHeap, HeapElement}
+import org.clulab.struct.{Edge, MinHeap, HeapElement}
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
 import java.io.PrintStream
-import scala.collection.mutable.ArrayBuffer
 
 class HexaDecoder {
   /**
@@ -49,7 +47,7 @@ class HexaDecoder {
         val bht = stack.pop()
         val deps = new ListBuffer[Edge[String]]
         bht.toDependencies(deps)
-        val roots = findRoots(deps.toSeq, termTags.length)
+        val roots = findRoots(deps, termTags.length)
 
         // success!
         bestBht = Some(bht)

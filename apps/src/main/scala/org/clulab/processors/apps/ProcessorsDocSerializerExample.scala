@@ -1,9 +1,10 @@
 package org.clulab.processors.apps
 
 import org.clulab.processors.{Document, Processor}
+import org.clulab.serialization.DocumentSerializer
 
 import java.io.PrintWriter
-import org.clulab.serialization.DocumentSerializer
+
 
 /**
  * An example on how to fully annotate text using processors
