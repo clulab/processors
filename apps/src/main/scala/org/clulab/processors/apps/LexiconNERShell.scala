@@ -1,6 +1,7 @@
-package org.clulab.sequences
+package org.clulab.processors.apps
 
 import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.sequences.LexiconNER
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.Shell
 

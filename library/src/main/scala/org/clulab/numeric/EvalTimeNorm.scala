@@ -2,7 +2,6 @@ package org.clulab.numeric
 
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.BalaurProcessor
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source
@@ -54,15 +53,13 @@ object EvalTimeNorm {
     fscore
   }
 
-  protected def run(): Double = {
-    val proc = new BalaurProcessor() // there are lots of options for this
+  def run(proc: Processor): Double = {
     val ner = NumericEntityRecognizer()
+
     test(proc, ner)
   }
 
   def test(proc: Processor, ner: NumericEntityRecognizer): Double = {
     runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
   }
-
-  def main(args: Array[String]): Unit = run()
 }

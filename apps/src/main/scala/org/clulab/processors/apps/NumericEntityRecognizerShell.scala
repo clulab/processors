@@ -1,5 +1,6 @@
-package org.clulab.numeric
+package org.clulab.processors.apps
 
+import org.clulab.numeric.{displayMentions, setLabelsAndNorms}
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
