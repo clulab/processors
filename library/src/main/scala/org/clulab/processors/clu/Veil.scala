@@ -2,6 +2,7 @@ package org.clulab.processors.clu
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
+import org.clulab.struct.GraphMap._
 
 import scala.collection.mutable.{Set => MutableSet}
 
