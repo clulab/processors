@@ -1,11 +1,8 @@
 package org.clulab.processors.hexatagging
 
-import scala.collection.mutable.ArrayBuffer
-
 import org.clulab.struct.HeapElement
 import org.clulab.struct.MinHeap
 import org.clulab.struct.MinHeapIterator
-import org.clulab.utils.Ops.ObjectOps
 import org.clulab.utils.MathUtils
 
 class Path[L](val score: Float, val sequence: Seq[L]) extends HeapElement {
