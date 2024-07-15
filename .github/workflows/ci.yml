@@ -1,4 +1,4 @@
-name: Scala-Transformers CI
+name: Processors CI
 
 on:
   push:
