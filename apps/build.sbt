@@ -1,6 +1,9 @@
 name := "processors-apps"
 description := "processors-apps"
 
+// for processors-models
+resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
+
 libraryDependencies ++= {
   Seq(
     "ch.qos.logback" % "logback-classic"  % "1.2.8", // up to 1.5.6; less than 1.2 is vulnerable

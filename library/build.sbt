@@ -1,6 +1,9 @@
 name := "processors"
 description := "processors"
 
+// for processors-models
+resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
+
 libraryDependencies ++= {
   val json4sVersion = {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -39,7 +42,7 @@ libraryDependencies ++= {
     "org.json4s"                 %% "json4s-jackson"             % json4sVersion,      // Apache-2.0
     // for machine learning
     "org.clulab"                  % "processors-model"           % "0.3.1" % Test,
-    "org.clulab"                 %% "scala-transformers-encoder" % "0.7.0",            // up to 0.7.0, Apache-2.0
+    "org.clulab"                 %% "scala-transformers-encoder" % "0.7.1",            // up to 0.7.0, Apache-2.0
     "de.bwaldvogel"               % "liblinear"                  % "2.30",             // up to 2.44, BSD-3
     "tw.edu.ntu.csie"             % "libsvm"                     % "3.23",             // up to 3.31, BSD
     // NLP tools used by CluProcessor
