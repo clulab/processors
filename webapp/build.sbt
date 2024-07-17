@@ -1,6 +1,9 @@
 name := "processors-webapp"
 description := "A web application providing a user interface to processors"
 
+// for processors-models
+resolvers += "clulab" at "https://artifactory.clulab.org/artifactory/sbt-release"
+
 libraryDependencies ++= Seq(
   // Versions were last checked 2023 Jan 31.
   guice,
