@@ -19,8 +19,8 @@ ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
   // Skip webapp because it only works for particular Scala versions.
+  // It needs to be released separately (if at all).
   .aggregate(library, apps)
-  .dependsOn(library, apps)
   .settings(
     publish / skip := true
   )
@@ -34,10 +34,11 @@ lazy val webapp = project
   .enablePlugins(PlayScala)
   .dependsOn(library % "compile -> compile; test -> test")
   .settings(
-    // scala3 doesn't have play and is ruled out completely.
-    // scala213 dies at runtime thinking it needs something from scala11.
+    // scala3 doesn't have play (for 2.8.19 as specified by the project) and is ruled out completely.
+    // scala213 has version problems for com.fasterxml.jackson.databind.JsonMappingException.
     // scala212 works!
     // scala211 isn't compiling and complains on twirlCompileTemplates.
+    // This isn't a library.  Only one version needs to work.  We shouldn't use play for this anyway.
     crossScalaVersions := Seq(scala212)
   )
 

@@ -13,7 +13,7 @@ import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
 import scala.util.Using
 
-import RVFRegDataset._
+import RVFRegDataset.logger
 
 /**
   * Parent class for regression datasets. For classification, see [[Dataset]].
