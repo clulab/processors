@@ -286,10 +286,8 @@ class RVFRankingDataset[F] extends BVFRankingDataset[F] with FeatureTraversable[
   }
 }
 
-object RVFRankingDataset {
+object RVFRankingDataset extends ZipIdentifying {
   val logger = LoggerFactory.getLogger(classOf[RVFRankingDataset[String]])
-
-  def isZipped(name: String): Boolean = name.endsWith(".gz")
 
   def mkDatasetFromSvmRankResource(path: String): RVFRankingDataset[String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)

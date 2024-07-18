@@ -382,10 +382,8 @@ class InformationGain( var datumCount:Int = 0,
 }
 */
 
-object RVFRegDataset {
+object RVFRegDataset extends ZipIdentifying {
   val logger = LoggerFactory.getLogger(this.getClass)
-
-  def isZipped(name: String): Boolean = name.endsWith(".gz")
 
   def mkRegDatasetFromSvmLightResource(path: String): RVFRegDataset[String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)

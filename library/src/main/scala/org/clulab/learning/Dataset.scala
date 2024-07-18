@@ -15,6 +15,10 @@ import scala.util.Using
 
 import RVFDataset._
 
+trait ZipIdentifying {
+  def isZipped(name: String): Boolean = name.endsWith(".gz")
+}
+
 /**
  * Parent class for classification datasets
  * User: mihais
@@ -386,10 +390,8 @@ class InformationGain( var datumCount:Int = 0,
   def pWithout(total:InformationGain): Double = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
 }
 
-object RVFDataset {
+object RVFDataset extends ZipIdentifying {
   val logger: Logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
-
-  def isZipped(name: String): Boolean = name.endsWith(".gz")
 
   def mkDatasetFromSvmLightResource(path: String): RVFDataset[Int, String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
