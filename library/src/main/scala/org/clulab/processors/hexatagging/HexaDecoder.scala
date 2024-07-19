@@ -1,12 +1,11 @@
 package org.clulab.processors.hexatagging
 
-import scala.collection.mutable.Stack
-import _root_.org.clulab.struct.Terminal
-import org.clulab.struct.{NonTerminal, Edge, MinHeap, HeapElement}
+import org.clulab.struct.{Edge, MinHeap, HeapElement}
+
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Stack
 import java.io.PrintStream
-import scala.collection.mutable.ArrayBuffer
 
 class HexaDecoder {
   /**
@@ -43,12 +42,13 @@ class HexaDecoder {
       val termSeq = pathPairs(i).termPath.sequence
       val nonTermSeq = pathPairs(i).nonTermPath.sequence
       try {
+        @annotation.nowarn("cat=deprecation")
         val stack = new Stack[BHT]
         decodeInternal(stack, termSeq, nonTermSeq, verbose)
         val bht = stack.pop()
         val deps = new ListBuffer[Edge[String]]
         bht.toDependencies(deps)
-        val roots = findRoots(deps, termTags.length)
+        val roots = findRoots(deps.toSeq, termTags.length)
 
         // success!
         bestBht = Some(bht)
@@ -100,14 +100,17 @@ class HexaDecoder {
     roots.toSet
   }
 
-  private def printTags(pw: PrintStream, 
+  private def printTags(
+    pw: PrintStream,
     termTags: Seq[String], 
-    nonTermTags: Seq[String]) {
+    nonTermTags: Seq[String]
+  ): Unit = {
     pw.println(s"Terminal tags: ${termTags.mkString(", ")}")
     pw.println(s"Nonterm tags: ${nonTermTags.mkString(", ")}")
   }
 
   private def decodeInternal(
+    @annotation.nowarn("cat=deprecation")
     stack: Stack[BHT], 
     termTags: Seq[String], 
     nonTermTags: Seq[String], 

@@ -131,7 +131,7 @@ class TriggerMentionGraphPattern(
       ruleName: String
   ): Seq[Mention] = for {
     mention <- state.mentionsFor(sent)
-    if mention matches triggerLabel
+    if mention.matches(triggerLabel)
     if mention.isInstanceOf[TextBoundMention]
     trig = mention.asInstanceOf[TextBoundMention]
     (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
@@ -154,7 +154,7 @@ class RelationGraphPattern(
       ruleName: String
   ): Seq[Mention] = for {
     mention <- state.mentionsFor(sent)
-    if mention matches anchorLabel
+    if mention.matches(anchorLabel)
     (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
     relationArgs = args + (anchorName -> Seq(mention))
     relationPaths = paths + (anchorName -> Map(mention -> Nil))

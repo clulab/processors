@@ -202,7 +202,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     // return Rule objects
     rules.asScala.toSeq.flatMap { r =>
       val m = r.asScala.toMap
-      if (m contains "import") {
+      if (m.contains("import")) {
         // import rules from a file and return them
         importRules(m, config)
       } else {
@@ -591,7 +591,7 @@ object RuleReader {
     val resource = getClass.getClassLoader.getResource(path)
     path match {
       case hasResource if resource != null => resource
-      case cp if cp startsWith CLASSPATH_PROTOCOL =>
+      case cp if cp.startsWith(CLASSPATH_PROTOCOL) =>
         val path = cp.drop(CLASSPATH_PROTOCOL.length)
         getClass.getResource(path)
       case other => new URL(other)

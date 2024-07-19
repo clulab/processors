@@ -1,13 +1,11 @@
 package org.clulab.processors.clu
 
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.serialization.DocumentSerializer
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
 
-import java.io.PrintWriter
 import scala.collection.mutable.{Set => MutableSet}
-import scala.util.Using
+
 
 trait Veil
 
@@ -25,7 +23,7 @@ object Veil {
   * @param veiledLetters a sequence of ranges which specify by index which letters in the original text to veil
   *                      when a document is created with mkDocument(processor)
   *
-  * See [[VeilApp.veilText]] for an example.
+  * See VeilApp.veilText for an example.
   */
 class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   /** This is a set containing veiled letter indices.
@@ -69,7 +67,7 @@ class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   * @param veiledWords a sequence of (integer, range) pairs which specify by sentence index and then word index range
   *                    which words of a document to veil during annotation with annotate(processor)
   *
-  * See [[VeilApp.veilDocument]] for an example.
+  * See VeilApp.veilDocument for an example.
   */
 class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)]) extends Veil {
   /** This is an array of sets, each containing veiled word indices for each sentence.
@@ -198,47 +196,4 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
 
     unveiledAnnotatedDocument
   }
-}
-
-/** Demonstrate how either parts of the text or Document can be veiled.
-  */
-object VeilApp extends App {
-
-  /** Treat this text as if the letters "(Hahn-Powell, 2012)" did not exist
-    *  for the purpose of mkDocument, but do include them in the text.
-    */
-  def veilText(processsor: Processor): Unit = {
-    val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
-    val veiledLetters = Seq(Range.inclusive(text.indexOf('('), text.indexOf(')')))
-    val veiledText = new VeiledText(text, veiledLetters)
-    val document: Document = veiledText.mkDocument(processor)
-
-    Using.resource(new PrintWriter("veiledLetters.out")) { printWriter =>
-      val documentSerializer = new DocumentSerializer()
-
-      documentSerializer.save(document, printWriter)
-    }
-  }
-
-  /** Treat this text as if the words "( Hahn-Powell , 2012 )" did not exist
-    * for the purpose of annotate, but do include them in the document.
-    */
-  def veilDocument(processor: Processor): Unit = {
-    val text = "To be loved by unicorns is the greatest gift of all (Hahn-Powell, 2012)."
-    val document: Document = processor.mkDocument(text)
-    val veiledWords = Seq((0, Range.inclusive(document.sentences(0).raw.indexOf("("), document.sentences(0).raw.indexOf(")"))))
-    val veiledDocument = new VeiledDocument(document, veiledWords)
-    val annotatedDocument: Document = veiledDocument.annotate(processor)
-
-    Using.resource(new PrintWriter("veiledWords.out")) { printWriter =>
-      val documentSerializer = new DocumentSerializer()
-
-      documentSerializer.save(annotatedDocument, printWriter)
-    }
-  }
-
-  val processor = new BalaurProcessor()
-
-  veilText(processor)
-  veilDocument(processor)
 }

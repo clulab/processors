@@ -4,7 +4,7 @@ import org.clulab.struct.Edge
 import scala.collection.mutable.ListBuffer
 
 trait BHT {
-  def isTerminal():Boolean
+  def isTerminal:Boolean
 
   def firstPosition:Int // inclusive
   def lastPosition:Int // inclusive
@@ -14,23 +14,19 @@ trait BHT {
 
   var parent:Option[BHT] = None
 
-  protected def addOffset(offset: Int): String = {
-    val sb = new StringBuilder()
-    for(i <- 0 until offset) sb.append(' ')
-    sb.toString()
-  }
+  protected def addOffset(offset: Int): String = " " * offset
 
   override def toString(): String = toString(0) 
 
   def toString(offset: Int): String
 
-  def setHexaTags(termTags: Array[String], nonTermTags: Array[String])
+  def setHexaTags(termTags: Array[String], nonTermTags: Array[String]): Unit
 
   def toDependencies(deps: ListBuffer[Edge[String]]): Unit
 }
 
 class TerminalBHT(val node: Int, val label: String) extends BHT {
-  override def isTerminal(): Boolean = true
+  override def isTerminal: Boolean = true
   override def toString(offset: Int): String = s"${addOffset(offset)}($node, $label)\n"
 
   override def firstPosition: Int = node
@@ -41,7 +37,7 @@ class TerminalBHT(val node: Int, val label: String) extends BHT {
 
   override def setHexaTags(termTags: Array[String], nonTermTags: Array[String]): Unit = {
     assert(parent.isDefined)
-    assert(! parent.get.isTerminal())
+    assert(! parent.get.isTerminal)
 
     val hexaTag = 
       if(parent.get.asInstanceOf[NonTerminalBHT].left == this) {
@@ -93,7 +89,7 @@ class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends B
     }
   }
 
-  override def isTerminal(): Boolean = false
+  override def isTerminal: Boolean = false
   override def toString(offset: Int): String = {
     val sb = new StringBuilder()
     sb.append(s"${addOffset(offset)}$label ($firstPosition, $lastPosition) ($headPosition, $dependencyLabel)\n")
@@ -117,7 +113,7 @@ class NonTerminalBHT(val label: String, var left: BHT, var right: BHT) extends B
       if(parent.isEmpty) {
         HexaTags.NONTERM_LEFT_CHILD + "-" + label
       } else {
-        assert(! parent.get.isTerminal())
+        assert(! parent.get.isTerminal)
         if(parent.get.asInstanceOf[NonTerminalBHT].left == this) {
           HexaTags.NONTERM_LEFT_CHILD + "-" + label
         } else {

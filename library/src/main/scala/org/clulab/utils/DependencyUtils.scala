@@ -94,10 +94,10 @@ object DependencyUtils {
 
           // throw new DependencyUtilsException("can't find a root")
           Double.MaxValue // this means the distance to the head is infinite, i.e., the head is not reachable
-        case (tok, dist) :: rest if seen contains tok =>
+        case (tok, dist) :: rest if seen.contains(tok) =>
           // we already explored this token, skip
           loop(rest, seen)
-        case (tok, dist) :: rest if graph.roots contains tok =>
+        case (tok, dist) :: rest if graph.roots.contains(tok) =>
           // found a root
           // it is the closest one because we are searching breath-first
           // return distance
@@ -188,9 +188,9 @@ object DependencyUtils {
   def findHeadsStrict(span: Interval, sent: Sentence): Seq[Int] = sent.dependencies match {
     case None => Nil
     case Some(graph) =>
-      val stopTags = "(.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
+      val stopTags = "(\\.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
       val heads = findHeads(span, graph)
-      heads.filter(x => !(sent.tags.get(x) matches stopTags))
+      heads.filter(x => !(sent.tags.get(x).matches(stopTags)))
   }
 
 

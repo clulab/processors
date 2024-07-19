@@ -1,4 +1,4 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
 import org.clulab.processors.Document
 import org.clulab.processors.Processor

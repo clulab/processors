@@ -1,4 +1,4 @@
-package org.clulab.utils
+package org.clulab.processors.apps
 
 import java.io.PrintWriter
 import scala.collection.mutable.ArrayBuffer

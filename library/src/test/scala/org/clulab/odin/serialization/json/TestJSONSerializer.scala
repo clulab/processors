@@ -85,7 +85,7 @@ class TestJSONSerializer extends Test {
     val mentions = ee.extractFrom(doc)
     mentions should have size (1)
     val Seq(coref) = mentions
-    (coref matches "Coref") should be (true)
+    (coref.matches("Coref")) should be (true)
     val deserializedMentions = JSONSerializer.toMentions(JSONSerializer.jsonAST(mentions))
     deserializedMentions should have size (mentions.size)
     deserializedMentions.map(MentionOps(_).equivalenceHash).toSet should equal(mentions.map(MentionOps(_).equivalenceHash).toSet)

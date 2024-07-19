@@ -1,4 +1,4 @@
-package org.clulab.sequences
+package org.clulab.processors.apps
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.BalaurProcessor

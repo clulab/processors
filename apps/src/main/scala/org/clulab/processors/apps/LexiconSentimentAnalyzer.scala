@@ -1,4 +1,4 @@
-package org.clulab.sentiment
+package org.clulab.processors.apps
 
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.processors.Processor

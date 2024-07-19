@@ -13,7 +13,7 @@ import scala.io.{BufferedSource, Source}
 import scala.reflect.ClassTag
 import scala.util.Using
 
-import RVFRegDataset._
+import RVFRegDataset.logger
 
 /**
   * Parent class for regression datasets. For classification, see [[Dataset]].
@@ -382,12 +382,12 @@ class InformationGain( var datumCount:Int = 0,
 }
 */
 
-object RVFRegDataset {
+object RVFRegDataset extends ZipIdentifying {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   def mkRegDatasetFromSvmLightResource(path: String): RVFRegDataset[String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -397,7 +397,7 @@ object RVFRegDataset {
 
   /** reads dataset from a file */
   def mkRegDatasetFromSvmLightFormat(filename: String): RVFRegDataset[String] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
@@ -473,7 +473,7 @@ object RVFRegDataset {
 
   def mkDatumsFromSvmLightResource(path: String): Iterable[Datum[Double, String]] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -483,7 +483,7 @@ object RVFRegDataset {
 
   /** reads dataset from a file */
   def mkDatumsFromSvmLightFormat(filename: String): Iterable[Datum[Double, String]] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {

@@ -360,7 +360,7 @@ class TestGraphPattern extends Test {
     val ee = ExtractorEngine(rule)
     val results = ee.extractFrom(doc, state)
 
-    results.filter(_ matches "Positive_activation") should have size (1)
+    results.filter(_.matches("Positive_activation")) should have size (1)
 
   }
 

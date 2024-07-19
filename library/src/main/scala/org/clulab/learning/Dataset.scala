@@ -15,6 +15,10 @@ import scala.util.Using
 
 import RVFDataset._
 
+trait ZipIdentifying {
+  def isZipped(name: String): Boolean = name.endsWith(".gz")
+}
+
 /**
  * Parent class for classification datasets
  * User: mihais
@@ -386,12 +390,12 @@ class InformationGain( var datumCount:Int = 0,
   def pWithout(total:InformationGain): Double = (total.datumCount - datumCount).toDouble / total.datumCount.toDouble
 }
 
-object RVFDataset {
+object RVFDataset extends ZipIdentifying {
   val logger: Logger = LoggerFactory.getLogger(classOf[RVFDataset[String, String]])
 
   def mkDatasetFromSvmLightResource(path: String): RVFDataset[Int, String] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -401,7 +405,7 @@ object RVFDataset {
 
   /** reads dataset from a file */
   def mkDatasetFromSvmLightFormat(filename: String): RVFDataset[Int, String] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {
@@ -477,7 +481,7 @@ object RVFDataset {
 
   def mkDatumsFromSvmLightResource(path: String): Iterable[Datum[Int, String]] = {
     val stream = getClass.getClassLoader.getResourceAsStream(path)
-    val source = if (path endsWith ".gz") {
+    val source = if (isZipped(path)) {
       Source.fromInputStream(new GZIPInputStream(stream))
     } else {
       Source.fromInputStream(stream)
@@ -487,7 +491,7 @@ object RVFDataset {
 
   /** reads dataset from a file */
   def mkDatumsFromSvmLightFormat(filename: String): Iterable[Datum[Int, String]] = {
-    val source = if (filename endsWith ".gz") {
+    val source = if (isZipped(filename)) {
       val stream = Files.newGZIPInputStream(filename)
       Source.fromInputStream(stream)
     } else {

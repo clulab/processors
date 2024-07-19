@@ -1,5 +1,6 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
+import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
 object ProcessorsScalaExample extends App {

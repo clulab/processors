@@ -1,7 +1,6 @@
-package org.clulab.odinstarter
+package org.clulab.processors.apps
 
-import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.Mention
+import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils

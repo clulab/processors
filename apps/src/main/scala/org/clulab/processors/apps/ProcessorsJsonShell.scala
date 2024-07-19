@@ -1,4 +1,4 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
 import org.clulab.serialization.json4StopGraph.JSONSerializer
 import org.clulab.utils.Menu

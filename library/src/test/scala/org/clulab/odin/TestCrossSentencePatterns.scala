@@ -39,7 +39,7 @@ class TestCrossSentencePatterns extends Test {
     val ee1 = ExtractorEngine(rule1)
     val mentions1 = ee1.extractFrom(doc, state)
     mentions1 should have size (1)
-    (mentions1.head matches "Coref") should be (true)
+    (mentions1.head.matches("Coref")) should be (true)
 
     // try with rule2
     val rule2 =
@@ -62,7 +62,7 @@ class TestCrossSentencePatterns extends Test {
     val ee2 = ExtractorEngine(rule2)
     val mentions2 = ee2.extractFrom(doc, state)
     mentions2 should have size (1)
-    (mentions2.head matches "Coref") should be (true)
+    (mentions2.head.matches("Coref")) should be (true)
 
   }
 
@@ -148,7 +148,7 @@ class TestCrossSentencePatterns extends Test {
     prec.arguments.keys should contain("after")
     prec.arguments("after") should have size(1)
     val Seq(after) = prec.arguments("after")
-    after matches "Positive_regulation" should be(true)
+    after.matches("Positive_regulation") should be(true)
   }
 
   it should "not match in the same sentence" in {
@@ -213,7 +213,7 @@ class TestCrossSentencePatterns extends Test {
       """.stripMargin
 
     val ee = ExtractorEngine(rules)
-    val mentions = ee.extractFrom(doc, state).filter(_ matches "Precedence")
+    val mentions = ee.extractFrom(doc, state).filter(_.matches("Precedence"))
     mentions should have size (0)
   }
 }

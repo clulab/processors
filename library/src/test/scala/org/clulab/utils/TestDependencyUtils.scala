@@ -129,4 +129,14 @@ class TestDependencyUtils extends Test {
     distToRootOpt(interval, graph) should be (Some(1))
   }
 
+  it should "only match complete stop tags" in {
+    val stopTags = "(\\.|,|\\(|\\)|:|''|``|#|$|CC|TO|IN)"
+
+    ".".matches(stopTags) should be (true)
+    "C".matches(stopTags) should be (false)
+    "CC".matches(stopTags) should be (true)
+    "CCC".matches(stopTags) should be (false)
+    "CC1".matches(stopTags) should be (false)
+    "1CC".matches(stopTags) should be (false)
+  }
 }

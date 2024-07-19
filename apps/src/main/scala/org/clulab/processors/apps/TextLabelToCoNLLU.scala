@@ -1,15 +1,14 @@
-package org.clulab.processors
-
+package org.clulab.processors.apps
 
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.struct.GraphMap
-import org.clulab.utils.StringUtils
+import org.clulab.utils.{FileUtils, Sourcer, StringUtils}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.{File, FileFilter, PrintWriter}
 import scala.util.Using
-
-import TextToCoNLLU._
+import TextLabelToCoNLLU._
+import org.clulab.processors.{Document, Processor}
 
 /**
   * Processes raw text and saves the output in the CoNLL-U format
@@ -17,9 +16,9 @@ import TextToCoNLLU._
   *
   * @author Mihai
   */
-class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
+class TextLabelToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
   def convert(inDir:File, outDir:File): Unit = {
-    val inFiles = inDir.listFiles(new TextFileFilter)
+    val inFiles = inDir.listFiles(new TextLabelFileFilter)
     logger.info(s"Found ${inFiles.length} text file(s) to process.")
     for(f <- inFiles) {
       logger.debug(s"Parsing file $f...")
@@ -42,6 +41,7 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
   def toCoNLLU(doc:Document, pw:PrintWriter): Unit = {
     var sentenceCount = 0
     for(sent <- doc.sentences) {
+      println(sent)
       sentenceCount += 1
       pw.println(s"# Sentence #$sentenceCount:")
       pw.println(s"# ${sent.words.mkString(" ")}")
@@ -60,22 +60,38 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
         val deprel =
           if(deps(i) != null && deps(i).nonEmpty) deps(i).head._2
           else "root"
-        pw.println(s"${i + 1}\t$word\t$lemma\t$upos\t$xpos\t$feats\t$head\t$deprel")
+        
+        // Generate labels (UI, L, AU)
+        val textLabel =
+          if(word.toUpperCase().equals(word) && (word.filter(_.isLetter)).length != 0) "UA"
+          else if (Character.isUpperCase(word.charAt(0))) "UI"
+          else "L"
+        
+        // Lower case the text
+        val lowerCasedWord = word.toLowerCase
+        pw.println(s"${i + 1}\t$lowerCasedWord\t$textLabel")
+
       }
       pw.println()
     }
   }
 
   def parseFile(f:File):Document = {
-    val buffer = new StringBuilder
-    Using.resource(scala.io.Source.fromFile(f)) { s =>
-      for (line <- s.getLines()) {
-        buffer.append(line)
-        buffer.append("\n")
-      }
+    def option1(): Document = {
+      val tokens = Using.resource(Sourcer.sourceFromFile(f)) { source =>
+        for (line <- source.getLines())
+          yield line.split(' ').toSeq
+      }.toSeq
+      println(tokens)
+      proc.mkDocumentFromTokens(tokens)
     }
 
-    val doc = proc.mkDocument(buffer.toString())
+    def option2(): Document = {
+      val text = FileUtils.getTextFromFile(f)
+      proc.mkDocument(text)
+    }
+
+    val doc = option2()
     annotate(doc)
     doc
   }
@@ -84,24 +100,23 @@ class TextToCoNLLU(val proc:Processor, val isCoreNLP:Boolean) {
     if(isCoreNLP) {
       proc.tagPartsOfSpeech(doc)
       proc.lemmatize(doc)
+      proc.parse(doc)
     } else {
-      proc.lemmatize(doc)
-      proc.tagPartsOfSpeech(doc)
+      proc.annotate(doc)
     }
-    proc.parse(doc)
     doc.clear()
   }
 }
 
-class TextFileFilter extends FileFilter {
+class TextLabelFileFilter extends FileFilter {
   override def accept(pathname: File): Boolean = pathname.getName.endsWith(".txt")
 }
 
-object TextToCoNLLU {
-  val logger: Logger = LoggerFactory.getLogger(classOf[TextToCoNLLU])
+object TextLabelToCoNLLU {
+  val logger: Logger = LoggerFactory.getLogger(classOf[TextLabelToCoNLLU])
 
   def usage(): Unit = {
-    println("Usage: org.clulab.processors.TextToCoNLLU -indir <input directory with text file> -outdir <output directory> -proc [clu]|corenlp")
+    println("Usage: org.clulab.processors.TextLabelToCoNLLU -indir <input directory with text file> -outdir <output directory> -proc [clu]|corenlp")
   }
 
   def main(args:Array[String]): Unit = {
@@ -112,8 +127,11 @@ object TextToCoNLLU {
 
     val props = StringUtils.argsToMap(args)
 
-    val proc = Processor()
-    val converter = new TextToCoNLLU(proc, false)
+    val proc =
+      if (props.get("proc").exists(_ == "corenlp")) new BalaurProcessor()
+      else new BalaurProcessor()
+    val isCoreNLP = props.get("proc").exists(_ == "corenlp")
+    val converter = new TextLabelToCoNLLU(proc, isCoreNLP)
 
     val inDirName = props.getOrElse("indir", {
       usage()
@@ -138,3 +156,4 @@ object TextToCoNLLU {
     converter.convert(inDir, outDir)
   }
 }
+

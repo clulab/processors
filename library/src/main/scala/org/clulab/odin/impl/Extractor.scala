@@ -46,8 +46,8 @@ class TokenExtractor(
   }
 
   def mkMention(r: TokenPattern.Result, sent: Int, doc: Document): Mention = {
-    val groupsTrigger = r.groups.keys find (_ equalsIgnoreCase "trigger")
-    val mentionsTrigger = r.mentions.keys find (_ equalsIgnoreCase "trigger")
+    val groupsTrigger = r.groups.keys find (_.equalsIgnoreCase("trigger"))
+    val mentionsTrigger = r.mentions.keys find (_.equalsIgnoreCase("trigger"))
     (groupsTrigger, mentionsTrigger) match {
       case (Some(groupTriggerKey), Some(mentionTriggerKey)) =>
         // Can't have both notations
@@ -141,7 +141,7 @@ class CrossSentenceExtractor(
         // the span should match exactly
         (mention.tokenInterval == m.tokenInterval) &&
         // the label should match
-        (mention matches m.label)
+        (mention.matches(m.label))
       }
     }
 

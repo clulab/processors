@@ -657,7 +657,7 @@ class TestTokenPattern extends Test {
     val results = ee.extractFrom(doc)
 
     results should have size (1)
-    results.count(_ matches "LearnedDoctor") should equal(1)
+    results.count(_.matches("LearnedDoctor")) should equal(1)
   }
 
   // match person if it is not preceded by a sequence of titles (starting at beginning of sentence)
@@ -703,7 +703,7 @@ class TestTokenPattern extends Test {
     val text9a = "Herr Professor Doktor Faust, may I see you in my office?"
     val doc9a = jsonStringToDocument(""" {"sentences":[{"raw":["Herr","Professor","Doktor","Faust",",","may","I","see","you","in","my","office","?"],"words":["Herr","Professor","Doktor","Faust",",","may","I","see","you","in","my","office","?"],"startOffsets":[0,5,15,22,27,29,33,35,39,43,46,49,55],"endOffsets":[4,14,21,27,28,32,34,38,42,45,48,55,56],"tags":["NNP","NNP","NNP","NNP",",","MD","PRP","VB","PRP","IN","PRP$","NN","."],"lemmas":["Herr","Professor","Doktor","Faust",",","may","I","see","you","in","my","office","?"],"entities":["B-Gene_or_gene_product","I-Gene_or_gene_product","I-Gene_or_gene_product","I-Gene_or_gene_product","O","O","O","O","O","O","O","O","O"],"chunks":["O","B-NP","I-NP","I-NP","O","O","B-NP","B-VP","B-NP","B-PP","B-NP","I-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":3,"destination":0,"relation":"nn"},{"source":3,"destination":1,"relation":"nn"},{"source":3,"destination":2,"relation":"nn"},{"source":5,"destination":3,"relation":"nsubj"},{"source":5,"destination":6,"relation":"dobj"},{"source":5,"destination":7,"relation":"dep"},{"source":7,"destination":8,"relation":"dobj"},{"source":7,"destination":9,"relation":"prep"},{"source":9,"destination":11,"relation":"pobj"},{"source":11,"destination":10,"relation":"poss"}],"roots":[5]},"stanford-collapsed":{"edges":[{"source":3,"destination":0,"relation":"nn"},{"source":3,"destination":1,"relation":"nn"},{"source":3,"destination":2,"relation":"nn"},{"source":5,"destination":3,"relation":"nsubj"},{"source":5,"destination":6,"relation":"dobj"},{"source":5,"destination":7,"relation":"dep"},{"source":7,"destination":8,"relation":"dobj"},{"source":7,"destination":11,"relation":"prep_in"},{"source":11,"destination":10,"relation":"poss"}],"roots":[5]}}}]} """)
     val results9a = ee.extractFrom(doc9a)
-    val titlelessDudeMentions9a = results9a.filter(_.label matches "TitlelessDude")
+    val titlelessDudeMentions9a = results9a.filter(_.label.matches("TitlelessDude"))
     // Should have (3) Title and (1) Person
     results9a should have size (4)
     titlelessDudeMentions9a should have size (0)
@@ -711,7 +711,7 @@ class TestTokenPattern extends Test {
     val text9b = "Faust is a friend of mine."
     val doc9b = jsonStringToDocument(""" {"sentences":[{"raw":["Faust","is","a","friend","of","mine","."],"words":["Faust","is","a","friend","of","mine","."],"startOffsets":[0,6,9,11,18,21,25],"endOffsets":[5,8,10,17,20,25,26],"tags":["NNP","VBZ","DT","NN","IN","NN","."],"lemmas":["Faust","be","a","friend","of","mine","."],"entities":["O","O","O","O","O","B-Family","O"],"chunks":["B-NP","B-VP","B-NP","I-NP","B-PP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":3,"destination":0,"relation":"nsubj"},{"source":3,"destination":1,"relation":"cop"},{"source":3,"destination":2,"relation":"det"},{"source":3,"destination":4,"relation":"prep"},{"source":4,"destination":5,"relation":"pobj"}],"roots":[3]},"stanford-collapsed":{"edges":[{"source":3,"destination":0,"relation":"nsubj"},{"source":3,"destination":1,"relation":"cop"},{"source":3,"destination":2,"relation":"det"},{"source":3,"destination":5,"relation":"prep_of"}],"roots":[3]}}}]} """)
     val results9b = ee.extractFrom(doc9b)
-    val titlelessDudeMentions9b = results9b.filter(_.label matches "TitlelessDude")
+    val titlelessDudeMentions9b = results9b.filter(_.label.matches("TitlelessDude"))
     // Should have (1) Person and (1) TitlelessDude
     results9b should have size (2)
     titlelessDudeMentions9b should have size (1)

@@ -1,9 +1,9 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
 import de.jollyday.{HolidayCalendar, HolidayManager, ManagerParameters}
 import org.joda.time.LocalDate
 
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object GenerateHolidaysApp extends App {
   val holidayManager = HolidayManager.getInstance(ManagerParameters.create(HolidayCalendar.UNITED_STATES))

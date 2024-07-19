@@ -1,4 +1,4 @@
-package org.clulab.processors
+package org.clulab.processors.apps
 
 import org.clulab.sequences.ColumnReader
 import org.clulab.struct.DirectedGraph
