@@ -15,6 +15,7 @@ val scala3   = scala31
 // Scala32: This is for experimentation, as in Scala Next, and not for release.
 // Scala33: This is the first official LTS, but hold off until necessary.
 ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
+ThisBuild / javacOptions ++= Seq("-source", "8", "-target", "8")
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
@@ -40,6 +41,12 @@ lazy val webapp = project
     // scala211 isn't compiling and complains on twirlCompileTemplates.
     // This isn't a library.  Only one version needs to work.  We shouldn't use play for this anyway.
     crossScalaVersions := Seq(scala212)
+  )
+
+lazy val webapp2 = project
+  .dependsOn(library % "compile -> compile; test -> test")
+  .settings(
+    crossScalaVersions := Seq(scala212, scala213, scala3)
   )
 
 addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
