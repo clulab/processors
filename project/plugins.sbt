@@ -7,3 +7,4 @@ addSbtPlugin("org.xerial.sbt"    % "sbt-sonatype" % "2.3")     // up to 3.9.21 *
 addSbtPlugin("com.typesafe.play" % "sbt-plugin"   % "2.8.19")  // up to 3.0.4
 addSbtPlugin("com.github.gseitz" % "sbt-release"  % "1.0.13")  // up to 1.4.0
 // * Held back out of an abundance of caution.
+addSbtPlugin("com.eed3si9n"      % "sbt-assembly" % "2.2.0")
