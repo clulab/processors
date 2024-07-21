@@ -13,11 +13,11 @@ object WebApp extends IOApp {
   object ParseTextQueryParamMatcher extends QueryParamDecoderMatcher[String]("text")
 
   def process(request: Request[IO])(block: => JValue): IO[Response[IO]] = {
-    println()
-    println(s" Enter: ${request.pathInfo}")
+    // println()
+    // println(s" Enter: ${request.pathInfo}")
     val result = JsonMethods.pretty(block)
-    println(s"Result: $result")
-    println(s"  Exit: ${request.method}")
+    // println(s"Result: $result")
+    // println(s"  Exit: ${request.method}")
     val response = Ok(result)
 
     response
@@ -38,7 +38,7 @@ object WebApp extends IOApp {
   val serverBuilder = EmberServerBuilder
       .default[IO]
       .withHost(ipv4"127.0.0.1")
-      .withPort(port"9000")
+      .withPort(port"9001")
       .withHttpApp(app)
 
   override def run(args: List[String]): IO[ExitCode] = {

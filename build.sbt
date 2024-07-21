@@ -46,7 +46,7 @@ lazy val webapp = project
 lazy val webapp2 = project
   .dependsOn(library % "compile -> compile; test -> test")
   .settings(
-    crossScalaVersions := Seq(scala212, scala213, scala3)
+    crossScalaVersions := Seq(scala212, scala213) // , scala3) no json4s yet
   )
 
 addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")

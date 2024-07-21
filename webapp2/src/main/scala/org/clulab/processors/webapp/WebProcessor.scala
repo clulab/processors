@@ -14,6 +14,22 @@ import scala.beans.BeanProperty
 import scala.jdk.CollectionConverters._
 
 class WebProcessor() {
+  implicit val mentionOrder: Ordering[Mention] = {
+    val mentionRank: Map[Class[_], Int] = Map(
+      classOf[TextBoundMention] -> 0,
+      classOf[EventMention] -> 1,
+      classOf[RelationMention] -> 2,
+      classOf[CrossSentenceMention] -> 3
+    )
+
+    Unordered[Mention]
+      .orElseBy(_.sentence)
+      .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
+      .orElseBy(_.getClass.getName)
+      .orElseBy(_.arguments.size)
+      .orElseBy(_.tokenInterval)
+      .orElse(-1)
+  }
 
   def initialize(): (Processor, ExtractorEngine) = {
     println("[processors] Initializing the processor ...")
@@ -28,7 +44,7 @@ class WebProcessor() {
     val processor = {
       val kbs = customLexiconNerConfigs.map(_.kb)
       val caseInsensitiveMatchings = customLexiconNerConfigs.map(_.caseInsensitiveMatching)
-      val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
+      val customLexiconNer = LexiconNER(kbs.toSeq, caseInsensitiveMatchings.toSeq, None)
       val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
 
       processor
@@ -46,23 +62,6 @@ class WebProcessor() {
     }
     println("[processors] Completed Initialization ...")
     (processor, extractorEngine)
-  }
-
-  implicit val mentionOrder = {
-    val mentionRank: Map[Class[_], Int] = Map(
-      classOf[TextBoundMention] -> 0,
-      classOf[EventMention] -> 1,
-      classOf[RelationMention] -> 2,
-      classOf[CrossSentenceMention] -> 3
-    )
-
-    Unordered[Mention]
-      .orElseBy(_.sentence)
-      .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
-      .orElseBy(_.getClass.getName)
-      .orElseBy(_.arguments.size)
-      .orElseBy(_.tokenInterval)
-      .orElse(-1)
   }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
