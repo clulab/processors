@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sbt 'apps/runMain org.clulab.processors.apps.EvaluateProcessorParser'
+
