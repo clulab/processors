@@ -6,7 +6,9 @@ nav_order: 2
 
 # Installation
 
-This software requires `Java` 8 or higher and `Scala` 2.11 or higher.  `Scala` is often installed as part of [sbt](https://www.scala-sbt.org/download.html), the Scala Build Tool, which one would need to build the project or incorporate it into a different `Scala` project.  `sbt` will be configured to use a compatible version of `Scala` automatically.
+This software requires `Java` 8 or higher.
+
+If you plan to use it with Scala, it also needs `Scala` 2.11 or higher.  `Scala` is often installed as part of [sbt](https://www.scala-sbt.org/download.html), the Scala Build Tool, which one would need to build the project or incorporate it into a different `Scala` project.  `sbt` will be configured to use a compatible version of `Scala` automatically.
 
 Beyond that, the bulk of this software is available in compiled jars on [Maven Central](https://search.maven.org/search?q=g:org.clulab%20a:processors*) and in source code at [GitHub](https://github.com/clulab/processors).
 
