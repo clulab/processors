@@ -40,6 +40,8 @@ libraryDependencies ++= {
   }
 
   Seq(
+    // debugger
+    "com.lihaoyi"                %% "sourcecode"               % "0.3.0",        // as of 2023-08-30 up to 0.3.0
     // common tools
     "commons-io"                  % "commons-io"               % "2.5", // Apache-2.0
     "com.typesafe"                % "config"                   % "1.3.1", // Apache-2.0
