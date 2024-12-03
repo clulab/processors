@@ -30,8 +30,9 @@ Most of the examples here use Scala. However, this software can be used as is fr
 This code is also available in the `org.clulab.processors.apps.ProcessorsScalaExample` object.
 
 ```scala
-package org.clulab.processors
+package org.clulab.processors.apps
 
+import org.clulab.processors.{Document, Processor}
 import org.clulab.struct.DirectedGraphEdgeIterator
 
 object ProcessorsScalaExample extends App {
@@ -166,23 +167,21 @@ As of v5.9.6, `Document` and `Mention` instances can be serialized to/from `json
 Scala is (largely) compatible with Java, so this library can be directly used from Java. The code below shows an example. This code is also available in the `org.clulab.processors.apps.ProcessorsJavaExample` class.
 
 ```java
-package org.clulab.processors;
+package org.clulab.processors.apps;
 
+import org.clulab.processors.Document;
 import org.clulab.processors.Processor;
+import org.clulab.processors.Processor$;
+import org.clulab.processors.Sentence;
 import org.clulab.struct.DirectedGraphEdgeIterator;
 import org.clulab.utils.JavaUtils;
 
-import scala.Option;
-import scala.collection.immutable.HashMap;
-import scala.collection.immutable.Map;
-
-import java.util.Arrays;
 import java.util.Iterator;
 
 public class ProcessorsJavaExample {
     public static void main(String [] args) throws Exception {
         // Create the processor
-        Processor proc = Processor.mkProcessor();
+        Processor proc = Processor$.MODULE$.mkProcessor();
 
         // The actual work is done here.
         Document doc = proc.annotate("John Smith went to China. He visited Beijing on January 10th, 2013.", false);
