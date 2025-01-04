@@ -34,6 +34,7 @@ object CoNLLUSerializer {
           } else {
             (UNDEF, UNDEF)
           }
+        val deps = UNDEF
 
         // extra info specific to us
         val startOffset = sent.startOffsets(i)
@@ -42,7 +43,7 @@ object CoNLLUSerializer {
         val entNorm = if(sent.norms.isDefined && sent.norms.get(i).nonEmpty) sent.norms.get(i) else UNDEF
         val chunk = if(sent.chunks.isDefined) sent.chunks.get(i) else UNDEF
 
-        pw.println(s"$id\t$form\t$lemma\t$upos\t$xpos\t$feats\t$head\t$depRel\t$startOffset\t$endOffset\t$ent\t$entNorm\t$chunk")
+        pw.println(s"$id\t$form\t$lemma\t$upos\t$xpos\t$feats\t$head\t$depRel\t$deps\t$startOffset\t$endOffset\t$ent\t$entNorm\t$chunk")
       }
 
       pw.println()
