@@ -45,13 +45,14 @@ object CommandLineInterface extends App {
         proc.annotate(rawText)
       }
 
-    val (pw, close) = mkOutput()
-    CoNLLUSerializer.saveCoNLLUExtended(pw, doc)
-    if(close) pw.close()
-  }
-
-  def mkOutput(): (PrintWriter, Boolean) = {
-    if(props.containsKey(OUTPUT)) (FileUtils.printWriterFromFile(props.getProperty(OUTPUT)), true)
-    else (new PrintWriter(System.out), false)
+    if(props.containsKey(OUTPUT)) {
+      val pw = FileUtils.printWriterFromFile(props.getProperty(OUTPUT))
+      CoNLLUSerializer.saveCoNLLUExtended(pw, doc)
+      pw.close()
+    } else {
+      val pw = new PrintWriter(System.out)
+      CoNLLUSerializer.saveCoNLLUExtended(pw, doc)
+      pw.flush()
+    }
   }
 }
