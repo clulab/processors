@@ -6,6 +6,7 @@ import org.clulab.serialization.CoNLLUSerializer
 import org.clulab.utils.{FileUtils, StringUtils}
 
 import java.io.PrintWriter
+import scala.collection.mutable.ArrayBuffer
 
 object CommandLineInterface extends App {
   // specifies the input file
@@ -13,9 +14,8 @@ object CommandLineInterface extends App {
   // specifies the output file; if not provided uses stdout
   val OUTPUT = "output"
 
-  // input formats:
-  val RAW = "raw"
-  val SENTS = "sents"
+  // input formats, other than raw text:
+  val SENTS = "sentences"
   val TOKENS = "tokens"
 
   val props = StringUtils.argsToProperties(args)
@@ -29,11 +29,20 @@ object CommandLineInterface extends App {
     val proc = new BalaurProcessor()
 
     val doc: Document =
-      if (props.containsKey(RAW)) {
+      if (props.containsKey(SENTS)) {
+        // one sentence per line; sentences are NOT tokenized
+        val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
+        proc.annotateFromSentences(sents.toIterable)
+      } else if(props.containsKey(TOKENS)) {
+        // one sentence per line; sentences are tokenized
+        val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
+        val tokenizedSents = new ArrayBuffer[Iterable[String]]()
+        for(sent <- sents) tokenizedSents += sent.split("\\s+")
+        proc.annotateFromTokens(tokenizedSents)
+      } else {
+        // assume raw text
         val rawText = FileUtils.getTextFromFile(props.getProperty(INPUT))
         proc.annotate(rawText)
-      } else {
-        throw new RuntimeException(s"ERROR: unknown input file format. Please use one of: $RAW|$SENTS|$TOKENS.")
       }
 
     val pw = mkOutput()

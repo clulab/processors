@@ -61,7 +61,7 @@ object FileUtils {
       getCommentedLinesFromSource(source).mkString(sep)
     }
 
-  protected def getTextFromSource(source: Source): String = source.mkString
+  private def getTextFromSource(source: Source): String = source.mkString
 
   def getTextFromResource(path: String): String =
     Using.resource(Sourcer.sourceFromResource(path)) { source =>
@@ -77,6 +77,22 @@ object FileUtils {
     Using.resource(Sourcer.sourceFromFile(new File(path))) { source =>
       getTextFromSource(source)
     }
+
+  def getLinesFromFile(path: String): Iterable[String] =
+    Using.resource(Sourcer.sourceFromFile(new File(path))) { source =>
+      getLinesFromSource(source)
+    }
+
+  def getLinesFromFile(file: File): Iterable[String] =
+    Using.resource(Sourcer.sourceFromFile(file)) { source =>
+      getLinesFromSource(source)
+    }
+
+  private def getLinesFromSource(source: Source): Iterable[String] = {
+    val lines = source.getLines().toVector
+    // println(lines.mkString("\n"))
+    lines
+  }
 
   def copyResourceToFile(src: String, dest: File): Unit = {
     Using.resources(
