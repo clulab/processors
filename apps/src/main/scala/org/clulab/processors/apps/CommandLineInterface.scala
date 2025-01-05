@@ -6,7 +6,7 @@ import org.clulab.serialization.CoNLLUSerializer
 import org.clulab.utils.{FileUtils, StringUtils}
 
 import java.io.PrintWriter
-import scala.collection.mutable.ArrayBuffer
+import scala.util.Using
 
 object CommandLineInterface extends App {
   // specifies the input file
@@ -32,12 +32,11 @@ object CommandLineInterface extends App {
       if (props.containsKey(SENTS)) {
         // one sentence per line; sentences are NOT tokenized
         val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
-        proc.annotateFromSentences(sents.toIterable)
+        proc.annotateFromSentences(sents)
       } else if(props.containsKey(TOKENS)) {
         // one sentence per line; sentences are tokenized
         val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
-        val tokenizedSents = new ArrayBuffer[Iterable[String]]()
-        for(sent <- sents) tokenizedSents += sent.split("\\s+")
+        val tokenizedSents = sents.map(_.split("\\s+").toIterable)
         proc.annotateFromTokens(tokenizedSents)
       } else {
         // assume raw text
@@ -45,14 +44,15 @@ object CommandLineInterface extends App {
         proc.annotate(rawText)
       }
 
-    if(props.containsKey(OUTPUT)) {
-      val pw = FileUtils.printWriterFromFile(props.getProperty(OUTPUT))
+    val pw: PrintWriter =
+      if(props.containsKey(OUTPUT)) {
+        FileUtils.printWriterFromFile(props.getProperty(OUTPUT))
+      } else {
+        FileUtils.printWriterFromSystemOut()
+      }
+
+    Using.resource(pw) { pw  =>
       CoNLLUSerializer.saveCoNLLUExtended(pw, doc)
-      pw.close()
-    } else {
-      val pw = new PrintWriter(System.out)
-      CoNLLUSerializer.saveCoNLLUExtended(pw, doc)
-      pw.flush()
     }
   }
 }
