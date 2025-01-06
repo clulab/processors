@@ -4,12 +4,22 @@ import org.clulab.scala.WrappedArray._
 
 import java.io._
 import java.net.URL
-import java.nio.file.{Files => JFiles, Path, Paths}
+import java.nio.charset.Charset
+import java.nio.file.{Path, Paths, Files => JFiles}
 import java.nio.file.StandardCopyOption
 import java.util.zip.ZipFile
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 import scala.util.Using
+
+
+class SystemOutPrintWriter extends
+    // The point here is to insist on UTF-8 even if it isn't the default.
+    PrintWriter(new BufferedWriter(new OutputStreamWriter(System.out, Sourcer.utf8)), false) {
+
+  // We do not want to close System.out as a side effect.
+  override def close(): Unit = flush()
+}
 
 object FileUtils {
   def appendingPrintWriterFromFile(file: File): PrintWriter = Sinker.printWriterFromFile(file, append = true)
@@ -19,6 +29,8 @@ object FileUtils {
   def printWriterFromFile(file: File): PrintWriter = Sinker.printWriterFromFile(file, append = false)
 
   def printWriterFromFile(path: String): PrintWriter = Sinker.printWriterFromFile(path, append = false)
+
+  def printWriterFromSystemOut(): PrintWriter = new SystemOutPrintWriter()
 
   // See https://rosettacode.org/wiki/Walk_a_directory/Recursively#Scala.
   def walkTree(file: File): Iterable[File] = {
@@ -61,7 +73,7 @@ object FileUtils {
       getCommentedLinesFromSource(source).mkString(sep)
     }
 
-  protected def getTextFromSource(source: Source): String = source.mkString
+  private def getTextFromSource(source: Source): String = source.mkString
 
   def getTextFromResource(path: String): String =
     Using.resource(Sourcer.sourceFromResource(path)) { source =>
@@ -77,6 +89,22 @@ object FileUtils {
     Using.resource(Sourcer.sourceFromFile(new File(path))) { source =>
       getTextFromSource(source)
     }
+
+  def getLinesFromFile(path: String): Iterable[String] =
+    Using.resource(Sourcer.sourceFromFile(new File(path))) { source =>
+      getLinesFromSource(source)
+    }
+
+  def getLinesFromFile(file: File): Iterable[String] =
+    Using.resource(Sourcer.sourceFromFile(file)) { source =>
+      getLinesFromSource(source)
+    }
+
+  private def getLinesFromSource(source: Source): Iterable[String] = {
+    val lines = source.getLines().toVector
+    // println(lines.mkString("\n"))
+    lines
+  }
 
   def copyResourceToFile(src: String, dest: File): Unit = {
     Using.resources(

@@ -1,3 +1,4 @@
++ **10.0.1** - Added CommandLineInterface for batch parsing jobs.
 + **10.0.0** - MAJOR reorganization. New syntactic parser in BalaurProcessor using the algorithm of Amini et al. (2023). Removed CoreNLP and GloVe. Everything is Apache now.
 + **9.0.0** - Replace CluProcessor with BalaurProcessor
 + **8.5.?** - Adjust processing of weeks as in "The first two weeks of the month"

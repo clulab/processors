@@ -1,2 +1,2 @@
 #!/bin/bash
-sbt 'apps/runMain org.clulab.processors.apps.ProcessorsShell'
+sbt 'apps/runMain org.clulab.processors.apps.CommandLineInterface'
