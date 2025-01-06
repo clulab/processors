@@ -64,7 +64,7 @@ If the input file contains one, untokenized sentence per line, as in:
 John Doe visited China.  
 His visit was on Jan 1st, 2024.  
 ```
-the command `java -jar <JAR FILE NAME> -input input.txt -sentences -output output.txt` produces the same output as above.
+the command `java -jar <JAR FILE NAME> -input input.txt -sentences -output output.txt` produces the same output as above (with start end end character offsets adjusted).
 
 If the input file contains one, tokenized sentence per line, as in:
 ```
