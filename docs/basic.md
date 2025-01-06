@@ -22,23 +22,11 @@ where the `<JAR FILE NAME>` is the name of the file you downloaded in the previo
 - ENTITY_NORM: normalized entity value for numeric entities, e.g., "2024-01-01" for the phrase "January 1st, 2024".  
 - CHUNK: syntactic chunk label, from the [CoNLL-2000 shared task](https://arxiv.org/pdf/cs/0009008).  
 
-# Slightly less Basic Usage
-
-If `input` is not specified in the command line, i.e., the command line is simply `java -jar <JAR FILE NAME>`, the software starts an interactive shell where the user can type the text to be parsed and the output is displayed when pressing `Enter`.
-
-If `output` is not specified in the command line, the CoNLL-U format will be displayed in the standard output.
-
-The input file can be in one of three possible formats:
-
-1. Raw, natural language text. This is the default option, which requires no additional command line parameters.  
-2. If the parameter `-sentences` is specified, the input file should contain one sentence per line. The sentences are not tokenized.  
-3. If the parameter `-tokens` is specified, the input file should contain one sentence per line, and sentences must be pre-tokenized using white spaces.  
-
 For example, if the input file `input.txt` contains the following raw text:
 ```
 John Doe visited China. His visit was on Jan 1st, 2024.
 ```
-the command line `java -jar <JAR FILE NAME> -input input.txt -output output.txt` produces the following output:
+the command line `java -jar <JAR FILE NAME> -input input.txt -output output.txt` produces the following output in `output.txt`:
 
 ```
 1       John    john    NNP     _       _       2       compound        _       0       4       B-PER   _       B-NP  
@@ -59,7 +47,17 @@ the command line `java -jar <JAR FILE NAME> -input input.txt -output output.txt`
   
 ```
 
-If the input file contains one, untokenized sentence per line, as in:
+# Slightly less Basic Usage
+
+If `input` is not specified in the command line, i.e., the command line is simply `java -jar <JAR FILE NAME>`, the software starts an interactive shell where the user can type the text to be parsed and the output is displayed when pressing `Enter`.
+
+If `output` is not specified in the command line, the CoNLL-U format will be displayed in the standard output.
+
+The input file can be in one of three possible formats:
+
+1. Raw, natural language text. This is the default option, which requires no additional command line parameters.  
+2. If the parameter `-sentences` is specified, the input file should contain one sentence per line. The sentences are not tokenized.  
+3. If the parameter `-tokens` is specified, the input file should contain one sentence per line, and sentences must be pre-tokenized using white spaces. For example, if the input file contains one, untokenized sentence per line, as in:
 ```
 John Doe visited China.  
 His visit was on Jan 1st, 2024.  
