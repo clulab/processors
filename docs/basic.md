@@ -57,7 +57,9 @@ The input file can be in one of three possible formats:
 
 1. Raw, natural language text. This is the default option, which requires no additional command line parameters.  
 2. If the parameter `-sentences` is specified, the input file should contain one sentence per line. The sentences are not tokenized.  
-3. If the parameter `-tokens` is specified, the input file should contain one sentence per line, and sentences must be pre-tokenized using white spaces. For example, if the input file contains one, untokenized sentence per line, as in:
+3. If the parameter `-tokens` is specified, the input file should contain one sentence per line, and sentences must be pre-tokenized using white spaces.  
+
+For example, if the input file contains one, untokenized sentence per line, as in:
 ```
 John Doe visited China.  
 His visit was on Jan 1st, 2024.  
