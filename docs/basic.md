@@ -16,11 +16,11 @@ java -jar <JAR FILE NAME> -input <INPUT TEXT FILE> -output <OUTPUT FILE>
 ```
 where the `<JAR FILE NAME>` is the name of the file you downloaded in the previous step, `<INPUT TEXT FILE>` is the input file, which contains plain text (just English for now), and `<OUTPUT FILE>` is the name of the file where the `processors` outputs will be saved. The outputs are saved in a format compatible with the [CoNLL-U format](https://universaldependencies.org/format.html). In particular, the first 9 columns (`ID, FORM, LEMMA, UPOS, XPOS, FEATS, HEAD, DEPREL, DEPS`) are the same as CoNLL-U, with the caveat that `XPOS`, `FEATS`, and `DEPS` are not populated (i.e., they contain `_`). Instead of the 10th column (`MISC`), we use 5 additional columns:
 
-1. START_OFFSET: start character offset for the current token.  
-2. END_OFFSET: end character offset for the current token.  
-3. ENTITY: named or numeric entity label.  
-4. ENTITY_NORM: normalized entity value for numeric entities, e.g., "2024-01-01" for the phrase "January 1st, 2024".  
-5. CHUNK: syntactic chunk label, from the [CoNLL-2000 shared task](https://arxiv.org/pdf/cs/0009008).  
+- START_OFFSET: start character offset for the current token.  
+- END_OFFSET: end character offset for the current token.  
+- ENTITY: named or numeric entity label.  
+- ENTITY_NORM: normalized entity value for numeric entities, e.g., "2024-01-01" for the phrase "January 1st, 2024".  
+- CHUNK: syntactic chunk label, from the [CoNLL-2000 shared task](https://arxiv.org/pdf/cs/0009008).  
 
 # Slightly less Basic Usage
 
