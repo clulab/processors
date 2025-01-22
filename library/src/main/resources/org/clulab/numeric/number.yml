@@ -27,11 +27,12 @@ rules:
       # numbers 10-19
       (ten | eleven | twelve | dozen | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
       # or numbers 20-99
-      twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
+      twenty @WordDigit? | thirty @WordDigit? | forty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
       sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
       "twenty-one" | "twenty-two" | "twenty-three" | "twenty-four" | "twenty-five" | "twenty-six" | "twenty-seven" | "twenty-eight" | "twenty-nine" |
       "thirty-one" | "thirty-two" | "thirty-three" | "thirty-four" | "thirty-five" | "thirty-six" | "thirty-seven" | "thirty-eight" | "thirty-nine" |
       "forty-one" | "forty-two" | "forty-three" | "forty-four" | "forty-five" | "forty-six" | "forty-seven" | "forty-eight" | "forty-nine" |
+      "fourty-one" | "fourty-two" | "fourty-three" | "fourty-four" | "fourty-five" | "fourty-six" | "fourty-seven" | "fourty-eight" | "fourty-nine" |
       "fifty-one" | "fifty-two" | "fifty-three" | "fifty-four" | "fifty-five" | "fifty-six" | "fifty-seven" | "fifty-eight" | "fifty-nine" |
       "sixty-one" | "sixty-two" | "sixty-three" | "sixty-four" | "sixty-five" | "sixty-six" | "sixty-seven" | "sixty-eight" | "sixty-nine" |
       "seventy-one" | "seventy-two" | "seventy-three" | "seventy-four" | "seventy-five" | "seventy-six" | "seventy-seven" | "seventy-eight" | "seventy-nine" |
@@ -91,11 +92,12 @@ rules:
       # numbers 10-19
       ten | eleven | twelve | dozen | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen |
       # or numbers 20-99
-      twenty @WordDigit? | thirty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
+      twenty @WordDigit? | thirty @WordDigit? | forty @WordDigit? | fourty @WordDigit? | fifty @WordDigit? |
       sixty @WordDigit? | seventy @WordDigit? | eighty @WordDigit? | ninety @WordDigit? |
       "twenty-one" | "twenty-two" | "twenty-three" | "twenty-four" | "twenty-five" | "twenty-six" | "twenty-seven" | "twenty-eight" | "twenty-nine" |
       "thirty-one" | "thirty-two" | "thirty-three" | "thirty-four" | "thirty-five" | "thirty-six" | "thirty-seven" | "thirty-eight" | "thirty-nine" |
       "forty-one" | "forty-two" | "forty-three" | "forty-four" | "forty-five" | "forty-six" | "forty-seven" | "forty-eight" | "forty-nine" |
+      "forty-one" | "fourty-two" | "fourty-three" | "fourty-four" | "fourty-five" | "fourty-six" | "fourty-seven" | "fourty-eight" | "fourty-nine" |
       "fifty-one" | "fifty-two" | "fifty-three" | "fifty-four" | "fifty-five" | "fifty-six" | "fifty-seven" | "fifty-eight" | "fifty-nine" |
       "sixty-one" | "sixty-two" | "sixty-three" | "sixty-four" | "sixty-five" | "sixty-six" | "sixty-seven" | "sixty-eight" | "sixty-nine" |
       "seventy-one" | "seventy-two" | "seventy-three" | "seventy-four" | "seventy-five" | "seventy-six" | "seventy-seven" | "seventy-eight" | "seventy-nine" |
