@@ -92,7 +92,7 @@ object NumberParser {
         // accumulate result here
         var totalSum: Double = 0
         var remainingWords = words.toArray
-        for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand")) {
+        for (w <- Seq("quadrillion", "trillion", "billion", "million", "thousand", "grand", "hundred")) {
           val index = remainingWords.indexOf(w)
           if (index >= 0) {
             val multiplier = numberFormation(remainingWords.slice(0, index))
@@ -151,6 +151,7 @@ object NumberParser {
     "twenty"      -> 20,
     "thirty"      -> 30,
     "forty"       -> 40,
+    "fourty"      -> 40,
     "fifty"       -> 50,
     "sixty"       -> 60,
     "seventy"     -> 70,
@@ -169,6 +170,7 @@ object NumberParser {
     "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five", "twenty-six", "twenty-seven", "twenty-eight", "twenty-nine",
     "thirty-one", "thirty-two", "thirty-three", "thirty-four", "thirty-five", "thirty-six", "thirty-seven", "thirty-eight", "thirty-nine",
     "forty-one", "forty-two", "forty-three", "forty-four", "forty-five", "forty-six", "forty-seven", "forty-eight", "forty-nine",
+    "fourty-one", "fourty-two", "fourty-three", "fourty-four", "fourty-five", "fourty-six", "fourty-seven", "foruty-eight", "fourty-nine",
     "fifty-one", "fifty-two", "fifty-three", "fifty-four", "fifty-five", "fifty-six", "fifty-seven", "fifty-eight", "fifty-nine",
     "sixty-one", "sixty-two", "sixty-three", "sixty-four", "sixty-five", "sixty-six", "sixty-seven", "sixty-eight", "sixty-nine",
     "seventy-one", "seventy-two", "seventy-three", "seventy-four", "seventy-five", "seventy-six", "seventy-seven", "seventy-eight", "seventy-nine",
