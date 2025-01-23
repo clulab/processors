@@ -57,6 +57,24 @@ class TestNumberParser extends Test {
 		NumberParser.parse("one hundred thousand".split(" ")) shouldEqual Some(100000)
 		NumberParser.parse("ONE HUNDRED THOUSAND".split(" ")) shouldEqual Some(100000)
 		NumberParser.parse("100,000".split(" ")) shouldEqual Some(100000)
+
+		NumberParser.parse(Seq("fourty")) shouldEqual Some(40d)
+		NumberParser.parse(Seq("forty")) shouldEqual Some(40d)
+
+		NumberParser.parse(Seq("fourty-five")) shouldEqual Some(45d)
+		NumberParser.parse(Seq("forty-five")) shouldEqual Some(45d)
+
+		NumberParser.parse(Seq("fourty", "five")) shouldEqual Some(45d)
+		NumberParser.parse(Seq("forty", "five")) shouldEqual Some(45d)
+
+		NumberParser.parse(Seq("fourty", "hundred")) shouldEqual Some(4000d)
+		NumberParser.parse(Seq("forty", "hundred")) shouldEqual Some(4000d)
+
+		NumberParser.parse(Seq("fourty-five", "hundred")) shouldEqual Some(4500d)
+		NumberParser.parse(Seq("forty-five", "hundred")) shouldEqual Some(4500d)
+
+		NumberParser.parse(Seq("fourty", "five", "hundred")) shouldEqual Some(4500d)
+		NumberParser.parse(Seq("forty", "five", "hundred")) shouldEqual Some(4500d)
 	}
 
 	// New added tests
