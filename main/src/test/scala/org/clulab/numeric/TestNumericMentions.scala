@@ -93,7 +93,7 @@ class TestNumericMentions extends Test {
     val sentence1 = processor.annotate(text1).sentences.head
     val sentence2 = processor.annotate(text2).sentences.head
 
-    sentence1.tags.get should not contain theSameElementsInOrderAs(sentence2.tags.get)
+    sentence1.tags.get should contain theSameElementsInOrderAs(sentence2.tags.get)
     sentence1.entities.get should contain theSameElementsInOrderAs(sentence2.entities.get)
     sentence1.norms.get should contain theSameElementsInOrderAs(sentence2.norms.get)
     sentence1.chunks.get should contain theSameElementsInOrderAs(sentence2.chunks.get)
