@@ -1,6 +1,6 @@
 package org.clulab.processors.apps
 
-import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.{Debugger, TextVisualizer}
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
 import org.clulab.processors.clu.BalaurProcessor
@@ -61,8 +61,13 @@ object OdinStarter extends App {
   for (mention <- mentions)
     printMention(mention)
 
-  for (extractor <- extractors)
+  val visualizer = new TextVisualizer()
+
+  for (extractor <- extractors) {
     visualize(extractor, sentence)
+    visualizer.visualize(extractor)
+    println()
+  }
 
   // Find all matching MatchTokens and say what they matched.
   def debugMatchTokens(): Unit = {
