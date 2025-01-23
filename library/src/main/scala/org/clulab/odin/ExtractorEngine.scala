@@ -1,13 +1,14 @@
 package org.clulab.odin
 
 import org.clulab.odin
-import org.clulab.odin.impl.{ Extractor, RuleReader }
+import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.impl.{Extractor, RuleReader}
 import org.clulab.processors.Document
 
 import java.io._
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets.UTF_8
-import scala.io.{ Codec, Source }
+import scala.io.{Codec, Source}
 import scala.reflect.ClassTag
 import scala.util.Using
 
@@ -22,7 +23,9 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
    *  @param doc a processor's document
    *  @return a sequence of mentions extracted from the document
    */
-  def extractFrom(doc: Document): Seq[Mention] = extractFrom(doc, new State)
+  def extractFrom(doc: Document): Seq[Mention] = Debugger.debugDoc(this, doc) {
+    extractFrom(doc, new State)
+  }
 
   /** Extract mentions from a document.
    *
@@ -30,7 +33,7 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
    *  @param initialState a state instance that may be prepopulated
    *  @return a sequence of mentions extracted from the document
    */
-  def extractFrom(document: Document, initialState: State): Seq[Mention] = {
+  def extractFrom(document: Document, initialState: State): Seq[Mention] = Debugger.debug {
     @annotation.tailrec
     def loop(i: Int, state: State): Seq[Mention] = extract(i, state) match {
       case Nil if i >= minIterations => state.allMentions // we are done
@@ -38,7 +41,7 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
       case mentions => loop(i + 1, state.updated(mentions))
     }
 
-    def extract(i: Int, state: State): Seq[Mention] = {
+    def extract(i: Int, state: State): Seq[Mention] = Debugger.debugLoop(i) {
       // extract mentions using extractors (each extractor applies its own action)
       val extractedMentions = for {
         extractor <- extractors
