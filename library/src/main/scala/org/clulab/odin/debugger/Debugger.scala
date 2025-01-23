@@ -1,9 +1,9 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor}
+import org.clulab.odin.impl._
 import org.clulab.processors.{Document, Sentence}
-import org.clulab.utils.{StringUtils, Timer}
+import org.clulab.utils.StringUtils
 
 import scala.collection.mutable.Buffer
 

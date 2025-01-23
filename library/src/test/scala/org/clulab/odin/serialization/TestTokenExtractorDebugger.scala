@@ -3,7 +3,6 @@ package org.clulab.odin.serialization
 import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.{Extractor, RuleReader}
 import org.clulab.odin.{Actions, ExtractorEngine, identityAction}
-import org.clulab.odinstarter.OdinStarter.resourceDir
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
@@ -13,6 +12,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 
 class TestTokenExtractorDebugger extends Test {
+  val resourceDir: File = new File("../apps/src/main/resources")
   val customLexiconNer = { // i.e., Named Entity Recognizer
     val kbsAndCaseInsensitiveMatchings: Seq[(String, Boolean)] = Seq(
       // You can add additional kbs (knowledge bases) and caseInsensitiveMatchings here.
