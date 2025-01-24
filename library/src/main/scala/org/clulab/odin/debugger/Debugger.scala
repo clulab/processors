@@ -166,16 +166,8 @@ class DebuggerContext(
   }
 }
 
-trait DebuggerTrait {
-  def activate(): Unit
-  def deactivate(): Unit
-  def showTrace(): Unit
-  def showDeepest(): Unit
-  // TODO break or pause
-}
-
-class Debugger protected () extends DebuggerTrait {
-  protected var active: Boolean = true // TODO: You can turn off debugging with this!
+class RealDebugger() {
+  protected var active: Boolean = false // TODO: You can turn off debugging with this!
   protected var quiet: Boolean = true // TODO: You can turn off the printing of messages with this.
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
@@ -187,7 +179,9 @@ class Debugger protected () extends DebuggerTrait {
 
   def deactivate(): Unit = active = false
 
-  def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+  def clear(): Unit = transcript.clear()
+
+  protected def debug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
       stack = stackFrame :: stack
       if (stack.length > maxDepth)
@@ -208,7 +202,7 @@ class Debugger protected () extends DebuggerTrait {
     }
   }
 
-  def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
+  protected def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
       if (!quiet) println(mkMessage("beg"))
@@ -408,14 +402,15 @@ class Debugger protected () extends DebuggerTrait {
   def showDeepest(): Unit = showTrace(maxStack)
 }
 
-object Debugger extends DebuggerTrait {
+object Debugger {
   type Stack = List[StackFrame]
 
-  lazy val instance = new Debugger() // TODO: In the end this will not be global unless it can be thread-aware.
+  val nullInstance: Debugging = new NullDebugger()
+  var instance: Debugging = nullInstance
 
-  override def activate(): Unit = instance.activate()
+  def activate(debugging: Debugging): Unit = instance = debugging
 
-  override def deactivate(): Unit = instance.deactivate()
+  def deactivate(): Unit = instance = nullInstance
 
   def debugFrame[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: StackFrameType => ResultType): ResultType = {
     instance.debug(stackFrame)(block(stackFrame))
