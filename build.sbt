@@ -41,4 +41,7 @@ lazy val webapp = project
     crossScalaVersions := Seq(scala212)
   )
 
+lazy val debugger = project
+  .dependsOn(main)
+
 addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
