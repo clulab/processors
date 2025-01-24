@@ -75,13 +75,13 @@ object ThompsonVM {
       ): Seq[Thread] = is match {
         case Nil => ts.reverse
         case (i, gs, ms, pgs) :: rest => i match {
-          case i: Pass => loop((i.next, gs, ms, pgs) :: rest, ts)
+          case i: Pass => loop((i.getNext, gs, ms, pgs) :: rest, ts)
           case i: Split => loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
-          case i: SaveStart => loop((i.next, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
+          case i: SaveStart => loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
           case i: SaveEnd => pgs match {
             case (name, start) :: partials if name == i.name =>
               val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-              loop((i.next, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
+              loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
             case _ => sys.error("unable to close capture")
           }
           case i => loop(rest, SingleThread(tok, i, dir, gs, ms, pgs) :: ts)
@@ -96,16 +96,16 @@ object ThompsonVM {
     def stepSingleThread(t: SingleThread): Seq[Thread] = t.inst match {
       case i: MatchToken if doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state) =>
         val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
-        mkThreads(nextTok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
+        mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceStart if (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1) =>
-        mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
+        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchSentenceEnd if t.tok == doc.sentences(sent).size =>
-        mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
+        mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
       case i: MatchLookAhead =>
         val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
         val results = eval(mkThreads(startTok, i.start, LeftToRight))
         if (i.negative == results.isEmpty) {
-          mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
           Nil
         }
@@ -113,7 +113,7 @@ object ThompsonVM {
         val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
         val results = if (startTok < 0) None else eval(mkThreads(startTok, i.start, RightToLeft))
         if (i.negative == results.isEmpty) {
-          mkThreads(t.tok, i.next, t.dir, t.groups, t.mentions, t.partialGroups)
+          mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
         } else {
           Nil
         }
@@ -123,7 +123,7 @@ object ThompsonVM {
           if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
           captures = mkMentionCapture(t.mentions, i.name, m)
           nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
-        } yield mkThreads(nextTok, i.next, t.dir, t.groups, captures, t.partialGroups)
+        } yield mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
         bundles match {
           case Seq() => Nil
           case Seq(bundle) => bundle
@@ -222,8 +222,13 @@ object ThompsonVM {
 
 // instruction
 sealed trait Inst {
-  var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
-  var next: Inst = null // See deepcopy for the write.
+  protected var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
+  def setPosId(newPosId: Int): Unit = posId = newPosId
+  def getPosId: Int = posId
+  protected var next: Inst = null
+  // See deepcopy, ProgramFragment.capture, and ProgramFragment.setOut for the writes.
+  def setNext(newNext: Inst): Unit = next = newNext
+  def getNext: Inst = next
   def dup(): Inst
   def deepcopy(): Inst = {
     val inst = dup()
@@ -284,7 +289,9 @@ case class Split(lhs: Inst, rhs: Inst) extends Inst {
 }
 
 // start capturing tokens
-case class SaveStart(name: String) extends Inst {
+case class SaveStart(name: String, newNext: Inst) extends Inst {
+  next = newNext
+
   def dup() = copy()
   override def hashCode: Int = (name, super.hashCode).##
 

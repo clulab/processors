@@ -19,10 +19,10 @@ object TokenPattern {
   // returns true if the next `Match*` instruction is a `MatchMention`
   def startsWithMatchMention(inst: Inst): Boolean = inst match {
     case i: MatchMention => true
-    case i: Pass => startsWithMatchMention(i.next)
+    case i: Pass => startsWithMatchMention(i.getNext)
     case i: Split => startsWithMatchMention(i.lhs) && startsWithMatchMention(i.rhs)
-    case i: SaveStart => startsWithMatchMention(i.next)
-    case i: SaveEnd => startsWithMatchMention(i.next)
+    case i: SaveStart => startsWithMatchMention(i.getNext)
+    case i: SaveEnd => startsWithMatchMention(i.getNext)
     case _ => false
   }
 
@@ -46,20 +46,20 @@ class TokenPattern(val start: Inst) {
         case Done :: tail =>
           // skip Done instruction
           assigner(id, tail)
-        case (head: Split) :: tail if head.posId == 0 =>
+        case (head: Split) :: tail if head.getPosId == 0 =>
           // only if posId hasn't been set
-          head.posId = id
+          head.setPosId(id)
           assigner(id + 1, head.lhs :: head.rhs :: tail)
-        case (head: MatchLookAhead) :: tail if head.posId == 0 =>
-          head.posId = id
-          assigner(id + 1, head.start :: head.next :: tail)
-        case (head: MatchLookBehind) :: tail if head.posId == 0 =>
-          head.posId = id
-          assigner(id + 1, head.start :: head.next :: tail)
-        case head :: tail if head.posId == 0 =>
+        case (head: MatchLookAhead) :: tail if head.getPosId == 0 =>
+          head.setPosId(id)
+          assigner(id + 1, head.start :: head.getNext :: tail)
+        case (head: MatchLookBehind) :: tail if head.getPosId == 0 =>
+          head.setPosId(id)
+          assigner(id + 1, head.start :: head.getNext :: tail)
+        case head :: tail if head.getPosId == 0 =>
           // only if posId hasn't been set
-          head.posId = id
-          assigner(id + 1, head.next :: tail)
+          head.setPosId(id)
+          assigner(id + 1, head.getNext :: tail)
         case head :: tail =>
           // skip if posId has been set already
           assigner(id, tail)

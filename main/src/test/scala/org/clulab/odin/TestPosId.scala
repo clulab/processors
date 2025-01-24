@@ -31,7 +31,7 @@ class TestPosId extends Test {
       case matchLook: MatchLookBehind => matchLook.start :: Nil
       case _: Inst => Nil
     }
-    val children = stepChildren :+ inst.next
+    val children = stepChildren :+ inst.getNext
 
     children
   }
@@ -64,7 +64,7 @@ class TestPosId extends Test {
     val ee = ExtractorEngine(rules)
     val start = ee.extractors.head.asInstanceOf[TokenExtractor].pattern.start
     val insts = collectInsts(start)
-    val posIds = insts.map(_.posId)
+    val posIds = insts.map(_.getPosId)
     val distinctPosIds = posIds.distinct
 
     insts.foreach(println)
