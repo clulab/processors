@@ -1,4 +1,4 @@
-package org.clulab.odin.visualizer
+package org.clulab.odin.debugger.visualizer
 
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor}
 
