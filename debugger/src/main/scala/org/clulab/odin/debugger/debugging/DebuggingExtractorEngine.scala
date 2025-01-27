@@ -90,16 +90,9 @@ object DebuggingExtractorEngine {
 
   def apply(extractorEngine: ExtractorEngine): DebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
-    val debuggingExtractors = extractors.map { extractor =>
-      extractor match {
-        case extractor: TokenExtractor => ??? // Make one with en empty debugger spot to be filled in when another copy made
-        case extractor: GraphExtractor => ???
-        case extractor: CrossSentenceExtractor => ???
-      }
-    }
     val globalAction = extractorEngine.globalAction
 
-    new DebuggingExtractorEngine(debuggingExtractors, globalAction)
+    new DebuggingExtractorEngine(extractors, globalAction)
 
   }
 }

@@ -17,7 +17,6 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
   // of all extractors
   val minIterations = extractors.map(_.priority.minIterations).max
 
-
   protected def extract(document: Document, i: Int, state: State): Seq[Mention] = {
     // extract mentions using extractors (each extractor applies its own action)
     val extractedMentions = for {

@@ -3,7 +3,6 @@ package org.clulab.odin.debugger.debugging
 import org.clulab.odin.State
 import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl.{Done, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, ThompsonVM}
-import org.clulab.odin.impl.ThompsonVM.Direction.{Direction, LeftToRight, RightToLeft}
 import org.clulab.odin.impl.ThompsonVM.{Direction, NamedGroups, NamedMentions, PartialGroups, SingleThread, Thread, ThreadBundle}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
@@ -20,7 +19,6 @@ object DebuggingThompsonVM {
     state: State
   ) extends ThompsonVM.Evaluator(start, tok, sent, doc, state) {
 
-
     // Executes instruction on token and returns the produced threads.
     // Threads are created by following all no-Match instructions.
     override def mkThreads(
@@ -33,7 +31,7 @@ object DebuggingThompsonVM {
     ): Seq[Thread] = debugger.debugTok(tok) {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
-      //@annotation.tailrec
+      // @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
         ts: List[Thread]
@@ -88,10 +86,7 @@ object DebuggingThompsonVM {
           debugger.debugMatches(matches)
           if (matches) {
             val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
-            val token = t.tok
-            val const = i.c
-//            matchTokens(const.toString) = token
-//            println(s"Match mentions in singlestepthread is $matchTokens")
+
             mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups)
           }
           else Nil

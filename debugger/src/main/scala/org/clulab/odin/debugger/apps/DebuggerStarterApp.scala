@@ -1,5 +1,6 @@
 package org.clulab.odin.debugger.apps
 
+import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.TextVisualizer
 import org.clulab.odin.{Actions, ExtractorEngine, Mention, identityAction}
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RuleReader, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
@@ -50,14 +51,19 @@ object DebuggerStarterApp extends App {
       (rules, ruleDirOpt)
     }
   }
-  val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
-  val extractors = reader.read(rules)
-  val extractorEngine = new ExtractorEngine(extractors, identityAction)
   val document = processor.annotate("B A A C A A A D A A A A A E")
-  val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
   val visualizer = new TextVisualizer()
 
-  val sentence = document.sentences.head.words.mkString(" ") // mentions.head.sentenceObj.words.mkString(" ")
+  val reader = new RuleReader(new Actions, UTF_8, ruleDirOpt)
+  val extractors = reader.read(rules)
+
+  val extractorEngine = new ExtractorEngine(extractors, identityAction)
+  val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
+
+  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
+  val mentions2 = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
+
+  // val sentence = document.sentences.head.words.mkString(" ") // mentions.head.sentenceObj.words.mkString(" ")
 
   for (mention <- mentions)
     printMention(mention)
