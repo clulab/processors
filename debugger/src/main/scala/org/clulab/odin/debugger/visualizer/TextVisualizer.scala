@@ -1,17 +1,46 @@
 package org.clulab.odin.debugger.visualizer
 
-import org.clulab.odin.impl.{ChunkConstraint, ConjunctiveConstraint, DisjunctiveConstraint, Done, EntityConstraint, Equal, ExactStringMatcher, GreaterThan, GreaterThanOrEqual, IncomingConstraint, Inst, LemmaConstraint, LessThan, LessThanOrEqual, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, NegatedConstraint, NormConstraint, NotEqual, OutgoingConstraint, Pass, RegexStringMatcher, SaveEnd, SaveStart, Split, StringMatcher, TagConstraint, TokenConstraint, TokenExtractor, TokenWildcard, WordConstraint}
+import org.clulab.odin.impl.{Addition, ChunkConstraint, ConjunctiveConstraint, Constant, DisjunctiveConstraint, Division, Done, EmbeddingsResource, EntityConstraint, Equal, EuclideanQuotient, EuclideanRemainder, ExactStringMatcher, GreaterThan, GreaterThanOrEqual, IncomingConstraint, Inst, LemmaConstraint, LessThan, LessThanOrEqual, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, Multiplication, NegatedConstraint, NegativeExpression, NormConstraint, NotEqual, NumericExpression, OutgoingConstraint, Pass, RegexStringMatcher, SaveEnd, SaveStart, SimilarityConstraint, Split, StringMatcher, Subtraction, TagConstraint, TokenConstraint, TokenExtractor, TokenWildcard, WordConstraint}
 
-import java.io.{PrintWriter, StringWriter}
 import scala.annotation.tailrec
 
 class TextVisualizer() extends Visualizer() {
 
+  def visualize(embeddingsResource: EmbeddingsResource): String = {
+    val name = embeddingsResource.getClass.getSimpleName
+    val details = s"p = ${embeddingsResource.p}"
+    val formattedDetails =
+      if (details.isEmpty) ""
+      else s"($details)"
+
+    s"$name$formattedDetails"
+  }
+
+  def visualize(numericExpression: NumericExpression): String = {
+    val name = numericExpression.getClass.getSimpleName
+    val details = numericExpression match {
+      case numericExpression: Constant => s"value = ${numericExpression.value}"
+      case numericExpression: Addition => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: Subtraction => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: Multiplication => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: Division => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: EuclideanQuotient => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: EuclideanRemainder => s"lhs = ${visualize(numericExpression.lhs)}, rhs = ${visualize(numericExpression.rhs)}"
+      case numericExpression: NegativeExpression => s"expr = ${visualize(numericExpression.expr)}"
+      case numericExpression: SimilarityConstraint => s"w1 = ${numericExpression.w1}, embeddings = ${visualize(numericExpression.embeddings)}"
+    }
+    val formattedDetails =
+      if (details.isEmpty) ""
+      else s"($details)"
+
+    s"$name$formattedDetails"
+  }
+
   def visualize(stringMatcher: StringMatcher): String = {
     val name = stringMatcher.getClass.getSimpleName
     val details = stringMatcher match {
-      case stringMatcher: ExactStringMatcher => s"string=${stringMatcher.string}"
-      case stringMatcher: RegexStringMatcher => s"regex=${stringMatcher.regex.toString}"
+      case stringMatcher: ExactStringMatcher => s"string = ${stringMatcher.string}"
+      case stringMatcher: RegexStringMatcher => s"regex = ${stringMatcher.regex.toString}"
     }
     val formattedDetails =
       if (details.isEmpty) ""
@@ -23,25 +52,25 @@ class TextVisualizer() extends Visualizer() {
   def visualize(tokenConstraint: TokenConstraint): String = {
     val name = tokenConstraint.getClass.getSimpleName
     val details = tokenConstraint match {
-      case tokenConstraint: GreaterThan => ""
-      case tokenConstraint: LessThan => ""
-      case tokenConstraint: GreaterThanOrEqual => ""
-      case tokenConstraint: LessThanOrEqual => ""
-      case tokenConstraint: Equal => ""
-      case tokenConstraint: NotEqual => ""
+      case tokenConstraint: GreaterThan => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: LessThan => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: GreaterThanOrEqual => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: LessThanOrEqual => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: Equal => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: NotEqual => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
       case TokenWildcard => ""
-      case tokenConstraint: WordConstraint => s"matcher=${visualize(tokenConstraint.matcher)}"
-      case tokenConstraint: LemmaConstraint => ""
-      case tokenConstraint: TagConstraint => ""
-      case tokenConstraint: EntityConstraint => ""
-      case tokenConstraint: ChunkConstraint => ""
-      case tokenConstraint: NormConstraint => ""
-      case tokenConstraint: IncomingConstraint => ""
-      case tokenConstraint: OutgoingConstraint => ""
-      case tokenConstraint: MentionConstraint => ""
-      case tokenConstraint: NegatedConstraint => ""
-      case tokenConstraint: ConjunctiveConstraint => ""
-      case tokenConstraint: DisjunctiveConstraint => ""
+      case tokenConstraint: WordConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: LemmaConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: TagConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: EntityConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: ChunkConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: NormConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: IncomingConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}, graphName = ${tokenConstraint.graphName}"
+      case tokenConstraint: OutgoingConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}, graphName = ${tokenConstraint.graphName}"
+      case tokenConstraint: MentionConstraint => s"matcher = ${visualize(tokenConstraint.matcher)}, arg = ${tokenConstraint.arg.toString}"
+      case tokenConstraint: NegatedConstraint => s"constraint = ${visualize(tokenConstraint.constraint)}"
+      case tokenConstraint: ConjunctiveConstraint => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
+      case tokenConstraint: DisjunctiveConstraint => s"lhs = ${visualize(tokenConstraint.lhs)}, rhs = ${visualize(tokenConstraint.rhs)}"
     }
     val formattedDetails =
       if (details.isEmpty) ""
@@ -92,14 +121,14 @@ class TextVisualizer() extends Visualizer() {
       case Done => stringEmpty
       case inst: Pass => stringEmpty
       case inst: Split => stringEmpty
-      case inst: SaveStart => s"name=${inst.name}"
-      case inst: SaveEnd => s"name=${inst.name}"
-      case inst: MatchToken => s"c=${visualize(inst.c)}"
-      case inst: MatchMention => s"m=StringMatcher, name=${inst.name}, arg=${inst.arg}"
+      case inst: SaveStart => s"name = ${inst.name}"
+      case inst: SaveEnd => s"name = ${inst.name}"
+      case inst: MatchToken => s"c = ${visualize(inst.c)}"
+      case inst: MatchMention => s"m = ${visualize(inst.m)}, name = ${inst.name}, arg = ${inst.arg}"
       case inst: MatchSentenceStart => stringEmpty
       case inst: MatchSentenceEnd => stringEmpty
-      case inst: MatchLookAhead => s"negative=${inst.negative}"
-      case inst: MatchLookBehind => s"negative=${inst.negative}"
+      case inst: MatchLookAhead => s"negative = ${inst.negative}"
+      case inst: MatchLookBehind => s"negative = ${inst.negative}"
     }
     val formattedDetails =
         if (details.isEmpty) ""
