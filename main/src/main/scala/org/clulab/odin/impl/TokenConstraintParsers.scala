@@ -246,7 +246,7 @@ object TokenWildcard extends TokenConstraint {
     doc.sentences(sent).words.isDefinedAt(tok)
 }
 
-class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class WordConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches word(tok, sent, doc)
 }

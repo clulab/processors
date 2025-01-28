@@ -7,16 +7,16 @@ import scala.annotation.tailrec
 abstract class Visualizer() {
   def visualize(extractor: Extractor): Unit = {
     extractor match {
-      case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
-      case graphExtractor: GraphExtractor => visualizeGraphExtractor(graphExtractor)
-      case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
+      case tokenExtractor: TokenExtractor => visualize(tokenExtractor)
+      case graphExtractor: GraphExtractor => visualize(graphExtractor)
+      case crossSentenceExtractor: CrossSentenceExtractor => visualize(crossSentenceExtractor)
       case _ => ???
     }
   }
 
-  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Unit = ???
+  def visualize(tokenExtractor: TokenExtractor): Unit = ???
 
-  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Unit = ()
+  def visualize(graphExtractor: GraphExtractor): Unit = ()
 
-  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Unit = ???
+  def visualize(crossSentenceExtractor: CrossSentenceExtractor): Unit = ???
 }

@@ -1,12 +1,56 @@
 package org.clulab.odin.debugger.visualizer
 
-import org.clulab.odin.impl.{Done, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor}
+import org.clulab.odin.impl.{ChunkConstraint, ConjunctiveConstraint, DisjunctiveConstraint, Done, EntityConstraint, Equal, ExactStringMatcher, GreaterThan, GreaterThanOrEqual, IncomingConstraint, Inst, LemmaConstraint, LessThan, LessThanOrEqual, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, NegatedConstraint, NormConstraint, NotEqual, OutgoingConstraint, Pass, RegexStringMatcher, SaveEnd, SaveStart, Split, StringMatcher, TagConstraint, TokenConstraint, TokenExtractor, TokenWildcard, WordConstraint}
 
+import java.io.{PrintWriter, StringWriter}
 import scala.annotation.tailrec
 
 class TextVisualizer() extends Visualizer() {
 
-  override def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Unit = {
+  def visualize(stringMatcher: StringMatcher): String = {
+    val name = stringMatcher.getClass.getSimpleName
+    val details = stringMatcher match {
+      case stringMatcher: ExactStringMatcher => s"string=${stringMatcher.string}"
+      case stringMatcher: RegexStringMatcher => s"regex=${stringMatcher.regex.toString}"
+    }
+    val formattedDetails =
+      if (details.isEmpty) ""
+      else s"($details)"
+
+    s"$name$formattedDetails"
+  }
+
+  def visualize(tokenConstraint: TokenConstraint): String = {
+    val name = tokenConstraint.getClass.getSimpleName
+    val details = tokenConstraint match {
+      case tokenConstraint: GreaterThan => ""
+      case tokenConstraint: LessThan => ""
+      case tokenConstraint: GreaterThanOrEqual => ""
+      case tokenConstraint: LessThanOrEqual => ""
+      case tokenConstraint: Equal => ""
+      case tokenConstraint: NotEqual => ""
+      case TokenWildcard => ""
+      case tokenConstraint: WordConstraint => s"matcher=${visualize(tokenConstraint.matcher)}"
+      case tokenConstraint: LemmaConstraint => ""
+      case tokenConstraint: TagConstraint => ""
+      case tokenConstraint: EntityConstraint => ""
+      case tokenConstraint: ChunkConstraint => ""
+      case tokenConstraint: NormConstraint => ""
+      case tokenConstraint: IncomingConstraint => ""
+      case tokenConstraint: OutgoingConstraint => ""
+      case tokenConstraint: MentionConstraint => ""
+      case tokenConstraint: NegatedConstraint => ""
+      case tokenConstraint: ConjunctiveConstraint => ""
+      case tokenConstraint: DisjunctiveConstraint => ""
+    }
+    val formattedDetails =
+      if (details.isEmpty) ""
+      else s"($details)"
+
+    s"$name$formattedDetails"
+  }
+
+  override def visualize(tokenExtractor: TokenExtractor): Unit = {
     val start: Inst = tokenExtractor.pattern.start
     val unsortedInsts = {
 
@@ -50,7 +94,7 @@ class TextVisualizer() extends Visualizer() {
       case inst: Split => stringEmpty
       case inst: SaveStart => s"name=${inst.name}"
       case inst: SaveEnd => s"name=${inst.name}"
-      case inst: MatchToken => s"c=TokenConstraint"
+      case inst: MatchToken => s"c=${visualize(inst.c)}"
       case inst: MatchMention => s"m=StringMatcher, name=${inst.name}, arg=${inst.arg}"
       case inst: MatchSentenceStart => stringEmpty
       case inst: MatchSentenceEnd => stringEmpty
