@@ -188,17 +188,28 @@ class TextVisualizer() extends Visualizer() {
     Seq(("", visualization))
   }
 
-  def visualizeTokenExtractor(indent: Int, tokenExtractor: TokenExtractor): Unit = {
+  def extractTokenExtractor(indent: Int, tokenExtractor: TokenExtractor): Seq[(String, String)] = {
+    extractTokenPattern(indent, tokenExtractor.pattern).map { case (name, value) =>
+      (s"pattern:$name", value)
+    }
+  }
+
+  def visualizeTokenExtractor(indent: Int, tokenExtractor: TokenExtractor): String = {
     val className = tokenExtractor.getClass.getSimpleName
     val details = s"name = ${tokenExtractor.name}, pattern = ${visualizeTokenPattern(indent, tokenExtractor.pattern)}"
-    val extractions = extractTokenPattern(indent, tokenExtractor.pattern).map { case (name, value) =>
+
+    s"$className($details)"
+  }
+
+  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Unit = {
+    val extractions = extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
 
-    println(indent, s"$className($details)")
+    println(0, visualizeTokenExtractor(0, tokenExtractor))
     extractions.foreach { case (name, string) =>
-      println(indent, name)
-      println(indent + 1, string)
+      println(0, name)
+      println(0 + 1, string)
     }
   }
 
@@ -291,17 +302,27 @@ class TextVisualizer() extends Visualizer() {
 
   def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Unit = {
     val className = graphExtractor.getClass.getSimpleName
-    val details = s"name = ${graphExtractor.name}, pattern = ${visualizeGraphPattern(indent, graphExtractor.pattern)}..."
+    val details = Seq(
+      s"name = ${graphExtractor.name}",
+      s"pattern = ${visualizeGraphPattern(indent, graphExtractor.pattern)}"
+    )
     val extractions = extractGraphPattern(indent, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
 
-    println(indent, s"$className($details)")
+    println(indent, s"$className(")
+    details.foreach { detail =>
+      println(indent + 1, detail)
+    }
+    println(indent, ")")
     extractions.foreach { case (name, value) =>
       println(indent, name)
       println(indent + 1, value)
     }
-    println(indent + 1, visualizeGraphPattern(indent + 1, graphExtractor.pattern))
+  }
+
+  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Unit = {
+    visualizeGraphExtractor(0, graphExtractor)
   }
 
   def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Unit = {
@@ -310,24 +331,38 @@ class TextVisualizer() extends Visualizer() {
       s"name = ${crossSentenceExtractor.name}",
       s"leftWindow = ${crossSentenceExtractor.leftWindow.toString}",
       s"rightWindow = ${crossSentenceExtractor.rightWindow.toString}",
-      s"anchorPattern = ...",
-      s"neighborPattern = ...",
+      s"anchorPattern = ${visualizeTokenExtractor(indent, crossSentenceExtractor.anchorPattern)}",
+      s"neighborPattern = ${visualizeTokenExtractor(indent, crossSentenceExtractor.neighborPattern)}",
       s"anchorRole = ${crossSentenceExtractor.anchorRole}",
       s"neighborRole = ${crossSentenceExtractor.neighborRole}"
     ).mkString(", ")
+    val anchorExtractions = extractTokenExtractor(indent, crossSentenceExtractor.anchorPattern).map { case (name, value) =>
+      (s"anchorPattern:$name", value)
+    }
+    val neighborExtractions = extractTokenExtractor(indent, crossSentenceExtractor.neighborPattern).map { case (name, value) =>
+      (s"neighborPattern:$name", value)
+    }
 
     println(indent, s"$className($details)")
-    println(indent, "anchorPattern:")
-    visualizeTokenExtractor(indent + 1, crossSentenceExtractor.anchorPattern)
-    println(indent, "neighborPattern:")
-    visualizeTokenExtractor(indent + 1, crossSentenceExtractor.neighborPattern)
+    anchorExtractions.foreach { case (name, value) =>
+      println(indent, name)
+      println(indent + 1, value)
+    }
+    neighborExtractions.foreach { case (name, value) =>
+      println(indent, name)
+      println(indent + 1, value)
+    }
+  }
+
+  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Unit = {
+    visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
   override def visualize(extractor: Extractor): Unit = {
     extractor match {
-      case tokenExtractor: TokenExtractor => visualizeTokenExtractor(0, tokenExtractor)
-      case graphExtractor: GraphExtractor => visualizeGraphExtractor(0, graphExtractor)
-      case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
+      case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
+      case graphExtractor: GraphExtractor => visualizeGraphExtractor(graphExtractor)
+      case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
       case _ => ???
     }
   }
