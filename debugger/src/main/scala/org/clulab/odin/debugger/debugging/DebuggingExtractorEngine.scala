@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.debugging
 
-import org.clulab.odin.debugger.{Debugger, LocalDebugger}
+import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document
@@ -50,7 +50,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   // May depend on what all it needs do to.
 
   override def extractFrom(doc: Document): Seq[Mention] = {
-    val debugger =  new LocalDebugger()
+    val debugger =  new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
     // Get stuff out of the debugger
@@ -60,7 +60,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   }
 
   override def extractFrom(document: Document, initialState: State): Seq[Mention] = {
-    val debugger = new LocalDebugger()
+    val debugger = new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(document, initialState)
     // Get stuff out of the debugger
@@ -70,7 +70,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   }
 
   override def extractByType[M <: Mention : ClassTag](document: Document, initialState: State): Seq[M] = {
-    val debugger = new LocalDebugger()
+    val debugger = new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractByType[M](document, initialState)
     // Get stuff out of the debugger
