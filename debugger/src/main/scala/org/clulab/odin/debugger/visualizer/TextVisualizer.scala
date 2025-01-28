@@ -198,6 +198,7 @@ class TextVisualizer() extends Visualizer() {
     val className = tokenExtractor.getClass.getSimpleName
     val details = s"name = ${tokenExtractor.name}, pattern = ${visualizeTokenPattern(indent, tokenExtractor.pattern)}"
 
+    // This is all on one line because it is used within other extractors.
     s"$className($details)"
   }
 
@@ -275,9 +276,7 @@ class TextVisualizer() extends Visualizer() {
     val className = graphPattern.getClass.getSimpleName
     val details = graphPattern match {
       case graphPattern: TriggerPatternGraphPattern =>
-        s"trigger = ${
-          visualizeTokenPattern(indent, graphPattern.trigger)
-        }, arguments = [${visualizeArguments(graphPattern.arguments)}]"
+        s"trigger = ${visualizeTokenPattern(indent, graphPattern.trigger)}, arguments = [${visualizeArguments(graphPattern.arguments)}]"
       case graphPattern: TriggerMentionGraphPattern =>
         s"triggerLabel = ${graphPattern.triggerLabel}, arguments = [${visualizeArguments(graphPattern.arguments)}]"
       case graphPattern: RelationGraphPattern =>
@@ -294,10 +293,9 @@ class TextVisualizer() extends Visualizer() {
         extractTokenPattern(indent, graphPattern.trigger).map { case (name, value) =>
           (s"trigger:$name", value)
         }
-      case graphPattern: TriggerMentionGraphPattern => Seq.empty // TODO
-      case graphPattern: RelationGraphPattern => Seq.empty // TODO
+      case graphPattern: TriggerMentionGraphPattern => Seq.empty
+      case graphPattern: RelationGraphPattern => Seq.empty
     }
-
   }
 
   def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Unit = {
@@ -311,8 +309,11 @@ class TextVisualizer() extends Visualizer() {
     }
 
     println(indent, s"$className(")
-    details.foreach { detail =>
-      println(indent + 1, detail)
+    details.zipWithIndex.foreach { case (detail, index) =>
+      if (index != details.length - 1)
+        println(indent + 1, s"$detail,")
+      else
+        println(indent + 1, detail)
     }
     println(indent, ")")
     extractions.foreach { case (name, value) =>
@@ -335,7 +336,7 @@ class TextVisualizer() extends Visualizer() {
       s"neighborPattern = ${visualizeTokenExtractor(indent, crossSentenceExtractor.neighborPattern)}",
       s"anchorRole = ${crossSentenceExtractor.anchorRole}",
       s"neighborRole = ${crossSentenceExtractor.neighborRole}"
-    ).mkString(", ")
+    )
     val anchorExtractions = extractTokenExtractor(indent, crossSentenceExtractor.anchorPattern).map { case (name, value) =>
       (s"anchorPattern:$name", value)
     }
@@ -343,7 +344,14 @@ class TextVisualizer() extends Visualizer() {
       (s"neighborPattern:$name", value)
     }
 
-    println(indent, s"$className($details)")
+    println(indent, s"$className(")
+    details.zipWithIndex.foreach { case (detail, index) =>
+      if (index != details.length - 1)
+        println(indent + 1, s"$detail,")
+      else
+        println(indent + 1, detail)
+    }
+    println(indent, ")")
     anchorExtractions.foreach { case (name, value) =>
       println(indent, name)
       println(indent + 1, value)
