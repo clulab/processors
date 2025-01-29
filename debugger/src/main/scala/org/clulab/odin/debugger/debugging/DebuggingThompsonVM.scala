@@ -30,42 +30,45 @@ object DebuggingThompsonVM {
       partialGroups: PartialGroups = Nil
     ): Seq[Thread] = debugger.debugTok(tok) {
 
-      // TODO: Why is this List while I see Seq and even Vector elsewhere?
       // @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-        ts: List[Thread]
+        threads: List[Thread]
       ): Seq[Thread] = {
         // This changes the Inst, but keeps the same Tok.
-
         internals match {
-          case Nil => ts.reverse
-          // TODO: Rename these headInst, headGroups, headMentions, headPartialGroups
-          case (i, gs, ms, pgs) :: rest => debugger.debugInst(i) {
-            i match {
-              case i: Pass =>
+          case Nil => threads.reverse
+          case (headInst, headGroups, headMentions, headPartialGroups) :: rest => debugger.debugInst(headInst) {
+            headInst match {
+              case inst: Pass =>
                 debugger.debugMatches(true)
-                loop((i.getNext, gs, ms, pgs) :: rest, ts)
-              case i: Split =>
+                // Add inst.getNext to front of internals and leave everything else the same.
+                loop((inst.getNext, headGroups, headMentions, headPartialGroups) :: rest, threads)
+              case inst: Split =>
                 debugger.debugMatches(true)
-                loop((i.lhs, gs, ms, pgs) :: (i.rhs, gs, ms, pgs) :: rest, ts)
-              case i: SaveStart =>
+                // Add inst.lhs and inst.rhs to the front of internals and leave everything else the same.
+                loop((inst.lhs, headGroups, headMentions, headPartialGroups) :: (inst.rhs, headGroups, headMentions, headPartialGroups) :: rest, threads)
+              case inst: SaveStart =>
                 debugger.debugMatches(true)
-                loop((i.getNext, gs, ms, (i.name, tok) :: pgs) :: rest, ts)
-              case i: SaveEnd => pgs match {
-                case (name, start) :: partials if name == i.name =>
-                  debugger.debugMatches(true)
-                  val updatedGroups = gs.getOrElse(name, Vector.empty) :+ Interval(start, tok)
-                  loop((i.getNext, gs + (name -> updatedGroups), ms, partials) :: rest, ts)
-                case _ =>
-                  debugger.debugMatches(false)
-                  sys.error("unable to close capture")
-              }
-              // Here we loop on rest.  Could that have different ms?
-              case i =>
-                if (i == Done)
-                  debugger.debugMatches(true)
-                loop(rest, SingleThread(tok, i, dir, gs, ms, pgs) :: ts)
+                // Add inst.getNext to the front of internals and also (inst.name, tok) to the headPartialGroups and leave everything else the same.
+                loop((inst.getNext, headGroups, headMentions, (inst.name, tok) :: headPartialGroups) :: rest, threads)
+              case inst: SaveEnd =>
+                headPartialGroups match {
+                  // See if what was stored in headPartialGroups matches the name of the inst.
+                  case (name, start) :: partials if name == inst.name =>
+                    debugger.debugMatches(true)
+                    val updatedGroups = headGroups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
+                    // Add inst.getNext to the front of the internals and also (name -> updatedGroups) to the headGroups and leave everything else the same.
+                    // Replace the partials with the remaining ones now that the head has been matched.
+                    loop((inst.getNext, headGroups + (name -> updatedGroups), headMentions, partials) :: rest, threads)
+                  case _ =>
+                    debugger.debugMatches(false)
+                    sys.error("unable to close capture")
+                }
+              // For any other kind of instance, add it to the threads that will in the end be the result.
+              case inst =>
+                // Turn whatever else is at the head into a SingleThread and prepend it to existing threads.
+                loop(rest, SingleThread(tok, inst, dir, headGroups, headMentions, headPartialGroups) :: threads)
             }
           }
         }
@@ -108,6 +111,7 @@ object DebuggingThompsonVM {
           else Nil
         case i: MatchLookAhead =>
           val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
+          // So this bunch of threads has to match first.
           val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
           val matches = i.negative == results.isEmpty
 
@@ -118,6 +122,7 @@ object DebuggingThompsonVM {
           else Nil
         case i: MatchLookBehind =>
           val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
+          // So this bunch of threads has to match first.
           val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
           val matches = i.negative == results.isEmpty
 
@@ -140,12 +145,9 @@ object DebuggingThompsonVM {
 
                 mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
               }
-  //        val bundlesOld = for {
-  //          m <- retrieveMentions(state, sent, t.tok, i.m, i.arg)
-  //          if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
-  //          captures = mkMentionCapture(t.mentions, i.name, m)
-  //          nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
-  //        } yield mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
+          val matches = bundles.nonEmpty
+
+          debugger.debugMatches(matches)
           bundles match {
             case Seq() => Nil
             case Seq(bundle) => bundle

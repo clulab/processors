@@ -86,18 +86,19 @@ class TextVisualizer() extends Visualizer() {
     s"$className$formattedDetails"
   }
 
-  def visualizeInst(indent: Int, inst: Inst, width: Int): String = {
+  def visualizeInst(indent: Int, inst: Inst, width: Int, depth: Int): String = {
     val posIdRight = inst.getPosId.toString
     val posIdLeft = " " * (width - posIdRight.length)
     val posId = posIdLeft + posIdRight
     val description = getDescription(indent, inst)
     val children = getChildren(inst)
     val links =
-      if (children.isEmpty) ""
-      else children.map { case (name, child) =>
-        s"--$name-> ${child.getPosId}"
-      }.mkString(", ", ", ", "")
-    val visualization = s"$posId. $description$links"
+        if (children.isEmpty) ""
+        else children.map { case (name, child) =>
+          s"--$name-> ${child.getPosId}"
+        }.mkString(", ", ", ", "")
+    val tab = "  " * depth
+    val visualization = s"$posId. $tab$description$links"
 
     visualization
   }
@@ -157,22 +158,19 @@ class TextVisualizer() extends Visualizer() {
     s"$className$formattedDetails"
   }
 
-  def extractTokenPattern(indent: Int, tokenPattern: TokenPattern): Seq[(String, String)] = {
-    val start: Inst = tokenPattern.start
-    val unsortedInsts = {
+  def extractInst(start: Inst): List[Inst] = {
 
-      @tailrec
-      def loop(todos: List[Inst], dones: List[Inst]): List[Inst] = {
-        todos match {
-          case Nil => dones
-          case head :: tail =>
-            if (dones.contains(head)) loop(tail, dones)
-            else loop(getChildren(head).map(_._2) ++ tail, head :: dones)
-        }
+    @tailrec
+    def loop(todos: List[Inst], dones: List[Inst]): List[Inst] = {
+      todos match {
+        case Nil => dones
+        case head :: tail =>
+          if (dones.contains(head)) loop(tail, dones)
+          else loop(getChildren(head).map(_._2) ++ tail, head :: dones)
       }
-
-      loop(List(start), List.empty)
     }
+
+    val unsortedInsts = loop(List(start), List.empty)
     val sortedInsts = unsortedInsts.sortBy(_.getPosId)
 
     assert(sortedInsts.head.getPosId == 0)
@@ -182,12 +180,56 @@ class TextVisualizer() extends Visualizer() {
       assert(tailHead == start)
     }
 
-    val resortedInsts = sortedInsts.tail :+ sortedInsts.head
+    sortedInsts
+  }
+
+  def assignDepths(depth: Int, index: Int, insts: Array[Inst], depths: Array[Int]): Array[Int] = {
+
+    // Do a loop inside with just depth and index
+    val inst = insts(index)
+
+    if (depths(index) == -1 || depth < depths(index)) {
+      depths(index) = depth
+
+      inst match {
+        case inst: MatchLookAhead =>
+          val namedChildren = getChildren(inst)
+
+          namedChildren.foreach { case (name, child) =>
+            if (name != "start")
+              assignDepths(depth, child.getPosId, insts, depths)
+            else
+              assignDepths(depth + 1, child.getPosId, insts, depths)
+          }
+        case inst: MatchLookBehind =>
+          val namedChildren = getChildren(inst)
+
+          namedChildren.foreach { case (name, child) =>
+            if (name != "start")
+              assignDepths(depth, child.getPosId, insts, depths)
+            else
+              assignDepths(depth + 1, child.getPosId, insts, depths)
+          }
+        case inst =>
+          val children = getChildren(inst).map(_._2)
+
+          children.foreach { child =>
+            assignDepths(depth, child.getPosId, insts, depths)
+          }
+      }
+    }
+    depths
+  }
+
+  def extractTokenPattern(indent: Int, tokenPattern: TokenPattern): Seq[(String, String)] = {
+    val sortedInsts = extractInst(tokenPattern.start)
+    val depths = assignDepths(0, 1, sortedInsts.toArray, Array.fill(sortedInsts.length)(-1))
+    val resortedInsts = (sortedInsts.tail :+ sortedInsts.head).toArray
     val width =
         if (resortedInsts.length <= 1) 1
         else math.log10(resortedInsts.length).floor.toInt + 1
-    val visualization = resortedInsts.map { inst =>
-      visualizeInst(indent, inst, width)
+    val visualization = resortedInsts.indices.map { index =>
+      visualizeInst(indent, resortedInsts(index), width, depths(resortedInsts(index).getPosId))
     }.mkString("\n")
 
     Seq(("", visualization))
