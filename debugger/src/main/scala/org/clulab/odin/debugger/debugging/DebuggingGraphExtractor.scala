@@ -7,6 +7,7 @@ import org.clulab.processors.Document
 
 class DebuggingGraphExtractor(
   val debugger: Debugger,
+  val graphExtractor: GraphExtractor,
   name: String,
   labels: Seq[String],
   priority: Priority,
@@ -17,7 +18,7 @@ class DebuggingGraphExtractor(
 ) extends GraphExtractor(name, labels, priority, keep, action, pattern, config) {
 
   // This comes indirectly through Extractor.
-  override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(this) {
+  override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(graphExtractor) {
     super.findAllIn(doc, state)
   }
 
@@ -31,6 +32,7 @@ object DebuggingGraphExtractor {
   def apply(debugger: Debugger, graphExtractor: GraphExtractor): DebuggingGraphExtractor = {
     new DebuggingGraphExtractor(
       debugger,
+      graphExtractor,
       graphExtractor.name,
       graphExtractor.labels,
       graphExtractor.priority,

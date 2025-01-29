@@ -164,8 +164,8 @@ class DebuggerContext(
 }
 
 class Debugger() {
-  protected var active: Boolean = false // TODO: You can turn off debugging with this!
-  protected var quiet: Boolean = true // TODO: You can turn off the printing of messages with this.
+  protected var active: Boolean = true // TODO: You can turn off debugging with this!
+  protected var quiet: Boolean = false // TODO: You can turn off the printing of messages with this.
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack

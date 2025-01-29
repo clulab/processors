@@ -7,16 +7,17 @@ import org.clulab.processors.Document
 
 class DebuggingTokenExtractor(
    val debugger: Debugger,
+   val tokenExtractor: TokenExtractor,
    name: String,
    labels: Seq[String],
    priority: Priority,
    keep: Boolean,
    action: Action,
-   pattern: TokenPattern // This may need to be copied
+   pattern: TokenPattern
  ) extends TokenExtractor(name, labels, priority, keep, action, pattern) {
 
   // This comes indirectly through Extractor.
-  override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(this) {
+  override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(tokenExtractor) {
     super.findAllIn(doc, state)
   }
 
@@ -30,12 +31,13 @@ object DebuggingTokenExtractor {
   def apply(debugger: Debugger, tokenExtractor: TokenExtractor): DebuggingTokenExtractor = {
     new DebuggingTokenExtractor(
       debugger,
+      tokenExtractor,
       tokenExtractor.name,
       tokenExtractor.labels,
       tokenExtractor.priority,
       tokenExtractor.keep,
       tokenExtractor.action,
-      tokenExtractor.pattern
+      DebuggingTokenPattern(debugger, tokenExtractor.pattern)
     )
   }
 }

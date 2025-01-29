@@ -93,6 +93,5 @@ object DebuggingExtractorEngine {
     val globalAction = extractorEngine.globalAction
 
     new DebuggingExtractorEngine(extractors, globalAction)
-
   }
 }

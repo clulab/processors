@@ -6,6 +6,7 @@ import org.clulab.odin.impl.{CrossSentenceExtractor, Priority, TokenExtractor}
 
 class DebuggingCrossSentenceExtractor(
   val debugger: Debugger,
+  val crossSentenceExtractor: CrossSentenceExtractor,
   name: String,
   labels: Seq[String],
   priority: Priority,
@@ -27,6 +28,7 @@ object DebuggingCrossSentenceExtractor {
   def apply(debugger: Debugger, crossSentenceExtractor: CrossSentenceExtractor): DebuggingCrossSentenceExtractor = {
     new DebuggingCrossSentenceExtractor(
       debugger,
+      crossSentenceExtractor,
       crossSentenceExtractor.name,
       crossSentenceExtractor.labels,
       crossSentenceExtractor.priority,
