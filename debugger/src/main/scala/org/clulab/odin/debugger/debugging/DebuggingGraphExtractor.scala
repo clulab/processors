@@ -1,9 +1,10 @@
 package org.clulab.odin.debugger.debugging
 
 import org.clulab.odin.debugger.Debugger
-import org.clulab.odin.{Action, Mention, State}
+import org.clulab.odin.{Action, EventMention, Mention, RelationMention, State, TextBoundMention, mkTokenInterval}
 import org.clulab.odin.impl.{ArgumentPattern, GraphExtractor, GraphPattern, OdinConfig, Priority, RelationGraphPattern, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.processors.Document
+import org.clulab.struct.Interval
 
 class DebuggingTriggerPatternGraphPattern(
   val debugger: Debugger,
@@ -20,8 +21,13 @@ class DebuggingTriggerPatternGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    super.getMentions(sent, doc, state, labels, keep, ruleName)
+    // super.getMentions(sent, doc, state, labels, keep, ruleName)
     // TODO: record should be made automatically
+    for {
+      r <- trigger.findAllIn(sent, doc, state)
+      trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
+      (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
+    } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
   }
 }
 
@@ -52,10 +58,17 @@ class DebuggingTriggerMentionGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    super.getMentions(sent, doc, state, labels, keep, ruleName)
+    // super.getMentions(sent, doc, state, labels, keep, ruleName)
     // TODO: record each mention and whether matched or not
     // debugger.debugMention
     // debugger.matches
+    for {
+      mention <- state.mentionsFor(sent)
+      if mention matches triggerLabel
+      if mention.isInstanceOf[TextBoundMention]
+      trig = mention.asInstanceOf[TextBoundMention]
+      (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
+    } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
   }
 }
 
@@ -79,7 +92,7 @@ class DebuggingRelationGraphPattern(
   config: OdinConfig
 ) extends RelationGraphPattern(anchorName, anchorLabel, arguments, config) {
 
-    override def getMentions(
+  override def getMentions(
     sent: Int,
     doc: Document,
     state: State,
@@ -87,10 +100,17 @@ class DebuggingRelationGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    super.getMentions(sent, doc, state, labels, keep, ruleName)
+    // super.getMentions(sent, doc, state, labels, keep, ruleName)
     // TODO: record each mention and whether matched or not
     // debugger.debugMention
     // debugger.matches
+    for {
+      mention <- state.mentionsFor(sent)
+      if mention matches anchorLabel
+      (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
+      relationArgs = args + (anchorName -> Seq(mention))
+      relationPaths = paths + (anchorName -> Map(mention -> Nil))
+    } yield new RelationMention(labels, mkTokenInterval(relationArgs), relationArgs, relationPaths, sent, doc, keep, ruleName)
   }
 }
 
@@ -106,8 +126,6 @@ object DebuggingRelationGraphPattern {
     )
   }
 }
-
-
 
 class DebuggingGraphExtractor(
   val debugger: Debugger,
@@ -134,6 +152,12 @@ class DebuggingGraphExtractor(
 object DebuggingGraphExtractor {
 
   def apply(debugger: Debugger, graphExtractor: GraphExtractor): DebuggingGraphExtractor = {
+    val debuggingGraphPattern = graphExtractor.pattern match {
+      case graphPattern: TriggerPatternGraphPattern => DebuggingTriggerPatternGraphPattern(debugger, graphPattern)
+      case graphPattern: TriggerMentionGraphPattern => DebuggingTriggerMentionGraphPattern(debugger, graphPattern)
+      case graphPattern: RelationGraphPattern => DebuggingRelationGraphPattern(debugger, graphPattern)
+    }
+
     new DebuggingGraphExtractor(
       debugger,
       graphExtractor,
@@ -142,7 +166,7 @@ object DebuggingGraphExtractor {
       graphExtractor.priority,
       graphExtractor.keep,
       graphExtractor.action,
-      graphExtractor.pattern,
+      debuggingGraphPattern,
       graphExtractor.config
     )
   }

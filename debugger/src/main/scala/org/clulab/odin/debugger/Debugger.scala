@@ -163,6 +163,8 @@ class DebuggerContext(
   }
 }
 
+// TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
+
 class Debugger() {
   protected var active: Boolean = true // TODO: You can turn off debugging with this!
   protected var quiet: Boolean = false // TODO: You can turn off the printing of messages with this.
