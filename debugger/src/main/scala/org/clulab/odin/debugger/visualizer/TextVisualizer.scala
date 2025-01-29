@@ -86,8 +86,10 @@ class TextVisualizer() extends Visualizer() {
     s"$className$formattedDetails"
   }
 
-  def visualizeInst(indent: Int, inst: Inst): String = {
-    val posId = inst.getPosId
+  def visualizeInst(indent: Int, inst: Inst, width: Int): String = {
+    val posIdRight = inst.getPosId.toString
+    val posIdLeft = " " * (width - posIdRight.length)
+    val posId = posIdLeft + posIdRight
     val description = getDescription(indent, inst)
     val children = getChildren(inst)
     val links =
@@ -181,8 +183,11 @@ class TextVisualizer() extends Visualizer() {
     }
 
     val resortedInsts = sortedInsts.tail :+ sortedInsts.head
+    val width =
+        if (resortedInsts.length <= 1) 1
+        else math.log10(resortedInsts.length).floor.toInt + 1
     val visualization = resortedInsts.map { inst =>
-      visualizeInst(indent, inst)
+      visualizeInst(indent, inst, width)
     }.mkString("\n")
 
     Seq(("", visualization))
