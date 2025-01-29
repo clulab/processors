@@ -127,17 +127,19 @@ object DebuggingThompsonVM {
           }
           else Nil
         case i: MatchMention =>
-          val bundles = retrieveMentions(state, sent, t.tok, i.m, i.arg).flatMap { m =>
-            val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
+          val mentions = retrieveMentions(state, sent, t.tok, i.m, i.arg)
+          val bundles = mentions
+              .filter { m =>
+                val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
 
-            debugger.debugMatches(matches)
-            if (matches) {
-              val captures = mkMentionCapture(t.mentions, i.name, m)
-              val nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
-              Some(mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups))
-            }
-            else None
-          }
+                matches
+              }
+              .map { m =>
+                val captures = mkMentionCapture(t.mentions, i.name, m)
+                val nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
+
+                mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups)
+              }
   //        val bundlesOld = for {
   //          m <- retrieveMentions(state, sent, t.tok, i.m, i.arg)
   //          if (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
