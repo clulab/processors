@@ -15,7 +15,7 @@ case class DebuggerRecord(
   start: Int,
   tok: Int,
   inst: Inst,
-  matches: Boolean
+  matches: Boolean // TODO: matches what?
 )
 
 class DebuggerContext(
@@ -440,6 +440,23 @@ class Debugger() {
   }
 
   def debugMatches(matches: Boolean): Unit = innerDebugMatches(matches)
+
+  def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    // Record some kind of cross type "anchor"
+    innerDebugExtractor(extractor)(stackFrame)(block)
+  }
+
+  def debugNeighbor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    // Record some kind of cross type "neighbor"
+    innerDebugExtractor(extractor)(stackFrame)(block)
+  }
+
 }
 
 object Debugger {

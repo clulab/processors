@@ -21,51 +21,57 @@ class DebuggingCrossSentenceExtractor(
   neighborRole: String
 ) extends CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow, anchorPattern,
     neighborPattern, anchorRole, neighborRole) {
+  // check for valid window values
+  if (leftWindow < 0) throw OdinException(s"left-window for '$name' must be >= 0")
+  if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
 
   // This comes indirectly through Extractor.
   override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(crossSentenceExtractor) {
     super.findAllIn(doc, state)
   }
 
-  override def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = debugger.debugSentence(sent, doc.sentences(sent)) {
-    // super.findAllIn(sent, doc, state) // TODO. This was copied from super and needs to have debugging added.
-
-    def getMentionsWithLabel(m: Mention): Seq[Mention] = {
-      state.mentionsFor(m.sentence, m.tokenInterval).filter{ mention =>
-        // the span should match exactly
-        (mention.tokenInterval == m.tokenInterval) &&
+  def getMatchingMentionsFromState(state: State, mention: Mention): Seq[Mention] = {
+    state.mentionsFor(mention.sentence, mention.tokenInterval).filter { stateMention =>
+      // the span should match exactly
+      (stateMention.tokenInterval == mention.tokenInterval) &&
         // the label should match
-        (mention matches m.label)
+        (stateMention matches mention.label)
+    }
+  }
+
+  override def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = debugger.debugSentence(sent, doc.sentences(sent)) {
+    val labelAnchorMentions = debugger.debugAnchor(anchorPattern) {
+      debugger.debugExtractor(anchorPattern) {
+        val allAnchorMentions = anchorPattern.findAllIn(sent, doc, state)
+
+        // Find the mentions in the state that match the given span and label.
+        allAnchorMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
       }
     }
 
-    anchorPattern.findAllIn(sent, doc, state) match {
-      // the rule failed
-      case Nil => Nil
-      // the anchor matched something
-      case anchorMentions =>
+    if (labelAnchorMentions.isEmpty) Nil // the rule failed
+    else debugger.debugNeighbor(neighborPattern) {
+      val windowRange = Range(math.max(sent - leftWindow, 0), math.min(sent + rightWindow, doc.sentences.length))
+      val labelNeighborMentions = windowRange.flatMap { i =>
+        if (i == sent) Seq.empty // The neighbor cannot be in the same sentence as the anchor.
+        else {
+          debugger.debugSentence(i, doc.sentences(i)) {
+            debugger.debugExtractor(neighborPattern) {
+              val allNeighborMentions = neighborPattern.findAllIn(i, doc, state)
 
-        // check for valid window values
-        if (leftWindow < 0)  throw OdinException(s"left-window for '$name' must be >= 0")
-        if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
+              // Find the mentions in the state that match the given span and label.
+              allNeighborMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+            }
+          }
+        }
+      }
+      val crossSentenceMentions = labelAnchorMentions.flatMap { anchor =>
+        labelNeighborMentions.map { neighbor =>
+          mkMention(anchor, neighbor)
+        }
+      }
 
-        val mentions = for {
-          i <- sent - leftWindow to sent + rightWindow
-          // is the sentence within the allotted window?
-          if 0 <= i && i < doc.sentences.length
-          // the neighbor cannot be in the same sentence as the anchor
-          if i != sent
-          // find the mentions in the state that match the given span and label
-          anchor <- anchorMentions.flatMap(getMentionsWithLabel)
-          //_ = println(s"Anchor:${anchor.labels}: '${anchor.text}' foundBy ${anchor.foundBy}")
-          // attempt to match the neighbor's pattern
-          neighbor <- neighborPattern.findAllIn(i, doc, state).flatMap(getMentionsWithLabel)
-          //_ = println(s"Neighbor:${neighbor.labels}: '${neighbor.text}' foundBy ${neighbor.foundBy}")
-          // the anchor and neighbor cannot be in the same sentence
-          // if anchor.sentence != neighbor.sentence
-        } yield mkMention(anchor, neighbor)
-
-        action(mentions, state)
+      action(crossSentenceMentions, state)
     }
   }
 }
