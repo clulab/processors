@@ -65,6 +65,8 @@ object DebuggerStarterApp extends App {
 
   // val sentence = document.sentences.head.words.mkString(" ") // mentions.head.sentenceObj.words.mkString(" ")
 
+  assert(mentions.length == mentions2.length)
+
   for (mention <- mentions)
     printMention(mention)
 

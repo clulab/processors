@@ -20,22 +20,22 @@ case class DebuggerRecord(
 
 class DebuggerContext(
   protected var depth: Int = 0,
-  protected var documentOpt: Option[Document] = None,
-  protected var loopOpt: Option[Int] = None,
-  protected var extractorOpt: Option[Extractor] = None,
-  protected var sentenceIndexOpt: Option[Int] = None,
-  protected var sentenceOpt: Option[Sentence] = None,
-  protected var startOpt: Option[Int] = None,
-  protected var toks: List[Int] = List.empty,
-  protected var insts: List[Inst] = List.empty
+  protected var documents: List[Document] = List.empty,
+  protected var loops: List[Int] = List.empty,
+  protected var extractors: List[Extractor] = List.empty,
+  protected var sentenceIndexes: List[Int] = List.empty,
+  protected var sentences: List[Sentence] = List.empty,
+  protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
+  protected var toks: List[Int] = List.empty, // The present token index
+  protected var insts: List[Inst] = List.empty // This might be for TokenPatterns only
 ) {
   def isComplete: Boolean = {
-    documentOpt.isDefined &&
-    loopOpt.isDefined &&
-    extractorOpt.isDefined &&
-    sentenceIndexOpt.isDefined &&
-    sentenceOpt.isDefined &&
-    startOpt.isDefined &&
+    documents.nonEmpty &&
+    loops.nonEmpty &&
+    extractors.nonEmpty &&
+    sentenceIndexes.nonEmpty &&
+    sentences.nonEmpty &&
+    starts.nonEmpty &&
     toks.nonEmpty &&
     insts.nonEmpty
   }
@@ -43,91 +43,71 @@ class DebuggerContext(
   def getDepth: Int = depth
 
   def setDocument(document: Document): Unit = {
-    assert(documentOpt.isEmpty)
-    documentOpt = Some(document)
+    documents = document :: documents
     depth += 1
   }
 
-  def getDocumentOpt: Option[Document] = documentOpt
+  def getDocumentOpt: Option[Document] = documents.headOption
 
   def resetDocument(): Unit = {
-    documentOpt = None
+    documents = documents.tail
     depth -= 1
   }
 
   def setLoop(loop: Int): Unit = {
-    assert(documentOpt.nonEmpty)
-    assert(loopOpt.isEmpty)
-    loopOpt = Some(loop)
+    loops = loop :: loops
     depth += 1
   }
 
-  def getLoopOpt: Option[Int] = loopOpt
+  def getLoopOpt: Option[Int] = loops.headOption
 
   def resetLoop(): Unit = {
-    loopOpt = None
+    loops = loops.tail
     depth -= 1
   }
 
   def setExtractor(extractor: Extractor): Unit = {
-    assert(loopOpt.nonEmpty)
-    assert(extractorOpt.isEmpty)
-    extractorOpt = Some(extractor)
+    extractors = extractor :: extractors
     depth += 1
   }
 
-  def getExtractorOpt: Option[Extractor] = extractorOpt
+  def getExtractorOpt: Option[Extractor] = extractors.headOption
 
   def resetExtractor(): Unit = {
-    extractorOpt = None
+    extractors = extractors.tail
     depth -= 1
   }
 
   def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
-    assert(loopOpt.nonEmpty)
-    assert(sentenceIndexOpt.isEmpty)
-    assert(sentenceOpt.isEmpty)
-    sentenceIndexOpt = Some(sentenceIndex)
-    sentenceOpt = Some(sentence)
+    sentenceIndexes = sentenceIndex :: sentenceIndexes
+    sentences = sentence :: sentences
     depth += 1
   }
 
-  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexOpt, sentenceOpt)
+  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexes.headOption, sentences.headOption)
 
   def resetSentence(): Unit = {
-    sentenceIndexOpt = None
-    sentenceOpt = None
+    sentenceIndexes = sentenceIndexes.tail
+    sentences = sentences.tail
     depth -= 1
   }
 
   def setStart(start: Int): Unit = {
-    assert(sentenceIndexOpt.nonEmpty)
-    assert(sentenceOpt.nonEmpty)
-    assert(startOpt.isEmpty)
-    assert(toks.isEmpty)
-    assert(insts.isEmpty)
-    startOpt = Some(start)
+    starts = start :: starts
     depth += 1
   }
 
-  def getStartOpt: Option[Int] = startOpt
+  def getStartOpt: Option[Int] = starts.headOption
 
   def resetStart(): Unit = {
-    startOpt = None
+    starts = starts.tail
     depth -= 1
   }
 
   def setTok(tok: Int): Unit = {
-    // If matches and go to next token, just in case there is a pass, then still have last tok
-    // can this be
-    assert(startOpt.nonEmpty)
     toks = tok :: toks
-//    assert(insts.isEmpty)
     depth += 1
   }
-
-  // TODO: Need to take recursion amount into account
-  // That should just be counted and put into context.
 
   def getTokOpt: (Option[Int]) = toks.headOption
 
@@ -139,10 +119,6 @@ class DebuggerContext(
   }
 
   def setInst(inst: Inst): Unit = {
-    if (toks.isEmpty)
-      println("How?")
-//    assert(tokOpt.nonEmpty)
-    // There can be multiple inst before we return.
     insts = inst :: insts
     depth += 1
   }
@@ -157,9 +133,9 @@ class DebuggerContext(
   }
 
   def setMatches(matches: Boolean): DebuggerRecord = {
-//    assert(isComplete)
-    DebuggerRecord(documentOpt.get, loopOpt.get, extractorOpt.get, sentenceIndexOpt.get, sentenceOpt.get,
-      startOpt.get, toks.head, insts.head, matches)
+    assert(isComplete)
+    DebuggerRecord(documents.head, loops.head, extractors.head, sentenceIndexes.head, sentences.head,
+      starts.head, toks.head, insts.head, matches)
   }
 }
 

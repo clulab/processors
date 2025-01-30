@@ -3,7 +3,7 @@
   label: Phrase
   type: token
   pattern: |
-    [word='A']{4}
+    (?= [word='A']{3})[word='A']{4}
 
 - name: foods-from-lexicon
   priority: ${rulepriority}
@@ -24,7 +24,7 @@
   label: Food
   type: token
   pattern: |
-    (?<= hello) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $
+    (?<= hello there) [entity='B-FOOD'] [entity='I-FOOD']* @theme:Person $
 
 - name: more-person-from-lexicon
   priority: ${rulepriority}

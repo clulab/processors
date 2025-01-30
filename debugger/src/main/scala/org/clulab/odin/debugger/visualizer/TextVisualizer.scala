@@ -225,9 +225,7 @@ class TextVisualizer() extends Visualizer() {
     val sortedInsts = extractInst(tokenPattern.start)
     val depths = assignDepths(0, 1, sortedInsts.toArray, Array.fill(sortedInsts.length)(-1))
     val resortedInsts = (sortedInsts.tail :+ sortedInsts.head).toArray
-    val width =
-        if (resortedInsts.length <= 1) 1
-        else math.log10(resortedInsts.length).floor.toInt + 1
+    val width = (resortedInsts.length - 1).toString.length
     val visualization = resortedInsts.indices.map { index =>
       visualizeInst(indent, resortedInsts(index), width, depths(resortedInsts(index).getPosId))
     }.mkString("\n")
