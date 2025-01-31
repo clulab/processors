@@ -22,12 +22,35 @@ class DebuggingTriggerPatternGraphPattern(
     ruleName: String
   ): Seq[Mention] = {
     // super.getMentions(sent, doc, state, labels, keep, ruleName)
-    // TODO: record should be made automatically
-    for {
-      r <- trigger.findAllIn(sent, doc, state)
-      trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
-      (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
-    } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
+    debugger.debugTrigger(trigger) {
+      debugger.debugTokenPattern(trigger) {
+        val tokenPatternResults = trigger.findAllIn(sent, doc, state)
+        val eventMentions = tokenPatternResults.flatMap { tokenPatternResult =>
+          val tokenInterval = Interval(tokenPatternResult.start, tokenPatternResult.end)
+          val eventMentions = debugger.debugTokenInterval(tokenInterval) {
+            val tbmTrigger = new TextBoundMention(labels, tokenInterval, sent, doc, keep, ruleName)
+            val argsAndPathsSeq = extractArguments(tokenInterval, sent, doc, state)
+            val eventMentions = argsAndPathsSeq.map { case (args, paths) =>
+              new EventMention(labels, mkTokenInterval(tbmTrigger, args), tbmTrigger, args, paths, sent, doc, keep, ruleName)
+            }
+            val matches = eventMentions.nonEmpty
+
+            debugger.debugMatches(matches)
+            eventMentions
+          }
+
+          eventMentions
+        }
+
+        eventMentions
+      }
+
+//      for {
+//        r <- trigger.findAllIn(sent, doc, state)
+//        trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
+//        (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
+//      } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
+    }
   }
 }
 

@@ -18,7 +18,9 @@ class DebuggingTokenExtractor(
 
   // This comes indirectly through Extractor.
   override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(tokenExtractor) {
-    super.findAllIn(doc, state)
+    debugger.debugTokenPattern(tokenExtractor.pattern) {
+      super.findAllIn(doc, state)
+    }
   }
 
   override def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = debugger.debugSentence(sent, doc.sentences(sent)) {

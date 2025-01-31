@@ -1,10 +1,11 @@
 package org.clulab.odin.debugger.debugging
 
-import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.{Debugger, DebuggerRecord}
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document
 
+import scala.collection.mutable.Buffer
 import scala.reflect.ClassTag
 
 class InnerDebuggingExtractorEngine(val debugger: Debugger, extractors: Vector[Extractor], globalAction: Action)
@@ -37,6 +38,7 @@ object InnerDebuggingExtractorEngine {
 
 class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action)
     extends ExtractorEngine(extractors, globalAction) {
+  val transcript: Buffer[DebuggerRecord] = Buffer.empty
 
   // We do have a list of extractors here and they are indexed.
   // Maybe in the log we need to store the index rather than extractor itself.
@@ -50,13 +52,17 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   // Call this Tracer rather than Debugger?
   // May depend on what all it needs do to.
 
+  def extractTranscript(debugger: Debugger): Unit = synchronized {
+    transcript.appendAll(debugger.transcript)
+
+  }
+
   override def extractFrom(doc: Document): Seq[Mention] = {
     val debugger =  new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
-    // Get stuff out of the debugger
-    // Save it in a synchronized way to the transcript
 
+    extractTranscript(debugger)
     result
   }
 
@@ -64,9 +70,8 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     val debugger = new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(document, initialState)
-    // Get stuff out of the debugger
-    // Save it in a synchronized way to the transcript
 
+    extractTranscript(debugger)
     result
   }
 
@@ -74,9 +79,8 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     val debugger = new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractByType[M](document, initialState)
-    // Get stuff out of the debugger
-    // Save it in a synchronized way to the transcript
 
+    extractTranscript(debugger)
     result
   }
 
