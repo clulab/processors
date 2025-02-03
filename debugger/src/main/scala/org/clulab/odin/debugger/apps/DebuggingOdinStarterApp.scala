@@ -10,7 +10,7 @@ import org.clulab.utils.FileUtils
 
 import java.io.File
 
-object DebuggerStarterApp extends App {
+object DebuggingOdinStarterApp extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
   // configuration is the subproject directory so that this resourceDir is accessible.
   val resourceDir: File = new File("./src/main/resources")
@@ -46,23 +46,11 @@ object DebuggerStarterApp extends App {
       ExtractorEngine(rules, ruleDir = None)
     }
   }
-  val document = processor.annotate("B A A C A A A D A A A A A E")
+  val document = processor.annotate("John eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   for (mention <- mentions)
     printMention(mention)
-
-  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
-  val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
-  val extractors = extractorEngine.extractors
-  val visualizer = new TextVisualizer()
-  val inspector = new Inspector(debuggingExtractorEngine.transcript)
-
-  assert(mentions.length == debuggingMentions.length)
-  extractors.foreach { extractor =>
-    visualizer.visualize(extractor)
-    println()
-  }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val indent = "    " * depth
@@ -82,4 +70,21 @@ object DebuggerStarterApp extends App {
     }
     println()
   }
+
+  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
+  val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
+  assert(mentions.length == debuggingMentions.length)
+
+  val visualizer = new TextVisualizer()
+  debuggingExtractorEngine.extractors.foreach { extractor =>
+    visualizer.visualize(extractor)
+    println()
+  }
+
+  val inspector = new Inspector(debuggingExtractorEngine.transcript)
+  val extractor = debuggingExtractorEngine.extractors.find { extractor =>
+    extractor.name == "people-eat-food"
+  }.get
+  val extractorInspector = inspector.inspect(extractor)
+
 }
