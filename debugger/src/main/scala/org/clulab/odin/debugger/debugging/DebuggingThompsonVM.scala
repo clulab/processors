@@ -117,6 +117,7 @@ object DebuggingThompsonVM {
           val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
           // So this bunch of threads has to match first.
           val results = evalThreads(mkThreads(startTok, i.start, LeftToRight))
+          println("Eval threads first, so side rail.")
           val matches = i.negative == results.isEmpty
 
           debugger.debugMatches(matches)
@@ -127,7 +128,10 @@ object DebuggingThompsonVM {
         case i: MatchLookBehind =>
           val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
           // So this bunch of threads has to match first.
-          val results = if (startTok < 0) None else evalThreads(mkThreads(startTok, i.start, RightToLeft))
+          val results =
+              if (startTok < 0) None
+              else evalThreads(mkThreads(startTok, i.start, RightToLeft))
+          println("Eval threads first, so side rail.")
           val matches = i.negative == results.isEmpty
 
           debugger.debugMatches(matches)
@@ -137,7 +141,7 @@ object DebuggingThompsonVM {
           else Nil
         case i: MatchMention =>
           val mentions = retrieveMentions(state, sent, t.tok, i.m, i.arg)
-          val bundles = mentions
+          val bundles: Seq[Seq[Thread]] = mentions
               .filter { m =>
                 val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
 

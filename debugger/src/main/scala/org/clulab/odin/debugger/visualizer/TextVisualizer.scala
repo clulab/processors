@@ -2,7 +2,9 @@ package org.clulab.odin.debugger.visualizer
 
 import org.clulab.odin.impl.{Addition, ArgumentPattern, ArgumentQuantifier, ChunkConstraint, ConcatGraphPattern, ConjunctiveConstraint, Constant, CrossSentenceExtractor, DisjunctiveConstraint, DisjunctiveGraphPattern, Division, Done, EmbeddingsResource, EntityConstraint, Equal, EuclideanQuotient, EuclideanRemainder, ExactQuantifier, ExactStringMatcher, Extractor, GraphExtractor, GraphPattern, GraphPatternNode, GreaterThan, GreaterThanOrEqual, IncomingConstraint, IncomingGraphPattern, IncomingWildcard, Inst, KleeneGraphPattern, LemmaConstraint, LessThan, LessThanOrEqual, LookaroundGraphPattern, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, Multiplication, NegatedConstraint, NegativeExpression, NormConstraint, NotEqual, NullQuantifier, NumericExpression, OptionalGraphPattern, OutgoingConstraint, OutgoingGraphPattern, OutgoingWildcard, Pass, RangedQuantifier, RegexStringMatcher, RelationGraphPattern, SaveEnd, SaveStart, SimilarityConstraint, Split, StringMatcher, Subtraction, TagConstraint, TokenConstraint, TokenConstraintGraphPattern, TokenExtractor, TokenPattern, TokenWildcard, TriggerMentionGraphPattern, TriggerPatternGraphPattern, WordConstraint}
 
+import java.io.{PrintWriter, StringWriter}
 import scala.annotation.tailrec
+import scala.util.Using
 
 class TextVisualizer() extends Visualizer() {
 
@@ -247,16 +249,19 @@ class TextVisualizer() extends Visualizer() {
     s"$className($details)"
   }
 
-  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Unit = {
+  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): String = {
     val extractions = extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
-
-    println(0, visualizeTokenExtractor(0, tokenExtractor))
-    extractions.foreach { case (name, string) =>
-      println(0, name)
-      println(0 + 1, string)
+    val string = printToString { printWriter =>
+      printWriter.println(0, visualizeTokenExtractor(0, tokenExtractor))
+      extractions.foreach { case (name, string) =>
+        printWriter.println(0, name)
+        printWriter.println(0 + 1, string)
+      }
     }
+
+    string
   }
 
   def visualizeGraphPatternNode(indent: Int, graphPatternNode: GraphPatternNode): String = {
@@ -343,7 +348,7 @@ class TextVisualizer() extends Visualizer() {
     }
   }
 
-  def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Unit = {
+  def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): String = {
     val className = graphExtractor.getClass.getSimpleName
     val details = Seq(
       s"name = ${graphExtractor.name}",
@@ -352,26 +357,29 @@ class TextVisualizer() extends Visualizer() {
     val extractions = extractGraphPattern(indent, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
+    val string = printToString { printWriter =>
+      printWriter.println(indent, s"$className(")
+      details.zipWithIndex.foreach { case (detail, index) =>
+        if (index != details.length - 1)
+          printWriter.println(indent + 1, s"$detail,")
+        else
+          printWriter.println(indent + 1, detail)
+      }
+      printWriter.println(indent, ")")
+      extractions.foreach { case (name, value) =>
+        printWriter.println(indent, name)
+        printWriter.println(indent + 1, value)
+      }
+    }
 
-    println(indent, s"$className(")
-    details.zipWithIndex.foreach { case (detail, index) =>
-      if (index != details.length - 1)
-        println(indent + 1, s"$detail,")
-      else
-        println(indent + 1, detail)
-    }
-    println(indent, ")")
-    extractions.foreach { case (name, value) =>
-      println(indent, name)
-      println(indent + 1, value)
-    }
+    string
   }
 
-  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Unit = {
+  def visualizeGraphExtractor(graphExtractor: GraphExtractor): String = {
     visualizeGraphExtractor(0, graphExtractor)
   }
 
-  def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Unit = {
+  def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): String = {
     val className = crossSentenceExtractor.getClass.getSimpleName
     val details = Seq(
       s"name = ${crossSentenceExtractor.name}",
@@ -389,34 +397,41 @@ class TextVisualizer() extends Visualizer() {
       (s"neighborPattern:$name", value)
     }
 
-    println(indent, s"$className(")
-    details.zipWithIndex.foreach { case (detail, index) =>
-      if (index != details.length - 1)
-        println(indent + 1, s"$detail,")
-      else
-        println(indent + 1, detail)
+    val string = printToString { printWriter =>
+      printWriter.println(indent, s"$className(")
+      details.zipWithIndex.foreach { case (detail, index) =>
+        if (index != details.length - 1)
+          printWriter.println(indent + 1, s"$detail,")
+        else
+          printWriter.println(indent + 1, detail)
+      }
+      printWriter.println(indent, ")")
+      anchorExtractions.foreach { case (name, value) =>
+        printWriter.println(indent, name)
+        printWriter.println(indent + 1, value)
+      }
+      neighborExtractions.foreach { case (name, value) =>
+        printWriter.println(indent, name)
+        printWriter.println(indent + 1, value)
+      }
     }
-    println(indent, ")")
-    anchorExtractions.foreach { case (name, value) =>
-      println(indent, name)
-      println(indent + 1, value)
-    }
-    neighborExtractions.foreach { case (name, value) =>
-      println(indent, name)
-      println(indent + 1, value)
-    }
+
+    string
   }
 
-  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Unit = {
+  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): String = {
     visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
-  override def visualize(extractor: Extractor): Unit = {
-    extractor match {
+  override def visualize(extractor: Extractor): TextVisualization = {
+    val text = extractor match {
       case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
       case graphExtractor: GraphExtractor => visualizeGraphExtractor(graphExtractor)
       case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
       case _ => ???
     }
+    val visualization = new TextVisualization(text)
+
+    visualization
   }
 }

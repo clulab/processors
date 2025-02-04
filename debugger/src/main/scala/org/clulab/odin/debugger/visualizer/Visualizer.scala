@@ -1,9 +1,20 @@
 package org.clulab.odin.debugger.visualizer
 
-import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor}
+import org.clulab.odin.impl.Extractor
 
-import scala.annotation.tailrec
+import java.io.{PrintWriter, StringWriter}
+import scala.util.Using
 
 abstract class Visualizer() {
-  def visualize(extractor: Extractor): Unit = ()
+  def visualize(extractor: Extractor): Visualization = ???
+
+  def printToString(f: PrintWriter => Unit): String = {
+    val stringWriter = new StringWriter()
+
+    Using.resource(new PrintWriter(stringWriter))  { printWriter =>
+      f(printWriter)
+    }
+
+    stringWriter.toString
+  }
 }

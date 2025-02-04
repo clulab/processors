@@ -9,6 +9,7 @@ import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
 import java.io.File
+import scala.util.Using
 
 object DebuggingOdinStarterApp extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
@@ -46,7 +47,7 @@ object DebuggingOdinStarterApp extends App {
       ExtractorEngine(rules, ruleDir = None)
     }
   }
-  val document = processor.annotate("John eats cake.")
+  val document = processor.annotate("John Doe eats cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   for (mention <- mentions)
@@ -77,7 +78,9 @@ object DebuggingOdinStarterApp extends App {
 
   val visualizer = new TextVisualizer()
   debuggingExtractorEngine.extractors.foreach { extractor =>
-    visualizer.visualize(extractor)
+    val stringVisualization = visualizer.visualize(extractor).toString
+
+    println(stringVisualization)
     println()
   }
 
@@ -88,12 +91,16 @@ object DebuggingOdinStarterApp extends App {
   // Track down the sentence that isn't working.
   val sentence = document.sentences.head
 
-  visualizer.visualize(extractor)
+  val stringVisualization = visualizer.visualize(extractor).toString
   val inspector = new Inspector(debuggingExtractorEngine.transcript)
       .inspectExtractor(extractor)
       .inspectSentence(sentence)
   val htmlTable = inspector.mkHtmlTables().head
 
+  println(stringVisualization)
+  Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
+    printWriter.println(htmlTable)
+  }
   println(htmlTable)
 
   // Do I need to keep track of previous Inst so that the path through them is clear?
