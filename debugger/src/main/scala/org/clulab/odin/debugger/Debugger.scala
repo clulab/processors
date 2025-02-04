@@ -12,12 +12,16 @@ case class DebuggerRecord(
   document: Document,
   loop: Int,
   extractor: Extractor,
+
   tokenPattern: TokenPattern,
   sentenceIndex: Int,
   sentence: Sentence,
-  start: Int,
-  tok: Int,
-  inst: Inst,
+
+  startOpt: Option[Int],
+  tokOpt: Option[Int],
+  instOpt: Option[Inst],
+  tokenIntervalOpt: Option[Interval],
+
   matches: Boolean // TODO: matches what?
 )
 
@@ -31,17 +35,22 @@ class DebuggerContext(
   protected var sentences: List[Sentence] = List.empty,
   protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
   protected var toks: List[Int] = List.empty, // The current token index
-  protected var insts: List[Inst] = List.empty
+  protected var insts: List[Inst] = List.empty,
+  protected var tokenIntervals: List[Interval] = List.empty
 ) {
   def isComplete: Boolean = {
     documents.nonEmpty &&
     loops.nonEmpty &&
     extractors.nonEmpty &&
+    tokenPatterns.nonEmpty &&
     sentenceIndexes.nonEmpty &&
-    sentences.nonEmpty &&
+    sentences.nonEmpty // &&
+/*
     starts.nonEmpty &&
     toks.nonEmpty &&
     insts.nonEmpty
+*/
+    // tokenIntervals
   }
 
   def getDepth: Int = depth
@@ -134,6 +143,19 @@ class DebuggerContext(
     depth -= 1
   }
 
+  def setTokenInterval(tokenInterval: Interval): Unit = {
+    tokenIntervals = tokenInterval :: tokenIntervals
+    depth += 1
+  }
+
+  def getTokenIntervalOpt: (Option[Interval]) = tokenIntervals.headOption
+
+  def resetTokenInterval(): Unit = {
+    tokenIntervals = tokenIntervals.tail
+    depth -= 1
+  }
+
+
   def setInst(inst: Inst): Unit = {
     insts = inst :: insts
     depth += 1
@@ -149,10 +171,31 @@ class DebuggerContext(
   }
 
   def setMatches(matches: Boolean): DebuggerRecord = {
-    assert(isComplete) // TODO: Depends on what kind of extractor
+    if (!isComplete)
+      println("The record is not complete!")// TODO: Depends on what kind of extractor
 
-    DebuggerRecord(documents.head, loops.head, extractors.head, tokenPatterns.head, sentenceIndexes.head, sentences.head,
-      starts.head, toks.head, insts.head, matches)
+    if (tokenIntervals.nonEmpty) {
+      // This is for cross
+      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
+    }
+    else {
+      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
+    }
+
+    DebuggerRecord(
+      documents.head,
+      loops.head,
+      extractors.head,
+      tokenPatterns.head,
+      sentenceIndexes.head,
+      sentences.head,
+
+      starts.headOption,
+      toks.headOption,
+      insts.headOption,
+      tokenIntervals.headOption,
+
+      matches)
   }
 }
 
@@ -213,14 +256,12 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
       val what = "doc"
+      val where = stackFrame.sourceCode.toString
+      val extractorEngineString = "[]"
       val docString = StringUtils.afterLast(doc.toString, '.')
       val textString = doc.text.getOrElse(doc.sentences.map { sentence => sentence.words.mkString(" ") }.mkString(" "))
-      val message = s"""${tabs}${side} $what $where(doc = $docString("$textString"))"""
+      val message = s"""${tabs}${side} $what $where$extractorEngineString(doc = $docString("$textString"))"""
 
       message
     }
@@ -238,14 +279,11 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
-          .replace(' ', '.')
       val what = "loop"
+      val where = stackFrame.sourceCode.toString
+      val extractorEngineString = "[]"
       val loopString = loop.toString
-      val message = s"""${tabs}${side} $what $where(loop = $loopString)"""
+      val message = s"""${tabs}${side} $what $where$extractorEngineString(loop = $loopString)"""
 
       message
     }
@@ -264,12 +302,54 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = s"""["${extractor.name}"]"""
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
       val what = "extractor"
-      val message = s"""${tabs}${side} $what $where()"""
+      val where = stackFrame.sourceCode.toString
+      val extractorString = s"""["${extractor.name}"]"""
+      val message = s"""${tabs}${side} $what $where$extractorString()"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    context.setExtractor(extractor)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetExtractor()
+    result
+  }
+
+  protected def innerDebugAnchorExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+    // TODO: This could keep track of the mentions returned from the block and
+    // do something special if there are none.
+
+    // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "anchorExtractor"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = s"""["${extractor.name}"]"""
+      val message = s"""${tabs}${side} $what $where$extractorString()"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    context.setExtractor(extractor)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetExtractor()
+    result
+  }
+
+  protected def innerDebugNeighborExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+    // TODO: This could keep track of the mentions returned from the block and
+    // do something special if there are none.
+
+    // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "neighborExtractor"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = s"""["${extractor.name}"]"""
+      val message = s"""${tabs}${side} $what $extractorString$where()"""
 
       message
     }
@@ -285,12 +365,29 @@ class Debugger() {
 
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = s"""["tokenPattern"]"""
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
       val what = "tokenPattern"
-      val message = s"""${tabs}${side} $what $where()"""
+      val where = stackFrame.sourceCode.toString
+      val tokenPatternString = s"""["tokenPattern"]"""
+      val message = s"""${tabs}${side} $what $where$tokenPatternString()"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    context.setTokenPattern(tokenPattern)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetTokenPattern()
+    result
+  }
+
+  protected def innerDebugTriggerTokenPattern[ResultType, StackFrameType <: StackFrame](tokenPattern: TokenPattern)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "triggerTokenPattern"
+      val where = stackFrame.sourceCode.toString
+      val tokenPatternString = s"""["tokenPattern"]"""
+      val message = s"""${tabs}${side} $what $where$tokenPatternString()"""
 
       message
     }
@@ -307,14 +404,11 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
-          .replace(' ', '.')
       val what = "sentence"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
       val sentenceString = sentence.words.mkString(" ")
-      val message = s"""${tabs}${side} $what $where(index = $index, sentence = "$sentenceString")"""
+      val message = s"""${tabs}${side} $what $where$extractorString(index = $index, sentence = "$sentenceString")"""
 
       message
     }
@@ -332,9 +426,9 @@ class Debugger() {
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "start"
-      val method = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
-      val obj = StringUtils.afterLast(StringUtils.beforeLast(stackFrame.sourceCode.enclosing.value, '.'), '.')
-      val message = s"""${tabs}${side} $what $obj.$method(start = $start)"""
+      val where = stackFrame.sourceCode.toString
+      val tokenPatternString="[]"
+      val message = s"""${tabs}${side} $what $where$tokenPatternString(start = $start)"""
 
       message
     }
@@ -351,13 +445,10 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
-          .replace(' ', '.')
       val what = "tok"
-      val message = s"""${tabs}${side} $what $where(tok = $tok)"""
+      val where = stackFrame.sourceCode.toString
+      val evaluatorString = "[]"
+      val message = s"""${tabs}${side} $what $where$evaluatorString(tok = $tok)"""
 
       message
     }
@@ -374,14 +465,11 @@ class Debugger() {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      val where = StringUtils
-          .afterLast(stackFrame.sourceCode.enclosing.value, '.')
-          .replace("#", s"$extractorString.")
-          .replace(' ', '.')
       val what = "inst"
-      val instString = inst.toString
-      val message = s"""${tabs}${side} $what $where(inst = $instString)"""
+      val where = stackFrame.sourceCode.toString
+      val evaluatorString = "[]"
+      val instString = inst.toString()
+      val message = s"""${tabs}${side} $what $where$evaluatorString(inst = $instString)"""
 
       message
     }
@@ -393,17 +481,34 @@ class Debugger() {
     result
   }
 
-  protected def innerDebugMatches(matches: Boolean): Unit = {
+  protected def innerDebugTokenInterval[ResultType, StackFrameType <: StackFrame](tokenInterval: Interval)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
+    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "tokenInterval"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}${side} $what $where$extractorString(tokenInterval = [${tokenInterval.start}, ${tokenInterval.end}))"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    context.setTokenInterval(tokenInterval)
+    val result = debugWithMessage(message)(stackFrame)(block)
+    context.resetTokenInterval()
+    result
+  }
+
+  protected def innerDebugMatches[StackFrameType <: StackFrame](matches: Boolean)(stackFrame: StackFrameType): Unit = {
 
     def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
-      val extractorString = "[]"
-      //      val where = StringUtils.afterLast(stackFrame.sourceCode.enclosing.value, '.')
-      //          .replace("#", s"$extractorString.")
-      //          .replace(' ', '.')
-      //      val instString = inst.toString
-      //      val message = s"""${tabs}${side} $where(inst = $instString)"""
-      val message = s"""${tabs}matches $matches"""
+      val what = "matches"
+      val where = stackFrame.sourceCode.toString
+      val evaluatorString = "[]"
+      val message = s"""${tabs} $what $where$evaluatorString(matches = ${matches.toString})"""
 
       message
     }
@@ -490,14 +595,19 @@ class Debugger() {
     innerDebugInst(inst)(stackFrame)(block)
   }
 
-  def debugMatches(matches: Boolean): Unit = innerDebugMatches(matches)
+  def debugMatches(matches: Boolean)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    innerDebugMatches(matches)(stackFrame)
+  }
 
   def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
     // TODO: Record some kind of cross type "anchor"
-    innerDebugExtractor(extractor)(stackFrame)(block)
+    innerDebugAnchorExtractor(extractor)(stackFrame)(block)
   }
 
   def debugNeighbor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
@@ -505,7 +615,7 @@ class Debugger() {
     val stackFrame = new StackFrame(sourceCode)
 
     // TODO: Record some kind of cross type "neighbor"
-    innerDebugExtractor(extractor)(stackFrame)(block)
+    innerDebugNeighborExtractor(extractor)(stackFrame)(block)
   }
 
   def debugTokenPattern[ResultType](tokenPattern: TokenPattern)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
@@ -520,14 +630,14 @@ class Debugger() {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    block // TODO
+    innerDebugTriggerTokenPattern(tokenPattern)(stackFrame)(block)
   }
 
   def debugTokenInterval[ResultType](tokenInterval: Interval)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    block // TODO
+    innerDebugTokenInterval(tokenInterval)(stackFrame)(block)
   }
 }
 

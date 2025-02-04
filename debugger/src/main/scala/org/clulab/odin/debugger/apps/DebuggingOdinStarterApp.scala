@@ -71,6 +71,16 @@ object DebuggingOdinStarterApp extends App {
     println()
   }
 
+  System.out.println("(DebuggingOdinStarterApp.scala:74)")
+  System.out.println("DebuggingOdinStarterApp.scala:74")
+  System.out.println("hello at org.clulab.odin.debugger.apps.DebuggingOdinStarterApp$.delayedEndpoint$org$clulab$odin$debugger$apps$DebuggingOdinStarterApp$1(DebuggingOdinStarterApp.scala:76)")
+  System.out.println("hello at whereever(DebuggingOdinStarterApp.scala:76)")
+  System.out.println("hello whereever(DebuggingOdinStarterApp.scala:76)")
+  // The long string here is important rather than the at
+  // and it can be System.out
+  System.out.println("org.clulab.odin.debugger.apps.DebuggingOdinStarterApp$.delayedEndpoint$org$clulab$odin$debugger$apps$DebuggingOdinStarterApp$1(DebuggingOdinStarterApp.scala:76)")
+//  throw new RuntimeException("This is a test.")
+
   val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   assert(mentions.length == debuggingMentions.length)
@@ -81,10 +91,20 @@ object DebuggingOdinStarterApp extends App {
     println()
   }
 
-  val inspector = new Inspector(debuggingExtractorEngine.transcript)
+  // Track down the rule that isn't working.
   val extractor = debuggingExtractorEngine.extractors.find { extractor =>
-    extractor.name == "people-eat-food"
+    extractor.name == "person-from-lexicon"
   }.get
-  val extractorInspector = inspector.inspect(extractor)
+  // Track down the sentence that isn't working.
+  val sentence = document.sentences.head
 
+  visualizer.visualize(extractor)
+  val inspector = new Inspector(debuggingExtractorEngine.transcript)
+      .inspectExtractor(extractor)
+      .inspectSentence(sentence)
+  val htmlTable = inspector.mkHtmlTables().head
+
+  println(htmlTable)
+
+  // Do I need to keep track of previous Inst so that the path through them is clear?
 }

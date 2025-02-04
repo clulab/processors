@@ -54,11 +54,10 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
 
   def extractTranscript(debugger: Debugger): Unit = synchronized {
     transcript.appendAll(debugger.transcript)
-
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {
-    val debugger =  new Debugger()
+    val debugger = new Debugger()
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
 

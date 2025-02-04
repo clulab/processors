@@ -15,12 +15,12 @@ class DebuggingCrossSentenceExtractor(
   action: Action,
   leftWindow: Int,
   rightWindow: Int,
-  anchorPattern: TokenExtractor,
-  neighborPattern: TokenExtractor,
+  anchorExtractor: TokenExtractor,
+  neighborExtractor: TokenExtractor,
   anchorRole: String,
   neighborRole: String
-) extends CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow, anchorPattern,
-    neighborPattern, anchorRole, neighborRole) {
+) extends CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow, anchorExtractor,
+    neighborExtractor, anchorRole, neighborRole) {
   // check for valid window values
   if (leftWindow < 0) throw OdinException(s"left-window for '$name' must be >= 0")
   if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
@@ -40,27 +40,31 @@ class DebuggingCrossSentenceExtractor(
   }
 
   override def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = debugger.debugSentence(sent, doc.sentences(sent)) {
-    val labelAnchorMentions = debugger.debugAnchor(anchorPattern) {
-      debugger.debugExtractor(anchorPattern) {
-        val allAnchorMentions = anchorPattern.findAllIn(sent, doc, state)
+    val labelAnchorMentions = debugger.debugAnchor(anchorExtractor) {
+      debugger.debugExtractor(anchorExtractor) {
+        debugger.debugTokenPattern(anchorExtractor.pattern) {
+          val allAnchorMentions = anchorExtractor.findAllIn(sent, doc, state)
 
-        // Find the mentions in the state that match the given span and label.
-        allAnchorMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+          // Find the mentions in the state that match the given span and label.
+          allAnchorMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+        }
       }
     }
 
     if (labelAnchorMentions.isEmpty) Nil // the rule failed
-    else debugger.debugNeighbor(neighborPattern) {
+    else debugger.debugNeighbor(neighborExtractor) {
       val windowRange = Range(math.max(sent - leftWindow, 0), math.min(sent + rightWindow, doc.sentences.length))
       val labelNeighborMentions = windowRange.flatMap { i =>
         if (i == sent) Seq.empty // The neighbor cannot be in the same sentence as the anchor.
         else {
           debugger.debugSentence(i, doc.sentences(i)) {
-            debugger.debugExtractor(neighborPattern) {
-              val allNeighborMentions = neighborPattern.findAllIn(i, doc, state)
+            debugger.debugExtractor(neighborExtractor) {
+              debugger.debugTokenPattern(neighborExtractor.pattern) {
+                val allNeighborMentions = neighborExtractor.findAllIn(i, doc, state)
 
-              // Find the mentions in the state that match the given span and label.
-              allNeighborMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+                // Find the mentions in the state that match the given span and label.
+                allNeighborMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+              }
             }
           }
         }
