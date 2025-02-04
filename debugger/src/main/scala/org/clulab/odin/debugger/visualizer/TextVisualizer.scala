@@ -2,17 +2,16 @@ package org.clulab.odin.debugger.visualizer
 
 import org.clulab.odin.impl.{Addition, ArgumentPattern, ArgumentQuantifier, ChunkConstraint, ConcatGraphPattern, ConjunctiveConstraint, Constant, CrossSentenceExtractor, DisjunctiveConstraint, DisjunctiveGraphPattern, Division, Done, EmbeddingsResource, EntityConstraint, Equal, EuclideanQuotient, EuclideanRemainder, ExactQuantifier, ExactStringMatcher, Extractor, GraphExtractor, GraphPattern, GraphPatternNode, GreaterThan, GreaterThanOrEqual, IncomingConstraint, IncomingGraphPattern, IncomingWildcard, Inst, KleeneGraphPattern, LemmaConstraint, LessThan, LessThanOrEqual, LookaroundGraphPattern, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, Multiplication, NegatedConstraint, NegativeExpression, NormConstraint, NotEqual, NullQuantifier, NumericExpression, OptionalGraphPattern, OutgoingConstraint, OutgoingGraphPattern, OutgoingWildcard, Pass, RangedQuantifier, RegexStringMatcher, RelationGraphPattern, SaveEnd, SaveStart, SimilarityConstraint, Split, StringMatcher, Subtraction, TagConstraint, TokenConstraint, TokenConstraintGraphPattern, TokenExtractor, TokenPattern, TokenWildcard, TriggerMentionGraphPattern, TriggerPatternGraphPattern, WordConstraint}
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.PrintWriter
 import scala.annotation.tailrec
-import scala.util.Using
 
 class TextVisualizer() extends Visualizer() {
 
-  def println(indent: Int, string: String): Unit = {
+  def pwPrintln(printWriter: PrintWriter, indent: Int, string: String): Unit = {
     val spaces = "  " * indent
     val spacedString = string.replaceAll("\n", "\n" + spaces)
 
-    System.out.println(s"$spaces$spacedString")
+    printWriter.println(s"$spaces$spacedString")
   }
 
   def visualizeEmbeddingsResource(indent: Int, embeddingsResource: EmbeddingsResource): String = {
@@ -254,10 +253,12 @@ class TextVisualizer() extends Visualizer() {
       (s"pattern:$name", value)
     }
     val string = printToString { printWriter =>
-      printWriter.println(0, visualizeTokenExtractor(0, tokenExtractor))
+      val string = visualizeTokenExtractor(0, tokenExtractor)
+
+      pwPrintln(printWriter, 0, string)
       extractions.foreach { case (name, string) =>
-        printWriter.println(0, name)
-        printWriter.println(0 + 1, string)
+        pwPrintln(printWriter, 0, name)
+        pwPrintln(printWriter, 0 + 1, string)
       }
     }
 
@@ -358,17 +359,17 @@ class TextVisualizer() extends Visualizer() {
       (s"pattern:$name", value)
     }
     val string = printToString { printWriter =>
-      printWriter.println(indent, s"$className(")
+      pwPrintln(printWriter, indent, s"$className(")
       details.zipWithIndex.foreach { case (detail, index) =>
         if (index != details.length - 1)
-          printWriter.println(indent + 1, s"$detail,")
+          pwPrintln(printWriter, indent + 1, s"$detail,")
         else
-          printWriter.println(indent + 1, detail)
+          pwPrintln(printWriter, indent + 1, detail)
       }
-      printWriter.println(indent, ")")
+      pwPrintln(printWriter, indent, ")")
       extractions.foreach { case (name, value) =>
-        printWriter.println(indent, name)
-        printWriter.println(indent + 1, value)
+        pwPrintln(printWriter, indent, name)
+        pwPrintln(printWriter, indent + 1, value)
       }
     }
 
@@ -398,21 +399,21 @@ class TextVisualizer() extends Visualizer() {
     }
 
     val string = printToString { printWriter =>
-      printWriter.println(indent, s"$className(")
+      pwPrintln(printWriter, indent, s"$className(")
       details.zipWithIndex.foreach { case (detail, index) =>
         if (index != details.length - 1)
-          printWriter.println(indent + 1, s"$detail,")
+          pwPrintln(printWriter, indent + 1, s"$detail,")
         else
-          printWriter.println(indent + 1, detail)
+          pwPrintln(printWriter, indent + 1, detail)
       }
-      printWriter.println(indent, ")")
+      pwPrintln(printWriter, indent, ")")
       anchorExtractions.foreach { case (name, value) =>
-        printWriter.println(indent, name)
-        printWriter.println(indent + 1, value)
+        pwPrintln(printWriter, indent, name)
+        pwPrintln(printWriter, indent + 1, value)
       }
       neighborExtractions.foreach { case (name, value) =>
-        printWriter.println(indent, name)
-        printWriter.println(indent + 1, value)
+        pwPrintln(printWriter, indent, name)
+        pwPrintln(printWriter, indent + 1, value)
       }
     }
 
