@@ -71,16 +71,6 @@ object DebuggingOdinStarterApp extends App {
     println()
   }
 
-  System.out.println("(DebuggingOdinStarterApp.scala:74)")
-  System.out.println("DebuggingOdinStarterApp.scala:74")
-  System.out.println("hello at org.clulab.odin.debugger.apps.DebuggingOdinStarterApp$.delayedEndpoint$org$clulab$odin$debugger$apps$DebuggingOdinStarterApp$1(DebuggingOdinStarterApp.scala:76)")
-  System.out.println("hello at whereever(DebuggingOdinStarterApp.scala:76)")
-  System.out.println("hello whereever(DebuggingOdinStarterApp.scala:76)")
-  // The long string here is important rather than the at
-  // and it can be System.out
-  System.out.println("org.clulab.odin.debugger.apps.DebuggingOdinStarterApp$.delayedEndpoint$org$clulab$odin$debugger$apps$DebuggingOdinStarterApp$1(DebuggingOdinStarterApp.scala:76)")
-//  throw new RuntimeException("This is a test.")
-
   val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   assert(mentions.length == debuggingMentions.length)

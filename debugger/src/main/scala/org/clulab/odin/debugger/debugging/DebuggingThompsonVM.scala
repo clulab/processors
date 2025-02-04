@@ -66,7 +66,11 @@ object DebuggingThompsonVM {
                     sys.error("unable to close capture")
                 }
               // For any other kind of instance, add it to the threads that will in the end be the result.
-              case inst =>
+              case inst: Inst =>
+                if (inst == Done)
+                  debugger.debugMatches(true)
+                else
+                  println("What is this?")
                 // Turn whatever else is at the head into a SingleThread and prepend it to existing threads.
                 loop(rest, SingleThread(tok, inst, dir, headGroups, headMentions, headPartialGroups) :: threads)
             }

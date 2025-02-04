@@ -508,7 +508,7 @@ class Debugger() {
       val what = "matches"
       val where = stackFrame.sourceCode.toString
       val evaluatorString = "[]"
-      val message = s"""${tabs} $what $where$evaluatorString(matches = ${matches.toString})"""
+      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString})"""
 
       message
     }
