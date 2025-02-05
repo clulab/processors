@@ -3,6 +3,7 @@ package org.clulab.odin.debugger.inspector
 import org.clulab.odin.debugger.DebuggerRecord
 import org.clulab.odin.impl.{Extractor, Inst}
 import org.clulab.processors.Sentence
+import scalatags.Text
 import scalatags.Text.all._
 
 import scala.collection.mutable
@@ -52,11 +53,10 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
     new Inspector(newTranscript)
   }
 
-  def mkHtmlTable(sentence: Sentence): String = {
+  def mkHtmlTable(sentence: Sentence): Text.TypedTag[String] = {
     val sentenceTranscript = transcript.filter { debuggerRecord =>
       debuggerRecord.sentence.eq(sentence)
     }
-    val headers = "start" +: sentence.words
 
     def findMatches(start: Int, tok: Int): Seq[(Inst, Option[Boolean])] = {
       val matchTranscripts = sentenceTranscript.filter { debuggerRecord =>
@@ -64,13 +64,9 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
       }
       val trues = matchTranscripts.filter(_.matches).flatMap(_.instOpt).distinct.toSet
       val falses = matchTranscripts.filter(!_.matches).flatMap(_.instOpt).distinct.toSet
-      val unsortedAll = (trues ++ falses).toSeq.sortBy(_.getPosId)
-      val sortedAll =
-          if (unsortedAll.nonEmpty && unsortedAll.head.getPosId == 0)
-            unsortedAll.tail :+ unsortedAll.head
-          else
-            unsortedAll
-      val summary = sortedAll.map { inst =>
+      val matches = (trues ++ falses).toSeq.sortBy(_.getPosId)
+
+      val summary = matches.map { inst =>
         ((trues.contains(inst), falses.contains(inst))) match {
           case (true, true) => None
           case (true, false) => Some(true)
@@ -78,50 +74,59 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
           case (false, false) => None
         }
       }
-      sortedAll.zip(summary)
+      matches.zip(summary)
     }
+    // This needs to overshoot to match Done for the complete sentence.
+    val extraWordRange = Range.inclusive(0, sentence.words.length)
     val borderStyle = "border: 1px solid black; border-collapse: collapse"
-    val fragment = html(body(
-      table(style := borderStyle)(
+    val fragment = table(style := borderStyle)(
+      tr(
+        th(style := borderStyle)("start"),
+        sentence.words.map { word =>
+          th(style := borderStyle)(word)
+        },
+        th(raw("&nbsp;"))
+      ),
+      sentence.words.indices.map { start =>
         tr(
-          th(style := borderStyle)("start"),
-          sentence.words.map { word =>
-            th(style := borderStyle)(word)
-          }
-        ),
-        sentence.words.indices.map { start =>
-          tr(
-            td(style := borderStyle)(sentence.words(start)),
-            sentence.words.indices.map { tok =>
-              val instAndMatchesOptSeq = findMatches(start, tok)
+          td(style := borderStyle)(sentence.words(start)),
+          extraWordRange.map { tok =>
+            val instAndMatchesOptSeq = findMatches(start, tok)
 
-              td(style := borderStyle) {
-                val spans = instAndMatchesOptSeq.flatMap { case (inst, matchesOpt) =>
-                  val color = matchesOpt match {
-                    case Some(true) => "green"
-                    case Some(false) => "red"
-                    case None => "gray"
-                  }
-
-                  Seq(
-                    span(style := s"color: $color")(inst.getPosId.toString),
-                    span(" ")
-                  )
+            td(style := borderStyle) {
+              val spans = instAndMatchesOptSeq.flatMap { case (inst, matchesOpt) =>
+                val color = matchesOpt match {
+                  case Some(true) => "green"
+                  case Some(false) => "red"
+                  case None => "gray"
                 }
 
-                spans
+                Seq(
+                  span(style := s"color: $color")(inst.getPosId.toString),
+                  span(" ")
+                )
               }
-            }
-          )
-        }
-      )
-    ))
-    val string = fragment.toString
 
-    string
+              spans
+            }
+          }
+        )
+      }
+    )
+
+    fragment
   }
 
-  def mkHtmlTables(): Seq[String] = {
+  def mkHtmlPage(text: String, table: Text.TypedTag[String]): String = {
+    val fragment = html(body(
+      pre(text),
+      table
+    ))
+
+    fragment.toString
+  }
+
+  def mkHtmlTables(): Seq[Text.TypedTag[String]] = {
     val allSentences = transcript
         .map { debuggerRecord =>
           EqualityByIdentity(debuggerRecord.sentence)
@@ -132,13 +137,6 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
     val htmlTables = sentences.map(mkHtmlTable)
 
     htmlTables
-  }
-
-
-  def printHtmlTables(): Unit = {
-    val htmlTable = mkHtmlTables()
-
-    println(htmlTable)
   }
 
 

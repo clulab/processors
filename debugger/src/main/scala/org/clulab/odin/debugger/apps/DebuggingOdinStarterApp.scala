@@ -96,10 +96,12 @@ object DebuggingOdinStarterApp extends App {
       .inspectExtractor(extractor)
       .inspectSentence(sentence)
   val htmlTable = inspector.mkHtmlTables().head
+  // TODO: Maybe some composite visualization
+  val htmlPage = inspector.mkHtmlPage(stringVisualization, htmlTable)
 
   println(stringVisualization)
   Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
-    printWriter.println(htmlTable)
+    printWriter.println(htmlPage)
   }
   println(htmlTable)
 

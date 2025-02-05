@@ -35,7 +35,7 @@ class DebuggingTriggerPatternGraphPattern(
             }
             val matches = eventMentions.nonEmpty
 
-            debugger.debugMatches(matches)
+//            debugger.debugMatches(matches) // TODO: This could be debug pair or something at the end
             eventMentions
           }
 
