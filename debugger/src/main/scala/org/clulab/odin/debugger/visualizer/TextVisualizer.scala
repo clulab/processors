@@ -242,7 +242,10 @@ class TextVisualizer() extends Visualizer() {
 
   def visualizeTokenExtractor(indent: Int, tokenExtractor: TokenExtractor): String = {
     val className = tokenExtractor.getClass.getSimpleName
-    val details = s"name = ${tokenExtractor.name}, pattern = ${visualizeTokenPattern(indent, tokenExtractor.pattern)}"
+    val details = Seq(
+      s"name = ${tokenExtractor.name}",
+      s"pattern = ${visualizeTokenPattern(indent, tokenExtractor.pattern)}"
+    ).mkString(", ")
 
     // This is all on one line because it is used within other extractors.
     s"$className($details)"
