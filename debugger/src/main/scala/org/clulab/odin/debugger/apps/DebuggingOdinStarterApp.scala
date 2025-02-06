@@ -76,7 +76,7 @@ object DebuggingOdinStarterApp extends App {
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   assert(mentions.length == debuggingMentions.length)
 
-  val visualizer = new TextVisualizer()
+  val visualizer = new TextVisualizer() // This is a rule visualizer
   debuggingExtractorEngine.extractors.foreach { extractor =>
     val stringVisualization = visualizer.visualize(extractor).toString
 
@@ -91,22 +91,24 @@ object DebuggingOdinStarterApp extends App {
   // Track down the sentence that isn't working.
   val sentence = document.sentences.head
 
-  val stringVisualization = visualizer.visualize(extractor).toString
-  val inspector = new Inspector(debuggingExtractorEngine.transcript)
+  // stackView, does there need to be a Stacker or tracer to show the stack trace.
+  val textualRuleView = visualizer.visualize(extractor).toString
+  val graphicalRuleView = "hello"
+  val inspector = Inspector(debuggingExtractorEngine)
       .inspectExtractor(extractor)
       .inspectSentence(sentence)
-  val htmlTable = inspector.mkHtmlTables().head
+  val instView = inspector.mkInstView().head
+  // So the threads need to also be keyed to the current debugger record at least down to sentence.
+  val threadView = inspector.mkThreadView()
   // TODO: Maybe some composite visualization
-  val htmlPage = inspector.mkHtmlPage(stringVisualization, htmlTable)
+  val htmlPage = inspector.mkHtmlPage(textualRuleView, instView, threadView)
 
   val finishedThreads = debuggingExtractorEngine.finishedThreads
   // TODO: Now visualize this.
 
-  println(stringVisualization)
+  println(textualRuleView)
   Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
     printWriter.println(htmlPage)
   }
-  println(htmlTable)
-
-  // Do I need to keep track of previous Inst so that the path through them is clear?
+  println(instView)
 }

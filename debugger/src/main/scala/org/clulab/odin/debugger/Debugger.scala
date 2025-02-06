@@ -9,7 +9,7 @@ import org.clulab.utils.StringUtils
 import scala.collection.mutable.Buffer
 
 case class FinishedThread(
-  thread: Thread,
+  thread: SingleThread,
   matched: Boolean,
   mismatchReason: Option[String] // Perhaps make these two an enum
 )
@@ -210,7 +210,7 @@ class DebuggerContext(
     )
   }
 
-  def setThread(matches: Boolean, thread: Thread, reasonOpt: Option[String]): DebuggerRecord = {
+  def setThread(matches: Boolean, thread: SingleThread, reasonOpt: Option[String]): DebuggerRecord = {
     val finishedThread = FinishedThread(thread, matches, reasonOpt)
 
     if (!isComplete)

@@ -1,48 +1,26 @@
 package org.clulab.odin.debugger.inspector
 
-import org.clulab.odin.debugger.DebuggerRecord
+import org.clulab.odin.debugger.{DebuggerRecord, FinishedThread}
+import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
+import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Extractor, Inst}
 import org.clulab.processors.Sentence
 import scalatags.Text
 import scalatags.Text.all._
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
-class EqualityByIdentity(val any: Any) {
-
-  override def hashCode(): Int = any.hashCode()
-
-  override def equals(other: Any): Boolean =
-    if (other.isInstanceOf[EqualityByIdentity])
-      (this.any, other.asInstanceOf[EqualityByIdentity].any) match {
-        case (self: Byte, other: Byte) => self == other
-        case (self: Short, other: Short) => self == other
-        case (self: Int, other: Int) => self == other
-        case (self: Long, other: Long) => self == other
-        case (self: Float, other: Float) => self == other
-        case (self: Double, other: Double) => self == other
-        case (self: AnyRef, other: AnyRef) =>
-          val result = self.eq(other)
-          result
-        case _ => false
-      }
-    else false
-}
-
-object EqualityByIdentity {
-
-  def apply(any: Any): EqualityByIdentity = new EqualityByIdentity(any)
-}
-
-
-class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
+class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mutable.Buffer[FinishedThread]) {
+  val borderStyle = "border: 1px solid black; border-collapse: collapse"
 
   def inspectExtractor(extractor: Extractor): Inspector = {
     val newTranscript = transcript.filter { debuggerRecord =>
       debuggerRecord.extractor.eq(extractor)
     }
 
-    new Inspector(newTranscript)
+    new Inspector(newTranscript, finishedThreads) // TODO: Filter this as well
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
@@ -50,7 +28,7 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
       debuggerRecord.sentence.eq(sentence)
     }
 
-    new Inspector(newTranscript)
+    new Inspector(newTranscript, finishedThreads) // TODO: Filter this as well
   }
 
   def mkHtmlTable(sentence: Sentence): Text.TypedTag[String] = {
@@ -77,19 +55,19 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
       matches.zip(summary)
     }
     // This needs to overshoot to match Done for the complete sentence.
-    val extraWordRange = Range.inclusive(0, sentence.words.length)
-    val borderStyle = "border: 1px solid black; border-collapse: collapse"
+    val words = sentence.words
+    val extraWordRange = Range.inclusive(0, words.length)
     val fragment = table(style := borderStyle)(
       tr(
         th(style := borderStyle)("start"),
-        sentence.words.map { word =>
+        words.map { word =>
           th(style := borderStyle)(word)
         },
         th(raw("&nbsp;"))
       ),
-      sentence.words.indices.map { start =>
+      words.indices.map { start =>
         tr(
-          td(style := borderStyle)(sentence.words(start)),
+          td(style := borderStyle)(words(start)),
           extraWordRange.map { tok =>
             val instAndMatchesOptSeq = findMatches(start, tok)
 
@@ -117,16 +95,21 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
     fragment
   }
 
-  def mkHtmlPage(text: String, table: Text.TypedTag[String]): String = {
+  def mkHtmlPage(text: String, instView: Text.TypedTag[String], threadView: Text.TypedTag[String]): String = {
     val fragment = html(body(
+      h2("Textual Rule View"),
       pre(text),
-      table
+      h2("Graphical Rule View"),
+      h2("Inst View"),
+      instView,
+      h2("Thread View"),
+      threadView
     ))
 
     fragment.toString
   }
 
-  def mkHtmlTables(): Seq[Text.TypedTag[String]] = {
+  def mkInstView(): Seq[Text.TypedTag[String]] = {
     val allSentences = transcript
         .map { debuggerRecord =>
           EqualityByIdentity(debuggerRecord.sentence)
@@ -139,81 +122,65 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord]) {
     htmlTables
   }
 
+  def mkThreadView(): Text.TypedTag[String] = {
 
-/*
+    @tailrec
+    def loop(singleThread: SingleThread, singleThreads: List[SingleThread]): List[SingleThread] = {
+      val newSingleThreads = singleThread :: singleThreads
 
-  // Find all matching MatchTokens and say what they matched.
-  def debugMatchTokens(): Unit = {
-    val transcript = Debugger.instance.transcript
-    val nameMatchTokenTokenSeq = transcript
-        .filter { debuggerRecord =>
-          debuggerRecord.matches && debuggerRecord.inst.isInstanceOf[MatchToken]
-        }
-        .map { debuggerRecord =>
-          (debuggerRecord.extractor.name, debuggerRecord.inst.asInstanceOf[MatchToken], debuggerRecord.sentence.words(debuggerRecord.tok))
-        }
-
-    nameMatchTokenTokenSeq.foreach(println)
-  }
-
-  def debugDoneRules(): Unit = {
-    val transcript = Debugger.instance.transcript
-    val nameSentencestartTokSeq = transcript
-        .filter { debuggerRecord =>
-          debuggerRecord.matches && debuggerRecord.inst.isInstanceOf[Done.type]
-        }
-        .map { debuggerRecord =>
-          (debuggerRecord.extractor.name, debuggerRecord.sentence, debuggerRecord.start, debuggerRecord.tok)
-        }
-
-    nameSentencestartTokSeq.foreach { case (name, sentence, start, tok) =>
-      val words = sentence.words.clone
-      words(start) = "[" + words(start)
-      words(tok - 1) = words(tok - 1) + "]"
-
-      println(s"""Rule $name matched sentence "${words.mkString(" ")}".""")
-    }
-  }
-
-  def hasWidth(inst: Inst): Boolean = {
-    inst.isInstanceOf[MatchToken] || inst.isInstanceOf[MatchMention] // What is the width of this?
-  }
-
-  def debugPartialMatches(): Unit = {
-    val transcript = Debugger.instance.transcript
-    val keyAndMinPosMaxPos = transcript
-        .groupBy { debuggerRecord =>
-          (debuggerRecord.document, debuggerRecord.loop, debuggerRecord.extractor, debuggerRecord.sentenceIndex, debuggerRecord.start)
-        }
-        .filter { case (key, debuggerRecords) =>
-          // We need to have something not SaveStart that matched and nothing that is Done.
-          // Some matches are zero-width and should be ignored.  Record this fact in the Inst.
-          // Alternatively, highlight empty string somewhere.
-          debuggerRecords.exists { debuggerRecord => !debuggerRecord.inst.isInstanceOf[SaveStart] && debuggerRecord.matches } &&
-          !debuggerRecords.exists { debuggerRecord => debuggerRecord.inst.isInstanceOf[Done.type] && debuggerRecord.matches }
-        }
-        .map { case (key, debuggerRecords) =>
-          val matchingToks = debuggerRecords.filter { debuggerRecord => debuggerRecord.matches && hasWidth(debuggerRecord.inst) }.map(_.tok)
-          val minPos = key._5
-          val maxPos = if (matchingToks.isEmpty) minPos else matchingToks.max + 1
-          key -> (minPos, maxPos)
-        }
-
-    keyAndMinPosMaxPos.foreach { case ((document, loop, extractor, sentenceIndex, start), (minPos, maxPos)) =>
-      val words = document.sentences(sentenceIndex).words.clone
-      if (maxPos > minPos) {
-        words(minPos) = ">" + words(minPos)
-        words(maxPos - 1) = words(maxPos - 1) + "<"
-      }
+      if (singleThread.prevThreadOpt.isEmpty) newSingleThreads
       else
-        words(minPos) = "><" + words(minPos)
-
-      println(s"""Rule ${extractor.name} partially matched sentence "${words.mkString(" ")}".""")
+        loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread], newSingleThreads) // TODO
     }
-  }
 
-  debugMatchTokens()
-  debugDoneRules()
-  debugPartialMatches()
-*/
+    // TODO: Assume all threads for now, but these need to be filtered as well.
+    // They need to know about their sentence then
+    val sentence = transcript.head.sentence
+    val words = sentence.words
+    val rows = finishedThreads.zipWithIndex.map { case (finishedThread, index) =>
+      val singleThreads = loop(finishedThread.thread, List.empty)
+      val byTok = singleThreads.groupBy(_.tok)
+      val extendedRange = Range.inclusive(0, words.length)
+      val tds = extendedRange.map { tok =>
+        val tokSingleThreads = byTok.getOrElse(tok, List.empty)
+        val posIds = tokSingleThreads.map { tokSingleThread =>
+          tokSingleThread.inst.getPosId
+        }.mkString(" ")
+
+        td(style := borderStyle)(posIds)
+      }
+      val reasonFrag =
+          if (finishedThread.mismatchReason.isDefined)
+            frag(finishedThread.mismatchReason.get)
+          else raw("&nbsp;")
+
+      val result = tr(
+        td(style := borderStyle)(index.toString),
+        td(style := borderStyle)(finishedThread.matched.toString),
+        tds,
+        td(style := borderStyle)(reasonFrag)
+      )
+
+      result
+    }
+    val view = table(style := borderStyle)(
+      tr(
+        th(style := borderStyle)("index"),
+        th(style := borderStyle)("matched"),
+        words.map(th(style := borderStyle)(_)),
+        th(style := borderStyle)(raw("&nbsp;")),
+        th(style := borderStyle)("reason")
+      ),
+      rows
+    )
+
+    view
+  }
+}
+
+object Inspector {
+
+  def apply(debuggingExtractorEngine: DebuggingExtractorEngine): Inspector = {
+    new Inspector(debuggingExtractorEngine.transcript, debuggingExtractorEngine.finishedThreads)
+  }
 }
