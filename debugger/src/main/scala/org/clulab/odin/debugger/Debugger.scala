@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.impl.ThompsonVM.Thread
+import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
 import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
@@ -251,6 +251,7 @@ class Debugger() {
   protected var maxStack: Debugger.Stack = stack
   protected val context = new DebuggerContext()
   val transcript: Buffer[DebuggerRecord] = Buffer.empty
+  val finishedThreads: Buffer[FinishedThread] = Buffer.empty
 
   def activate(): Unit = active = true
 
@@ -563,24 +564,9 @@ class Debugger() {
     }
   }
 
-  protected def innerDebugThread[StackFrameType <: StackFrame](matches: Boolean, thread: Thread, reasonOpt: Option[String])(stackFrame: StackFrameType): Unit = {
-
-    def mkMessage(depth: Int): String = {
-      val tabs = "\t" * depth
-      val what = "matches"
-      val where = stackFrame.sourceCode.toString
-      val evaluatorString = "[]"
-      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString})"""
-
-      message
-    }
-
-    val message = mkMessage(context.getDepth)
-
+  protected def innerDebugThread[StackFrameType <: StackFrame](matches: Boolean, thread: SingleThread, reasonOpt: Option[String])(stackFrame: StackFrameType): Unit = {
     if (active) {
-      if (!quiet) println(message)
-      // TODO
-//      transcript += context.setMatches(matches, thread, reasonOpt)
+      finishedThreads += FinishedThread(thread, matches, reasonOpt)
     }
   }
 
@@ -665,7 +651,7 @@ class Debugger() {
     innerDebugMatches(matches, tok, inst)(stackFrame)
   }
 
-  def debugThread(thread: Thread, matches: Boolean, reasonOpt: Option[String] = None)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+  def debugThread(thread: SingleThread, matches: Boolean, reasonOpt: Option[String] = None)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 

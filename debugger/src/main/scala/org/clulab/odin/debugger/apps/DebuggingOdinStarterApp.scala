@@ -99,6 +99,9 @@ object DebuggingOdinStarterApp extends App {
   // TODO: Maybe some composite visualization
   val htmlPage = inspector.mkHtmlPage(stringVisualization, htmlTable)
 
+  val finishedThreads = debuggingExtractorEngine.finishedThreads
+  // TODO: Now visualize this.
+
   println(stringVisualization)
   Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
     printWriter.println(htmlPage)
