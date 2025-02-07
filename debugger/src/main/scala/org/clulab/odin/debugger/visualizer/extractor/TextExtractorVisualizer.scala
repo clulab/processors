@@ -1,17 +1,12 @@
-package org.clulab.odin.debugger.visualizer
+package org.clulab.odin.debugger.visualizer.extractor
 
-import org.clulab.odin.impl.{Addition, ArgumentPattern, ArgumentQuantifier, ChunkConstraint, ConcatGraphPattern, ConjunctiveConstraint, Constant, CrossSentenceExtractor, DisjunctiveConstraint, DisjunctiveGraphPattern, Division, Done, EmbeddingsResource, EntityConstraint, Equal, EuclideanQuotient, EuclideanRemainder, ExactQuantifier, ExactStringMatcher, Extractor, GraphExtractor, GraphPattern, GraphPatternNode, GreaterThan, GreaterThanOrEqual, IncomingConstraint, IncomingGraphPattern, IncomingWildcard, Inst, KleeneGraphPattern, LemmaConstraint, LessThan, LessThanOrEqual, LookaroundGraphPattern, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, MentionConstraint, Multiplication, NegatedConstraint, NegativeExpression, NormConstraint, NotEqual, NullQuantifier, NumericExpression, OptionalGraphPattern, OutgoingConstraint, OutgoingGraphPattern, OutgoingWildcard, Pass, RangedQuantifier, RegexStringMatcher, RelationGraphPattern, SaveEnd, SaveStart, SimilarityConstraint, Split, StringMatcher, Subtraction, TagConstraint, TokenConstraint, TokenConstraintGraphPattern, TokenExtractor, TokenPattern, TokenWildcard, TriggerMentionGraphPattern, TriggerPatternGraphPattern, WordConstraint}
+import org.clulab.odin.debugger.visualization.{TextVisualization, Visualization}
+import org.clulab.odin.impl._
 
 import java.io.PrintWriter
 import scala.annotation.tailrec
 
-
-class TextVisualization(text: String) extends Visualization {
-
-  override def toString: String = text
-}
-
-class TextVisualizer() extends Visualizer() {
+class TextExtractorVisualizer() extends ExtractorVisualizer() {
 
   def pwPrintln(printWriter: PrintWriter, indent: Int, string: String): Unit = {
     val spaces = "  " * indent

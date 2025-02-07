@@ -1,51 +1,11 @@
-package org.clulab.odin.debugger.visualizer
+package org.clulab.odin.debugger.visualizer.extractor
 
+import org.clulab.odin.debugger.visualization.{HtmlVisualization, Visualization}
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import scalatags.Text
 import scalatags.Text.all._
 
-class HtmlVisualization(val frag: Text.TypedTag[String]) extends Visualization {
-
-  override def toString: String = frag.toString()
-}
-
-/*
-
-  def mkHtmlRuleView(textualRuleView: String): Text.TypedTag[String] = {
-    val lines = textualRuleView.lines.toArray
-    val topLines = lines.takeWhile(!_.endsWith(":"))
-    val botLines = lines.drop(topLines.length)
-    val indent = span(raw("&nbsp;" * 2))
-
-    val botRows = botLines.map { line =>
-      if (line.startsWith(" ")) {
-        val trimmedLine = line.trim
-        val number = trimmedLine.takeWhile(_ != ' ')
-        val rest = trimmedLine.drop(number.length).trim
-        val inst = ""
-        val details = ""
-        val nexts = ""
-
-        tr(
-          td(indent),
-          td(indent),
-          td(number.dropRight(1)),
-          td(rest)
-        )
-      }
-      else
-        tr(
-          td(indent),
-          td(colspan := 3)(line)
-        )
-    }
-
-
-
-  }
-
- */
-class HtmlVisualizer extends Visualizer {
+class MermaidExtractorVisualizer() extends ExtractorVisualizer() {
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
     ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
@@ -56,7 +16,7 @@ class HtmlVisualizer extends Visualizer {
   }
 
   def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Text.TypedTag[String] = {
-    val textVisualizer = new TextVisualizer()
+    val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
@@ -83,31 +43,39 @@ class HtmlVisualizer extends Visualizer {
     }
 
     val top = textVisualizer.visualizeTokenExtractor(0, tokenExtractor)
-    val topRows = toRows(top, 4)
+    val topRows = toRows(top, 3)
     val botRows = extractions.flatMap { case (name, string) =>
       val headerRow = tr(
         td(placeholder),
-        td(colspan := 3)(name)
+        td(colspan := 2)(name)
       )
-      val trailerRows = string.lines.map { line =>
-        val number = line.takeWhile(_ != '.')
-        val indent = line
-            .drop(number.length + 2) // Skip . and first space.
-            .takeWhile(_ == ' ')
-        val rest = line.drop(number.length + 2 + indent.length)
+      val trailerRow = {
+        val mermaid = pre(`class` := "mermaid")("""
+          graph TD
+          A[1 SaveStart --GLOBAL--] -. next .-> B[2 MatchToken B-PER]
+          B -- next --> C[3 Split]
+          C -. lhs .-> D[4 MatchToken I-PER]
+          C -. rhs .-> E[5 Pass]
+          D -- next --> C
+          E -. next .-> F[6 SaveEnd --GLOBAL--]
+          F -. next .-> G[0 Done]
+        """)
+
+        // need the val and where they go to
+        // also figure out what kind of line, solid or dashed
+        // also take look ahead and behind into account
+        // somehow insert into pipeline with auto
 
         tr(
           td(placeholder),
           td(placeholder),
-          td(number),
           td(
-            raw("&nbsp;" * indent.length),
-            rest
+            mermaid
           )
         )
       }
 
-      Seq(headerRow) ++ trailerRows
+      Seq(headerRow) :+ trailerRow
     }
 
     table(`class` := "bordered")(
@@ -127,7 +95,5 @@ class HtmlVisualizer extends Visualizer {
     val visualization = new HtmlVisualization(frag)
 
     visualization
-
-
   }
 }

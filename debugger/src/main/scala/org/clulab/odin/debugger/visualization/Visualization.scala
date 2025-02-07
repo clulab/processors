@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.visualizer
+package org.clulab.odin.debugger.visualization
 
 import org.clulab.utils.FileUtils
 

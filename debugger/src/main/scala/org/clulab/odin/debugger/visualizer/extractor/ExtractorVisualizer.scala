@@ -1,11 +1,12 @@
-package org.clulab.odin.debugger.visualizer
+package org.clulab.odin.debugger.visualizer.extractor
 
+import org.clulab.odin.debugger.visualization.Visualization
 import org.clulab.odin.impl.Extractor
 
 import java.io.{PrintWriter, StringWriter}
 import scala.util.Using
 
-abstract class Visualizer() {
+abstract class ExtractorVisualizer() {
   def visualize(extractor: Extractor): Visualization
 
   def printToString(f: PrintWriter => Unit): String = {
