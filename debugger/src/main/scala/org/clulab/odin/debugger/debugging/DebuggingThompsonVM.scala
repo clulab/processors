@@ -136,7 +136,10 @@ object DebuggingThompsonVM {
 
               mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
-            else Nil
+            else {
+              debugger.debugThread(t, false, Some("MatchToken failed"))
+              Nil
+            }
           case i: MatchSentenceStart =>
             val matches = (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1)
 
@@ -144,7 +147,10 @@ object DebuggingThompsonVM {
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
-            else Nil
+            else {
+              debugger.debugThread(t, false, Some("MatchSentenceStart failed"))
+              Nil
+            }
           case i: MatchSentenceEnd => // TODO: Account for false
             val matches = t.tok == doc.sentences(sent).size
 
@@ -152,7 +158,10 @@ object DebuggingThompsonVM {
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
-            else Nil
+            else {
+              debugger.debugThread(t, false, Some("MatchSentenceEnd failed"))
+              Nil
+            }
           case i: MatchLookAhead => // TODO: Account for false
             val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
             // So this bunch of threads has to match first.
@@ -164,7 +173,10 @@ object DebuggingThompsonVM {
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
-            else Nil
+            else {
+              debugger.debugThread(t, false, Some("MatchLookAhead failed"))
+              Nil
+            }
           case i: MatchLookBehind =>
             val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
             // So this bunch of threads has to match first.
@@ -178,7 +190,10 @@ object DebuggingThompsonVM {
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
-            else Nil
+            else {
+              debugger.debugThread(t, false, Some("MatchLookBehind failed"))
+              Nil
+            }
           case i: MatchMention =>
             val mentions = retrieveMentions(state, sent, t.tok, i.m, i.arg)
             val bundles: Seq[Seq[Thread]] = mentions
@@ -216,7 +231,7 @@ object DebuggingThompsonVM {
     def debugThread(thread: Thread, matches: Boolean, reasonOpt: Option[String]): Unit = {
       thread match {
         case singleThread: SingleThread =>
-          debugger.debug(singleThread, matches, reasonOpt)
+          debugger.debugThread(singleThread, matches, reasonOpt)
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
@@ -226,7 +241,7 @@ object DebuggingThompsonVM {
       }
     }
 
-    def debugDoneThread(thread: Thread): Unit = {
+    def debugThreadDone(thread: Thread): Unit = {
       thread match {
         case singleThread: SingleThread =>
           if (singleThread.inst == Done) {
@@ -237,7 +252,7 @@ object DebuggingThompsonVM {
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
-              debugDoneThread(thread)
+              debugThreadDone(thread)
             }
           }
       }
@@ -250,7 +265,7 @@ object DebuggingThompsonVM {
       val doneThreadOpt = doneThreadIndexOpt.map(threads(_))
 
       // Not all of these will actually be considered, but that is tracked with the threads.
-      threads.foreach(debugDoneThread)
+      threads.foreach(debugThreadDone)
       doneThreadOpt match {
         // No thread has finished; return them all.
         case None => (threads, None)
@@ -263,7 +278,8 @@ object DebuggingThompsonVM {
           // one continue the search for one that isReallyDone?
           val result =
               if (thread.isReallyDone) {
-                debugThread(thread, true, Some("It was really done."))
+                // TODO: Again, this might not be used, so don't debug it yet.
+                // debugThread(thread, true, Some("It was really done."))
                 (survivors, Some(thread))
               } // TODO: Mark this last one complete with the debugger.
               else
@@ -276,10 +292,42 @@ object DebuggingThompsonVM {
           val survivors = threads.slice(0, doneThreadIndex) // Exclude doneThreadIndex.
           val victims = threads.slice(doneThreadIndex + 1, threads.length)
 
-          debugger.debugThread(thread, true, Some("It was the first found that was done."))
+          // Even though the thread is being returned, it may not be used.
+          // debugger.debugThread(thread, true, Some("It was the first found that was done."))
           victims.foreach(debugThread(_, false, Some("It was located after the surviving thread.")))
           (survivors, Some(thread)) // This last thread finished, the ones after takeWhile failed.  Didn't get there first.
       }
+    }
+
+    @annotation.tailrec
+    private def localInnerEvalThreads(threads: Seq[Thread], resultOpt: Option[Thread] = None): Option[Thread] = {
+      // TODO: This is a good place to record the threads that are being evaluated and maybe depth.
+      if (threads.isEmpty) {
+        resultOpt.foreach { thread =>
+          debugThread(thread, true, Some("There are no other choices."))
+        }
+        resultOpt
+      }
+      else {
+        // Threads that move to nextThreads will eventually be counted.
+        // The nextResultOpt
+        val (nextThreads, nextResultOpt) = handleDone(threads)
+        val steppedThreads = stepThreads(nextThreads)
+
+//        nextThreads.foreach { thread =>
+//          debugThread(thread, false, Some("It got stepped."))
+//        }
+        if (nextResultOpt.isDefined) {
+          resultOpt.foreach { thread =>
+            debugThread(thread, false, Some("We'll use the next result instead."))
+          }
+        }
+        localInnerEvalThreads(steppedThreads, nextResultOpt.orElse(resultOpt))
+      }
+    }
+
+    override def evalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
+      localInnerEvalThreads(threads, result)
     }
   }
 
