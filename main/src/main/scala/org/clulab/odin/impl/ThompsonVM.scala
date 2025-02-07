@@ -271,15 +271,18 @@ object ThompsonVM {
     }
 
     @annotation.tailrec
-    final def evalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
-      // TODO: This is a good place to record the threads that are being evaluated and maybe depth.
+    final def innerEvalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
       if (threads.isEmpty) result
       else {
         val (nextThreads, nextResult) = handleDone(threads)
         val steppedThreads = stepThreads(nextThreads)
 
-        evalThreads(steppedThreads, nextResult orElse result)
+        innerEvalThreads(steppedThreads, nextResult orElse result)
       }
+    }
+
+    def evalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
+      innerEvalThreads(threads, result)
     }
 
     def eval(tok: Int, start: Inst): Option[Thread] = {
