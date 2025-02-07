@@ -16,8 +16,3 @@ trait Visualization {
 
   def toScreen(): Unit = println(toString)
 }
-
-class TextVisualization(text: String) extends Visualization {
-
-  override def toString: String = text
-}

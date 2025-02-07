@@ -5,6 +5,12 @@ import org.clulab.odin.impl.{Addition, ArgumentPattern, ArgumentQuantifier, Chun
 import java.io.PrintWriter
 import scala.annotation.tailrec
 
+
+class TextVisualization(text: String) extends Visualization {
+
+  override def toString: String = text
+}
+
 class TextVisualizer() extends Visualizer() {
 
   def pwPrintln(printWriter: PrintWriter, indent: Int, string: String): Unit = {

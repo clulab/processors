@@ -3,6 +3,7 @@ package org.clulab.odin.debugger.inspector
 import org.clulab.odin.debugger.{DebuggerRecord, FinishedThread}
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.debugger.visualizer.HtmlVisualization
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Extractor, Inst}
 import org.clulab.processors.Sentence
@@ -23,7 +24,7 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
     |  font-size: 12px;
     |}
     |
-    |table, th, td {
+    |table.bordered, table.bordered th, table.bordered td {
     |  border: 1px solid;
     |  border-collapse: collapse;
     |}
@@ -42,6 +43,7 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
     |
     |""".stripMargin
   )
+  val bordered = "bordered"
   val green = "green"
   val red = "red"
   val gray = "gray"
@@ -88,7 +90,7 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
     // This needs to overshoot to match Done for the complete sentence.
     val words = sentence.words
     val extraWordRange = Range.inclusive(0, words.length)
-    val fragment = table(
+    val fragment = table(`class` := bordered)(
       tr(
         th("start"),
         words.map { word =>
@@ -127,14 +129,14 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
     fragment
   }
 
-  def mkHtmlPage(text: String, instView: Text.TypedTag[String], threadView: Text.TypedTag[String]): String = {
+  def mkHtmlPage(htmlVisualization: HtmlVisualization, instView: Text.TypedTag[String], threadView: Text.TypedTag[String]): String = {
     val fragment = html(
       head(
         style
       ),
       body(
         h2("Textual Rule View"),
-        pre(text),
+        htmlVisualization.frag,
         h2("Graphical Rule View"),
         h2("Inst View"),
         instView,
@@ -233,14 +235,14 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
 
       val result = tr(
         td((index + 1).toString),
-        td(`class` := survivedClass)(survivedValue),
+        td(span(`class` := survivedClass)(survivedValue)),
         tds,
         td(reasonFrag)
       )
 
       result
     }
-    val view = table(
+    val view = table(`class` := bordered)(
       tr(
         th("index"),
         th("survived"),

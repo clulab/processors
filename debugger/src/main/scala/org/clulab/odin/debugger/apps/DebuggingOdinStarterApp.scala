@@ -2,7 +2,7 @@ package org.clulab.odin.debugger.apps
 
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.inspector.Inspector
-import org.clulab.odin.debugger.visualizer.TextVisualizer
+import org.clulab.odin.debugger.visualizer.{HtmlVisualizer, TextVisualizer}
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
@@ -76,13 +76,14 @@ object DebuggingOdinStarterApp extends App {
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   assert(mentions.length == debuggingMentions.length)
 
-  val visualizer = new TextVisualizer() // This is a rule visualizer
+  val textVisualizer = new TextVisualizer()
   debuggingExtractorEngine.extractors.foreach { extractor =>
-    val stringVisualization = visualizer.visualize(extractor).toString
+    val textVisualization = textVisualizer.visualize(extractor).toString
 
-    println(stringVisualization)
+    println(textVisualization)
     println()
   }
+  val htmlVisualizer = new HtmlVisualizer()
 
   // Track down the rule that isn't working.
   val extractor = debuggingExtractorEngine.extractors.find { extractor =>
@@ -92,7 +93,7 @@ object DebuggingOdinStarterApp extends App {
   val sentence = document.sentences.head
 
   // stackView, does there need to be a Stacker or tracer to show the stack trace.
-  val textualRuleView = visualizer.visualize(extractor).toString
+  val htmlVisualization = htmlVisualizer.visualize(extractor)
   val graphicalRuleView = "hello"
   val inspector = Inspector(debuggingExtractorEngine)
       .inspectExtractor(extractor)
@@ -101,12 +102,12 @@ object DebuggingOdinStarterApp extends App {
   // So the threads need to also be keyed to the current debugger record at least down to sentence.
   val threadView = inspector.mkThreadView()
   // TODO: Maybe some composite visualization
-  val htmlPage = inspector.mkHtmlPage(textualRuleView, instView, threadView)
+  val htmlPage = inspector.mkHtmlPage(htmlVisualization, instView, threadView)
 
   val finishedThreads = debuggingExtractorEngine.finishedThreads
   // TODO: Now visualize this.
 
-  println(textualRuleView)
+  println(htmlVisualization.toString)
   Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
     printWriter.println(htmlPage)
   }

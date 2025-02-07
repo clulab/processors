@@ -6,7 +6,7 @@ import java.io.{PrintWriter, StringWriter}
 import scala.util.Using
 
 abstract class Visualizer() {
-  def visualize(extractor: Extractor): Visualization = ???
+  def visualize(extractor: Extractor): Visualization
 
   def printToString(f: PrintWriter => Unit): String = {
     val stringWriter = new StringWriter()
