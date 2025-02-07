@@ -13,12 +13,12 @@ import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
-
 import org.clulab.odin.Mention
-
 import BalaurProcessor._
 import PostProcessor._
 import org.clulab.processors.hexatagging.HexaDecoder
+
+import scala.collection.mutable.ArrayBuffer
 
 class BalaurProcessor protected (
   val config: Config,
@@ -314,6 +314,13 @@ class BalaurProcessor protected (
       // however, this processor produces only syntactic dependencies
       sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
     }
+
+    // keep track of the top term/nonterm hexatags as well
+    val other = new ArrayBuffer[String]()
+    for(i <- termTags.indices) {
+      other += s"${termTags(i).head._1}|${nonTermTags(i).head._1}"
+    }
+    sent.other = Some(other.toArray)
   }  
 }
 

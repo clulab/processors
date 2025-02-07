@@ -46,8 +46,9 @@ object CoNLLUSerializer {
           impossiblyEmptyEntNorm
         }
         val chunk = getOrElseUndef(sent.chunks, i)
+        val other = getOrElseUndef(sent.other, i)
 
-        pw.println(s"$id\t$form\t$lemma\t$upos\t$xpos\t$feats\t$head\t$depRel\t$deps\t$startOffset\t$endOffset\t$ent\t$entNorm\t$chunk")
+        pw.println(s"$id\t$form\t$lemma\t$upos\t$xpos\t$feats\t$head\t$depRel\t$deps\t$startOffset\t$endOffset\t$ent\t$entNorm\t$chunk\t$other")
       }
 
       pw.println()

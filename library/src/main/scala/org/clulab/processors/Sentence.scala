@@ -42,8 +42,9 @@ class Sentence(
   var graphs: GraphMap = GraphMap()
   /** Relation triples from OpenIE */
   var relations:Option[Array[RelationTriple]] = None
-
-
+  /** Other debugging information */
+  var other: Option[Array[String]] = None
+  
   def size:Int = raw.length
 
   def indices: Range = 0 until size
