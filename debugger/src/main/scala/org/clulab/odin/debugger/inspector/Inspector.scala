@@ -13,7 +13,38 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mutable.Buffer[FinishedThread]) {
-  val borderStyle = "border: 1px solid black; border-collapse: collapse"
+  val style = tag("style")("""
+    |body {
+    |  font-family: system-ui, sans-serif;
+    |  font-size: 12px;
+    |}
+    |
+    |table {
+    |  font-size: 12px;
+    |}
+    |
+    |table, th, td {
+    |  border: 1px solid;
+    |  border-collapse: collapse;
+    |}
+    |
+    |.green {
+    |  color: green;
+    |}
+    |
+    |.red {
+    |  color: red;
+    |}
+    |
+    |.gray {
+    |  color: gray;
+    |}
+    |
+    |""".stripMargin
+  )
+  val green = "green"
+  val red = "red"
+  val gray = "gray"
 
   def inspectExtractor(extractor: Extractor): Inspector = {
     val newTranscript = transcript.filter { debuggerRecord =>
@@ -57,30 +88,31 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
     // This needs to overshoot to match Done for the complete sentence.
     val words = sentence.words
     val extraWordRange = Range.inclusive(0, words.length)
-    val fragment = table(style := borderStyle)(
+    val fragment = table(
       tr(
-        th(style := borderStyle)("start"),
+        th("start"),
         words.map { word =>
-          th(style := borderStyle)(word)
+          th(word)
         },
         th(raw("&nbsp;"))
       ),
       words.indices.map { start =>
         tr(
-          td(style := borderStyle)(words(start)),
+          td(words(start)),
           extraWordRange.map { tok =>
             val instAndMatchesOptSeq = findMatches(start, tok)
 
-            td(style := borderStyle) {
+            td {
               val spans = instAndMatchesOptSeq.flatMap { case (inst, matchesOpt) =>
                 val color = matchesOpt match {
-                  case Some(true) => "green"
-                  case Some(false) => "red"
-                  case None => "gray"
+                  case Some(true) => green
+                  case Some(false) => red
+                  case None => gray
                 }
 
                 Seq(
-                  span(style := s"color: $color")(inst.getPosId.toString),
+//                  span(style := s"color: $color")(inst.getPosId.toString),
+                  span(`class` := color)(inst.getPosId.toString),
                   span(" ")
                 )
               }
@@ -96,15 +128,20 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
   }
 
   def mkHtmlPage(text: String, instView: Text.TypedTag[String], threadView: Text.TypedTag[String]): String = {
-    val fragment = html(body(
-      h2("Textual Rule View"),
-      pre(text),
-      h2("Graphical Rule View"),
-      h2("Inst View"),
-      instView,
-      h2("Thread View"),
-      threadView
-    ))
+    val fragment = html(
+      head(
+        style
+      ),
+      body(
+        h2("Textual Rule View"),
+        pre(text),
+        h2("Graphical Rule View"),
+        h2("Inst View"),
+        instView,
+        h2("Thread View"),
+        threadView
+      )
+    )
 
     fragment.toString
   }
@@ -133,43 +170,83 @@ class Inspector(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mut
         loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread], newSingleThreads) // TODO
     }
 
+    def startToken(finishedThread: FinishedThread): Int = {
+
+      @tailrec
+      def loop(singleThread: SingleThread): Int = {
+        if (singleThread.prevThreadOpt.isEmpty) singleThread.tok
+        else loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread])
+      }
+
+      loop(finishedThread.thread)
+    }
+
+    def length(finishedThread: FinishedThread): Int = {
+
+      @tailrec
+      def loop(singleThread: SingleThread, current: Int): Int = {
+        if (singleThread.prevThreadOpt.isEmpty) current
+        else loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread], current + 1)
+      }
+
+      loop(finishedThread.thread, 1)
+    }
+
+    def sortFinishedThreads(finishedThreads: mutable.Buffer[FinishedThread]): mutable.Buffer[FinishedThread] = {
+      // This assumes ties are broken by the original order.
+      // Recalculation of the sort key is fairly expensive, unfortunately, so there might be a better option.
+
+      def mkSortKey(finishedThread: FinishedThread): (Int, Int, Int) = {
+        (startToken(finishedThread), length(finishedThread), if (finishedThread.matched) 0 else 1)
+      }
+
+      finishedThreads.sortBy(mkSortKey)
+    }
+
     // TODO: Assume all threads for now, but these need to be filtered as well.
     // They need to know about their sentence then
     val sentence = transcript.head.sentence
     val words = sentence.words
-    val rows = finishedThreads.zipWithIndex.map { case (finishedThread, index) =>
+    val sortedFinishedThreads = sortFinishedThreads(finishedThreads)
+    val rows = sortedFinishedThreads.zipWithIndex.map { case (finishedThread, index) =>
       val singleThreads = loop(finishedThread.thread, List.empty)
       val byTok = singleThreads.groupBy(_.tok)
       val extendedRange = Range.inclusive(0, words.length)
+      val maxTok = byTok.keys.max
       val tds = extendedRange.map { tok =>
         val tokSingleThreads = byTok.getOrElse(tok, List.empty)
         val posIds = tokSingleThreads.map { tokSingleThread =>
           tokSingleThread.inst.getPosId
         }.mkString(" ")
+        val color =
+            if (tok != maxTok || finishedThread.matched) green
+            else red
 
-        td(style := borderStyle)(posIds)
+        td(span(`class` := color)(posIds))
       }
       val reasonFrag =
-          if (finishedThread.mismatchReason.isDefined)
-            frag(finishedThread.mismatchReason.get)
+          if (finishedThread.reasonOpt.isDefined)
+            frag(finishedThread.reasonOpt.get)
           else raw("&nbsp;")
+      val survivedClass = if (finishedThread.survived) green else red
+      val survivedValue = if (finishedThread.survived) raw("&#9745;") else raw("&#9746;")
 
       val result = tr(
-        td(style := borderStyle)(index.toString),
-        td(style := borderStyle)(finishedThread.matched.toString),
+        td((index + 1).toString),
+        td(`class` := survivedClass)(survivedValue),
         tds,
-        td(style := borderStyle)(reasonFrag)
+        td(reasonFrag)
       )
 
       result
     }
-    val view = table(style := borderStyle)(
+    val view = table(
       tr(
-        th(style := borderStyle)("index"),
-        th(style := borderStyle)("matched"),
-        words.map(th(style := borderStyle)(_)),
-        th(style := borderStyle)(raw("&nbsp;")),
-        th(style := borderStyle)("reason")
+        th("index"),
+        th("survived"),
+        words.map(th(_)),
+        th(raw("&nbsp;")),
+        th("reason")
       ),
       rows
     )

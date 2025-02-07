@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.utils
 
-class EqualityByIdentity(val any: Any) {
+class EqualityByIdentity(val any: Any) extends Equality {
 
   override def hashCode(): Int = any.hashCode()
 

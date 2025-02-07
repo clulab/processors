@@ -137,7 +137,7 @@ object DebuggingThompsonVM {
               mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, Some("MatchToken failed"))
+              debugger.debugThread(t, false, false, Some("MatchToken failed"))
               Nil
             }
           case i: MatchSentenceStart =>
@@ -148,7 +148,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, Some("MatchSentenceStart failed"))
+              debugger.debugThread(t, false, false, Some("MatchSentenceStart failed"))
               Nil
             }
           case i: MatchSentenceEnd => // TODO: Account for false
@@ -159,7 +159,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, Some("MatchSentenceEnd failed"))
+              debugger.debugThread(t, false, false, Some("MatchSentenceEnd failed"))
               Nil
             }
           case i: MatchLookAhead => // TODO: Account for false
@@ -174,7 +174,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, Some("MatchLookAhead failed"))
+              debugger.debugThread(t, false, false, Some("MatchLookAhead failed"))
               Nil
             }
           case i: MatchLookBehind =>
@@ -191,7 +191,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, Some("MatchLookBehind failed"))
+              debugger.debugThread(t, false, false, Some("MatchLookBehind failed"))
               Nil
             }
           case i: MatchMention =>
@@ -222,26 +222,26 @@ object DebuggingThompsonVM {
             Seq(t)
           case _ =>
             debugger.debugMatches(false, t.tok, t.inst) // TODO: Kill the thread as well // Other inst
-            debugger.debugThread(t, false, Some("Died with no match"))
+            debugger.debugThread(t, false, false, Some("Died with no match"))
             Nil // The Thread died with no match.
         }
       }
     }
 
-    def debugThread(thread: Thread, matches: Boolean, reasonOpt: Option[String]): Unit = {
+    def debugThread(thread: Thread, survives: Boolean, reasonOpt: Option[String]): Unit = {
       thread match {
         case singleThread: SingleThread =>
-          debugger.debugThread(singleThread, matches, reasonOpt)
+          debugger.debugThread(singleThread, singleThread.isDone, survives, reasonOpt)
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
-              debugThread(thread, matches, reasonOpt)
+              debugThread(thread, survives, reasonOpt)
             }
           }
       }
     }
 
-    def debugThreadDone(thread: Thread): Unit = {
+    def debugMatchesDone(thread: Thread): Unit = {
       thread match {
         case singleThread: SingleThread =>
           if (singleThread.inst == Done) {
@@ -252,7 +252,7 @@ object DebuggingThompsonVM {
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
-              debugThreadDone(thread)
+              debugMatchesDone(thread)
             }
           }
       }
@@ -265,7 +265,7 @@ object DebuggingThompsonVM {
       val doneThreadOpt = doneThreadIndexOpt.map(threads(_))
 
       // Not all of these will actually be considered, but that is tracked with the threads.
-      threads.foreach(debugThreadDone)
+      threads.foreach(debugMatchesDone)
       doneThreadOpt match {
         // No thread has finished; return them all.
         case None => (threads, None)

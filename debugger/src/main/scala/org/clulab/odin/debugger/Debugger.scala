@@ -11,7 +11,8 @@ import scala.collection.mutable.Buffer
 case class FinishedThread(
   thread: SingleThread,
   matched: Boolean,
-  mismatchReason: Option[String] // Perhaps make these two an enum
+  survived: Boolean,
+  reasonOpt: Option[String] // TODO: Perhaps make these two an enum
 )
 
 // Turn into SearchRecord, InstRecord, ThreadRecord
@@ -210,8 +211,8 @@ class DebuggerContext(
     )
   }
 
-  def setThread(matches: Boolean, thread: SingleThread, reasonOpt: Option[String]): DebuggerRecord = {
-    val finishedThread = FinishedThread(thread, matches, reasonOpt)
+  def setThread(matches: Boolean, survives: Boolean, thread: SingleThread, reasonOpt: Option[String]): DebuggerRecord = {
+    val finishedThread = FinishedThread(thread, matches, survives, reasonOpt)
 
     if (!isComplete)
       println("The record is not complete!")// TODO: Depends on what kind of extractor
@@ -564,9 +565,9 @@ class Debugger() {
     }
   }
 
-  protected def innerDebugThread[StackFrameType <: StackFrame](matches: Boolean, thread: SingleThread, reasonOpt: Option[String])(stackFrame: StackFrameType): Unit = {
+  protected def innerDebugThread[StackFrameType <: StackFrame](matches: Boolean, survives: Boolean, thread: SingleThread, reasonOpt: Option[String])(stackFrame: StackFrameType): Unit = {
     if (active) {
-      finishedThreads += FinishedThread(thread, matches, reasonOpt)
+      finishedThreads += FinishedThread(thread, matches, survives, reasonOpt)
     }
   }
 
@@ -651,11 +652,11 @@ class Debugger() {
     innerDebugMatches(matches, tok, inst)(stackFrame)
   }
 
-  def debugThread(thread: SingleThread, matches: Boolean, reasonOpt: Option[String] = None)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+  def debugThread(thread: SingleThread, matches: Boolean, survives: Boolean, reasonOpt: Option[String] = None)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugThread(matches, thread, reasonOpt)(stackFrame)
+    innerDebugThread(matches, survives, thread, reasonOpt)(stackFrame)
   }
 
   def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
