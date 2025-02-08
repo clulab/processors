@@ -2,9 +2,11 @@ package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.{HtmlVisualization, Visualization}
 import org.clulab.odin.debugger.visualizer.HtmlStyling
-import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
+import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern}
 import scalatags.Text
 import scalatags.Text.all._
+
+import scala.annotation.tailrec
 
 class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStyling {
 
@@ -14,6 +16,58 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStylin
 
   def visualizeGraphExtractor(graphExtractor: GraphExtractor): Text.TypedTag[String] = {
     ??? // visualizeGraphExtractor(0, graphExtractor)
+  }
+
+
+  def getShortDescription(inst: Inst): String = {
+    val name = inst.getClass.getSimpleName
+    val stringEmpty = ""
+    val details = inst match {
+      case Done => stringEmpty
+      case inst: Pass => stringEmpty
+      case inst: Split => stringEmpty
+      case inst: SaveStart => stringEmpty // s"name = ${inst.name}"
+      case inst: SaveEnd => stringEmpty // s"name = ${inst.name}"
+      case inst: MatchToken => stringEmpty // s"c = ${visualizeTokenConstraint(indent, inst.c)}"
+      case inst: MatchMention => stringEmpty // s"m = ${visualizeStringMatcher(indent, inst.m)}, name = ${inst.name}, arg = ${inst.arg}"
+      case inst: MatchSentenceStart => stringEmpty
+      case inst: MatchSentenceEnd => stringEmpty
+      case inst: MatchLookAhead => s"negative = ${inst.negative}"
+      case inst: MatchLookBehind => s"negative = ${inst.negative}"
+    }
+    val formattedDetails =
+      if (details.isEmpty) ""
+      else s"($details)"
+
+    s"$name$formattedDetails"
+  }
+
+  def visualizeTokenPattern(tokenPattern: TokenPattern): Text.TypedTag[String] = {
+    val start = tokenPattern.start
+    val insts = extractInst(start)
+    val nodes = insts.map { inst =>
+      val posId = inst.getPosId
+      val description = getShortDescription(inst)
+
+      s"N$posId[$posId $description]\n"
+    }
+    val edges = insts.flatMap { parent =>
+      val namedChildren = getChildren(parent)
+      val edges = namedChildren.map { case (name, child) =>
+        // If it goes to done and it is from a start, then complications.
+        // Maybe add N#start and N#done as nodes?
+        s"N${parent.getPosId} -- $name --> N${child.getPosId}\n"
+      }
+
+      edges
+    }
+    val rawEdges = edges.map(raw)
+
+    pre(`class` := "mermaid")(
+      "\ngraph TD\n",
+      nodes,
+      rawEdges
+    )
   }
 
   def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Text.TypedTag[String] = {
@@ -45,27 +99,23 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStylin
 
     val top = textVisualizer.visualizeTokenExtractor(0, tokenExtractor)
     val topRows = toRows(top, 3)
-    val botRows = extractions.flatMap { case (name, string) =>
+    val botRows = extractions.flatMap { case (name, _) =>
       val headerRow = tr(
         td(placeholder),
         td(colspan := 2)(name)
       )
       val trailerRow = {
-        val mermaid = pre(`class` := "mermaid")("""
+        val mermaid2 = pre(`class` := "mermaid")("""
           graph TD
-          A[1 SaveStart --GLOBAL--] -. next .-> B[2 MatchToken B-PER]
-          B -- next --> C[3 Split]
-          C -. lhs .-> D[4 MatchToken I-PER]
-          C -. rhs .-> E[5 Pass]
-          D -- next --> C
-          E -. next .-> F[6 SaveEnd --GLOBAL--]
-          F -. next .-> G[0 Done]
+          N1[1 SaveStart --GLOBAL--] -. next .-> N2[2 MatchToken B-PER]
+          N2 -- next --> N3[3 Split]
+          N3 -. lhs .-> N4[4 MatchToken I-PER]
+          N3 -. rhs .-> N5[5 Pass]
+          N4 -- next --> N3
+          N5 -. next .-> N6[6 SaveEnd --GLOBAL--]
+          N6 -. next .-> N7[0 Done]
         """)
-
-        // need the val and where they go to
-        // also figure out what kind of line, solid or dashed
-        // also take look ahead and behind into account
-        // somehow insert into pipeline with auto
+        val mermaid = visualizeTokenPattern(tokenExtractor.pattern)
 
         tr(
           td(placeholder),

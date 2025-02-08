@@ -129,27 +129,6 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     s"$name$formattedDetails"
   }
 
-  def getChildren(inst: Inst): List[(String, Inst)] = {
-    val nexts = Option(inst.getNext).map { next =>
-      "next" -> next
-    }.toList
-
-    val others = inst match {
-      case Done => List.empty
-      case inst: Pass => List.empty
-      case inst: Split => List("lhs" -> inst.lhs, "rhs" -> inst.rhs)
-      case inst: SaveStart => List.empty
-      case inst: SaveEnd => List.empty
-      case inst: MatchToken => List.empty
-      case inst: MatchMention => List.empty
-      case inst: MatchSentenceStart => List.empty
-      case inst: MatchSentenceEnd => List.empty
-      case inst: MatchLookAhead => List("start" -> inst.start)
-      case inst: MatchLookBehind => List("start" -> inst.start)
-    }
-    others ++ nexts
-  }
-
   def visualizeTokenPattern(indent: Int, tokenPattern: TokenPattern): String = {
     val className = tokenPattern.getClass.getSimpleName
     val details = "..."
@@ -160,33 +139,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     s"$className$formattedDetails"
   }
 
-  def extractInst(start: Inst): List[Inst] = {
-
-    @tailrec
-    def loop(todos: List[Inst], dones: List[Inst]): List[Inst] = {
-      todos match {
-        case Nil => dones
-        case head :: tail =>
-          if (dones.contains(head)) loop(tail, dones)
-          else loop(getChildren(head).map(_._2) ++ tail, head :: dones)
-      }
-    }
-
-    val unsortedInsts = loop(List(start), List.empty)
-    val sortedInsts = unsortedInsts.sortBy(_.getPosId)
-
-    assert(sortedInsts.head.getPosId == 0)
-    assert(sortedInsts.head == Done)
-    assert(start.getPosId == 1)
-    sortedInsts.tail.headOption.foreach { tailHead =>
-      assert(tailHead == start)
-    }
-
-    sortedInsts
-  }
-
   def assignDepths(depth: Int, index: Int, insts: Array[Inst], depths: Array[Int]): Array[Int] = {
-
     // Do a loop inside with just depth and index
     val inst = insts(index)
 
