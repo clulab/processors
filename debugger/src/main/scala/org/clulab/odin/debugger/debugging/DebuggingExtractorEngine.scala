@@ -91,11 +91,13 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     result
   }
 
-  // Need extra stuff to fish out the right extractor
-  // Need to get out the right extractor, how?
-  // Maybe get out the right inst of it by number?
-  // Then need document and sentence.
-  // Write various kinds of queries.
+  def getExtractorByName(name: String): Extractor = {
+    val extractor = extractors.find { extractor =>
+      extractor.name == "person-from-lexicon"
+    }.get
+
+    extractor
+  }
 }
 
 object DebuggingExtractorEngine {

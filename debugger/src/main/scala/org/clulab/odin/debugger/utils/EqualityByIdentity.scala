@@ -1,12 +1,12 @@
 package org.clulab.odin.debugger.utils
 
-class EqualityByIdentity(val any: Any) extends Equality {
+class EqualityByIdentity(val value: Any) extends Equality {
 
-  override def hashCode(): Int = any.hashCode()
+  override def hashCode(): Int = value.hashCode()
 
   override def equals(other: Any): Boolean =
     if (other.isInstanceOf[EqualityByIdentity])
-      (this.any, other.asInstanceOf[EqualityByIdentity].any) match {
+      (this.value, other.asInstanceOf[EqualityByIdentity].value) match {
         case (self: Byte, other: Byte) => self == other
         case (self: Short, other: Short) => self == other
         case (self: Int, other: Int) => self == other
@@ -23,5 +23,5 @@ class EqualityByIdentity(val any: Any) extends Equality {
 
 object EqualityByIdentity {
 
-  def apply(any: Any): EqualityByIdentity = new EqualityByIdentity(any)
+  def apply(value: Any): EqualityByIdentity = new EqualityByIdentity(value)
 }

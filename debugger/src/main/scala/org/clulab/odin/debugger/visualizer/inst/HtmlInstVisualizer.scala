@@ -44,7 +44,7 @@ class HtmlInstVisualizer() extends InstVisualizer {
     val extraWordRange = Range.inclusive(0, words.length)
     val fragment = table(`class` := bordered)(
       tr(
-        th("start"),
+        th("<start>"),
         words.map { word =>
           th(word)
         },
@@ -88,7 +88,7 @@ class HtmlInstVisualizer() extends InstVisualizer {
       }
     val distinctSentences = allSentences.distinct
     val sentences = distinctSentences
-        .map { equalityByIdentity => equalityByIdentity.any.asInstanceOf[Sentence] }
+        .map { equalityByIdentity => equalityByIdentity.value.asInstanceOf[Sentence] }
     val htmlTables = sentences.map { mkHtmlTable(transcript, _) }
     val fragment = frag(htmlTables)
 

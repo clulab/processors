@@ -1,17 +1,15 @@
 package org.clulab.odin.debugger.apps
 
+import org.clulab.odin.debugger.Inspector
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
-import org.clulab.odin.debugger.inspector.Inspector
-import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer, TextExtractorVisualizer}
-import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
-import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
+import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
+
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
 import java.io.File
-import scala.util.Using
 
 object DebuggingOdinStarterApp extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
@@ -74,10 +72,14 @@ object DebuggingOdinStarterApp extends App {
     println()
   }
 
+  // Create a debugging extractor engine from the extractor engine already in use.
   val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
+  // Do the same to it as was done before.
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
+  // The result should be the same whether debugging or not.
   assert(mentions.length == debuggingMentions.length)
 
+  // Just for kicks, print all the rules being used.
   val textVisualizer = new TextExtractorVisualizer()
   debuggingExtractorEngine.extractors.foreach { extractor =>
     val textVisualization = textVisualizer.visualize(extractor).toString
@@ -85,34 +87,15 @@ object DebuggingOdinStarterApp extends App {
     println()
     println(textVisualization)
   }
-  val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
-  val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
-  val htmlInstVisualizer = new HtmlInstVisualizer()
-  val htmlThreadVisualizer = new HtmlThreadVisualizer()
 
-  // Track down the rule that isn't working.
-  val extractor = debuggingExtractorEngine.extractors.find { extractor =>
-    extractor.name == "person-from-lexicon"
-  }.get
+  // Track down the extractor that isn't working.
+  val extractor = debuggingExtractorEngine.getExtractorByName("person-from-lexicon")
   // Track down the sentence that isn't working.
   val sentence = document.sentences.head
 
-  // stackView, does there need to be a Stacker or tracer to show the stack trace.
-  val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
-  val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
-  val inspector = Inspector(debuggingExtractorEngine)
+  // Take a closer look at what happened.
+  Inspector(debuggingExtractorEngine)
       .inspectExtractor(extractor)
       .inspectSentence(sentence)
-
-
-
-  val instVisualization = htmlInstVisualizer.visualize(inspector.transcript)
-  val threadVisualization = htmlThreadVisualizer.visualize(inspector.transcript, inspector.finishedThreads)
-
-  val htmlPage = inspector.mkHtmlPage(htmlExtractorVisualization, graphicalExtractorVisualization, instVisualization, threadVisualization)
-
-  println(htmlExtractorVisualization.toString)
-  Using.resource(FileUtils.printWriterFromFile("debug.html")) { printWriter =>
-    printWriter.println(htmlPage)
-  }
+      .asHtml("debug.html")
 }
