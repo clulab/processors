@@ -1,11 +1,12 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import scalatags.Text
 import scalatags.Text.all._
 
-class HtmlExtractorVisualizer extends ExtractorVisualizer {
+class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlStyling {
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
     ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
@@ -70,7 +71,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer {
       Seq(headerRow) ++ trailerRows
     }
 
-    table(`class` := "bordered")(
+    table(`class` := bordered)(
       topRows,
       botRows
     )

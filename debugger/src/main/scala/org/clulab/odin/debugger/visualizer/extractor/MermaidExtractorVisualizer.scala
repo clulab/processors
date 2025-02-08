@@ -1,11 +1,12 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.{HtmlVisualization, Visualization}
+import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import scalatags.Text
 import scalatags.Text.all._
 
-class MermaidExtractorVisualizer() extends ExtractorVisualizer() {
+class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStyling {
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
     ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
@@ -78,7 +79,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() {
       Seq(headerRow) :+ trailerRow
     }
 
-    table(`class` := "bordered")(
+    table(`class` := bordered)(
       topRows,
       botRows
     )

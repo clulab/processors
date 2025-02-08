@@ -2,6 +2,7 @@ package org.clulab.odin.debugger.visualizer.thread
 
 import org.clulab.odin.debugger.{DebuggerRecord, FinishedThread}
 import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import scalatags.Text
 import scalatags.Text.all._
@@ -9,11 +10,7 @@ import scalatags.Text.all._
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-class HtmlThreadVisualizer() extends ThreadVisualizer {
-  val bordered = "bordered"
-  val green = "green"
-  val red = "red"
-  val gray = "gray"
+class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
 
   def mkThreadView(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mutable.Buffer[FinishedThread]): Text.TypedTag[String] = {
 

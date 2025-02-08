@@ -3,6 +3,7 @@ package org.clulab.odin.debugger.visualizer.inst
 import org.clulab.odin.debugger.DebuggerRecord
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.impl.Inst
 import org.clulab.processors.Sentence
 import scalatags.Text
@@ -10,11 +11,7 @@ import scalatags.Text.all._
 
 import scala.collection.mutable
 
-class HtmlInstVisualizer() extends InstVisualizer {
-  val bordered = "bordered"
-  val green = "green"
-  val red = "red"
-  val gray = "gray"
+class HtmlInstVisualizer() extends InstVisualizer with HtmlStyling {
 
   def mkHtmlTable(transcript: mutable.Buffer[DebuggerRecord], sentence: Sentence): Text.TypedTag[String] = {
     val sentenceTranscript = transcript.filter { debuggerRecord =>
