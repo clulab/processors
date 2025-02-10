@@ -50,7 +50,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
       // Recalculation of the sort key is fairly expensive, unfortunately, so there might be a better option.
 
       def mkSortKey(finishedThread: FinishedThread): (Int, Int, Int) = {
-        (startToken(finishedThread), length(finishedThread), if (finishedThread.matched) 0 else 1)
+        (startToken(finishedThread), length(finishedThread), if (finishedThread.instMatch) 0 else 1)
       }
 
       finishedThreads.sortBy(mkSortKey)
@@ -72,17 +72,14 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
           tokSingleThread.inst.getPosId
         }.mkString(" ")
         val color =
-          if (tok != maxTok || finishedThread.matched) green
+          if (tok != maxTok || finishedThread.instMatch) green
           else red
 
         td(span(`class` := color)(posIds))
       }
-      val reasonFrag =
-        if (finishedThread.reasonOpt.isDefined)
-          frag(finishedThread.reasonOpt.get)
-        else raw("&nbsp;")
-      val survivedClass = if (finishedThread.survived) green else red
-      val survivedValue = if (finishedThread.survived) raw("&#9745;") else raw("&#9746;")
+      val reasonFrag = finishedThread.threadMatch.reason
+      val survivedClass = if (finishedThread.threadMatch.matches) green else red
+      val survivedValue = if (finishedThread.threadMatch.matches) raw("&#9745;") else raw("&#9746;")
 
       val result = tr(
         td((index + 1).toString),

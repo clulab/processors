@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.debugging
 
 import org.clulab.odin.State
-import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.{Debugger, ThreadMatch}
 import org.clulab.odin.impl.{Done, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, ThompsonVM}
 import org.clulab.odin.impl.ThompsonVM.{Direction, NamedGroups, NamedMentions, PartialGroups, SingleThread, Thread, ThreadBundle}
 import org.clulab.processors.Document
@@ -136,7 +136,7 @@ object DebuggingThompsonVM {
               mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, false, Some("MatchToken failed"))
+              debugger.debugThread(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchSentenceStart =>
@@ -147,7 +147,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, false, Some("MatchSentenceStart failed"))
+              debugger.debugThread(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchSentenceEnd => // TODO: Account for false
@@ -158,7 +158,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, false, Some("MatchSentenceEnd failed"))
+              debugger.debugThread(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchLookAhead => // TODO: Account for false
@@ -173,7 +173,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, false, Some("MatchLookAhead failed"))
+              debugger.debugThread(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchLookBehind =>
@@ -190,7 +190,7 @@ object DebuggingThompsonVM {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, false, Some("MatchLookBehind failed"))
+              debugger.debugThread(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchMention =>
@@ -220,21 +220,21 @@ object DebuggingThompsonVM {
             debugger.debugMatches(true, t.tok, t.inst) // Don't think this ever gets called.
             Seq(t)
           case _ =>
-            debugger.debugMatches(false, t.tok, t.inst) // TODO: Kill the thread as well // Other inst
-            debugger.debugThread(t, false, false, Some("Died with no match"))
+            debugger.debugMatches(false, t.tok, t.inst)
+            debugger.debugThread(t, false, ThreadMatch.empty)
             Nil // The Thread died with no match.
         }
       }
     }
 
-    def debugThread(thread: Thread, survives: Boolean, reasonOpt: Option[String]): Unit = {
+    def debugThread(thread: Thread, threadMatch: ThreadMatch): Unit = {
       thread match {
         case singleThread: SingleThread =>
-          debugger.debugThread(singleThread, singleThread.isDone, survives, reasonOpt)
+          debugger.debugThread(singleThread, singleThread.isDone, threadMatch)
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
-              debugThread(thread, survives, reasonOpt)
+              debugThread(thread, threadMatch)
             }
           }
       }
@@ -284,7 +284,7 @@ object DebuggingThompsonVM {
               else
                 (survivors :+ thread, None) // This sends it to the end of the line.
 
-          victims.foreach(debugThread(_, false, Some("It was located after the surviving thread.")))
+          victims.foreach(debugThread(_, ThreadMatch.lowerPriority))
           result
         // A Thread finished.  Drop all Threads to its right but keep the ones to its left.
         case Some(thread: SingleThread) =>
@@ -293,7 +293,7 @@ object DebuggingThompsonVM {
 
           // Even though the thread is being returned, it may not be used.
           // debugger.debugThread(thread, true, Some("It was the first found that was done."))
-          victims.foreach(debugThread(_, false, Some("It was located after the surviving thread.")))
+          victims.foreach(debugThread(_, ThreadMatch.lowerPriority))
           (survivors, Some(thread)) // This last thread finished, the ones after takeWhile failed.  Didn't get there first.
       }
     }
@@ -303,7 +303,7 @@ object DebuggingThompsonVM {
       // TODO: This is a good place to record the threads that are being evaluated and maybe depth.
       if (threads.isEmpty) {
         resultOpt.foreach { thread =>
-          debugThread(thread, true, Some("There are no other choices."))
+          debugThread(thread, ThreadMatch.survivor)
         }
         resultOpt
       }
@@ -318,7 +318,7 @@ object DebuggingThompsonVM {
 //        }
         if (nextResultOpt.isDefined) {
           resultOpt.foreach { thread =>
-            debugThread(thread, false, Some("We'll use the next result instead."))
+            debugThread(thread, ThreadMatch.superseded)
           }
         }
         localInnerEvalThreads(steppedThreads, nextResultOpt.orElse(resultOpt))
