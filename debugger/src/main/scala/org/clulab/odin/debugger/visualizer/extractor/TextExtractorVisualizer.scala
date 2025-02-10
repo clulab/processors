@@ -96,8 +96,9 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     val children = getChildren(inst)
     val links =
         if (children.isEmpty) ""
-        else children.map { case (name, child) =>
-          s"--$name-> ${child.getPosId}"
+        else children.map { case InstChild(name, child, wide) =>
+          if (wide) s"==$name=> ${child.getPosId}"
+          else s"--$name-> ${child.getPosId}"
         }.mkString(", ", ", ", "")
     val tab = "  " * depth
     val visualization = s"$posId. $tab$description$links"
@@ -150,7 +151,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
         case inst: MatchLookAhead =>
           val namedChildren = getChildren(inst)
 
-          namedChildren.foreach { case (name, child) =>
+          namedChildren.foreach { case InstChild(name, child, wide) =>
             if (name != "start")
               assignDepths(depth, child.getPosId, insts, depths)
             else
@@ -159,14 +160,14 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
         case inst: MatchLookBehind =>
           val namedChildren = getChildren(inst)
 
-          namedChildren.foreach { case (name, child) =>
+          namedChildren.foreach { case InstChild(name, child, wide) =>
             if (name != "start")
               assignDepths(depth, child.getPosId, insts, depths)
             else
               assignDepths(depth + 1, child.getPosId, insts, depths)
           }
         case inst =>
-          val children = getChildren(inst).map(_._2)
+          val children = getChildren(inst).map(_.inst)
 
           children.foreach { child =>
             assignDepths(depth, child.getPosId, insts, depths)

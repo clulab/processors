@@ -53,10 +53,11 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStylin
     }
     val edges = insts.flatMap { parent =>
       val namedChildren = getChildren(parent)
-      val edges = namedChildren.map { case (name, child) =>
+      val edges = namedChildren.map { case InstChild(name, child, wide) =>
         // If it goes to done and it is from a start, then complications.
         // Maybe add N#start and N#done as nodes?
-        s"N${parent.getPosId} -- $name --> N${child.getPosId}\n"
+        if (wide) s"N${parent.getPosId} == $name ==> N${child.getPosId}\n"
+        else s"N${parent.getPosId} -- $name --> N${child.getPosId}\n"
       }
 
       edges

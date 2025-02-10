@@ -7,6 +7,8 @@ import java.io.{PrintWriter, StringWriter}
 import scala.annotation.tailrec
 import scala.util.Using
 
+case class InstChild(name: String, inst: Inst, wide: Boolean)
+
 abstract class ExtractorVisualizer() {
   def visualize(extractor: Extractor): Visualization
 
@@ -20,25 +22,35 @@ abstract class ExtractorVisualizer() {
     stringWriter.toString
   }
 
-  def getChildren(inst: Inst): List[(String, Inst)] = {
-    val nexts = Option(inst.getNext).map { next =>
-      "next" -> next
-    }.toList
+  def getChildren(inst: Inst): List[InstChild] = {
 
-    val others = inst match {
+    def mkNextChild(inst: Inst, wide: Boolean): InstChild =
+        InstChild("next", inst.getNext, wide)
+
+    val children = inst match {
       case Done => List.empty
-      case inst: Pass => List.empty
-      case inst: Split => List("lhs" -> inst.lhs, "rhs" -> inst.rhs)
-      case inst: SaveStart => List.empty
-      case inst: SaveEnd => List.empty
-      case inst: MatchToken => List.empty
-      case inst: MatchMention => List.empty
-      case inst: MatchSentenceStart => List.empty
-      case inst: MatchSentenceEnd => List.empty
-      case inst: MatchLookAhead => List("start" -> inst.start)
-      case inst: MatchLookBehind => List("start" -> inst.start)
+      case inst: Pass => List(mkNextChild(inst, true))
+      case inst: Split => List(
+        InstChild("lhs", inst.lhs, true),
+        InstChild("rhs", inst.rhs, true)
+      )
+      case inst: SaveStart => List(mkNextChild(inst, true))
+      case inst: SaveEnd => List(mkNextChild(inst, true))
+      case inst: MatchToken => List(mkNextChild(inst, false))
+      case inst: MatchMention => List(mkNextChild(inst, false))
+      case inst: MatchSentenceStart => List(mkNextChild(inst, true))
+      case inst: MatchSentenceEnd => List(mkNextChild(inst, true))
+      case inst: MatchLookAhead => List(
+        mkNextChild(inst, true),
+        InstChild("start", inst.start, true)
+      )
+      case inst: MatchLookBehind => List(
+        mkNextChild(inst.start, true),
+        InstChild("start", inst.start, true)
+      )
     }
-    others ++ nexts
+
+    children
   }
 
   def extractInst(start: Inst): List[Inst] = {
@@ -49,7 +61,7 @@ abstract class ExtractorVisualizer() {
         case Nil => dones
         case head :: tail =>
           if (visiteds(head)) loop(tail, visiteds, dones)
-          else loop(getChildren(head).map(_._2) ++ tail, visiteds + head, head :: dones)
+          else loop(getChildren(head).map(_.inst) ++ tail, visiteds + head, head :: dones)
       }
     }
 
