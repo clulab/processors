@@ -8,6 +8,15 @@ import org.clulab.utils.StringUtils
 
 import scala.collection.mutable.Buffer
 
+case class ThreadMatch(matched: Boolean, reason: String)
+
+object ThreadMatches {
+  val instMismatch = ThreadMatch(false, "Inst mismatch")
+  val notDone = ThreadMatch(false, "No Inst to continue Thread")
+  val lowerPriority = ThreadMatch(false, "Thread not the best")
+  val survivor = ThreadMatch(true, "Thread survived")
+}
+
 case class FinishedThread(
   thread: SingleThread,
   matched: Boolean,
@@ -244,9 +253,8 @@ class DebuggerContext(
 
 // TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
 
-class Debugger() {
-  protected var active: Boolean = true // TODO: You can turn off debugging with this!
-  protected var quiet: Boolean = false // TODO: You can turn off the printing of messages with this.
+class Debugger(verbose: Boolean = false) {
+  protected var active: Boolean = true // You can turn off debugging with this!
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
@@ -284,9 +292,9 @@ class Debugger() {
   protected def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
-      if (!quiet) println(mkMessage("beg"))
+      if (verbose) println(mkMessage("beg"))
       val result = innerDebug(stackFrame)(block)
-      if (!quiet) println(mkMessage("end"))
+      if (verbose) println(mkMessage("end"))
       result
     }
     else {
@@ -560,7 +568,7 @@ class Debugger() {
     val message = mkMessage(context.getDepth)
 
     if (active) {
-      if (!quiet) println(message)
+      if (verbose) println(message)
       transcript += context.setMatches(matches, tok, inst)
     }
   }
