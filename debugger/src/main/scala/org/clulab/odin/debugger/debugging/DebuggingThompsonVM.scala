@@ -105,8 +105,7 @@ object DebuggingThompsonVM {
     def printThread(thread: Thread): Unit = {
       thread match {
         case thread: SingleThread =>
-          println(s"Debugging single thread with tok = ${thread.tok} and inst.posId = ${thread.inst.getPosId}")
-
+          // println(s"Debugging single thread with tok = ${thread.tok} and inst.posId = ${thread.inst.getPosId}")
           thread.prevThreadOpt.foreach(printThread)
         case threadBundle: ThreadBundle =>
           println(s"Debugging thread bundle: $threadBundle")

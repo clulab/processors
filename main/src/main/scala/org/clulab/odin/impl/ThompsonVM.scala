@@ -30,7 +30,7 @@ object ThompsonVM {
     groups: NamedGroups,
     mentions: NamedMentions,
     partialGroups: PartialGroups,
-    prevThreadOpt: Option[Thread]
+    prevThreadOpt: Option[Thread] = None
   ) extends Thread {
 
     def isDone: Boolean = inst == Done
@@ -96,7 +96,7 @@ object ThompsonVM {
               }
               // Here we loop on rest.  Could that have different ms?
               case i =>
-                loop(rest, SingleThread(tok, i, dir, gs, ms, pgs, prevThreadOpt) :: ts)
+                loop(rest, SingleThread(tok, i, dir, gs, ms, pgs) :: ts)
             }
           }
         }
@@ -263,8 +263,6 @@ object ThompsonVM {
           else (survivors :+ thread, None) // This sends it to the end of the line.
         // A Thread finished.  Drop all Threads to its right but keep the ones to its left.
         case Some(thread: SingleThread) =>
-          // TODO: This is really doing the done on a single thread
-          println(s"Some single thread is done.")
           val survivors = threads.takeWhile(_ != thread)
           (survivors, Some(thread)) // This last thread finished, the ones after takeWhile failed.  Didn't get there first.
       }
