@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils.readFileToString
 import org.apache.commons.text.StrSubstitutor
 import org.clulab.odin._
 import org.clulab.odin.impl.MarkdownGeneration._
-import org.clulab.scala.WrappedArray._
 import org.clulab.utils.FileUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.{Constructor, ConstructorException}
@@ -27,6 +26,10 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
 
   // invokes actions through reflection
   private val mirror = new ActionMirror(actions)
+
+  val ruleYamlOpt =
+      if (OdinConfig.keepRule) Some(new Yaml(new Constructor(classOf[Map[String, Any]])))
+      else None
 
   def read(input: String): Vector[Extractor] = {
     val rules = getRules(input)
@@ -118,7 +121,6 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       template: Any => String,
       config: OdinConfig
   ): Rule = {
-
     // name is required
     val name = try {
       template(data("name"))
@@ -167,24 +169,26 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     // the graph to match against
     val graph: String = getGraph(data, config.graph)
     val updatedConfig = config.copy(graph = graph)
+    val textOpt = ruleYamlOpt.map(_.dump(data.asJava))
+
     // make intermediary rule
     ruleType match {
       case DefaultType =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig, textOpt)
       // ignore specification of 'graph' when using "type: dependency"
       case "dependency" =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig.copy(graph = OdinConfig.DEFAULT_GRAPH))
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig.copy(graph = OdinConfig.DEFAULT_GRAPH), textOpt)
       case "token" =>
-        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig)
+        new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, updatedConfig, textOpt)
       // cross-sentence cases
       case "cross-sentence" =>
         (data.getOrElse("left-window", None), data.getOrElse("right-window", None)) match {
           case (leftWindow: Int, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig, textOpt)
           case (leftWindow: Int, None) =>
-            new CrossSentenceRule(name, labels, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, updatedConfig)
+            new CrossSentenceRule(name, labels, ruleType, leftWindow, DefaultWindow, unit, priority, keep, action, pattern, updatedConfig, textOpt)
           case (None, rightWindow: Int) =>
-            new CrossSentenceRule(name, labels, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig)
+            new CrossSentenceRule(name, labels, ruleType, DefaultWindow, rightWindow, unit, priority, keep, action, pattern, updatedConfig, textOpt)
           case _ =>
             throw OdinCompileException(s""""cross-sentence" rule '$name' requires a "left-window" and/or "right-window"""")
         }
@@ -348,19 +352,21 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     }
   }
 
-  protected def newTokenExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean, action: Action, pattern: TokenPattern) =
-      new TokenExtractor(name, labels, priority, keep, action, pattern)
+  protected def newTokenExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean, action: Action,
+      pattern: TokenPattern, ruleOpt: Option[String]) = {
+    new TokenExtractor(name, labels, priority, keep, action, pattern, ruleOpt)
+  }
 
   protected def newCrossSentenceExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean,
       action: Action, leftWindow: Int, rightWindow: Int, anchorPattern: TokenExtractor, neighborPattern: TokenExtractor,
-      anchorRole: String, neighborRole: String): CrossSentenceExtractor = {
+      anchorRole: String, neighborRole: String, ruleOpt: Option[String]): CrossSentenceExtractor = {
     new CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow,
-        anchorPattern, neighborPattern, anchorRole, neighborRole)
+        anchorPattern, neighborPattern, anchorRole, neighborRole, ruleOpt)
   }
 
   protected def newGraphExtractor(name: String, labels: Seq[String], priority: Priority, keep: Boolean, action: Action,
-      pattern: GraphPattern, config: OdinConfig): GraphExtractor = {
-    new GraphExtractor(name, labels, priority, keep, action, pattern, config)
+      pattern: GraphPattern, config: OdinConfig, ruleOpt: Option[String]): GraphExtractor = {
+    new GraphExtractor(name, labels, priority, keep, action, pattern, config, ruleOpt)
   }
 
   // compiles a token extractor
@@ -372,7 +378,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     val action = mirror.reflect(rule.action)
     val compiler = new TokenPatternParsers(rule.unit, rule.config)
     val pattern = compiler.compileTokenPattern(rule.pattern)
-    newTokenExtractor(name, labels, priority, keep, action, pattern)
+    newTokenExtractor(name, labels, priority, keep, action, pattern, rule.textOpt)
   }
 
   private def mkCrossSentenceExtractor(rule: Rule): CrossSentenceExtractor = {
@@ -421,7 +427,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
       // Do not apply cross-sentence rule's action to anchor and neighbor
       // This does not need to be stored
-      (role, new Rule(ruleName, labels, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.config))
+      (role, new Rule(ruleName, labels, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.config, rule.textOpt))
     }
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
@@ -439,7 +445,8 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       anchorPattern = mkTokenExtractor(rolesWithRules.head._2),
       neighborPattern = mkTokenExtractor(rolesWithRules.last._2),
       anchorRole = rolesWithRules.head._1,
-      neighborRole = rolesWithRules.last._1
+      neighborRole = rolesWithRules.last._1,
+      rule.textOpt
     )
   }
 
@@ -452,7 +459,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     val action = mirror.reflect(rule.action)
     val compiler = new GraphPatternCompiler(rule.unit, rule.config)
     val pattern = compiler.compileGraphPattern(rule.pattern)
-    newGraphExtractor(name, labels, priority, keep, action, pattern, rule.config)
+    newGraphExtractor(name, labels, priority, keep, action, pattern, rule.config, rule.textOpt)
   }
 
   /**
@@ -619,7 +626,8 @@ object RuleReader {
       val keep: Boolean,
       val action: String,
       val pattern: String,
-      val config: OdinConfig
+      val config: OdinConfig,
+      val textOpt: Option[String] = None
   ) {
 
     val taxonomy: Option[Taxonomy] = config.taxonomy
@@ -634,8 +642,9 @@ object RuleReader {
       keep: Boolean = this.keep,
       action: String = this.action,
       pattern: String = this.pattern,
-      config: OdinConfig = this.config
-    ): Rule = new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
+      config: OdinConfig = this.config,
+      textOpt: Option[String] = this.textOpt
+    ): Rule = new Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config, textOpt)
   }
 
   /**
@@ -655,6 +664,7 @@ object RuleReader {
     keep: Boolean,
     action: String,
     pattern: String,
-    config: OdinConfig
-  ) extends Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config)
+    config: OdinConfig,
+    textOpt: Option[String] = None
+  ) extends Rule(name, labels, ruleType, unit, priority, keep, action, pattern, config, textOpt)
 }

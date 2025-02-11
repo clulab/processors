@@ -159,8 +159,9 @@ class DebuggingGraphExtractor(
   keep: Boolean,
   action: Action,
   pattern: GraphPattern,
-  config: OdinConfig
-) extends GraphExtractor(name, labels, priority, keep, action, pattern, config) {
+  config: OdinConfig,
+  ruleOpt: Option[String]
+) extends GraphExtractor(name, labels, priority, keep, action, pattern, config, ruleOpt) {
 
   // This comes indirectly through Extractor.
   override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(graphExtractor) {
@@ -190,7 +191,8 @@ object DebuggingGraphExtractor {
       graphExtractor.keep,
       graphExtractor.action,
       debuggingGraphPattern,
-      graphExtractor.config
+      graphExtractor.config,
+      graphExtractor.ruleOpt
     )
   }
 }

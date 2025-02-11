@@ -3,7 +3,8 @@ package org.clulab.odin.debugger.apps
 import org.clulab.odin.debugger.Inspector
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
-
+import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
+import org.clulab.odin.impl.OdinConfig
 import org.clulab.odin.{ExtractorEngine, Mention}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
@@ -12,6 +13,7 @@ import org.clulab.utils.FileUtils
 import java.io.File
 
 object DebuggingOdinStarterApp extends App {
+  OdinConfig.keepRule = true
   // When using an IDE rather than sbt, make sure the working directory for the run
   // configuration is the subproject directory so that this resourceDir is accessible.
   val resourceDir: File = new File("./src/main/resources")
@@ -47,7 +49,7 @@ object DebuggingOdinStarterApp extends App {
       ExtractorEngine(rules, ruleDir = None)
     }
   }
-  val document = processor.annotate("John Doe eats cake.")
+  val document = processor.annotate("John Doe eats cake.  His brothers, Brad and Dean, do not eat cake.")
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   for (mention <- mentions)
@@ -79,13 +81,18 @@ object DebuggingOdinStarterApp extends App {
   // The result should be the same whether debugging or not.
   assert(mentions.length == debuggingMentions.length)
 
-  // Just for kicks, print all the rules being used.
-  val textVisualizer = new TextExtractorVisualizer()
+  // Just for kicks, print all the rules and extractors being used.
+  val textRuleVisualizer = new TextRuleVisualizer()
+  val textExtractorVisualizer = new TextExtractorVisualizer()
   debuggingExtractorEngine.extractors.foreach { extractor =>
-    val textVisualization = textVisualizer.visualize(extractor).toString
+    val textRuleVisualization = textRuleVisualizer.visualize(extractor).toString
+    val textExtractorVisualization = textExtractorVisualizer.visualize(extractor).toString
 
     println()
-    println(textVisualization)
+    println()
+    println(textRuleVisualization)
+    println()
+    println(textExtractorVisualization)
   }
 
   // Track down the extractor that isn't working.
@@ -95,7 +102,7 @@ object DebuggingOdinStarterApp extends App {
 
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
-      .inspectExtractor(extractor)
+//      .inspectExtractor(extractor)
       .inspectSentence(sentence)
       .asHtml("debug.html")
 }

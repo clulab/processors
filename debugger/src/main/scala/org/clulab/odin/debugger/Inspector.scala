@@ -4,6 +4,7 @@ import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
+import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
 import org.clulab.odin.impl.Extractor
 import org.clulab.processors.Sentence
@@ -113,6 +114,7 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
   }
 
   def asHtml(fileName: String): Inspector = {
+    val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
     val htmlInstVisualizer = new HtmlInstVisualizer()
@@ -158,6 +160,7 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
           finishedThread.debuggerRecord.sentence.eq(sentence) &&
           finishedThread.debuggerRecord.extractor.eq(extractor)
         }
+        val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
         val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
         val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
         val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
@@ -166,6 +169,8 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
         frag(
           h2("Extractor"),
           p(extractor.name),
+          h3("Rule View"),
+          htmlRuleVisualization.fragment,
           h3("Textual Extractor View"),
           htmlExtractorVisualization.fragment,
           h3("Inst View"),
