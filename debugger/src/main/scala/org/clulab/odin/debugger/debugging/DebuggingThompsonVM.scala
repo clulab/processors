@@ -12,6 +12,8 @@ import scala.annotation.tailrec
 object DebuggingThompsonVM {
   import Direction._
 
+  val noThreads = Seq.empty[SingleThread]
+
   class DebuggingEvaluator(
     debugger: Debugger,
     start: Inst,
@@ -21,7 +23,7 @@ object DebuggingThompsonVM {
     state: State
   ) extends ThompsonVM.Evaluator(start, tok, sent, doc, state) {
 
-    // Executes instruction on token and returns the produced threads.
+    // Executes instruction on token and returns the produced SingleThreads.
     // Threads are created by following all no-Match instructions.
     override def mkThreads(
       tok: Int,
@@ -30,35 +32,32 @@ object DebuggingThompsonVM {
       groups: NamedGroups = Map.empty,
       mentions: NamedMentions = Map.empty,
       partialGroups: PartialGroups = Nil,
-      prevThreadOpt: Option[Thread] // TODO: Should this be a single thread?
-    ): Seq[Thread] = debugger.debugTok(tok) {
+      prevThreadOpt: Option[SingleThread]
+    ): Seq[SingleThread] = debugger.debugTok(tok) {
 
-      // @annotation.tailrec
+      @tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-        threads: List[SingleThread]
+        singleThreads: List[SingleThread]
       ): Seq[SingleThread] = {
         // This changes the Inst, but keeps the same Tok.
         internals match {
-          case Nil => threads.reverse
+          case Nil => singleThreads.reverse
           case (headInst, headGroups, headMentions, headPartialGroups) :: rest => /*debugger.debugInst(headInst)*/ {
             headInst match {
               case inst: Pass =>
                 debugger.debugInstMatches(true, tok, inst)
-                prevThreadOpt.foreach(printThread) // It was on that thread and inst passed, and now trying what pass leads to.
-                // So, pass works at this token and should see the inst in table.
-                // Do I want to add the thread there as well?
-                // For which threads did it pass and for which did it fail?
+                // So, pass works at this token and should see the Inst in table.
                 // Add inst.getNext to front of internals and leave everything else the same.
-                loop((inst.getNext, headGroups, headMentions, headPartialGroups) :: rest, threads)
+                loop((inst.getNext, headGroups, headMentions, headPartialGroups) :: rest, singleThreads)
               case inst: Split =>
                 debugger.debugInstMatches(true, tok, inst)
                 // Add inst.lhs and inst.rhs to the front of internals and leave everything else the same.
-                loop((inst.lhs, headGroups, headMentions, headPartialGroups) :: (inst.rhs, headGroups, headMentions, headPartialGroups) :: rest, threads)
+                loop((inst.lhs, headGroups, headMentions, headPartialGroups) :: (inst.rhs, headGroups, headMentions, headPartialGroups) :: rest, singleThreads)
               case inst: SaveStart =>
                 debugger.debugInstMatches(true, tok, inst)
                 // Add inst.getNext to the front of internals and also (inst.name, tok) to the headPartialGroups and leave everything else the same.
-                loop((inst.getNext, headGroups, headMentions, (inst.name, tok) :: headPartialGroups) :: rest, threads)
+                loop((inst.getNext, headGroups, headMentions, (inst.name, tok) :: headPartialGroups) :: rest, singleThreads)
               case inst: SaveEnd =>
                 headPartialGroups match {
                   // See if what was stored in headPartialGroups matches the name of the inst.
@@ -67,21 +66,17 @@ object DebuggingThompsonVM {
                     val updatedGroups = headGroups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
                     // Add inst.getNext to the front of the internals and also (name -> updatedGroups) to the headGroups and leave everything else the same.
                     // Replace the partials with the remaining ones now that the head has been matched.
-                    loop((inst.getNext, headGroups + (name -> updatedGroups), headMentions, partials) :: rest, threads)
+                    loop((inst.getNext, headGroups + (name -> updatedGroups), headMentions, partials) :: rest, singleThreads)
                   case _ =>
                     sys.error("unable to close capture")
                 }
               // For any other kind of instance, add it to the threads that will in the end be the result.
               case inst: Inst =>
-                //                if (inst == Done)
-                //                  debugger.debugMatches(true, tok, inst) // Maybe wait on this.  Turn each thread into a finished thread with result and reason why.
-                //                else
-                //                  println("What is this?")
                 // This inst is passed up for now but will be recorded later.
                 val singleThread = SingleThread(tok, inst, dir, headGroups, headMentions, headPartialGroups, prevThreadOpt)
                 // Turn whatever else is at the head into a SingleThread and prepend it to existing threads.
                 // If the inst is Done, then it is sitting there waiting to be recognized as is anything else not in the match above.
-                loop(rest, singleThread :: threads)
+                loop(rest, singleThread :: singleThreads)
             }
           }
         }
@@ -91,169 +86,134 @@ object DebuggingThompsonVM {
       // Notice that tok and dir are not in the list.  They always come from method arguments.
       val threads = loop(List((inst, groups, mentions, partialGroups)), Nil)
 
-      // TODO: Record demise of prevThreadOpt that doesn't continue?
-      //      if (threads.isEmpty)
-      //        debugger.debugMatches(false) // This would be for the thread then?
-      threads.foreach { thread =>
-        printThread(thread)
-      }
       threads
-    }
-
-    // Add some kind of 5(tok) <- 4(tok) <-
-    // Showing what the prev thread was and for each the token where it matched.
-    def printThread(thread: Thread): Unit = {
-      thread match {
-        case thread: SingleThread =>
-          // println(s"Debugging single thread with tok = ${thread.tok} and inst.posId = ${thread.inst.getPosId}")
-          thread.prevThreadOpt.foreach(printThread)
-        case threadBundle: ThreadBundle =>
-          println(s"Debugging thread bundle: $threadBundle")
-          threadBundle.bundles.foreach { bundle =>
-            bundle.foreach { thread =>
-              printThread(thread)
-            }
-          }
-      }
     }
 
     // Advance the Thread by executing its instruction (Inst).
     // The Inst is expected to be a Match_ instruction.
     override def stepSingleThread(t: SingleThread): Seq[Thread] = debugger.debugTok(t.tok) {
-      /*debugger.debugInst(t.inst)*/ {
-        printThread(t)
-        val prevThreadOpt = Some(t)
+      val prevThreadOpt = Some(t)
+      val newThreads = t.inst match {
+        case i: MatchToken =>
+          val matches = doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state)
 
-        t.inst match {
-          case i: MatchToken =>
-            val matches = doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state)
+          // TODO: Add thread to this and turn into done thread with reason being not matches.
+          debugger.debugInstMatches(matches, t.tok, i)
+          if (matches) {
+            val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
 
-            // TODO: Add thread to this and turn into done thread with reason being not matches.
-            debugger.debugInstMatches(matches, t.tok, i)
-            if (matches) {
-              val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
+            mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+          }
+          else {
+            debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
+            noThreads
+          }
+        case i: MatchSentenceStart =>
+          val matches = (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1)
 
-              mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-            }
-            else {
-              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
-              Nil
-            }
-          case i: MatchSentenceStart =>
-            val matches = (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1)
+          debugger.debugInstMatches(matches, t.tok, i) // TODO: Account for false
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+          }
+          else {
+            debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
+            noThreads
+          }
+        case i: MatchSentenceEnd => // TODO: Account for false
+          val matches = t.tok == doc.sentences(sent).size
 
-            debugger.debugInstMatches(matches, t.tok, i) // TODO: Account for false
-            if (matches) {
-              mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-            }
-            else {
-              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
-              Nil
-            }
-          case i: MatchSentenceEnd => // TODO: Account for false
-            val matches = t.tok == doc.sentences(sent).size
+          debugger.debugInstMatches(matches, t.tok, i)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+          }
+          else {
+            debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
+            noThreads
+          }
+        case i: MatchLookAhead => // TODO: Account for false
+          val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
+          // So this bunch of threads has to match first.
+          val results = evalThreads(mkThreads(startTok, i.start, LeftToRight, prevThreadOpt = None)) // TODO: Record as dependency?
+          println("Eval threads first, so side rail.")
+          val matches = i.negative == results.isEmpty
 
-            debugger.debugInstMatches(matches, t.tok, i)
-            if (matches) {
-              mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-            }
-            else {
-              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
-              Nil
-            }
-          case i: MatchLookAhead => // TODO: Account for false
-            val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
-            // So this bunch of threads has to match first.
-            val results = evalThreads(mkThreads(startTok, i.start, LeftToRight, prevThreadOpt = None)) // TODO: Record as dependency?
-            println("Eval threads first, so side rail.")
-            val matches = i.negative == results.isEmpty
+          debugger.debugInstMatches(matches, t.tok, i)
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+          }
+          else {
+            debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
+            noThreads
+          }
+        case i: MatchLookBehind =>
+          val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
+          // So this bunch of threads has to match first.
+          val results =
+            if (startTok < 0) None
+            else evalThreads(mkThreads(startTok, i.start, RightToLeft, prevThreadOpt = None)) // TODO: Record as dependency?
+          println("Eval threads first, so side rail.")
+          val matches = i.negative == results.isEmpty
 
-            debugger.debugInstMatches(matches, t.tok, i)
-            if (matches) {
-              mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-            }
-            else {
-              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
-              Nil
-            }
-          case i: MatchLookBehind =>
-            val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
-            // So this bunch of threads has to match first.
-            val results =
-              if (startTok < 0) None
-              else evalThreads(mkThreads(startTok, i.start, RightToLeft, prevThreadOpt = None)) // TODO: Record as dependency?
-            println("Eval threads first, so side rail.")
-            val matches = i.negative == results.isEmpty
+          debugger.debugInstMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.
+          if (matches) {
+            mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+          }
+          else {
+            debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
+            noThreads
+          }
+        case i: MatchMention =>
+          val mentions = retrieveMentions(state, sent, t.tok, i.m, i.arg)
+          val bundles: Seq[Seq[Thread]] = mentions
+            .filter { m =>
+              val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
 
-            debugger.debugInstMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.
-            if (matches) {
-              mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
+              matches
             }
-            else {
-              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
-              Nil
+            .map { m =>
+              val captures = mkMentionCapture(t.mentions, i.name, m)
+              val nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
+
+              // Everything that gets bundled later will already have a prevThreadOpt.
+              mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups, prevThreadOpt)
             }
-          case i: MatchMention =>
-            val mentions = retrieveMentions(state, sent, t.tok, i.m, i.arg)
-            val bundles: Seq[Seq[Thread]] = mentions
-              .filter { m =>
-                val matches = (t.dir == LeftToRight && t.tok == m.start) || (t.dir == RightToLeft && t.tok == m.end - 1)
+          val matches = bundles.nonEmpty
 
-                matches
-              }
-              .map { m =>
-                val captures = mkMentionCapture(t.mentions, i.name, m)
-                val nextTok = if (t.dir == LeftToRight) m.end else m.start - 1
-
-                // Everything that gets bundled later will already have a prevThreadOpt.
-                mkThreads(nextTok, i.getNext, t.dir, t.groups, captures, t.partialGroups, prevThreadOpt)
-              }
-            val matches = bundles.nonEmpty
-
-            debugger.debugInstMatches(matches, t.tok, i) // TODO. If mkThreads is empty, then prevThreadOpt essentially dies, so need to note.
-            bundles match {
-              case Seq() => Nil
-              case Seq(bundle) => bundle
-              case bundles => Seq(ThreadBundle(bundles))
-            }
-          case Done =>
-            debugger.debugInstMatches(true, t.tok, t.inst) // Don't think this ever gets called.
-            Seq(t)
-          case _ =>
-            debugger.debugInstMatches(false, t.tok, t.inst)
-            debugger.debugThreadMatches(t, false, ThreadMatch.empty)
-            Nil // The Thread died with no match.
-        }
+          debugger.debugInstMatches(matches, t.tok, i)
+          bundles match {
+            case Seq() =>
+              // TODO. If mkThreads is empty, then prevThreadOpt essentially dies, so need to note.
+              noThreads
+            case Seq(bundle) => bundle
+            case bundles => Seq(ThreadBundle(bundles))
+          }
+        case Done =>
+          debugger.debugInstMatches(true, t.tok, t.inst) // Don't think this ever gets called.
+          Seq(t)
+        case _ =>
+          debugger.debugInstMatches(false, t.tok, t.inst)
+          debugger.debugThreadMatches(t, false, ThreadMatch.empty)
+          noThreads // The Thread died with no match.
       }
+
+      newThreads
     }
 
     def debugThread(thread: Thread, threadMatch: ThreadMatch): Unit = {
-      thread match {
-        case singleThread: SingleThread =>
-          debugger.debugThreadMatches(singleThread, singleThread.isDone, threadMatch)
-        case threadBundle: ThreadBundle =>
-          threadBundle.bundles.foreach { bundle =>
-            bundle.foreach { thread =>
-              debugThread(thread, threadMatch)
-            }
-          }
+      Thread.withSingleThreads(thread) { singleThread =>
+        debugger.debugThreadMatches(singleThread, singleThread.isDone, threadMatch)
       }
     }
 
     def debugMatchesDone(thread: Thread): Unit = {
-      thread match {
-        case singleThread: SingleThread =>
-          if (singleThread.inst == Done) {
-            // This will at least be good for the table.
-            // Should it really by the prevThread thing instead?
-            debugger.debugInstMatches(true, singleThread.tok, singleThread.inst)
-          }
-        case threadBundle: ThreadBundle =>
-          threadBundle.bundles.foreach { bundle =>
-            bundle.foreach { thread =>
-              debugMatchesDone(thread)
-            }
-          }
+      Thread.withSingleThreads(thread) { singleThread =>
+        if (singleThread.inst == Done) {
+          // This will at least be good for the table.
+          // Should it really use the prevThreadOpt instead so that
+          // the recorded tok is one behind, making an inclusive range?
+          // TODO: Experiment with this.
+          debugger.debugInstMatches(true, singleThread.tok, singleThread.inst)
+        }
       }
     }
 
@@ -327,6 +287,13 @@ object DebuggingThompsonVM {
 
     override def evalThreads(threads: Seq[Thread], result: Option[Thread] = None): Option[Thread] = {
       localInnerEvalThreads(threads, result)
+    }
+
+    override def eval(tok: Int, start: Inst): Option[Thread] = {
+      val singleThreads = mkThreads(tok, start, prevThreadOpt = None)
+      val threadOpt = evalThreads(singleThreads)
+
+      threadOpt
     }
   }
 
