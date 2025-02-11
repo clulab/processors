@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.debugging
 
-import org.clulab.odin.debugger.{Debugger, DebuggerRecord, FinishedThread}
+import org.clulab.odin.debugger.{Debugger, FinishedInst, FinishedThread}
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document
@@ -38,7 +38,7 @@ object InnerDebuggingExtractorEngine {
 
 class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, verbose: Boolean)
     extends ExtractorEngine(extractors, globalAction) {
-  val transcript: Buffer[DebuggerRecord] = Buffer.empty
+  val transcript: Buffer[FinishedInst] = Buffer.empty
   val finishedThreads: Buffer[FinishedThread] = Buffer.empty
 
   // We do have a list of extractors here and they are indexed.
@@ -54,11 +54,11 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   // May depend on what all it needs do to.
 
   def extractTranscript(debugger: Debugger): Unit = synchronized {
-    transcript.appendAll(debugger.transcript)
+    transcript.appendAll(debugger.instTranscript)
   }
 
   def extractFinishedThreads(debugger: Debugger): Unit = synchronized {
-    finishedThreads.appendAll(debugger.finishedThreads)
+    finishedThreads.appendAll(debugger.threadTranscript)
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {

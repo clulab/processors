@@ -21,7 +21,14 @@ object ThreadMatch {
 case class FinishedThread(
   thread: SingleThread,
   instMatch: Boolean,
-  threadMatch: ThreadMatch
+  threadMatch: ThreadMatch,
+  debuggerRecord: DebuggerRecord
+)
+
+case class FinishedInst(
+  inst: Inst,
+  instMatch: Boolean,
+  debuggerRecord: DebuggerRecord
 )
 
 // Turn into SearchRecord, InstRecord, ThreadRecord
@@ -35,14 +42,9 @@ case class DebuggerRecord(
   sentenceIndex: Int,
   sentence: Sentence,
 
-  startOpt: Option[Int],
-  tokOpt: Option[Int], // TODO: Maybe skip
-  instOpt: Option[Inst], // TODO: Maybe skip, get from thread
-  tokenIntervalOpt: Option[Interval],
-
-  matches: Boolean
-
-//  finishedThread: FinishedThread
+  startOpt: Option[Int] = None,
+  tokOpt: Option[Int] = None, // TODO: Maybe skip
+  tokenIntervalOpt: Option[Interval] = None
 )
 
 class DebuggerContext(
@@ -64,13 +66,23 @@ class DebuggerContext(
     extractors.nonEmpty &&
     tokenPatterns.nonEmpty &&
     sentenceIndexes.nonEmpty &&
-    sentences.nonEmpty // &&
-/*
-    starts.nonEmpty &&
-    toks.nonEmpty &&
-    insts.nonEmpty
-*/
+    sentences.nonEmpty
+
     // tokenIntervals
+  }
+
+  def isInstComplete: Boolean = {
+    isComplete && {
+      starts.nonEmpty &&
+      toks.nonEmpty &&
+      insts.nonEmpty
+    }
+  }
+
+  def isThreadComplete: Boolean = {
+    isComplete && {
+      starts.nonEmpty
+    }
   }
 
   def getDepth: Int = depth
@@ -190,20 +202,7 @@ class DebuggerContext(
     depth -= 1
   }
 
-  def setMatches(matches: Boolean, tok: Int, inst: Inst): DebuggerRecord = {
-//    val finishedThread = FinishedThread(thread, matches, reasonOpt)
-
-    if (!isComplete)
-      println("The record is not complete!")// TODO: Depends on what kind of extractor
-
-    if (tokenIntervals.nonEmpty) {
-      // This is for cross
-      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
-    }
-    else {
-      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
-    }
-
+  def mkDebuggerRecord(tok: Int): DebuggerRecord = {
     DebuggerRecord(
       documents.head,
       loops.head,
@@ -213,15 +212,33 @@ class DebuggerContext(
       sentences.head,
 
       starts.headOption,
-      Some(tok),
-      Some(inst),
-      tokenIntervals.headOption,
-      matches
+      Some(tok) // ,
+      //      Some(inst),
+      //      tokenIntervals.headOption,
+      //      matches
     )
   }
 
-  def setThread(matches: Boolean, survives: Boolean, thread: SingleThread, reasonOpt: Option[String]): DebuggerRecord = {
-    val finishedThread = FinishedThread(thread, matches, ThreadMatch(survives, reasonOpt.get))
+  def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
+
+    if (!isInstComplete)
+      println("The record is not complete!")// TODO: Depends on what kind of extractor
+
+
+    if (tokenIntervals.nonEmpty) {
+      // This is for cross
+      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
+    }
+    else {
+      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
+    }
+
+    FinishedInst(inst, matches, mkDebuggerRecord(tok))
+  }
+
+  def setThreadMatches(thread: SingleThread, instMatches: Boolean, threadMatch: ThreadMatch): FinishedThread = {
+    val debuggerRecord = mkDebuggerRecord(thread.tok)
+    val finishedThread = FinishedThread(thread, instMatches, threadMatch, debuggerRecord)
 
     if (!isComplete)
       println("The record is not complete!")// TODO: Depends on what kind of extractor
@@ -234,20 +251,7 @@ class DebuggerContext(
       val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
     }
 
-    DebuggerRecord(
-      documents.head,
-      loops.head,
-      extractors.head,
-      tokenPatterns.head,
-      sentenceIndexes.head,
-      sentences.head,
-
-      starts.headOption,
-      toks.headOption,
-      insts.headOption,
-      tokenIntervals.headOption,
-      matches
-      /*finishedThread*/)
+    finishedThread
   }
 }
 
@@ -259,14 +263,14 @@ class Debugger(verbose: Boolean = false) {
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
   protected val context = new DebuggerContext()
-  val transcript: Buffer[DebuggerRecord] = Buffer.empty
-  val finishedThreads: Buffer[FinishedThread] = Buffer.empty
+  val instTranscript: Buffer[FinishedInst] = Buffer.empty
+  val threadTranscript: Buffer[FinishedThread] = Buffer.empty
 
   def activate(): Unit = active = true
 
   def deactivate(): Unit = active = false
 
-  def clear(): Unit = transcript.clear()
+  def clear(): Unit = instTranscript.clear()
 
   protected def innerDebug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
@@ -553,7 +557,7 @@ class Debugger(verbose: Boolean = false) {
     result
   }
 
-  protected def innerDebugMatches[StackFrameType <: StackFrame](matches: Boolean, tok: Int, inst: Inst)(stackFrame: StackFrameType): Unit = {
+  protected def innerDebugInstMatches[StackFrameType <: StackFrame](matches: Boolean, tok: Int, inst: Inst)(stackFrame: StackFrameType): Unit = {
 
     def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
@@ -569,13 +573,13 @@ class Debugger(verbose: Boolean = false) {
 
     if (active) {
       if (verbose) println(message)
-      transcript += context.setMatches(matches, tok, inst)
+      instTranscript += context.setInstMatches(matches, tok, inst)
     }
   }
 
-  protected def innerDebugThread[StackFrameType <: StackFrame](matches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
+  protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
     if (active) {
-      finishedThreads += FinishedThread(thread, matches, threadMatch)
+      threadTranscript += context.setThreadMatches(thread, instMatches, threadMatch)
     }
   }
 
@@ -653,18 +657,18 @@ class Debugger(verbose: Boolean = false) {
     innerDebugInst(inst)(stackFrame)(block)
   }
 
-  def debugMatches(matches: Boolean, tok: Int, inst: Inst)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+  def debugInstMatches(matches: Boolean, tok: Int, inst: Inst)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugMatches(matches, tok, inst)(stackFrame)
+    innerDebugInstMatches(matches, tok, inst)(stackFrame)
   }
 
-  def debugThread(thread: SingleThread, matches: Boolean, threadMatch: ThreadMatch)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+  def debugThreadMatches(thread: SingleThread, matches: Boolean, threadMatch: ThreadMatch)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugThread(matches, thread, threadMatch)(stackFrame)
+    innerDebugThreadMatches(matches, thread, threadMatch)(stackFrame)
   }
 
   def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {

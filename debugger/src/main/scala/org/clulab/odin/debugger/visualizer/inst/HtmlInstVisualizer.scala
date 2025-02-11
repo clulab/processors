@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.inst
 
-import org.clulab.odin.debugger.DebuggerRecord
+import org.clulab.odin.debugger.FinishedInst
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.HtmlStyling
@@ -13,17 +13,17 @@ import scala.collection.mutable
 
 class HtmlInstVisualizer() extends InstVisualizer with HtmlStyling {
 
-  def mkHtmlTable(transcript: mutable.Buffer[DebuggerRecord], sentence: Sentence): Text.TypedTag[String] = {
-    val sentenceTranscript = transcript.filter { debuggerRecord =>
-      debuggerRecord.sentence.eq(sentence)
+  def mkInstView(transcript: mutable.Buffer[FinishedInst], sentence: Sentence): Text.TypedTag[String] = {
+    val sentenceTranscript = transcript.filter { finishedInst =>
+      finishedInst.debuggerRecord.sentence.eq(sentence)
     }
 
     def findMatches(start: Int, tok: Int): Seq[(Inst, Option[Boolean])] = {
-      val matchTranscripts = sentenceTranscript.filter { debuggerRecord =>
-        debuggerRecord.startOpt.contains(start) && debuggerRecord.tokOpt.contains(tok)
+      val matchTranscripts = sentenceTranscript.filter { finishedInst =>
+        finishedInst.debuggerRecord.startOpt.contains(start) && finishedInst.debuggerRecord.tokOpt.contains(tok)
       }
-      val trues = matchTranscripts.filter(_.matches).flatMap(_.instOpt).distinct.toSet
-      val falses = matchTranscripts.filter(!_.matches).flatMap(_.instOpt).distinct.toSet
+      val trues = matchTranscripts.filter(_.instMatch).map(_.inst).distinct.toSet
+      val falses = matchTranscripts.filter(!_.instMatch).map(_.inst).distinct.toSet
       val matches = (trues ++ falses).toSeq.sortBy(_.getPosId)
 
       val summary = matches.map { inst =>
@@ -78,15 +78,15 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlStyling {
     fragment
   }
 
-  def visualize(transcript: mutable.Buffer[DebuggerRecord]): HtmlVisualization = {
-    val allSentences = transcript
-      .map { debuggerRecord =>
-        EqualityByIdentity(debuggerRecord.sentence)
-      }
+  def visualize(transcript: mutable.Buffer[FinishedInst]): HtmlVisualization = {
+    val allSentences = transcript.map { finishedInst =>
+      EqualityByIdentity(finishedInst.debuggerRecord.sentence)
+    }
     val distinctSentences = allSentences.distinct
-    val sentences = distinctSentences
-        .map { equalityByIdentity => equalityByIdentity.value.asInstanceOf[Sentence] }
-    val htmlTables = sentences.map { mkHtmlTable(transcript, _) }
+    val sentences = distinctSentences.map { equalityByIdentity =>
+      equalityByIdentity.value.asInstanceOf[Sentence]
+    }
+    val htmlTables = sentences.map { mkInstView(transcript, _) }
     val fragment = frag(htmlTables)
 
     new HtmlVisualization(fragment)

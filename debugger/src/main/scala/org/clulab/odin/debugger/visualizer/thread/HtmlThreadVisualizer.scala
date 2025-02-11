@@ -1,9 +1,11 @@
 package org.clulab.odin.debugger.visualizer.thread
 
-import org.clulab.odin.debugger.{DebuggerRecord, FinishedThread}
+import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.debugger.FinishedThread
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.impl.ThompsonVM.SingleThread
+import org.clulab.processors.Sentence
 import scalatags.Text
 import scalatags.Text.all._
 
@@ -12,7 +14,7 @@ import scala.collection.mutable
 
 class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
 
-  def mkThreadView(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mutable.Buffer[FinishedThread]): Text.TypedTag[String] = {
+  def mkThreadView(transcript: mutable.Buffer[FinishedThread], sentence: Sentence): Text.TypedTag[String] = {
 
     @tailrec
     def loop(singleThread: SingleThread, singleThreads: List[SingleThread]): List[SingleThread] = {
@@ -58,9 +60,11 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
 
     // TODO: Assume all threads for now, but these need to be filtered as well.
     // They need to know about their sentence then
-    val sentence = transcript.head.sentence
+    val sentenceTranscript = transcript.filter { finishedThread =>
+      finishedThread.debuggerRecord.sentence.eq(sentence)
+    }
     val words = sentence.words
-    val sortedFinishedThreads = sortFinishedThreads(finishedThreads)
+    val sortedFinishedThreads = sortFinishedThreads(sentenceTranscript)
     val rows = sortedFinishedThreads.zipWithIndex.map { case (finishedThread, index) =>
       val singleThreads = loop(finishedThread.thread, List.empty)
       val byTok = singleThreads.groupBy(_.tok)
@@ -104,9 +108,17 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
     view
   }
 
-  override def visualize(transcript: mutable.Buffer[DebuggerRecord], finishedThreads: mutable.Buffer[FinishedThread]): HtmlVisualization = {
-    val fragment = mkThreadView(transcript, finishedThreads)
+  override def visualize(transcript: mutable.Buffer[FinishedThread]): HtmlVisualization = {
+    val allSentences = transcript.map { finishedThread =>
+      EqualityByIdentity(finishedThread.debuggerRecord.sentence)
+    }
+    val distinctSentences = allSentences.distinct
+    val sentences = distinctSentences.map { equalityByIdentity =>
+      equalityByIdentity.value.asInstanceOf[Sentence]
+    }
+    val htmlTables = sentences.map { mkThreadView(transcript, _) }
+    val fragment = frag(htmlTables)
 
-    new HtmlVisualization(frag(fragment))
+    new HtmlVisualization(fragment)
   }
 }

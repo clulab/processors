@@ -15,7 +15,7 @@ import scalatags.text.Builder
 import scala.collection.mutable
 import scala.util.Using
 
-class Inspector(val transcript: mutable.Buffer[DebuggerRecord], val finishedThreads: mutable.Buffer[FinishedThread]) {
+class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread]) {
   val style = tag("style")("""
     |body {
     |  font-family: system-ui, sans-serif;
@@ -51,19 +51,48 @@ class Inspector(val transcript: mutable.Buffer[DebuggerRecord], val finishedThre
   val gray = "gray"
 
   def inspectExtractor(extractor: Extractor): Inspector = {
-    val newTranscript = transcript.filter { debuggerRecord =>
+    val newInstTranscript = filterInstTranscript { debuggerRecord =>
+      debuggerRecord.extractor.eq(extractor)
+    }
+    val newThreadTranscript = filterThreadTranscript { debuggerRecord =>
       debuggerRecord.extractor.eq(extractor)
     }
 
-    new Inspector(newTranscript, finishedThreads) // TODO: Filter this as well
+    new Inspector(newInstTranscript, newThreadTranscript)
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
-    val newTranscript = transcript.filter { debuggerRecord =>
+    val newInstTranscript = filterInstTranscript { debuggerRecord =>
+      debuggerRecord.sentence.eq(sentence)
+    }
+    val newThreadTranscript = filterThreadTranscript { debuggerRecord =>
       debuggerRecord.sentence.eq(sentence)
     }
 
-    new Inspector(newTranscript, finishedThreads) // TODO: Filter this as well
+    new Inspector(newInstTranscript, newThreadTranscript)
+  }
+
+  def filterInstTranscript(f: DebuggerRecord => Boolean): mutable.Buffer[FinishedInst] = {
+    val newInstTranscript = instTranscript.filter { finishedInst =>
+      f(finishedInst.debuggerRecord)
+    }
+
+    newInstTranscript
+  }
+
+  def filterThreadTranscript(f: DebuggerRecord => Boolean): mutable.Buffer[FinishedThread] = {
+    val newThreadTranscript = threadTranscript.filter { finishedThread =>
+      f(finishedThread.debuggerRecord)
+    }
+
+    newThreadTranscript
+  }
+
+  def filter(f: DebuggerRecord => Boolean): Inspector = {
+    val newInstTranscript = filterInstTranscript(f)
+    val newThreadTranscript = filterThreadTranscript(f)
+
+    new Inspector(newInstTranscript, newThreadTranscript)
   }
 
   def mkHtml(fragment: Frag[Builder, String]): Frag[Builder, String] = {
@@ -89,26 +118,50 @@ class Inspector(val transcript: mutable.Buffer[DebuggerRecord], val finishedThre
     val htmlInstVisualizer = new HtmlInstVisualizer()
     val htmlThreadVisualizer = new HtmlThreadVisualizer()
 
-    val equalitySentences = transcript.map { debuggerRecord =>
-      EqualityByIdentity(debuggerRecord.sentence)
-    }.distinct
+    // It is possible that the sentences for the Insts and Threads are
+    // different, especially since Threads might never have gotten around
+    // to match so that no Sentence would ever be recorded.
+    val instEqualitySentences = instTranscript.map { finishedInst =>
+      EqualityByIdentity(finishedInst.debuggerRecord.sentence)
+    }
+    val threadEqualitySentences = threadTranscript.map { finishedThread =>
+      EqualityByIdentity(finishedThread.debuggerRecord.sentence)
+    }
+    val equalitySentences = (instEqualitySentences ++ threadEqualitySentences).distinct
+
     val sentenceFragments = equalitySentences.map { equalitySentence =>
       val sentence = equalitySentence.value.asInstanceOf[Sentence]
-      val sentenceTranscript = transcript.filter { debuggerRecord =>
-        debuggerRecord.sentence.eq(sentence)
-      }
-      val equalityExtractors = sentenceTranscript.map { debuggerRecord =>
-        EqualityByIdentity(debuggerRecord.extractor)
-      }.distinct
+      val instEqualityExtractors = instTranscript
+          .filter { finishedInst =>
+            finishedInst.debuggerRecord.sentence.eq(sentence)
+          }
+          .map { finishedInst =>
+            EqualityByIdentity(finishedInst.debuggerRecord.extractor)
+          }
+      val threadEqualityExtractors = threadTranscript
+          .filter { finishedThread =>
+            finishedThread.debuggerRecord.sentence.eq(sentence)
+          }
+          .map { finishedThread =>
+            EqualityByIdentity(finishedThread.debuggerRecord.extractor)
+          }
+      val equalityExtractors = (instEqualityExtractors ++ threadEqualityExtractors).distinct
+
       val extractorFragments = equalityExtractors.map { equalityExtractor =>
         val extractor = equalityExtractor.value.asInstanceOf[Extractor]
-        val extractorTranscript = sentenceTranscript.filter { debuggerRecord =>
-          debuggerRecord.extractor.eq(extractor)
+
+        val newInstTranscript = instTranscript.filter { finishedInst =>
+          finishedInst.debuggerRecord.sentence.eq(sentence) &&
+          finishedInst.debuggerRecord.extractor.eq(extractor)
+        }
+        val newThreadTranscript = threadTranscript.filter { finishedThread =>
+          finishedThread.debuggerRecord.sentence.eq(sentence) &&
+          finishedThread.debuggerRecord.extractor.eq(extractor)
         }
         val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
         val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
-        val instVisualization = htmlInstVisualizer.visualize(extractorTranscript)
-        val threadVisualization = htmlThreadVisualizer.visualize(extractorTranscript, finishedThreads)
+        val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
+        val threadVisualization = htmlThreadVisualizer.visualize(newThreadTranscript)
 
         frag(
           h2("Extractor"),

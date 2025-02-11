@@ -41,10 +41,10 @@ object DebuggingThompsonVM {
         // This changes the Inst, but keeps the same Tok.
         internals match {
           case Nil => threads.reverse
-          case (headInst, headGroups, headMentions, headPartialGroups) :: rest => debugger.debugInst(headInst) {
+          case (headInst, headGroups, headMentions, headPartialGroups) :: rest => /*debugger.debugInst(headInst)*/ {
             headInst match {
               case inst: Pass =>
-                debugger.debugMatches(true, tok, inst)
+                debugger.debugInstMatches(true, tok, inst)
                 prevThreadOpt.foreach(printThread) // It was on that thread and inst passed, and now trying what pass leads to.
                 // So, pass works at this token and should see the inst in table.
                 // Do I want to add the thread there as well?
@@ -52,18 +52,18 @@ object DebuggingThompsonVM {
                 // Add inst.getNext to front of internals and leave everything else the same.
                 loop((inst.getNext, headGroups, headMentions, headPartialGroups) :: rest, threads)
               case inst: Split =>
-                debugger.debugMatches(true, tok, inst)
+                debugger.debugInstMatches(true, tok, inst)
                 // Add inst.lhs and inst.rhs to the front of internals and leave everything else the same.
                 loop((inst.lhs, headGroups, headMentions, headPartialGroups) :: (inst.rhs, headGroups, headMentions, headPartialGroups) :: rest, threads)
               case inst: SaveStart =>
-                debugger.debugMatches(true, tok, inst)
+                debugger.debugInstMatches(true, tok, inst)
                 // Add inst.getNext to the front of internals and also (inst.name, tok) to the headPartialGroups and leave everything else the same.
                 loop((inst.getNext, headGroups, headMentions, (inst.name, tok) :: headPartialGroups) :: rest, threads)
               case inst: SaveEnd =>
                 headPartialGroups match {
                   // See if what was stored in headPartialGroups matches the name of the inst.
                   case (name, start) :: partials if name == inst.name =>
-                    debugger.debugMatches(true, tok, inst)
+                    debugger.debugInstMatches(true, tok, inst)
                     val updatedGroups = headGroups.getOrElse(name, Vector.empty) :+ Interval(start, tok)
                     // Add inst.getNext to the front of the internals and also (name -> updatedGroups) to the headGroups and leave everything else the same.
                     // Replace the partials with the remaining ones now that the head has been matched.
@@ -77,7 +77,7 @@ object DebuggingThompsonVM {
                 //                  debugger.debugMatches(true, tok, inst) // Maybe wait on this.  Turn each thread into a finished thread with result and reason why.
                 //                else
                 //                  println("What is this?")
-
+                // This inst is passed up for now but will be recorded later.
                 val singleThread = SingleThread(tok, inst, dir, headGroups, headMentions, headPartialGroups, prevThreadOpt)
                 // Turn whatever else is at the head into a SingleThread and prepend it to existing threads.
                 // If the inst is Done, then it is sitting there waiting to be recognized as is anything else not in the match above.
@@ -120,7 +120,7 @@ object DebuggingThompsonVM {
     // Advance the Thread by executing its instruction (Inst).
     // The Inst is expected to be a Match_ instruction.
     override def stepSingleThread(t: SingleThread): Seq[Thread] = debugger.debugTok(t.tok) {
-      debugger.debugInst(t.inst) {
+      /*debugger.debugInst(t.inst)*/ {
         printThread(t)
         val prevThreadOpt = Some(t)
 
@@ -129,36 +129,36 @@ object DebuggingThompsonVM {
             val matches = doc.sentences(sent).words.isDefinedAt(t.tok) && i.c.matches(t.tok, sent, doc, state)
 
             // TODO: Add thread to this and turn into done thread with reason being not matches.
-            debugger.debugMatches(matches, t.tok, i)
+            debugger.debugInstMatches(matches, t.tok, i)
             if (matches) {
               val nextTok = if (t.dir == LeftToRight) t.tok + 1 else t.tok - 1
 
               mkThreads(nextTok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, ThreadMatch.instMismatch)
+              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchSentenceStart =>
             val matches = (t.tok == 0) || (t.dir == RightToLeft && t.tok == -1)
 
-            debugger.debugMatches(matches, t.tok, i) // TODO: Account for false
+            debugger.debugInstMatches(matches, t.tok, i) // TODO: Account for false
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, ThreadMatch.instMismatch)
+              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchSentenceEnd => // TODO: Account for false
             val matches = t.tok == doc.sentences(sent).size
 
-            debugger.debugMatches(matches, t.tok, i)
+            debugger.debugInstMatches(matches, t.tok, i)
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, ThreadMatch.instMismatch)
+              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchLookAhead => // TODO: Account for false
@@ -168,12 +168,12 @@ object DebuggingThompsonVM {
             println("Eval threads first, so side rail.")
             val matches = i.negative == results.isEmpty
 
-            debugger.debugMatches(matches, t.tok, i)
+            debugger.debugInstMatches(matches, t.tok, i)
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, ThreadMatch.instMismatch)
+              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchLookBehind =>
@@ -185,12 +185,12 @@ object DebuggingThompsonVM {
             println("Eval threads first, so side rail.")
             val matches = i.negative == results.isEmpty
 
-            debugger.debugMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.
+            debugger.debugInstMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.
             if (matches) {
               mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
             }
             else {
-              debugger.debugThread(t, false, ThreadMatch.instMismatch)
+              debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
               Nil
             }
           case i: MatchMention =>
@@ -210,18 +210,18 @@ object DebuggingThompsonVM {
               }
             val matches = bundles.nonEmpty
 
-            debugger.debugMatches(matches, t.tok, i) // TODO. If mkThreads is empty, then prevThreadOpt essentially dies, so need to note.
+            debugger.debugInstMatches(matches, t.tok, i) // TODO. If mkThreads is empty, then prevThreadOpt essentially dies, so need to note.
             bundles match {
               case Seq() => Nil
               case Seq(bundle) => bundle
               case bundles => Seq(ThreadBundle(bundles))
             }
           case Done =>
-            debugger.debugMatches(true, t.tok, t.inst) // Don't think this ever gets called.
+            debugger.debugInstMatches(true, t.tok, t.inst) // Don't think this ever gets called.
             Seq(t)
           case _ =>
-            debugger.debugMatches(false, t.tok, t.inst)
-            debugger.debugThread(t, false, ThreadMatch.empty)
+            debugger.debugInstMatches(false, t.tok, t.inst)
+            debugger.debugThreadMatches(t, false, ThreadMatch.empty)
             Nil // The Thread died with no match.
         }
       }
@@ -230,7 +230,7 @@ object DebuggingThompsonVM {
     def debugThread(thread: Thread, threadMatch: ThreadMatch): Unit = {
       thread match {
         case singleThread: SingleThread =>
-          debugger.debugThread(singleThread, singleThread.isDone, threadMatch)
+          debugger.debugThreadMatches(singleThread, singleThread.isDone, threadMatch)
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
             bundle.foreach { thread =>
@@ -246,7 +246,7 @@ object DebuggingThompsonVM {
           if (singleThread.inst == Done) {
             // This will at least be good for the table.
             // Should it really by the prevThread thing instead?
-            debugger.debugMatches(true, singleThread.tok, singleThread.inst)
+            debugger.debugInstMatches(true, singleThread.tok, singleThread.inst)
           }
         case threadBundle: ThreadBundle =>
           threadBundle.bundles.foreach { bundle =>
