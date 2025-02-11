@@ -36,8 +36,8 @@ object DebuggingThompsonVM {
       // @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
-        threads: List[Thread]
-      ): Seq[Thread] = {
+        threads: List[SingleThread]
+      ): Seq[SingleThread] = {
         // This changes the Inst, but keeps the same Tok.
         internals match {
           case Nil => threads.reverse
@@ -330,18 +330,6 @@ object DebuggingThompsonVM {
     }
   }
 
-  object DebuggingEvaluator {
-
-    def apply(
-      debugger: Debugger,
-      start: Inst,
-      tok: Int,
-      sent: Int,
-      doc: Document,
-      state: State
-    ): DebuggingEvaluator = new DebuggingEvaluator(debugger, start, tok, sent, doc, state)
-  }
-
   def evaluate(
     debugger: Debugger,
     start: Inst,
@@ -350,7 +338,7 @@ object DebuggingThompsonVM {
     doc: Document,
     state: State
   ): Seq[(NamedGroups, NamedMentions)] = {
-    val evaluator = DebuggingEvaluator(debugger, start, tok, sent, doc, state)
+    val evaluator = new DebuggingEvaluator(debugger, start, tok, sent, doc, state)
     val result = evaluator
         .eval(tok, start)
         .map(_.results)

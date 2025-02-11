@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
-import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
+import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
@@ -74,8 +74,8 @@ class DebuggerContext(
   def isInstComplete: Boolean = {
     isComplete && {
       starts.nonEmpty &&
-      toks.nonEmpty &&
-      insts.nonEmpty
+      toks.nonEmpty //&&
+//      insts.nonEmpty
     }
   }
 
@@ -221,8 +221,10 @@ class DebuggerContext(
 
   def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
 
-    if (!isInstComplete)
-      println("The record is not complete!")// TODO: Depends on what kind of extractor
+    if (!isInstComplete) {
+      if (inst != Done)
+        println("The record is not complete!")
+    } // TODO: Depends on what kind of extractor
 
 
     if (tokenIntervals.nonEmpty) {
