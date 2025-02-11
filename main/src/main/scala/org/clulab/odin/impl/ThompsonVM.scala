@@ -4,6 +4,8 @@ import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
 
+import scala.annotation.tailrec
+
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
@@ -21,6 +23,27 @@ object ThompsonVM {
     def isDone: Boolean
     def isReallyDone: Boolean
     def results: Seq[(NamedGroups, NamedMentions)]
+  }
+
+  object Thread {
+
+    def withSingleThreads[T](thread: Thread)(f: SingleThread => Unit): Unit = {
+
+      // TODO: Make this tail recursive!
+      def loop(thread: Thread): Unit = {
+        thread match {
+          case singleThread: SingleThread => f(singleThread)
+          case threadBundle: ThreadBundle =>
+            threadBundle.bundles.foreach { bundle =>
+              bundle.foreach { thread =>
+                loop(thread)
+              }
+            }
+        }
+      }
+
+      loop(thread)
+    }
   }
 
   case class SingleThread(
@@ -65,7 +88,7 @@ object ThompsonVM {
       groups: NamedGroups = Map.empty,
       mentions: NamedMentions = Map.empty,
       partialGroups: PartialGroups = Nil,
-      prevThreadOpt: Option[Thread] // TODO: Should this be a single thread?
+      prevThreadOpt: Option[SingleThread] // TODO: Should this be a single thread?
     ): Seq[Thread] = {
 
       // TODO: Why is this List while I see Seq and even Vector elsewhere?
