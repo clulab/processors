@@ -8,8 +8,54 @@ import scalatags.Text.all._
 
 class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizer {
 
+  def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
+    val textVisualizer = new TextExtractorVisualizer()
+    val placeholder = raw("&nbsp;" * 2)
+    val anchorExtraction = textVisualizer.extractTokenPattern(indent, crossSentenceExtractor.anchorPattern.pattern).map { case (name, value) =>
+      (s"anchorPattern:pattern:$name", value)
+    }
+    val neighborExtraction = textVisualizer.extractTokenPattern(indent, crossSentenceExtractor.neighborPattern.pattern).map { case (name, value) =>
+      (s"neighborPattern:pattern:$name", value)
+    }
+    val extractions = anchorExtraction ++ neighborExtraction
+    val textVisualization = textVisualizer.visualizeCrossSentenceExtractor(indent, crossSentenceExtractor)
+    val lines = textVisualization.lines
+    val top = lines.takeWhile(_ != "anchorPattern:pattern:").toArray
+    val topRow = toRow(top, 4)
+    val botRows = extractions.flatMap { case (name, string) =>
+      val headerRow = tr(
+        td(placeholder),
+        td(colspan := 3)(name)
+      )
+      val trailerRows = string.lines.map { line =>
+        val number = line.takeWhile(_ != '.')
+        val indent = line
+          .drop(number.length + 2) // Skip . and first space.
+          .takeWhile(_ == ' ')
+        val rest = line.drop(number.length + 2 + indent.length)
+
+        tr(
+          td(placeholder),
+          td(placeholder),
+          td(`class` := right)(number),
+          td(
+            raw("&nbsp;" * indent.length),
+            rest
+          )
+        )
+      }
+
+      Seq(headerRow) ++ trailerRows
+    }
+
+    table(`class` := bordered)(
+      topRow,
+      botRows
+    )
+  }
+
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
-    p("Keith was here") // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
+    visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
   def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Text.TypedTag[String] = {
@@ -37,7 +83,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizer {
         tr(
           td(placeholder),
           td(placeholder),
-          td(number),
+          td(`class` := right)(number),
           td(
             raw("&nbsp;" * indent.length),
             rest
@@ -82,7 +128,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizer {
         tr(
           td(placeholder),
           td(placeholder),
-          td(number),
+          td(`class` := right)(number),
           td(
             raw("&nbsp;" * indent.length),
             rest

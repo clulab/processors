@@ -19,7 +19,7 @@ class HtmlRuleVisualizer extends RuleVisualizer with HtmlVisualizer {
     val longMap = yaml.load(rule).asInstanceOf[JMap[String, Any]].asScala
     val rows = longMap.map { case (key, value) =>
       tr(
-        td(key),
+        td(`class` := right)(s"$key:"),
         td(toSpans(value.toString))
       )
     }.toSeq

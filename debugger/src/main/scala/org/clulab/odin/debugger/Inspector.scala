@@ -2,6 +2,7 @@ package org.clulab.odin.debugger
 
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.debugger.visualizer.HtmlStyling
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
@@ -16,40 +17,8 @@ import scalatags.text.Builder
 import scala.collection.mutable
 import scala.util.Using
 
-class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread]) {
-  val style = tag("style")("""
-    |body {
-    |  font-family: system-ui, sans-serif;
-    |  font-size: 12px;
-    |}
-    |
-    |table {
-    |  font-size: 12px;
-    |}
-    |
-    |table.bordered, table.bordered th, table.bordered td {
-    |  border: 1px solid;
-    |  border-collapse: collapse;
-    |}
-    |
-    |.green {
-    |  color: green;
-    |}
-    |
-    |.red {
-    |  color: red;
-    |}
-    |
-    |.gray {
-    |  color: gray;
-    |}
-    |
-    |""".stripMargin
-  )
-  val bordered = "bordered"
-  val green = "green"
-  val red = "red"
-  val gray = "gray"
+class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread])
+    extends HtmlStyling {
 
   def copy(
     extractors: Seq[Extractor] = this.extractors2,
