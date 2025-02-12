@@ -102,7 +102,8 @@ object DebuggingOdinStarterApp extends App {
 
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
+      .inspectStaticAsHtml("rules.html")
 //      .inspectExtractor(extractor)
       .inspectSentence(sentence)
-      .asHtml("debug.html")
+      .inspectDynamicAsHtml("debug.html")
 }

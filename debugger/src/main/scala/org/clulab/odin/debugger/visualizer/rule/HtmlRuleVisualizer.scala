@@ -20,7 +20,7 @@ class HtmlRuleVisualizer extends RuleVisualizer with HtmlVisualizer {
     val rows = longMap.map { case (key, value) =>
       tr(
         td(key),
-        td(value.toString)
+        td(toSpans(value.toString))
       )
     }.toSeq
 

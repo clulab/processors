@@ -46,4 +46,23 @@ trait HtmlVisualizer extends HtmlStyling {
       )
     )
   }
+
+  def toSpans(lines: Seq[String]): Seq[Text.TypedTag[String]] = {
+    val spans = lines.zipWithIndex.flatMap { case (line, index) =>
+      val indent = line.takeWhile(_ == ' ')
+      val rest = line.drop(indent.length)
+      val spans = Seq(
+        span(raw("&nbsp;" * indent.length)),
+        span(rest)
+      )
+
+      if (index != lines.length - 1) spans :+ br()
+      else spans
+    }
+
+    spans
+  }
+
+  def toSpans(line: String): Seq[Text.TypedTag[String]] =
+      toSpans(line.lines.toArray)
 }

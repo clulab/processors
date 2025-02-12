@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStyling {
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
-    ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
+    p("Keith was here") // ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
   def visualizeGraphExtractor(graphExtractor: GraphExtractor): Text.TypedTag[String] = {

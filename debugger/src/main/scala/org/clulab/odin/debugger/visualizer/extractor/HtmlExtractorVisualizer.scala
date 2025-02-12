@@ -9,7 +9,7 @@ import scalatags.Text.all._
 class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizer {
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
-    ??? // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
+    p("Keith was here") // visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
   def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Text.TypedTag[String] = {

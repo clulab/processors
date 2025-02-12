@@ -16,7 +16,7 @@ import scalatags.text.Builder
 import scala.collection.mutable
 import scala.util.Using
 
-class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread]) {
+class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread]) {
   val style = tag("style")("""
     |body {
     |  font-family: system-ui, sans-serif;
@@ -51,6 +51,14 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
   val red = "red"
   val gray = "gray"
 
+  def copy(
+    extractors: Seq[Extractor] = this.extractors2,
+    instTranscript: mutable.Buffer[FinishedInst] = this.instTranscript,
+    threadTranscript: mutable.Buffer[FinishedThread] = this.threadTranscript
+  ): Inspector = {
+    new Inspector(extractors, instTranscript, threadTranscript)
+  }
+
   def inspectExtractor(extractor: Extractor): Inspector = {
     val newInstTranscript = filterInstTranscript { debuggerRecord =>
       debuggerRecord.extractor.eq(extractor)
@@ -59,7 +67,7 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
       debuggerRecord.extractor.eq(extractor)
     }
 
-    new Inspector(newInstTranscript, newThreadTranscript)
+    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
@@ -70,7 +78,7 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
       debuggerRecord.sentence.eq(sentence)
     }
 
-    new Inspector(newInstTranscript, newThreadTranscript)
+    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
   def filterInstTranscript(f: DebuggerRecord => Boolean): mutable.Buffer[FinishedInst] = {
@@ -93,7 +101,7 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
     val newInstTranscript = filterInstTranscript(f)
     val newThreadTranscript = filterThreadTranscript(f)
 
-    new Inspector(newInstTranscript, newThreadTranscript)
+    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
   def mkHtml(fragment: Frag[Builder, String]): Frag[Builder, String] = {
@@ -113,7 +121,40 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
     htmlFragment
   }
 
-  def asHtml(fileName: String): Inspector = {
+  def inspectStaticAsHtml(fileName: String): Inspector = {
+    val htmlRuleVisualizer = new HtmlRuleVisualizer()
+    val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
+    val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
+
+    val extractorFragments = extractors2.map { extractor =>
+      val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
+      val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
+      val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
+
+      frag(
+        h2("Extractor"),
+        p(extractor.name),
+        h3("Rule View"),
+        htmlRuleVisualization.fragment,
+        h3("Textual Extractor View"),
+        htmlExtractorVisualization.fragment,
+        h3("Graphical Extractor View"),
+        graphicalExtractorVisualization.fragment
+      )
+    }
+    val bodyFragment = frag(
+      h1("Extractors"),
+      extractorFragments
+    )
+    val htmlPage = mkHtml(bodyFragment).toString
+
+    Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>
+      printWriter.println(htmlPage)
+    }
+    this
+  }
+
+  def inspectDynamicAsHtml(fileName: String): Inspector = {
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
@@ -202,6 +243,6 @@ class Inspector(val instTranscript: mutable.Buffer[FinishedInst], val threadTran
 object Inspector {
 
   def apply(debuggingExtractorEngine: DebuggingExtractorEngine): Inspector = {
-    new Inspector(debuggingExtractorEngine.transcript, debuggingExtractorEngine.finishedThreads)
+    new Inspector(debuggingExtractorEngine.extractors, debuggingExtractorEngine.transcript, debuggingExtractorEngine.finishedThreads)
   }
 }
