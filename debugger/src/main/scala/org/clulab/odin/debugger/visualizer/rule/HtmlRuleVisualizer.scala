@@ -1,9 +1,8 @@
 package org.clulab.odin.debugger.visualizer.rule
 
-import org.clulab.odin.debugger.visualization.{HtmlVisualization, TextVisualization, Visualization}
-import org.clulab.odin.debugger.visualizer.HtmlStyling
+import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualizer.HtmlVisualizer
 import org.clulab.odin.impl.Extractor
-import org.clulab.utils.StringUtils
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import scalatags.Text.all._
@@ -13,7 +12,7 @@ import scalatags.text.Builder
 import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 
-class HtmlRuleVisualizer extends RuleVisualizer with HtmlStyling {
+class HtmlRuleVisualizer extends RuleVisualizer with HtmlVisualizer {
   val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
 
   def visualize(rule: String): Frag[Builder, String] = {

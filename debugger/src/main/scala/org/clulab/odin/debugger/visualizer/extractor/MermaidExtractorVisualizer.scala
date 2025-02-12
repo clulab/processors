@@ -15,7 +15,8 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlStylin
   }
 
   def visualizeGraphExtractor(graphExtractor: GraphExtractor): Text.TypedTag[String] = {
-    ??? // visualizeGraphExtractor(0, graphExtractor)
+    //??? // visualizeGraphExtractor(0, graphExtractor)
+    p("Keith was here")
   }
 
 

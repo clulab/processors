@@ -3,7 +3,7 @@ package org.clulab.odin.debugger.visualizer.inst
 import org.clulab.odin.debugger.FinishedInst
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlStyling
+import org.clulab.odin.debugger.visualizer.HtmlVisualizer
 import org.clulab.odin.impl.Inst
 import org.clulab.processors.Sentence
 import scalatags.Text
@@ -11,7 +11,7 @@ import scalatags.Text.all._
 
 import scala.collection.mutable
 
-class HtmlInstVisualizer() extends InstVisualizer with HtmlStyling {
+class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizer {
 
   def mkInstView(transcript: mutable.Buffer[FinishedInst], sentence: Sentence): Text.TypedTag[String] = {
     val sentenceTranscript = transcript.filter { finishedInst =>

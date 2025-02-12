@@ -3,7 +3,7 @@ package org.clulab.odin.debugger.visualizer.thread
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.FinishedThread
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlStyling
+import org.clulab.odin.debugger.visualizer.HtmlVisualizer
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.processors.Sentence
 import scalatags.Text
@@ -12,7 +12,7 @@ import scalatags.Text.all._
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlStyling {
+class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizer {
 
   def mkThreadView(transcript: mutable.Buffer[FinishedThread], sentence: Sentence): Text.TypedTag[String] = {
 
