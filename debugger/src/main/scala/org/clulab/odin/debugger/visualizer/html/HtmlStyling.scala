@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.visualizer
+package org.clulab.odin.debugger.visualizer.html
 
 import scalatags.Text.all._
 
@@ -11,13 +11,9 @@ trait HtmlStyling {
   val wide = "wide"
 
   val style = tag("style")("""
-    |body {
+    |body, table, span.nodeLabel p:first-line {
     |  font-family: system-ui, sans-serif;
-    |  font-size: 12px;
-    |}
-    |
-    |table {
-    |  font-size: 12px;
+    |  font-size: 12pt;
     |}
     |
     |table.bordered, table.bordered th, table.bordered td {
@@ -43,6 +39,10 @@ trait HtmlStyling {
     |
     |.gray {
     |  color: gray;
+    |}
+    |
+    |span.nodeLabel p {
+    |  font-size: 8pt;
     |}
     |
     |""".stripMargin

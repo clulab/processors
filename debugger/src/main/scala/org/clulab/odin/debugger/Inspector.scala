@@ -2,8 +2,8 @@ package org.clulab.odin.debugger
 
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
-import org.clulab.odin.debugger.visualizer.HtmlVisualizing
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
+import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer

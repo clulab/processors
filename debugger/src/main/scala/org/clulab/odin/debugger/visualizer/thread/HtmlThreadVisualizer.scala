@@ -3,7 +3,7 @@ package org.clulab.odin.debugger.visualizer.thread
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.FinishedThread
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlVisualizing
+import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.processors.Sentence
 import scalatags.Text

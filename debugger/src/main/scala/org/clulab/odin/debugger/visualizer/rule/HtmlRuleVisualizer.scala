@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.visualizer.rule
 
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlVisualizing
+import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.Extractor
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor

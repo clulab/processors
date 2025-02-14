@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlVisualizing
+import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import scalatags.Text
 import scalatags.Text.all._

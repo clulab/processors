@@ -1,14 +1,16 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlVisualizing
+import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RelationGraphPattern, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
+import org.clulab.utils.StringUtils
 import scalatags.Text
 import scalatags.Text.all._
 
 import scala.annotation.tailrec
 
 class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisualizing {
+  val textExtractorVisualizer = new TextExtractorVisualizer()
 
   def esc(string: String): String = string.replaceAll("\"", "#quot;")
 
@@ -93,51 +95,27 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
   }
 
   def getShortDescription(inst: Inst): String = {
-    val name = inst.getClass.getSimpleName
-    val stringEmpty = ""
-    val details = inst match {
-      case Done => stringEmpty
-      case inst: Pass => stringEmpty
-      case inst: Split => stringEmpty
-      case inst: SaveStart => stringEmpty // s"name = ${inst.name}"
-      case inst: SaveEnd => stringEmpty // s"name = ${inst.name}"
-      case inst: MatchToken => stringEmpty // s"c = ${visualizeTokenConstraint(indent, inst.c)}"
-      case inst: MatchMention => stringEmpty // s"m = ${visualizeStringMatcher(indent, inst.m)}, name = ${inst.name}, arg = ${inst.arg}"
-      case inst: MatchSentenceStart => stringEmpty
-      case inst: MatchSentenceEnd => stringEmpty
-      case inst: MatchLookAhead => stringEmpty // s"negative = ${inst.negative}"
-      case inst: MatchLookBehind => stringEmpty // s"negative = ${inst.negative}"
-    }
-    val formattedDetails =
-      if (details.isEmpty) ""
-      else s"($details)"
+    val longDescription = textExtractorVisualizer.getDescription(0, inst)
+    val separator = '('
+    val shortDescription =
+        if (longDescription.contains(separator)) {
+          val name = StringUtils.beforeFirst(longDescription, separator)
+          val description = StringUtils.afterFirst(longDescription, separator).dropRight(1)
 
-    s"$name$formattedDetails"
+          s"$name\n$description"
+        }
+        else longDescription
+
+    shortDescription
   }
 
   def getMainChildren(inst: Inst): List[InstChild] = {
-
-    def mkNextChild(inst: Inst, wide: Boolean): InstChild =
-      InstChild("next", inst.getNext, wide)
-
-    val children = inst match {
-      case Done => List.empty
-      case inst: Pass => List(mkNextChild(inst, true))
-      case inst: Split => List(
-        InstChild("lhs", inst.lhs, true),
-        InstChild("rhs", inst.rhs, true)
-      )
-      case inst: SaveStart => List(mkNextChild(inst, true))
-      case inst: SaveEnd => List(mkNextChild(inst, true))
-      case inst: MatchToken => List(mkNextChild(inst, false))
-      case inst: MatchMention => List(mkNextChild(inst, false))
-      case inst: MatchSentenceStart => List(mkNextChild(inst, true))
-      case inst: MatchSentenceEnd => List(mkNextChild(inst, true))
-      case inst: MatchLookAhead => List(mkNextChild(inst, true))
-      case inst: MatchLookBehind => List(mkNextChild(inst, true))
+    val children = textExtractorVisualizer.getChildren(inst)
+    val mainChildren = children.filter { case InstChild(name, _, _) =>
+      name != "start"
     }
 
-    children
+    mainChildren
   }
 
   def extractMainInst(start: Inst): List[Inst] = {
@@ -237,43 +215,11 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  def visualizeTokenPattern2(tokenPattern: TokenPattern): Text.TypedTag[String] = {
+  def visualizeTokenPattern(tokenPattern: TokenPattern): Text.TypedTag[String] = {
     val fragment = visualizeStartInst(tokenPattern.start, 0, None)
 
     pre(`class` := "mermaid")(
       fragment
-    )
-  }
-
-   def visualizeTokenPattern(tokenPattern: TokenPattern): Text.TypedTag[String] = {
-    val start = tokenPattern.start
-    val insts = extractInst(start)
-    val nodes = insts.map { inst =>
-      val posId = inst.getPosId
-      val description = getShortDescription(inst)
-      val label = esc(s"$posId $description")
-
-      s"""N$posId["$label"]\n"""
-    }
-    val rawNodes = nodes.map(raw)
-    val edges = insts.flatMap { parent =>
-      val namedChildren = getChildren(parent)
-      val edges = namedChildren.map { case InstChild(name, child, wide) =>
-        val label = esc(name)
-        // If it goes to done and it is from a start, then complications.
-        // Maybe add N#start and N#done as nodes?
-        if (wide) s"""N${parent.getPosId} == "$label" ==> N${child.getPosId}\n"""
-        else s"""N${parent.getPosId} -- "$label" --> N${child.getPosId}\n"""
-      }
-
-      edges
-    }
-    val rawEdges = edges.map(raw)
-
-    pre(`class` := "mermaid")(
-      "\ngraph TD\n",
-      rawNodes,
-      rawEdges
     )
   }
 
@@ -291,10 +237,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
         td(colspan := 2)(name)
       )
       val trailerRow = {
-        val mermaid1 = visualizeTokenPattern(tokenExtractor.pattern)
-        val mermaid = visualizeTokenPattern2(tokenExtractor.pattern)
-//        val string = mermaid2.toString
-//        println(string)
+        val mermaid = visualizeTokenPattern(tokenExtractor.pattern)
 
         tr(
           td(placeholder),
