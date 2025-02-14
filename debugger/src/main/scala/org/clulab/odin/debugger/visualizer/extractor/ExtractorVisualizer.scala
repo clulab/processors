@@ -45,7 +45,7 @@ abstract class ExtractorVisualizer() {
         InstChild("start", inst.start, true)
       )
       case inst: MatchLookBehind => List(
-        mkNextChild(inst.start, true),
+        mkNextChild(inst, true),
         InstChild("start", inst.start, true)
       )
     }

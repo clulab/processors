@@ -133,14 +133,8 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       case inst: MatchMention => List(mkNextChild(inst, false))
       case inst: MatchSentenceStart => List(mkNextChild(inst, true))
       case inst: MatchSentenceEnd => List(mkNextChild(inst, true))
-      case inst: MatchLookAhead => List(
-        mkNextChild(inst, true) // ,
-        // InstChild("start", inst.start, true)
-      )
-      case inst: MatchLookBehind => List(
-        mkNextChild(inst.start, true) // ,
-        // InstChild("start", inst.start, true)
-      )
+      case inst: MatchLookAhead => List(mkNextChild(inst, true))
+      case inst: MatchLookBehind => List(mkNextChild(inst, true))
     }
 
     children
@@ -163,7 +157,6 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     unsortedInsts
   }
 
-  // TODO: Fix indents and line feeds
   def visualizeStartInst(start: Inst, depth: Int, parentOpt: Option[Inst]): Fragment = {
     assert(if (depth == 0) parentOpt.isEmpty else parentOpt.isDefined)
 
