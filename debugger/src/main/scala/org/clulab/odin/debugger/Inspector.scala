@@ -2,7 +2,7 @@ package org.clulab.odin.debugger
 
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
-import org.clulab.odin.debugger.visualizer.HtmlStyling
+import org.clulab.odin.debugger.visualizer.HtmlVisualizing
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
@@ -11,14 +11,12 @@ import org.clulab.odin.impl.Extractor
 import org.clulab.processors.Sentence
 import org.clulab.utils.FileUtils
 import scalatags.Text.all._
-import scalatags.generic.Frag
-import scalatags.text.Builder
 
 import scala.collection.mutable
 import scala.util.Using
 
 class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread])
-    extends HtmlStyling {
+    extends HtmlVisualizing {
 
   def copy(
     extractors: Seq[Extractor] = this.extractors2,
@@ -73,7 +71,7 @@ class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buf
     copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
-  def mkHtml(fragment: Frag[Builder, String]): Frag[Builder, String] = {
+  def mkHtml(fragment: Fragment): Fragment = {
     val htmlFragment = html(
       head(
         style,

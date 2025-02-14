@@ -1,12 +1,12 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.HtmlVisualization
-import org.clulab.odin.debugger.visualizer.HtmlVisualizer
+import org.clulab.odin.debugger.visualizer.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import scalatags.Text
 import scalatags.Text.all._
 
-class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizer {
+class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
 
   def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
     val textVisualizer = new TextExtractorVisualizer()

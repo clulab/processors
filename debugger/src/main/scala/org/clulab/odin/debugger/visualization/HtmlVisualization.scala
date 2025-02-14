@@ -1,5 +1,6 @@
 package org.clulab.odin.debugger.visualization
 
+import org.clulab.odin.debugger.visualizer.HtmlVisualizing
 import scalatags.generic.Frag
 import scalatags.text.Builder
 

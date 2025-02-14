@@ -8,6 +8,7 @@ trait HtmlStyling {
   val red = "red"
   val gray = "gray"
   val right = "right"
+  val wide = "wide"
 
   val style = tag("style")("""
     |body {
@@ -26,6 +27,10 @@ trait HtmlStyling {
     |
     |td.right {
     |  text-align: right;
+    |}
+    |
+    |td.wide {
+    |  width: 100%;
     |}
     |
     |.green {
