@@ -106,7 +106,7 @@ class GraphExtractor(
     val action: Action,
     val pattern: GraphPattern,
     val config: OdinConfig,
-    val ruleOpt: Option[String]
+    val ruleOpt: Option[String] = None
 ) extends Extractor {
 
   def findAllIn(sent: Int, doc: Document, state: State): Seq[Mention] = {

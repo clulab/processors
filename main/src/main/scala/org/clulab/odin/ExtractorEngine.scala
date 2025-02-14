@@ -17,22 +17,6 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
   // of all extractors
   val minIterations = extractors.map(_.priority.minIterations).max
 
-  protected def extract(document: Document, i: Int, state: State): Seq[Mention] = {
-    // extract mentions using extractors (each extractor applies its own action)
-    val extractedMentions = for {
-      extractor <- extractors
-      if extractor.priority matches i
-      mention <- extractor.findAllIn(document, state)
-    } yield mention
-    // apply globalAction and filter resulting mentions
-    val finalMentions = for {
-      mention <- globalAction(extractedMentions, state)
-      if mention.isValid && !state.contains(mention)
-    } yield mention
-    // return the final mentions
-    finalMentions
-  }
-
   /** Extract mentions from a document.
    *
    *  @param doc a processor's document
@@ -55,6 +39,22 @@ class ExtractorEngine(val extractors: Vector[Extractor], val globalAction: Actio
     }
 
     loop(1, initialState)
+  }
+
+  protected def extract(document: Document, i: Int, state: State): Seq[Mention] = {
+    // extract mentions using extractors (each extractor applies its own action)
+    val extractedMentions = for {
+      extractor <- extractors
+      if extractor.priority matches i
+      mention <- extractor.findAllIn(document, state)
+    } yield mention
+    // apply globalAction and filter resulting mentions
+    val finalMentions = for {
+      mention <- globalAction(extractedMentions, state)
+      if mention.isValid && !state.contains(mention)
+    } yield mention
+    // return the final mentions
+    finalMentions
   }
 
   def extractByType[M <: Mention : ClassTag](

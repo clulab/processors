@@ -17,7 +17,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
 
   def visualizeEmbeddingsResource(indent: Int, embeddingsResource: EmbeddingsResource): String = {
     val className = embeddingsResource.getClass.getSimpleName
-    val details = s"p = ${embeddingsResource.p}"
+    val details = s"path = ${embeddingsResource.path}"
     val formattedDetails =
       if (details.isEmpty) ""
       else s"($details)"

@@ -4,8 +4,6 @@ import org.clulab.processors.Document
 import org.clulab.struct.Interval
 import org.clulab.odin._
 
-import scala.annotation.tailrec
-
 object ThompsonVM {
   type NamedGroups = Map[String, Seq[Interval]]
   type NamedMentions = Map[String, Seq[Mention]]
@@ -25,27 +23,6 @@ object ThompsonVM {
     def results: Seq[(NamedGroups, NamedMentions)]
   }
 
-  object Thread {
-
-    def withSingleThreads[T](thread: Thread)(f: SingleThread => Unit): Unit = {
-
-      // TODO: Make this tail recursive!
-      def loop(thread: Thread): Unit = {
-        thread match {
-          case singleThread: SingleThread => f(singleThread)
-          case threadBundle: ThreadBundle =>
-            threadBundle.bundles.foreach { bundle =>
-              bundle.foreach { thread =>
-                loop(thread)
-              }
-            }
-        }
-      }
-
-      loop(thread)
-    }
-  }
-
   case class SingleThread(
     tok: Int,
     inst: Inst,
@@ -55,21 +32,16 @@ object ThompsonVM {
     partialGroups: PartialGroups,
     prevThreadOpt: Option[Thread] = None
   ) extends Thread {
-
     def isDone: Boolean = inst == Done
-
     def isReallyDone: Boolean = isDone
-
     def results: Seq[(NamedGroups, NamedMentions)] = Seq((groups, mentions))
   }
 
   case class ThreadBundle(bundles: Seq[Seq[Thread]]) extends Thread {
     // At least one Thread is done and the Threads after the ThreadBundle can be dropped.
     def isDone: Boolean = bundles.exists(_.exists(_.isDone))
-
     // all bundles are done and we can retrieve the results
     def isReallyDone: Boolean = bundles.forall(_.head.isReallyDone)
-
     def results: Seq[(NamedGroups, NamedMentions)] = for {
       threads <- bundles
       thread = threads.head if thread.isReallyDone

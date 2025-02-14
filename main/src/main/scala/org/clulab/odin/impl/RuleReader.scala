@@ -121,6 +121,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       template: Any => String,
       config: OdinConfig
   ): Rule = {
+
     // name is required
     val name = try {
       template(data("name"))

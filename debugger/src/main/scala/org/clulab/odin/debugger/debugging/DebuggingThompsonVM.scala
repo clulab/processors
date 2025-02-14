@@ -14,6 +14,27 @@ object DebuggingThompsonVM {
 
   val noThreads = Seq.empty[SingleThread]
 
+  object DebuggingThread {
+
+    def withSingleThreads[T](thread: Thread)(f: SingleThread => Unit): Unit = {
+
+      // TODO: Make this tail recursive!
+      def loop(thread: Thread): Unit = {
+        thread match {
+          case singleThread: SingleThread => f(singleThread)
+          case threadBundle: ThreadBundle =>
+            threadBundle.bundles.foreach { bundle =>
+              bundle.foreach { thread =>
+                loop(thread)
+              }
+            }
+        }
+      }
+
+      loop(thread)
+    }
+  }
+
   class DebuggingEvaluator(
     debugger: Debugger,
     start: Inst,
@@ -200,13 +221,13 @@ object DebuggingThompsonVM {
     }
 
     def debugThread(thread: Thread, threadMatch: ThreadMatch): Unit = {
-      Thread.withSingleThreads(thread) { singleThread =>
+      DebuggingThread.withSingleThreads(thread) { singleThread =>
         debugger.debugThreadMatches(singleThread, singleThread.isDone, threadMatch)
       }
     }
 
     def debugMatchesDone(thread: Thread): Unit = {
-      Thread.withSingleThreads(thread) { singleThread =>
+      DebuggingThread.withSingleThreads(thread) { singleThread =>
         if (singleThread.inst == Done) {
           // This will at least be good for the table.
           // Should it really use the prevThreadOpt instead so that
