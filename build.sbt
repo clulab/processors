@@ -16,7 +16,7 @@ ThisBuild / crossScalaVersions := Seq(scala212, scala211, scala213, scala3)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))
-  .aggregate(main, corenlp, openie)
+  .aggregate(main, corenlp, openie, debugger)
   .dependsOn(main, corenlp, openie) // so that we can import from the console
   .settings(
     publish / skip := true

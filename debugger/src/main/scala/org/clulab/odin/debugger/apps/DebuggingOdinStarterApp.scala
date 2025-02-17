@@ -75,7 +75,7 @@ object DebuggingOdinStarterApp extends App {
   }
 
   // Create a debugging extractor engine from the extractor engine already in use.
-  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine, verbose = false)
+  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine, active = true, verbose = false)
   // Do the same to it as was done before.
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   // The result should be the same whether debugging or not.

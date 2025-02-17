@@ -204,7 +204,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
         else {
           frag(
             indent("end\n", depth - 1),
-            indent(s"""${mkNodeId(Done)} == "pop" ==> ${mkNodeId(parentOpt.get)}\n""", depth - 1)
+            indent(s"""${mkNodeId(Done)} == "return" ==> ${mkNodeId(parentOpt.get)}\n""", depth - 1)
           )
         }
 

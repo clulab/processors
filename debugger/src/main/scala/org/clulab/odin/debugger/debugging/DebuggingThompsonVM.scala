@@ -151,11 +151,10 @@ object DebuggingThompsonVM {
             debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
             noThreads
           }
-        case i: MatchLookAhead => // TODO: Account for false
+        case i: MatchLookAhead =>
           val startTok = if (t.dir == LeftToRight) t.tok else t.tok + 1
           // So this bunch of threads has to match first.
           val results = evalThreads(mkThreads(startTok, i.start, LeftToRight, prevThreadOpt = None)) // TODO: Record as dependency?
-          println("Eval threads first, so side rail.")
           val matches = i.negative == results.isEmpty
 
           debugger.debugInstMatches(matches, t.tok, i)
@@ -172,7 +171,7 @@ object DebuggingThompsonVM {
           val results =
             if (startTok < 0) None
             else evalThreads(mkThreads(startTok, i.start, RightToLeft, prevThreadOpt = None)) // TODO: Record as dependency?
-          println("Eval threads first, so side rail.")
+          // println("Eval threads first, so side rail.")
           val matches = i.negative == results.isEmpty
 
           debugger.debugInstMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.

@@ -36,7 +36,7 @@ object InnerDebuggingExtractorEngine {
   }
 }
 
-class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, verbose: Boolean)
+class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, active: Boolean, verbose: Boolean)
     extends ExtractorEngine(extractors, globalAction) {
   val transcript: Buffer[FinishedInst] = Buffer.empty
   val finishedThreads: Buffer[FinishedThread] = Buffer.empty
@@ -72,7 +72,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   }
 
   override def extractFrom(document: Document, initialState: State): Seq[Mention] = {
-    val debugger = new Debugger(verbose)
+    val debugger = new Debugger(active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(document, initialState)
 
@@ -82,7 +82,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   }
 
   override def extractByType[M <: Mention : ClassTag](document: Document, initialState: State): Seq[M] = {
-    val debugger = new Debugger(verbose)
+    val debugger = new Debugger(active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractByType[M](document, initialState)
 
@@ -102,10 +102,10 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
 
 object DebuggingExtractorEngine {
 
-  def apply(extractorEngine: ExtractorEngine, verbose: Boolean = false): DebuggingExtractorEngine = {
+  def apply(extractorEngine: ExtractorEngine, active: Boolean = true, verbose: Boolean = false): DebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
     val globalAction = extractorEngine.globalAction
 
-    new DebuggingExtractorEngine(extractors, globalAction, verbose)
+    new DebuggingExtractorEngine(extractors, globalAction, active, verbose)
   }
 }

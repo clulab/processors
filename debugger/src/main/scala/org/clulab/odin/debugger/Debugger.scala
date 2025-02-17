@@ -259,8 +259,7 @@ class DebuggerContext(
 
 // TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
 
-class Debugger(verbose: Boolean = false) {
-  protected var active: Boolean = true // You can turn off debugging with this!
+class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
