@@ -41,18 +41,6 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   val transcript: Buffer[FinishedInst] = Buffer.empty
   val finishedThreads: Buffer[FinishedThread] = Buffer.empty
 
-  // We do have a list of extractors here and they are indexed.
-  // Maybe in the log we need to store the index rather than extractor itself.
-  // The debugging extractor needs to have an index then.
-  // What if an extractor is present twice?  getIndex could return multiple values
-  // and the user would have to decide?
-  // Get records for particular extractor
-  // By sentence
-  // Get the trace and get any extractor details
-  // Send those to the debugger
-  // Call this Tracer rather than Debugger?
-  // May depend on what all it needs do to.
-
   def extractTranscript(debugger: Debugger): Unit = synchronized {
     transcript.appendAll(debugger.instTranscript)
   }
@@ -62,7 +50,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {
-    val debugger = new Debugger(verbose)
+    val debugger = new Debugger(active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
 

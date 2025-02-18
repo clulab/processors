@@ -263,7 +263,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
       case graphExtractor: GraphExtractor => visualizeGraphExtractor(graphExtractor)
       case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
-      case _ => ???
+      case _ => throw new RuntimeException(s"Unrecognized extractor: ${extractor.toString}")
     }
     val visualization = new HtmlVisualization(frag)
 

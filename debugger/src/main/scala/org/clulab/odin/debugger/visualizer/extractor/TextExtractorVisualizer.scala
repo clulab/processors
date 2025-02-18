@@ -387,7 +387,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
       case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
       case graphExtractor: GraphExtractor => visualizeGraphExtractor(graphExtractor)
       case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
-      case _ => ???
+      case _ => throw new RuntimeException(s"Unrecognized extractor: ${extractor.toString}")
     }
     val visualization = new TextVisualization(text)
 
