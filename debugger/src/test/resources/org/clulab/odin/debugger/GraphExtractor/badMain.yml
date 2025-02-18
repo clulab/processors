@@ -1,0 +1,18 @@
+
+taxonomy:
+  - Entity:
+    - Food
+    - Person
+    - Word
+    - Phrase
+  - Event:
+    - Eating
+
+rules:
+  - import: org/clulab/odin/debugger/GraphExtractor/entities.yml
+    vars:
+      rulepriority: "1"
+
+  - import: org/clulab/odin/debugger/GraphExtractor/badEvents.yml
+    vars:
+      rulepriority: "2"

@@ -1,0 +1,9 @@
+
+taxonomy:
+  - Entity:
+    - Person
+
+rules:
+  - import: org/clulab/odin/debugger/TokenExtractor/goodEntities.yml
+    vars:
+      rulepriority: "1"

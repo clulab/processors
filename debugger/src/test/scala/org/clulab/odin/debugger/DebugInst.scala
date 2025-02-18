@@ -5,8 +5,6 @@ import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, TextExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
 import org.clulab.odin.impl.{Done, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, OdinConfig, Pass, SaveEnd, SaveStart, Split}
-import org.clulab.processors.clu.CluProcessor
-import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Test}
 
 import java.io.File
@@ -17,7 +15,6 @@ class DebugInst extends Test {
   val baseResourceDirName = "src/test/resources"
   val resourceDirName = if (!new File(baseResourceDirName).exists()) s"./debugger/$baseResourceDirName" else baseResourceDirName
   val resourceDir: File = new File(resourceDirName)
-  val processor = new CluProcessor()
   val rules = FileUtils.getTextFromFile(new File(resourceDir, "org/clulab/odin/debugger/Inst/main.yml"))
   val extractorEngine = ExtractorEngine(rules, ruleDir = Some(resourceDir))
   val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine, active = true, verbose = false)

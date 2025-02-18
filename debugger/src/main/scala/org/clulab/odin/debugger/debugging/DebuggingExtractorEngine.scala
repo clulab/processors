@@ -81,7 +81,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
 
   def getExtractorByName(name: String): Extractor = {
     val extractor = extractors.find { extractor =>
-      extractor.name == "person-from-lexicon"
+      extractor.name == name
     }.get
 
     extractor

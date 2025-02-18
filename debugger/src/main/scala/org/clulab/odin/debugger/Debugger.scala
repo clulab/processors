@@ -224,7 +224,9 @@ class DebuggerContext(
     if (!isInstComplete) {
       if (inst != Done)
         println("The record is not complete!")
-    } // TODO: Depends on what kind of extractor
+
+    } // TODO: Depends on what kind of extractor.  How does one know?  Check most recent extractor?
+    // Leave something else on the stack.
 
 
     if (tokenIntervals.nonEmpty) {
@@ -585,7 +587,6 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
-    println("Here's your trace...")
     stack.zipWithIndex.foreach { case (stackFrame, index) =>
       println(s"$index: $stackFrame")
     }

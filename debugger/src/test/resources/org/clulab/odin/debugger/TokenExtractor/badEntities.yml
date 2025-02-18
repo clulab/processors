@@ -1,0 +1,7 @@
+
+- name: person-from-lexicon
+  priority: ${rulepriority}
+  label: Person
+  type: token
+  pattern: |
+    [entity='B-PER'] [entity='I-PER']+

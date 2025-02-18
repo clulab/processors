@@ -28,7 +28,11 @@ class HtmlRuleVisualizer extends RuleVisualizer with HtmlVisualizing {
   }
 
   def visualize(extractor: Extractor): HtmlVisualization = {
-    val fragment = extractor.ruleOpt.map(visualize).getOrElse(frag())
+    val fragment = extractor.ruleOpt.map(visualize).getOrElse(frag(
+      p(`class` := red)(
+        "The rule has not been saved.  Be sure to use OdinConfig.keepRule = true before debugging."
+      )
+    ))
 
     new HtmlVisualization(fragment)
   }

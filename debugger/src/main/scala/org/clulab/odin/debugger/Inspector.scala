@@ -15,11 +15,11 @@ import scalatags.Text.all._
 import scala.collection.mutable
 import scala.util.Using
 
-class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread])
+class Inspector(val extractors: Seq[Extractor], val instTranscript: mutable.Buffer[FinishedInst], val threadTranscript: mutable.Buffer[FinishedThread])
     extends HtmlVisualizing {
 
   def copy(
-    extractors: Seq[Extractor] = this.extractors2,
+    extractors: Seq[Extractor] = this.extractors,
     instTranscript: mutable.Buffer[FinishedInst] = this.instTranscript,
     threadTranscript: mutable.Buffer[FinishedThread] = this.threadTranscript
   ): Inspector = {
@@ -93,7 +93,7 @@ class Inspector(val extractors2: Seq[Extractor], val instTranscript: mutable.Buf
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
 
-    val extractorFragments = extractors2.map { extractor =>
+    val extractorFragments = extractors.map { extractor =>
       val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
       val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
       val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
