@@ -1,0 +1,6 @@
+- name: complex-rule
+  priority: ${rulepriority}
+  label: Food
+  type: token
+  pattern: |
+    ^ (?= A (?= B)) C+ @theme:Food (?<= D (?<= E)) $
