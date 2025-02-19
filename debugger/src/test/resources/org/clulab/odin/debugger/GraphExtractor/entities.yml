@@ -1,12 +1,12 @@
 
-- name: foods-from-lexicon
+- name: food-from-lexicon
   priority: 1
   label: Food
   type: token
   pattern: |
     [entity='B-FOOD'] [entity='I-FOOD']*
 
-- name: person-from-lexicon
+- name: person
   priority: 1
   label: Person
   type: token

@@ -18,7 +18,7 @@ class DebugTokenExtractor extends Test {
   val processor = new CluProcessor()
   val document = processor.annotate("John eats cake.")
   val sentence = document.sentences.head
-  val ruleName = "person-from-lexicon"
+  val ruleName = "person"
 
   val badRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/badMain.yml"))
   val badExtractorEngine = ExtractorEngine(badRules, ruleDir = Some(resourceDir))
@@ -38,11 +38,11 @@ class DebugTokenExtractor extends Test {
     Inspector(badDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectExtractor(badDebuggingExtractor)
-        .inspectDynamicAsHtml("bad-debug.html")
+        .inspectDynamicAsHtml("bad-tokenExtractor-debug.html")
     Inspector(goodDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectExtractor(goodDebuggingExtractor)
-        .inspectDynamicAsHtml("good-debug.html")
+        .inspectDynamicAsHtml("good-tokenExtractor-debug.html")
 
     badMentions.length should be (0)
     goodMentions.length should be (1)

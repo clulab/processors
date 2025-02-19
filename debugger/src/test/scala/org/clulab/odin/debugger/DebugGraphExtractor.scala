@@ -41,11 +41,11 @@ class DebugGraphExtractor extends Test {
     Inspector(badDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectExtractor(badDebuggingExtractor)
-        .inspectDynamicAsHtml("bad-debug.html")
+        .inspectDynamicAsHtml("bad-graphExtractor-debug.html")
     Inspector(goodDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectExtractor(goodDebuggingExtractor)
-        .inspectDynamicAsHtml("good-debug.html")
+        .inspectDynamicAsHtml("good-graphExtractor-debug.html")
 
     badMentions.length should be (2)
     goodMentions.length should be (3)

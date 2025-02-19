@@ -1,5 +1,5 @@
 
-- name: person-from-lexicon
+- name: person
   priority: 1
   label: Person
   type: token

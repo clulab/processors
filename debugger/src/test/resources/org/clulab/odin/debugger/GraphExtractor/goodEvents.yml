@@ -2,8 +2,9 @@
 - name: people-eat-food
   priority: 2
   label: Eating
-  example: "John eats cake"
-  graph: "hybrid"
+  type: dependency
+  example: John eats cake
+  graph: hybrid
   pattern: |
     trigger = [lemma=/eat/ & tag=/^V/]
     food:Food = dobj
