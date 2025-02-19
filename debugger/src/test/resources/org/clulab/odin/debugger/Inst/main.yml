@@ -4,4 +4,4 @@ taxonomy:
     - Food
 
 rules:
-  - import: org/clulab/odin/debugger/Inst/badEntities.yml
+  - import: org/clulab/odin/debugger/Inst/entities.yml
