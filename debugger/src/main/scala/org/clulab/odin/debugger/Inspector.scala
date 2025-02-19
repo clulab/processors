@@ -196,11 +196,11 @@ class Inspector(val extractors: Seq[Extractor], val instTranscript: mutable.Buff
         h1("Sentence"),
         p(sentence.getSentenceText),
         htmlSentenceVisualization.fragment,
-        extractorFragments
+        extractorFragments.toSeq
       )
 
       sentenceFragment
-    }
+    }.toSeq
     val bodyFragment = frag(sentenceFragments)
     val htmlPage = mkHtml(bodyFragment).toString
 

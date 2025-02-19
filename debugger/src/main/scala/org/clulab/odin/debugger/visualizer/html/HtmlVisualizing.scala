@@ -67,5 +67,5 @@ trait HtmlVisualizing extends HtmlStyling {
   }
 
   def toSpans(line: String): Seq[Text.TypedTag[String]] =
-      toSpans(line.lines.toSeq)
+      toSpans(line.linesIterator.toSeq)
 }

@@ -21,7 +21,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     val neighborExtraction = ("neighborPattern:pattern:", crossSentenceExtractor.neighborPattern.pattern)
     val extractions = Seq(anchorExtraction, neighborExtraction)
     val textVisualization = textVisualizer.visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
-    val lines = textVisualization.lines
+    val lines = textVisualization.linesIterator
     val top = lines.takeWhile(_ != "anchorPattern:pattern:")
     val topRow = toRow(top.toSeq, 3)
     val botRows = extractions.flatMap { case (name, tokenPattern) =>
@@ -66,7 +66,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     }
 
     val textVisualization = textVisualizer.visualizeGraphExtractor(0, graphExtractor)
-    val lines = textVisualization.lines
+    val lines = textVisualization.linesIterator
     val top = lines.takeWhile(_ != "pattern:trigger:")
     val topRow = toRow(top.toSeq, 3)
     val botRows = extractions.flatMap { case (name, _) =>
@@ -184,7 +184,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       val sideEdges = inst match {
         case inst: MatchLookAhead => List(
           frag(indent(s"""N${inst.getPosId} == "1 start" ==> N${inst.start.getPosId}\n""")),
-          visualizeStartInst(inst.start, depth + 1, Some(inst)),
+          visualizeStartInst(inst.start, depth + 1, Some(inst))
         )
         case inst: MatchLookBehind => List(
           frag(indent(s"""N${inst.getPosId} == "1 start" ==> N${inst.start.getPosId}\n""")),
@@ -230,7 +230,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       (s"pattern:$name", value)
     }
     val top = textVisualizer.visualizeTokenExtractor(0, tokenExtractor)
-    val topRows = toRows(top.lines.toSeq, 3)
+    val topRows = toRows(top.linesIterator.toSeq, 3)
     val botRows = extractions.flatMap { case (name, _) =>
       val headerRow = tr(
         td(placeholder),

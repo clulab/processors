@@ -93,7 +93,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
       )
 
       result
-    }
+    }.toSeq
     val view = table(`class` := bordered)(
       tr(
         th("#"),
@@ -116,7 +116,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
     val sentences = distinctSentences.map { equalityByIdentity =>
       equalityByIdentity.value.asInstanceOf[Sentence]
     }
-    val htmlTables = sentences.map { mkThreadView(transcript, _) }
+    val htmlTables = sentences.map { mkThreadView(transcript, _) }.toSeq
     val fragment = frag(htmlTables)
 
     new HtmlVisualization(fragment)

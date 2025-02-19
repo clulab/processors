@@ -19,15 +19,18 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
     }
     val extractions = anchorExtraction ++ neighborExtraction
     val textVisualization = textVisualizer.visualizeCrossSentenceExtractor(indent, crossSentenceExtractor)
-    val lines = textVisualization.lines
-    val top = lines.takeWhile(_ != "anchorPattern:pattern:").toArray
+    // Later versions of Scala complain on lines instead of linesIterator because newer versions of Java
+    // itself have added lines() to String.  Unfortunately, older versions of Scala want the opposite and
+    // complain on linesIterator.  The older versions will have to make do with linesIterator.
+    val lines = textVisualization.linesIterator
+    val top = lines.takeWhile(_ != "anchorPattern:pattern:").toSeq
     val topRow = toRow(top, 4)
     val botRows = extractions.flatMap { case (name, string) =>
       val headerRow = tr(
         td(placeholder),
         td(colspan := 3)(name)
       )
-      val trailerRows = string.lines.map { line =>
+      val trailerRows = string.linesIterator.map { line =>
         val number = line.takeWhile(_ != '.')
         val indent = line
           .drop(number.length + 2) // Skip . and first space.
@@ -65,15 +68,15 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
       (s"pattern:$name", value)
     }
     val textVisualization = textVisualizer.visualizeGraphExtractor(indent, graphExtractor)
-    val lines = textVisualization.lines
-    val top = lines.takeWhile(_ != "pattern:trigger:").toArray
+    val lines = textVisualization.linesIterator
+    val top = lines.takeWhile(_ != "pattern:trigger:").toSeq
     val topRow = toRow(top, 4)
     val botRows = extractions.flatMap { case (name, string) =>
       val headerRow = tr(
         td(placeholder),
         td(colspan := 3)(name)
       )
-      val trailerRows = string.lines.map { line =>
+      val trailerRows = string.linesIterator.map { line =>
         val number = line.takeWhile(_ != '.')
         val indent = line
           .drop(number.length + 2) // Skip . and first space.
@@ -112,13 +115,13 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
     }
 
     val top = textVisualizer.visualizeTokenExtractor(0, tokenExtractor)
-    val topRows = toRows(top.lines.toSeq, 4)
+    val topRows = toRows(top.linesIterator.toSeq, 4)
     val botRows = extractions.flatMap { case (name, string) =>
       val headerRow = tr(
         td(placeholder),
         td(colspan := 3)(name)
       )
-      val trailerRows = string.lines.map { line =>
+      val trailerRows = string.linesIterator.map { line =>
         val number = line.takeWhile(_ != '.')
         val indent = line
             .drop(number.length + 2) // Skip . and first space.

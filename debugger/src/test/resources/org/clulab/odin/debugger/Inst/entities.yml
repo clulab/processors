@@ -1,5 +1,5 @@
 - name: complex-rule
-  priority: ${rulepriority}
+  priority: 1
   label: Food
   type: token
   pattern: |

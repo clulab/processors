@@ -400,7 +400,8 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     //   argName2: ArgType = tokenpattern
     // ...to Seq[(role, Rule)]
     val rolesWithRules: Seq[(String, Rule)] = for {
-      (argPattern, i) <- rule.pattern.split("\n").zipWithIndex
+      // The toIndexedSeq is on behalf of higher versions of Scala.
+      (argPattern, i) <- rule.pattern.split("\n").toIndexedSeq.zipWithIndex
       // ignore empty lines
       if argPattern.trim.nonEmpty
       // ignore comments
@@ -408,7 +409,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     } yield {
       // split arg pattern into 'argName1:ArgType', 'tokenpattern'
       // apply split only once
-      val contents: Seq[String] = argPattern.split("\\s*=\\s*", 2)
+      val contents: Seq[String] = argPattern.split("\\s*=\\s*", 2).toIndexedSeq
       if (contents.size != 2) throw OdinException(s"'$argPattern' for rule '${rule.name}' must have the form 'argName:ArgType = tokenpattern'")
       // split 'argName1:ArgType' into 'argName1', 'ArgType'
       // apply split only once
