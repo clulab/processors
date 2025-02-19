@@ -46,6 +46,6 @@ lazy val webapp = project
   )
 
 lazy val debugger = project
-    .dependsOn(main  % "compile -> compile; test -> test")
+    .dependsOn(library  % "compile -> compile; test -> test")
 
 addCommandAlias("dockerizeWebapp", ";webapp/docker:publishLocal")
