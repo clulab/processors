@@ -38,7 +38,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
     // This needs to overshoot to match Done for the complete sentence.
     val words = sentence.words
     val extraWordRange = Range.inclusive(0, words.length)
-    val tableFragment = frag(table(`class` := bordered)(
+    val tableFragment = table(`class` := bordered)(
       tr(
         th("<start>"),
         words.map { word =>
@@ -71,7 +71,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
           }
         )
       }
-    ))
+    )
 
     tableFragment
   }

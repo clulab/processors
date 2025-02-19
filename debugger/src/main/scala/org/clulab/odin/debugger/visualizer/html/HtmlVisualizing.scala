@@ -17,11 +17,11 @@ trait HtmlVisualizing extends HtmlStyling {
         span(rest)
       )
 
-      frag(tr(
+      tr(
         td(colspan := colCount)(
           fragment
         )
-      ))
+      )
     }
 
     rowFragments
@@ -42,11 +42,11 @@ trait HtmlVisualizing extends HtmlStyling {
       else spans
     }
 
-    frag(tr(
+    tr(
       td(colspan := colCount)(
         spans
       )
-    ))
+    )
   }
 
   def toSpans(lines: Seq[String]): Seq[Fragment] = {
