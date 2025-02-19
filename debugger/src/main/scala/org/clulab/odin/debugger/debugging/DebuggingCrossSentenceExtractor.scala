@@ -21,7 +21,7 @@ class DebuggingCrossSentenceExtractor(
   neighborRole: String
 ) extends CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow, anchorExtractor,
     neighborExtractor, anchorRole, neighborRole) {
-  // check for valid window values
+  // Check for valid window values.
   if (leftWindow < 0) throw OdinException(s"left-window for '$name' must be >= 0")
   if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
 
@@ -32,9 +32,9 @@ class DebuggingCrossSentenceExtractor(
 
   def getMatchingMentionsFromState(state: State, mention: Mention): Seq[Mention] = {
     state.mentionsFor(mention.sentence, mention.tokenInterval).filter { stateMention =>
-      // the span should match exactly
+      // The span should match exactly.
       (stateMention.tokenInterval == mention.tokenInterval) &&
-        // the label should match
+        // The label should match.
         (stateMention matches mention.label)
     }
   }
@@ -51,7 +51,7 @@ class DebuggingCrossSentenceExtractor(
       }
     }
 
-    if (labelAnchorMentions.isEmpty) Nil // the rule failed
+    if (labelAnchorMentions.isEmpty) Nil // The rule failed.
     else debugger.debugNeighbor(neighborExtractor) {
       val windowRange = Range(math.max(sent - leftWindow, 0), math.min(sent + rightWindow, doc.sentences.length))
       val labelNeighborMentions = windowRange.flatMap { i =>

@@ -4,6 +4,5 @@ import org.clulab.odin.debugger.visualization.Visualization
 import org.clulab.processors.Sentence
 
 abstract class SentenceVisualizer() {
-
   def visualize(sentence: Sentence): Visualization
 }

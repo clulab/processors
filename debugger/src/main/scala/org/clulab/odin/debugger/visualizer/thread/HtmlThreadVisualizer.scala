@@ -6,17 +6,15 @@ import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.processors.Sentence
-import scalatags.Text
 import scalatags.Text.all._
 
-import scala.annotation.tailrec
 import scala.collection.mutable
 
 class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
 
-  def mkThreadView(transcript: mutable.Buffer[FinishedThread], sentence: Sentence): Text.TypedTag[String] = {
+  def mkThreadView(transcript: mutable.Buffer[FinishedThread], sentence: Sentence): Fragment = {
 
-    @tailrec
+    @annotation.tailrec
     def loop(singleThread: SingleThread, singleThreads: List[SingleThread]): List[SingleThread] = {
       val newSingleThreads = singleThread :: singleThreads
 
@@ -27,7 +25,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
 
     def startToken(finishedThread: FinishedThread): Int = {
 
-      @tailrec
+      @annotation.tailrec
       def loop(singleThread: SingleThread): Int = {
         if (singleThread.prevThreadOpt.isEmpty) singleThread.tok
         else loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread])
@@ -38,7 +36,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
 
     def length(finishedThread: FinishedThread): Int = {
 
-      @tailrec
+      @annotation.tailrec
       def loop(singleThread: SingleThread, current: Int): Int = {
         if (singleThread.prevThreadOpt.isEmpty) current
         else loop(singleThread.prevThreadOpt.get.asInstanceOf[SingleThread], current + 1)

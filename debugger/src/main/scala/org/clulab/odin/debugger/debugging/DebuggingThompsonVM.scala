@@ -7,8 +7,6 @@ import org.clulab.odin.impl.ThompsonVM.{Direction, NamedGroups, NamedMentions, P
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
 
-import scala.annotation.tailrec
-
 object DebuggingThompsonVM {
   import Direction._
 
@@ -56,7 +54,7 @@ object DebuggingThompsonVM {
       prevThreadOpt: Option[SingleThread]
     ): Seq[SingleThread] = debugger.debugTok(tok) {
 
-      @tailrec
+      @annotation.tailrec
       def loop(
         internals: List[(Inst, NamedGroups, NamedMentions, PartialGroups)],
         singleThreads: List[SingleThread]
@@ -140,7 +138,7 @@ object DebuggingThompsonVM {
             debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
             noThreads
           }
-        case i: MatchSentenceEnd => // TODO: Account for false
+        case i: MatchSentenceEnd =>
           val matches = t.tok == doc.sentences(sent).size
 
           debugger.debugInstMatches(matches, t.tok, i)
@@ -158,26 +156,22 @@ object DebuggingThompsonVM {
           val matches = i.negative == results.isEmpty
 
           debugger.debugInstMatches(matches, t.tok, i)
-          if (matches) {
+          if (matches)
             mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-          }
           else {
             debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
             noThreads
           }
         case i: MatchLookBehind =>
           val startTok = if (t.dir == LeftToRight) t.tok - 1 else t.tok
-          // So this bunch of threads has to match first.
           val results =
-            if (startTok < 0) None
-            else evalThreads(mkThreads(startTok, i.start, RightToLeft, prevThreadOpt = None)) // TODO: Record as dependency?
-          // println("Eval threads first, so side rail.")
+              if (startTok < 0) None
+              else evalThreads(mkThreads(startTok, i.start, RightToLeft, prevThreadOpt = None)) // TODO: Record as dependency?
           val matches = i.negative == results.isEmpty
 
           debugger.debugInstMatches(matches, t.tok, i) // Record reason as lookbehind was unsuccessful.
-          if (matches) {
+          if (matches)
             mkThreads(t.tok, i.getNext, t.dir, t.groups, t.mentions, t.partialGroups, prevThreadOpt)
-          }
           else {
             debugger.debugThreadMatches(t, false, ThreadMatch.instMismatch)
             noThreads

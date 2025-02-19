@@ -7,11 +7,10 @@ class StackFrame(val sourceCode: SourceCode) {
 
   override def toString: String = s"${getClass.getName}\t$sourceCode"
 
-  val execTime = new Timer("Execution Time") // Nick Avalani
+  val execTime = new Timer("Execution Time")
   execTime.start()
 
-
-  //Stop the timer
+  // Stop the timer.
   def stopTimer(): Long = {
     execTime.stop()
     execTime.elapsedTime

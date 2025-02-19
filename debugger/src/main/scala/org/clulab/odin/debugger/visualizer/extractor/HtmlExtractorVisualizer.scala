@@ -3,12 +3,11 @@ package org.clulab.odin.debugger.visualizer.extractor
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
-import scalatags.Text
 import scalatags.Text.all._
 
 class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
 
-  def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
+  def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val anchorExtraction = textVisualizer.extractTokenPattern(indent, crossSentenceExtractor.anchorPattern.pattern).map { case (name, value) =>
@@ -57,11 +56,11 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
     )
   }
 
-  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
+  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     visualizeCrossSentenceExtractor(0, crossSentenceExtractor)
   }
 
-  def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Text.TypedTag[String] = {
+  def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val extractions = textVisualizer.extractGraphPattern(indent, graphExtractor.pattern).map { case (name, value) =>
@@ -103,11 +102,11 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
     )
   }
 
-  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Text.TypedTag[String] = {
+  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Fragment = {
     visualizeGraphExtractor(0, graphExtractor)
   }
 
-  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Text.TypedTag[String] = {
+  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>

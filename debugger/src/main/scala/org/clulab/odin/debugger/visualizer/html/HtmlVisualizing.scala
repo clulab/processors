@@ -1,6 +1,5 @@
 package org.clulab.odin.debugger.visualizer.html
 
-import scalatags.Text
 import scalatags.Text.all._
 import scalatags.generic.Frag
 import scalatags.text.Builder
@@ -9,8 +8,8 @@ trait HtmlVisualizing extends HtmlStyling {
   type Fragment = Frag[Builder, String]
 
   // Turn it into multiple table rows, preserving indentation.
-  def toRows(lines: Seq[String], colCount: Int): Seq[Text.TypedTag[String]] = {
-    val rows = lines.map { line =>
+  def toRows(lines: Seq[String], colCount: Int): Seq[Fragment] = {
+    val rowFragments = lines.map { line =>
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
       val fragment = frag(
@@ -18,19 +17,19 @@ trait HtmlVisualizing extends HtmlStyling {
         span(rest)
       )
 
-      tr(
+      frag(tr(
         td(colspan := colCount)(
           fragment
         )
-      )
+      ))
     }
 
-    rows
+    rowFragments
   }
 
   // Turn it into a single table row, preserving indentation.
   // Each line should be separated from others by a <br>.
-  def toRow(lines: Seq[String], colCount: Int): Text.TypedTag[String] = {
+  def toRow(lines: Seq[String], colCount: Int): Fragment = {
     val spans = lines.zipWithIndex.flatMap { case (line, index) =>
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
@@ -43,14 +42,14 @@ trait HtmlVisualizing extends HtmlStyling {
       else spans
     }
 
-    tr(
+    frag(tr(
       td(colspan := colCount)(
         spans
       )
-    )
+    ))
   }
 
-  def toSpans(lines: Seq[String]): Seq[Text.TypedTag[String]] = {
+  def toSpans(lines: Seq[String]): Seq[Fragment] = {
     val spans = lines.zipWithIndex.flatMap { case (line, index) =>
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
@@ -66,6 +65,6 @@ trait HtmlVisualizing extends HtmlStyling {
     spans
   }
 
-  def toSpans(line: String): Seq[Text.TypedTag[String]] =
+  def toSpans(line: String): Seq[Fragment] =
       toSpans(line.linesIterator.toSeq)
 }

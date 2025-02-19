@@ -6,14 +6,13 @@ import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.Inst
 import org.clulab.processors.Sentence
-import scalatags.Text
 import scalatags.Text.all._
 
 import scala.collection.mutable
 
 class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
 
-  def mkInstView(transcript: mutable.Buffer[FinishedInst], sentence: Sentence): Text.TypedTag[String] = {
+  def mkInstView(transcript: mutable.Buffer[FinishedInst], sentence: Sentence): Fragment = {
     val sentenceTranscript = transcript.filter { finishedInst =>
       finishedInst.debuggerRecord.sentence.eq(sentence)
     }
@@ -39,7 +38,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
     // This needs to overshoot to match Done for the complete sentence.
     val words = sentence.words
     val extraWordRange = Range.inclusive(0, words.length)
-    val fragment = table(`class` := bordered)(
+    val tableFragment = frag(table(`class` := bordered)(
       tr(
         th("<start>"),
         words.map { word =>
@@ -62,7 +61,6 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
                 }
 
                 Seq(
-                  //                  span(style := s"color: $color")(inst.getPosId.toString),
                   span(`class` := color)(inst.getPosId.toString),
                   span(" ")
                 )
@@ -73,9 +71,9 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
           }
         )
       }
-    )
+    ))
 
-    fragment
+    tableFragment
   }
 
   def visualize(transcript: mutable.Buffer[FinishedInst]): HtmlVisualization = {

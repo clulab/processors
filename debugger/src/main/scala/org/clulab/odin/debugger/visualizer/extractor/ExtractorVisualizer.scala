@@ -3,10 +3,6 @@ package org.clulab.odin.debugger.visualizer.extractor
 import org.clulab.odin.debugger.visualization.Visualization
 import org.clulab.odin.impl.{Done, Extractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split}
 
-import java.io.{PrintWriter, StringWriter}
-import scala.annotation.tailrec
-import scala.util.Using
-
 case class InstChild(name: String, inst: Inst, wide: Boolean)
 
 abstract class ExtractorVisualizer() {
@@ -45,7 +41,7 @@ abstract class ExtractorVisualizer() {
 
   def extractInst(start: Inst): List[Inst] = {
 
-    @tailrec
+    @annotation.tailrec
     def loop(todos: List[Inst], visiteds: Set[Inst], dones: List[Inst]): List[Inst] = {
       todos match {
         case Nil => dones

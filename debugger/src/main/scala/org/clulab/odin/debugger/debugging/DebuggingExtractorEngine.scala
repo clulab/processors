@@ -5,7 +5,7 @@ import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document
 
-import scala.collection.mutable.Buffer
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 class InnerDebuggingExtractorEngine(val debugger: Debugger, extractors: Vector[Extractor], globalAction: Action)
@@ -24,7 +24,6 @@ object InnerDebuggingExtractorEngine {
 
   def apply(debugger: Debugger, extractorEngine: ExtractorEngine): InnerDebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
-    // TODO: change back to debugging version
     val debuggingExtractors = extractors.map {
       case extractor: TokenExtractor => DebuggingTokenExtractor(debugger, extractor)
       case extractor: GraphExtractor => DebuggingGraphExtractor(debugger, extractor)
@@ -38,8 +37,8 @@ object InnerDebuggingExtractorEngine {
 
 class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, active: Boolean, verbose: Boolean)
     extends ExtractorEngine(extractors, globalAction) {
-  val transcript: Buffer[FinishedInst] = Buffer.empty
-  val finishedThreads: Buffer[FinishedThread] = Buffer.empty
+  val transcript: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
+  val finishedThreads: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
 
   def extractTranscript(debugger: Debugger): Unit = synchronized {
     transcript.appendAll(debugger.instTranscript)

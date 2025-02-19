@@ -6,8 +6,6 @@ import org.clulab.odin.impl.Extractor
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.Constructor
 import scalatags.Text.all._
-import scalatags.generic.Frag
-import scalatags.text.Builder
 
 import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._

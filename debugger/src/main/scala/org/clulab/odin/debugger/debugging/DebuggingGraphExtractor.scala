@@ -21,7 +21,6 @@ class DebuggingTriggerPatternGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    // super.getMentions(sent, doc, state, labels, keep, ruleName)
     debugger.debugTrigger(trigger) {
       debugger.debugTokenPattern(trigger) {
         val tokenPatternResults = trigger.findAllIn(sent, doc, state)
@@ -44,12 +43,6 @@ class DebuggingTriggerPatternGraphPattern(
 
         eventMentions
       }
-
-//      for {
-//        r <- trigger.findAllIn(sent, doc, state)
-//        trig = new TextBoundMention(labels, Interval(r.start, r.end), sent, doc, keep, ruleName)
-//        (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
-//      } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
     }
   }
 }
@@ -81,7 +74,6 @@ class DebuggingTriggerMentionGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    // super.getMentions(sent, doc, state, labels, keep, ruleName)
     // TODO: record each mention and whether matched or not
     // debugger.debugMention
     // debugger.matches
@@ -97,7 +89,7 @@ class DebuggingTriggerMentionGraphPattern(
 
 object DebuggingTriggerMentionGraphPattern {
 
-  def apply(debugger: Debugger, triggerMentionGraphPattern: TriggerMentionGraphPattern) = {
+  def apply(debugger: Debugger, triggerMentionGraphPattern: TriggerMentionGraphPattern): DebuggingTriggerMentionGraphPattern = {
     new DebuggingTriggerMentionGraphPattern(
       debugger,
       triggerMentionGraphPattern.triggerLabel,

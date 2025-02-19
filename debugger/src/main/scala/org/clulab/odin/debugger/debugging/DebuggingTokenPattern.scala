@@ -11,7 +11,7 @@ class DebuggingTokenPattern(debugger: Debugger, start: Inst) extends TokenPatter
   override def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     DebuggingThompsonVM.evaluate(debugger, start, tok, sent, doc, state) map {
       case (groups, mentions) =>
-        // there must be one GlobalCapture only
+        // There must be one GlobalCapture only.
         val globalCapture = groups(GlobalCapture).head
         Result(globalCapture, groups - GlobalCapture, mentions)
     }
@@ -26,6 +26,7 @@ class DebuggingTokenPattern(debugger: Debugger, start: Inst) extends TokenPatter
         val r = debugger.debugStart(i) {
           findPrefixOf(i, sent, doc, state)
         }
+
         if (r.nonEmpty) r
         else loop(i + 1)
       }

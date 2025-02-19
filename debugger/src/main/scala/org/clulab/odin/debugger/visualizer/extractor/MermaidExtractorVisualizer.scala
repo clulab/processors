@@ -4,17 +4,14 @@ import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RelationGraphPattern, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.utils.StringUtils
-import scalatags.Text
 import scalatags.Text.all._
-
-import scala.annotation.tailrec
 
 class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisualizing {
   val textExtractorVisualizer = new TextExtractorVisualizer()
 
   def esc(string: String): String = string.replaceAll("\"", "#quot;")
 
-  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Text.TypedTag[String] = {
+  def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val anchorExtraction = ("anchorPattern:pattern:", crossSentenceExtractor.anchorPattern.pattern)
@@ -49,7 +46,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  def visualizeGraphPattern(graphPattern: GraphPattern): Text.TypedTag[String] = {
+  def visualizeGraphPattern(graphPattern: GraphPattern): Fragment = {
     graphPattern match {
       case graphPattern: TriggerPatternGraphPattern =>
         visualizeTokenPattern(graphPattern.trigger)
@@ -58,7 +55,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     }
   }
 
-  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Text.TypedTag[String] = {
+  def visualizeGraphExtractor(graphExtractor: GraphExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val extractions = textVisualizer.extractGraphPattern(0, graphExtractor.pattern).map { case (name, value) =>
@@ -120,7 +117,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def extractMainInst(start: Inst): List[Inst] = {
 
-    @tailrec
+    @annotation.tailrec
     def loop(todos: List[Inst], visiteds: Set[Inst], dones: List[Inst]): List[Inst] = {
       todos match {
         case Nil => dones.reverse
@@ -215,7 +212,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  def visualizeTokenPattern(tokenPattern: TokenPattern): Text.TypedTag[String] = {
+  def visualizeTokenPattern(tokenPattern: TokenPattern): Fragment = {
     val fragment = visualizeStartInst(tokenPattern.start, 0, None)
 
     pre(`class` := "mermaid")(
@@ -223,7 +220,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Text.TypedTag[String] = {
+  def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
     val placeholder = raw("&nbsp;" * 2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
