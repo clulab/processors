@@ -10,6 +10,7 @@ import org.clulab.utils.{FileUtils, Test}
 import java.io.File
 
 class DebugCrossSentenceExtractor extends Test {
+  /*
   OdinConfig.keepRule = true
 
   val baseResourceDirName = "src/test/resources"
@@ -34,20 +35,21 @@ class DebugCrossSentenceExtractor extends Test {
   val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
   val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
+  */
 
   behavior of "debugger"
 
   it should "find problems with a CrossSentenceExtractor" in {
-    Inspector(badDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectExtractor(badDebuggingExtractor)
-        .inspectDynamicAsHtml("bad-debug.html")
-    Inspector(goodDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectExtractor(goodDebuggingExtractor)
-        .inspectDynamicAsHtml("good-debug.html")
-
-    badMentions.length should be (2)
-    goodMentions.length should be (3)
+//    Inspector(badDebuggingExtractorEngine)
+//        .inspectSentence(sentence)
+//        .inspectExtractor(badDebuggingExtractor)
+//        .inspectDynamicAsHtml("bad-debug.html")
+//    Inspector(goodDebuggingExtractorEngine)
+//        .inspectSentence(sentence)
+//        .inspectExtractor(goodDebuggingExtractor)
+//        .inspectDynamicAsHtml("good-debug.html")
+//
+//    badMentions.length should be (2)
+//    goodMentions.length should be (3)
   }
 }

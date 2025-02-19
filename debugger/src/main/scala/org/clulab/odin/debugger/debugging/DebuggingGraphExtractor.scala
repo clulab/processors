@@ -24,24 +24,24 @@ class DebuggingTriggerPatternGraphPattern(
     debugger.debugTrigger(trigger) {
       debugger.debugTokenPattern(trigger) {
         val tokenPatternResults = trigger.findAllIn(sent, doc, state)
-        val eventMentions = tokenPatternResults.flatMap { tokenPatternResult =>
+        val mentions = tokenPatternResults.flatMap { tokenPatternResult =>
           val tokenInterval = Interval(tokenPatternResult.start, tokenPatternResult.end)
           val eventMentions = debugger.debugTokenInterval(tokenInterval) {
-            val tbmTrigger = new TextBoundMention(labels, tokenInterval, sent, doc, keep, ruleName)
-            val argsAndPathsSeq = extractArguments(tokenInterval, sent, doc, state)
-            val eventMentions = argsAndPathsSeq.map { case (args, paths) =>
+            lazy val tbmTrigger = new TextBoundMention(labels, tokenInterval, sent, doc, keep, ruleName)
+            val arguments = extractArguments(tokenInterval, sent, doc, state)
+            val eventMentions = arguments.map { case (args, paths) =>
               new EventMention(labels, mkTokenInterval(tbmTrigger, args), tbmTrigger, args, paths, sent, doc, keep, ruleName)
             }
-            val matches = eventMentions.nonEmpty
 
-//            debugger.debugMatches(matches) // TODO: This could be debug pair or something at the end
+            // val matches = eventMentions.nonEmpty
+            // debugger.debugTokenIntervalMatches(tokenInterval, matches) // TODO: This could be debug pair or something at the end
             eventMentions
           }
 
           eventMentions
         }
 
-        eventMentions
+        mentions
       }
     }
   }
@@ -77,13 +77,35 @@ class DebuggingTriggerMentionGraphPattern(
     // TODO: record each mention and whether matched or not
     // debugger.debugMention
     // debugger.matches
-    for {
+    val mentions1 = for {
       mention <- state.mentionsFor(sent)
       if mention matches triggerLabel
       if mention.isInstanceOf[TextBoundMention]
       trig = mention.asInstanceOf[TextBoundMention]
       (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
     } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
+
+    val mentions = state.mentionsFor(sent).flatMap { mention =>
+      val matches =  mention.matches(triggerLabel) && mention.isInstanceOf[TextBoundMention]
+      val eventMentions = if (matches) {
+        val trig = mention.asInstanceOf[TextBoundMention]
+        val arguments = extractArguments(trig.tokenInterval, sent, doc, state)
+        val eventMentions = arguments.map { case (args, paths) =>
+          new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
+        }
+
+        eventMentions
+      }
+      else Seq.empty
+
+      // val matches = eventMentions.nonEmpty
+      // debugger.debugMentionMatches(mention, matches) // TODO: This could be debug pair or something at the end
+      eventMentions
+    }
+
+    if (mentions1.length != mentions.length)
+      println("This is bad!")
+    mentions1
   }
 }
 
@@ -119,13 +141,36 @@ class DebuggingRelationGraphPattern(
     // TODO: record each mention and whether matched or not
     // debugger.debugMention
     // debugger.matches
-    for {
+    val mentions1 = for {
       mention <- state.mentionsFor(sent)
       if mention matches anchorLabel
       (args, paths) <- extractArguments(mention.tokenInterval, sent, doc, state)
       relationArgs = args + (anchorName -> Seq(mention))
       relationPaths = paths + (anchorName -> Map(mention -> Nil))
     } yield new RelationMention(labels, mkTokenInterval(relationArgs), relationArgs, relationPaths, sent, doc, keep, ruleName)
+
+    val mentions = state.mentionsFor(sent).flatMap { mention =>
+      val matches = mention.matches(anchorLabel)
+
+      // debugger.debugMentionMatches(mention, matches)
+      if (matches) {
+        val arguments = extractArguments(mention.tokenInterval, sent, doc, state)
+        val relationMentions = arguments.map { case (args, paths) =>
+          val relationArgs = args + (anchorName -> Seq(mention))
+          val relationPaths = paths + (anchorName -> Map(mention -> Nil))
+
+          new RelationMention(labels, mkTokenInterval(relationArgs), relationArgs, relationPaths, sent, doc, keep, ruleName)
+        }
+
+        relationMentions
+      }
+      else Seq.empty
+    }
+
+    if (mentions1.length != mentions.length)
+      println("This is bad!")
+
+    mentions
   }
 }
 

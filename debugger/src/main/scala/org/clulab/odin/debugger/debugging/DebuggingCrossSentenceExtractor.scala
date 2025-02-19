@@ -63,7 +63,9 @@ class DebuggingCrossSentenceExtractor(
                 val allNeighborMentions = neighborExtractor.findAllIn(i, doc, state)
 
                 // Find the mentions in the state that match the given span and label.
-                allNeighborMentions.flatMap { mention => getMatchingMentionsFromState(state, mention) }
+                allNeighborMentions.flatMap { mention =>
+                  getMatchingMentionsFromState(state, mention)
+                }
               }
             }
           }
