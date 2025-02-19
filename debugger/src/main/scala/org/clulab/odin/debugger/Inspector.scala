@@ -6,6 +6,7 @@ import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, M
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
+import org.clulab.odin.debugger.visualizer.sentence.HtmlSentenceVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
 import org.clulab.odin.impl.Extractor
 import org.clulab.processors.Sentence
@@ -122,6 +123,7 @@ class Inspector(val extractors: Seq[Extractor], val instTranscript: mutable.Buff
   }
 
   def inspectDynamicAsHtml(fileName: String): Inspector = {
+    val htmlSentenceVisualizer = new HtmlSentenceVisualizer()
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
@@ -141,6 +143,7 @@ class Inspector(val extractors: Seq[Extractor], val instTranscript: mutable.Buff
 
     val sentenceFragments = equalitySentences.map { equalitySentence =>
       val sentence = equalitySentence.value.asInstanceOf[Sentence]
+      val htmlSentenceVisualization = htmlSentenceVisualizer.visualize(sentence)
       val instEqualityExtractors = instTranscript
           .filter { finishedInst =>
             finishedInst.debuggerRecord.sentence.eq(sentence)
@@ -192,6 +195,7 @@ class Inspector(val extractors: Seq[Extractor], val instTranscript: mutable.Buff
       val sentenceFragment = frag(
         h1("Sentence"),
         p(sentence.getSentenceText),
+        htmlSentenceVisualization.fragment,
         extractorFragments
       )
 

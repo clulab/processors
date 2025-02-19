@@ -12,16 +12,6 @@ case class InstChild(name: String, inst: Inst, wide: Boolean)
 abstract class ExtractorVisualizer() {
   def visualize(extractor: Extractor): Visualization
 
-  def printToString(f: PrintWriter => Unit): String = {
-    val stringWriter = new StringWriter()
-
-    Using.resource(new PrintWriter(stringWriter))  { printWriter =>
-      f(printWriter)
-    }
-
-    stringWriter.toString
-  }
-
   def getChildren(inst: Inst): List[InstChild] = {
 
     def mkNextChild(inst: Inst, wide: Boolean): InstChild =

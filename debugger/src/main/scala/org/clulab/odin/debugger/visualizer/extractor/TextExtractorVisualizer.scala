@@ -2,6 +2,7 @@ package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.{TextVisualization, Visualization}
 import org.clulab.odin.impl._
+import org.clulab.utils.StringUtils
 
 import java.io.PrintWriter
 import scala.annotation.tailrec
@@ -210,7 +211,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     val extractions = extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
-    val string = printToString { printWriter =>
+    val string = StringUtils.viaPrintWriter { printWriter =>
       val string = visualizeTokenExtractor(0, tokenExtractor)
 
       pwPrintln(printWriter, 0, string)
@@ -316,7 +317,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     val extractions = extractGraphPattern(indent, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
-    val string = printToString { printWriter =>
+    val string = StringUtils.viaPrintWriter { printWriter =>
       pwPrintln(printWriter, indent, s"$className(")
       details.zipWithIndex.foreach { case (detail, index) =>
         if (index != details.length - 1)
@@ -356,7 +357,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
       (s"neighborPattern:$name", value)
     }
 
-    val string = printToString { printWriter =>
+    val string = StringUtils.viaPrintWriter { printWriter =>
       pwPrintln(printWriter, indent, s"$className(")
       details.zipWithIndex.foreach { case (detail, index) =>
         if (index != details.length - 1)

@@ -5,5 +5,3 @@ taxonomy:
 
 rules:
   - import: org/clulab/odin/debugger/TokenExtractor/badEntities.yml
-    vars:
-      rulepriority: "1"

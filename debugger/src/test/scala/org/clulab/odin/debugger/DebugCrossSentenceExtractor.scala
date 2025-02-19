@@ -4,21 +4,24 @@ import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
 import org.clulab.odin.impl.OdinConfig
 import org.clulab.processors.clu.CluProcessor
+import org.clulab.sequences.LexiconNER
 import org.clulab.utils.{FileUtils, Test}
 
 import java.io.File
 
-class DebugTokenExtractor extends Test {
+class DebugCrossSentenceExtractor extends Test {
   OdinConfig.keepRule = true
 
   val baseResourceDirName = "src/test/resources"
-  val baseResourceName = "org/clulab/odin/debugger/TokenExtractor"
+  val baseResourceName = "org/clulab/odin/debugger/CrossSentenceExtractor"
   val resourceDirName = if (!new File(baseResourceDirName).exists()) s"./debugger/$baseResourceDirName" else baseResourceDirName
   val resourceDir: File = new File(resourceDirName)
-  val processor = new CluProcessor()
-  val document = processor.annotate("John eats cake.")
+
+  val customLexiconNer = LexiconNER(Seq(s"$baseResourceName/FOOD.tsv"), Seq(true), Some(resourceDir))
+  val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+  val document = processor.annotate("John eats cake.  He likes it.")
   val sentence = document.sentences.head
-  val ruleName = "person-from-lexicon"
+  val ruleName = "people-eat-food"
 
   val badRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/badMain.yml"))
   val badExtractorEngine = ExtractorEngine(badRules, ruleDir = Some(resourceDir))
@@ -34,7 +37,7 @@ class DebugTokenExtractor extends Test {
 
   behavior of "debugger"
 
-  it should "find problems with a TokenExtractor" in {
+  it should "find problems with a CrossSentenceExtractor" in {
     Inspector(badDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectExtractor(badDebuggingExtractor)
@@ -44,7 +47,7 @@ class DebugTokenExtractor extends Test {
         .inspectExtractor(goodDebuggingExtractor)
         .inspectDynamicAsHtml("good-debug.html")
 
-    badMentions.length should be (0)
-    goodMentions.length should be (1)
+    badMentions.length should be (2)
+    goodMentions.length should be (3)
   }
 }

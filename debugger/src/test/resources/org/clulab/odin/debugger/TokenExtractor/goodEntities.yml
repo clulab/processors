@@ -1,6 +1,6 @@
 
 - name: person-from-lexicon
-  priority: ${rulepriority}
+  priority: 1
   label: Person
   type: token
   pattern: |

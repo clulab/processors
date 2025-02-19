@@ -1,13 +1,13 @@
 
 - name: foods-from-lexicon
-  priority: ${rulepriority}
+  priority: 1
   label: Food
   type: token
   pattern: |
     [entity='B-FOOD'] [entity='I-FOOD']*
 
 - name: person-from-lexicon
-  priority: ${rulepriority}
+  priority: 1
   label: Person
   type: token
   pattern: |

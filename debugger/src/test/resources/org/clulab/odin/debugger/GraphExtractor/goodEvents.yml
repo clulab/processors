@@ -1,6 +1,6 @@
 
 - name: people-eat-food
-  priority: ${rulepriority}
+  priority: 2
   label: Eating
   example: "John eats cake"
   graph: "hybrid"
