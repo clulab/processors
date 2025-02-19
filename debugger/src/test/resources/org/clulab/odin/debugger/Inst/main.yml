@@ -1,0 +1,7 @@
+
+taxonomy:
+  - Entity:
+    - Food
+
+rules:
+  - import: org/clulab/odin/debugger/Inst/badEntities.yml

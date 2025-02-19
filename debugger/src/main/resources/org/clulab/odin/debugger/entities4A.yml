@@ -1,0 +1,6 @@
+- name: four-As
+  priority: ${rulepriority}
+  label: Phrase
+  type: token
+  pattern: |
+    (?= [word='A']{3})[word='A']{4}

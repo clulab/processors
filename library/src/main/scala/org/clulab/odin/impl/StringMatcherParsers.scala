@@ -48,10 +48,10 @@ sealed trait StringMatcher {
   def matches(s: String): Boolean
 }
 
-class ExactStringMatcher(string: String) extends StringMatcher {
+class ExactStringMatcher(val string: String) extends StringMatcher {
   def matches(s: String): Boolean = string == s
 }
 
-class RegexStringMatcher(regex: Regex) extends StringMatcher {
+class RegexStringMatcher(val regex: Regex) extends StringMatcher {
   def matches(s: String): Boolean = regex.findFirstIn(s).nonEmpty
 }
