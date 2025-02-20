@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.debugging
+package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.{Action, Mention, State}
 import org.clulab.odin.debugger.Debugger

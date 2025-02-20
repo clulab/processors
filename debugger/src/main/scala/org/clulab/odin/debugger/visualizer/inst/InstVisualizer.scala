@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.inst
 
-import org.clulab.odin.debugger.FinishedInst
+import org.clulab.odin.debugger.debug.FinishedInst
 import org.clulab.odin.debugger.visualization.Visualization
 
 import scala.collection.mutable

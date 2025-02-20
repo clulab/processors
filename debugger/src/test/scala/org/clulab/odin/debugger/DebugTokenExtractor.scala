@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
+import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.impl.OdinConfig
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.{FileUtils, Test}

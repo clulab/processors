@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.Mention
+import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedInst, FinishedThread, SourceCode, StackFrame, ThreadMatch}
 import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
 import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
@@ -8,257 +9,6 @@ import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
 
 import scala.collection.mutable.Buffer
-
-case class ThreadMatch(matches: Boolean, reason: String)
-
-object ThreadMatch {
-  val instMismatch = ThreadMatch(false, "Inst mismatch")
-  val empty = ThreadMatch(false, "Thread empty")
-  val lowerPriority = ThreadMatch(false, "Thread not the best")
-  val superseded = ThreadMatch(false, "Thread superseded")
-  val survivor = ThreadMatch(true, "Thread survived")
-}
-
-case class FinishedThread(
-  thread: SingleThread,
-  instMatch: Boolean,
-  threadMatch: ThreadMatch,
-  debuggerRecord: DebuggerRecord
-)
-
-case class FinishedInst(
-  inst: Inst,
-  instMatch: Boolean,
-  debuggerRecord: DebuggerRecord
-)
-
-// Turn into SearchRecord, InstRecord, ThreadRecord
-case class DebuggerRecord(
-  // TODO: Maybe include depth?
-  document: Document,
-  loop: Int,
-  extractor: Extractor,
-
-  tokenPattern: TokenPattern,
-  sentenceIndex: Int,
-  sentence: Sentence,
-
-  startOpt: Option[Int] = None,
-  tokOpt: Option[Int] = None, // TODO: Maybe skip
-  tokenIntervalOpt: Option[Interval] = None
-)
-
-class DebuggerContext(
-  protected var depth: Int = 0,
-  protected var documents: List[Document] = List.empty,
-  protected var loops: List[Int] = List.empty,
-  protected var extractors: List[Extractor] = List.empty,
-  protected var tokenPatterns: List[TokenPattern] = List.empty,
-  protected var sentenceIndexes: List[Int] = List.empty,
-  protected var sentences: List[Sentence] = List.empty,
-  protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
-  protected var toks: List[Int] = List.empty, // The current token index
-  protected var insts: List[Inst] = List.empty, // TODO: skip toks and insts because of Threads
-  protected var tokenIntervals: List[Interval] = List.empty
-) {
-  def isComplete: Boolean = {
-    documents.nonEmpty &&
-    loops.nonEmpty &&
-    extractors.nonEmpty &&
-    tokenPatterns.nonEmpty &&
-    sentenceIndexes.nonEmpty &&
-    sentences.nonEmpty
-
-    // tokenIntervals
-  }
-
-  def isInstComplete: Boolean = {
-    isComplete && {
-      starts.nonEmpty &&
-      toks.nonEmpty //&&
-//      insts.nonEmpty
-    }
-  }
-
-  def isThreadComplete: Boolean = {
-    isComplete && {
-      starts.nonEmpty
-    }
-  }
-
-  def getDepth: Int = depth
-
-  def setDocument(document: Document): Unit = {
-    documents = document :: documents
-    depth += 1
-  }
-
-  def getDocumentOpt: Option[Document] = documents.headOption
-
-  def resetDocument(): Unit = {
-    documents = documents.tail
-    depth -= 1
-  }
-
-  def setLoop(loop: Int): Unit = {
-    loops = loop :: loops
-    depth += 1
-  }
-
-  def getLoopOpt: Option[Int] = loops.headOption
-
-  def resetLoop(): Unit = {
-    loops = loops.tail
-    depth -= 1
-  }
-
-  def setExtractor(extractor: Extractor): Unit = {
-    extractors = extractor :: extractors
-    depth += 1
-  }
-
-  def getExtractorOpt: Option[Extractor] = extractors.headOption
-
-  def resetExtractor(): Unit = {
-    extractors = extractors.tail
-    depth -= 1
-  }
-
-  def setTokenPattern(tokenPattern: TokenPattern): Unit = {
-    tokenPatterns = tokenPattern :: tokenPatterns
-    depth += 1
-  }
-
-  def getTokenPattern: Option[TokenPattern] = tokenPatterns.headOption
-
-  def resetTokenPattern(): Unit = {
-    tokenPatterns = tokenPatterns.tail
-    depth -= 1
-  }
-
-  def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
-    sentenceIndexes = sentenceIndex :: sentenceIndexes
-    sentences = sentence :: sentences
-    depth += 1
-  }
-
-  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexes.headOption, sentences.headOption)
-
-  def resetSentence(): Unit = {
-    sentenceIndexes = sentenceIndexes.tail
-    sentences = sentences.tail
-    depth -= 1
-  }
-
-  def setStart(start: Int): Unit = {
-    starts = start :: starts
-    depth += 1
-  }
-
-  def getStartOpt: Option[Int] = starts.headOption
-
-  def resetStart(): Unit = {
-    starts = starts.tail
-    depth -= 1
-  }
-
-  def setTok(tok: Int): Unit = {
-    toks = tok :: toks
-    depth += 1
-  }
-
-  def getTokOpt: (Option[Int]) = toks.headOption
-
-  def getToksLength: Int = toks.length
-
-  def resetTok(): Unit = {
-    toks = toks.tail
-    depth -= 1
-  }
-
-  def setTokenInterval(tokenInterval: Interval): Unit = {
-    tokenIntervals = tokenInterval :: tokenIntervals
-    depth += 1
-  }
-
-  def getTokenIntervalOpt: (Option[Interval]) = tokenIntervals.headOption
-
-  def resetTokenInterval(): Unit = {
-    tokenIntervals = tokenIntervals.tail
-    depth -= 1
-  }
-
-
-  def setInst(inst: Inst): Unit = {
-    insts = inst :: insts
-    depth += 1
-  }
-
-  def getInstOpt: Option[Inst] = insts.headOption
-
-  def getInstsLength: Int = insts.length
-
-  def resetInst(): Unit = {
-    insts = insts.tail
-    depth -= 1
-  }
-
-  def mkDebuggerRecord(tok: Int): DebuggerRecord = {
-    DebuggerRecord(
-      documents.head,
-      loops.head,
-      extractors.head,
-      tokenPatterns.head,
-      sentenceIndexes.head,
-      sentences.head,
-
-      starts.headOption,
-      Some(tok) // ,
-      //      Some(inst),
-      //      tokenIntervals.headOption,
-      //      matches
-    )
-  }
-
-  def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
-
-    if (!isInstComplete) {
-      if (inst != Done)
-        println("The record is not complete!")
-
-    } // TODO: Depends on what kind of extractor.  How does one know?  Check most recent extractor?
-    // Leave something else on the stack.
-
-
-    if (tokenIntervals.nonEmpty) {
-      // This is for cross
-      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
-    }
-    else {
-      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
-    }
-
-    FinishedInst(inst, matches, mkDebuggerRecord(tok))
-  }
-
-  def setThreadMatches(thread: SingleThread, instMatches: Boolean, threadMatch: ThreadMatch): FinishedThread = {
-    val debuggerRecord = mkDebuggerRecord(thread.tok)
-    val finishedThread = FinishedThread(thread, instMatches, threadMatch, debuggerRecord)
-
-    if (!isComplete)
-      println("The record is not complete!")// TODO: Depends on what kind of extractor
-
-    if (tokenIntervals.nonEmpty) {
-      // This is for cross
-      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
-    }
-    else {
-      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
-    }
-
-    finishedThread
-  }
-}
 
 // TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
 
@@ -566,24 +316,19 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val what = "tokenInterval"
+      val what = "action"
       val where = stackFrame.sourceCode.toString
       val extractorString = "[]"
-      val message = "TODO" // s"""${tabs}${side} $what $where$extractorString(tokenInterval = [${tokenInterval.start}, ${tokenInterval.end}))"""
+      val message = s"""${tabs}${side} $what $where$extractorString"""
 
       message
     }
 
     val message = mkMessage(context.getDepth) _
 
-    // What does this involve?
-    // Document, sentence, extractor, round?
-    // What about global action?
-
     if (active) {
       if (verbose) println(message)
-      // TODO
-//      instTranscript += context.setInstMatches(matches, tok, inst)
+//      actionTranscript += context.setInstMatches(inMentions, outMentions)
     }
   }
 

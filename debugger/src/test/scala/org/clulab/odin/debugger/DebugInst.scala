@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.ExtractorEngine
-import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
+import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, TextExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
 import org.clulab.odin.impl.{Done, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, OdinConfig, Pass, SaveEnd, SaveStart, Split}

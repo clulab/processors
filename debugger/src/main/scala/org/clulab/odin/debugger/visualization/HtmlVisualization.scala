@@ -1,9 +1,6 @@
 package org.clulab.odin.debugger.visualization
 
-import scalatags.generic.Frag
-import scalatags.text.Builder
-
-class HtmlVisualization(val fragment: Frag[Builder, String]) extends Visualization {
+class HtmlVisualization(val fragment: HtmlFragment.Fragment) extends Visualization {
 
   override def toString: String = fragment.toString
 }

@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger
+package org.clulab.odin.debugger.debug
 
 import org.clulab.odin.impl.TokenExtractor
 import org.clulab.utils.Timer

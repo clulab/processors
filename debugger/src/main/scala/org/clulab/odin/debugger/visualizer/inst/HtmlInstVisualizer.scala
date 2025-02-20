@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.inst
 
-import org.clulab.odin.debugger.FinishedInst
+import org.clulab.odin.debugger.debug.FinishedInst
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing

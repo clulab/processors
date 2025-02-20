@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
-import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualization.MermaidVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RelationGraphPattern, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.utils.StringUtils
@@ -254,7 +254,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  override def visualize(extractor: Extractor): HtmlVisualization = {
+  override def visualize(extractor: Extractor): MermaidVisualization = {
 
     val frag = extractor match {
       case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
@@ -262,7 +262,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
       case _ => throw new RuntimeException(s"Unrecognized extractor: ${extractor.toString}")
     }
-    val visualization = new HtmlVisualization(frag)
+    val visualization = new MermaidVisualization(frag)
 
     visualization
   }

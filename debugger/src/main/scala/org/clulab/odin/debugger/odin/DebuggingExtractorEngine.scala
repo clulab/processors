@@ -1,6 +1,7 @@
-package org.clulab.odin.debugger.debugging
+package org.clulab.odin.debugger.odin
 
-import org.clulab.odin.debugger.{Debugger, FinishedInst, FinishedThread}
+import org.clulab.odin.debugger.debug.{FinishedInst, FinishedThread}
+import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document

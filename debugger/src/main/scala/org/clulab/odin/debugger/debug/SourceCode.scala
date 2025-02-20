@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger
+package org.clulab.odin.debugger.debug
 
 // See https://github.com/com-lihaoyi/sourcecode
 

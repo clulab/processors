@@ -1,11 +1,10 @@
 package org.clulab.odin.debugger.visualizer.html
 
+import org.clulab.odin.debugger.visualization.HtmlFragment
 import scalatags.Text.all._
-import scalatags.generic.Frag
-import scalatags.text.Builder
 
 trait HtmlVisualizing extends HtmlStyling {
-  type Fragment = Frag[Builder, String]
+  type Fragment = HtmlFragment.Fragment
 
   // Turn it into multiple table rows, preserving indentation.
   def toRows(lines: Seq[String], colCount: Int): Seq[Fragment] = {

@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
+import org.clulab.odin.debugger.debug.{DebuggerRecord, FinishedInst, FinishedThread}
+import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing

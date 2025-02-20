@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.apps
 
 import org.clulab.odin.debugger.Inspector
-import org.clulab.odin.debugger.debugging.DebuggingExtractorEngine
+import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
 import org.clulab.odin.impl.OdinConfig
