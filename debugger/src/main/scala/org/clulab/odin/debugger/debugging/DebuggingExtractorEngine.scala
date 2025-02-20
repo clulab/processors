@@ -29,7 +29,7 @@ object InnerDebuggingExtractorEngine {
       case extractor: GraphExtractor => DebuggingGraphExtractor(debugger, extractor)
       case extractor: CrossSentenceExtractor => DebuggingCrossSentenceExtractor(debugger, extractor)
     }
-    val globalAction = extractorEngine.globalAction
+    val globalAction = DebuggingAction(debugger, extractorEngine.globalAction, None)
 
     new InnerDebuggingExtractorEngine(debugger, debuggingExtractors, globalAction)
   }
@@ -91,8 +91,7 @@ object DebuggingExtractorEngine {
 
   def apply(extractorEngine: ExtractorEngine, active: Boolean = true, verbose: Boolean = false): DebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
-    val globalAction = extractorEngine.globalAction
 
-    new DebuggingExtractorEngine(extractors, globalAction, active, verbose)
+    new DebuggingExtractorEngine(extractors, extractorEngine.globalAction, active, verbose)
   }
 }

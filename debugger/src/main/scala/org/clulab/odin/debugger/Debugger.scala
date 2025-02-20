@@ -1,5 +1,6 @@
 package org.clulab.odin.debugger
 
+import org.clulab.odin.Mention
 import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
 import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
@@ -560,6 +561,32 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     result
   }
 
+  protected def innerDebugAction[StackFrameType <: StackFrame](inMentions: Seq[Mention], outMentions: Seq[Mention])(stackFrame: StackFrameType): Unit = {
+
+    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "tokenInterval"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = "TODO" // s"""${tabs}${side} $what $where$extractorString(tokenInterval = [${tokenInterval.start}, ${tokenInterval.end}))"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+
+    // What does this involve?
+    // Document, sentence, extractor, round?
+    // What about global action?
+
+    if (active) {
+      if (verbose) println(message)
+      // TODO
+//      instTranscript += context.setInstMatches(matches, tok, inst)
+    }
+  }
+
   protected def innerDebugInstMatches[StackFrameType <: StackFrame](matches: Boolean, tok: Int, inst: Inst)(stackFrame: StackFrameType): Unit = {
 
     def mkMessage(depth: Int): String = {
@@ -709,6 +736,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     val stackFrame = new StackFrame(sourceCode)
 
     innerDebugTokenInterval(tokenInterval)(stackFrame)(block)
+  }
+
+  def debugAction(inMentions: Seq[Mention], outMentions: Seq[Mention])(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    innerDebugAction(inMentions, outMentions)(stackFrame)
   }
 }
 

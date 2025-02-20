@@ -38,7 +38,7 @@ object DebuggingTokenExtractor {
       tokenExtractor.labels,
       tokenExtractor.priority,
       tokenExtractor.keep,
-      tokenExtractor.action,
+      DebuggingAction(debugger, tokenExtractor.action, Some(tokenExtractor)),
       DebuggingTokenPattern(debugger, tokenExtractor.pattern)
     )
   }

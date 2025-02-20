@@ -92,7 +92,7 @@ object DebuggingCrossSentenceExtractor {
       crossSentenceExtractor.labels,
       crossSentenceExtractor.priority,
       crossSentenceExtractor.keep,
-      crossSentenceExtractor.action,
+      DebuggingAction(debugger, crossSentenceExtractor.action, Some(crossSentenceExtractor)),
       crossSentenceExtractor.leftWindow,
       crossSentenceExtractor.rightWindow,
       DebuggingTokenExtractor(debugger, crossSentenceExtractor.anchorPattern),

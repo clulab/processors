@@ -226,7 +226,7 @@ object DebuggingGraphExtractor {
       graphExtractor.labels,
       graphExtractor.priority,
       graphExtractor.keep,
-      graphExtractor.action,
+      DebuggingAction(debugger, graphExtractor.action, Some(graphExtractor)),
       debuggingGraphPattern,
       graphExtractor.config,
       graphExtractor.ruleOpt
