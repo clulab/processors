@@ -11,27 +11,26 @@ import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
 import org.clulab.odin.debugger.visualizer.sentence.HtmlSentenceVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
 import org.clulab.odin.impl.Extractor
-import org.clulab.processors.Sentence
+import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.FileUtils
 import scalatags.Text.all._
 
-import scala.collection.mutable
 import scala.util.Using
 
 class Inspector(
   val extractors: Seq[Extractor],
-  val instTranscript: mutable.Buffer[FinishedInst],
-  val threadTranscript: mutable.Buffer[FinishedThread],
-  val localActionTranscript: mutable.Buffer[FinishedLocalAction],
-  val globalActionTranscript: mutable.Buffer[FinishedGlobalAction]
+  val instTranscript: Seq[FinishedInst],
+  val threadTranscript: Seq[FinishedThread],
+  val localActionTranscript: Seq[FinishedLocalAction],
+  val globalActionTranscript: Seq[FinishedGlobalAction]
 ) extends HtmlVisualizing {
 
   def copy(
     extractors: Seq[Extractor] = this.extractors,
-    instTranscript: mutable.Buffer[FinishedInst] = this.instTranscript,
-    threadTranscript: mutable.Buffer[FinishedThread] = this.threadTranscript,
-    localActionTranscript: mutable.Buffer[FinishedLocalAction] = this.localActionTranscript,
-    globalActionTranscript: mutable.Buffer[FinishedGlobalAction] = this.globalActionTranscript
+    instTranscript: Seq[FinishedInst] = this.instTranscript,
+    threadTranscript: Seq[FinishedThread] = this.threadTranscript,
+    localActionTranscript: Seq[FinishedLocalAction] = this.localActionTranscript,
+    globalActionTranscript: Seq[FinishedGlobalAction] = this.globalActionTranscript
   ): Inspector = {
     new Inspector(extractors, instTranscript, threadTranscript, localActionTranscript, globalActionTranscript)
   }
@@ -58,7 +57,7 @@ class Inspector(
     copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
-  def filterInstTranscript(f: DebuggerRecord => Boolean): mutable.Buffer[FinishedInst] = {
+  def filterInstTranscript(f: DebuggerRecord => Boolean): Seq[FinishedInst] = {
     val newInstTranscript = instTranscript.filter { finishedInst =>
       f(finishedInst.debuggerRecord)
     }
@@ -66,7 +65,7 @@ class Inspector(
     newInstTranscript
   }
 
-  def filterThreadTranscript(f: DebuggerRecord => Boolean): mutable.Buffer[FinishedThread] = {
+  def filterThreadTranscript(f: DebuggerRecord => Boolean): Seq[FinishedThread] = {
     val newThreadTranscript = threadTranscript.filter { finishedThread =>
       f(finishedThread.debuggerRecord)
     }
@@ -131,7 +130,19 @@ class Inspector(
     this
   }
 
-  def getEqualitySentences(): mutable.Buffer[EqualityByIdentity[Sentence]] = {
+  def getEqualityDocuments(): Seq[EqualityByIdentity[Document]] = {
+    val instEqualityDocuments = instTranscript.map { finishedInst =>
+      EqualityByIdentity(finishedInst.debuggerRecord.document)
+    }.distinct
+    val threadEqualityDocuments = threadTranscript.map { finishedThread =>
+      EqualityByIdentity(finishedThread.debuggerRecord.document)
+    }.distinct
+    val equalitySentences = (instEqualityDocuments ++ threadEqualityDocuments).distinct
+
+    equalitySentences
+  }
+
+  def getEqualitySentences(document: Document): Seq[EqualityByIdentity[Sentence]] = {
     // It is possible that the sentences for the Insts and Threads are
     // different, especially since Threads might never have gotten around
     // to match so that no Sentence would ever be recorded.
@@ -146,7 +157,7 @@ class Inspector(
     equalitySentences
   }
 
-  def getEqualityExtractors(sentence: Sentence): mutable.Buffer[EqualityByIdentity[Extractor]] = {
+  def getEqualityExtractors(sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
     val instEqualityExtractors = instTranscript
       .filter { finishedInst =>
         finishedInst.debuggerRecord.sentence.eq(sentence)
@@ -174,60 +185,93 @@ class Inspector(
     val htmlInstVisualizer = new HtmlInstVisualizer()
     val htmlThreadVisualizer = new HtmlThreadVisualizer()
     val htmlActionVisualizer = new HtmlActionVisualizer()
-    val equalitySentences = getEqualitySentences()
-    val sentenceFragments = equalitySentences.map { equalitySentence =>
-      val sentence = equalitySentence.value.asInstanceOf[Sentence]
-      val htmlSentenceVisualization = htmlSentenceVisualizer.visualize(sentence)
-      val equalityExtractors = getEqualityExtractors(sentence)
-      val extractorFragments = equalityExtractors.map { equalityExtractor =>
-        val extractor = equalityExtractor.value.asInstanceOf[Extractor]
 
-        val newInstTranscript = instTranscript.filter { finishedInst =>
-          finishedInst.debuggerRecord.sentence.eq(sentence) &&
-          finishedInst.debuggerRecord.extractor.eq(extractor)
-        }
-        val newThreadTranscript = threadTranscript.filter { finishedThread =>
-          finishedThread.debuggerRecord.sentence.eq(sentence) &&
-          finishedThread.debuggerRecord.extractor.eq(extractor)
-        }
-        val newLocalActionTranscript = localActionTranscript.filter { finishedLocalAction =>
-          finishedLocalAction.debuggerRecord.sentence.eq(sentence) &&
-          finishedLocalAction.debuggerRecord.extractor.eq(extractor)
-        }
-        val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
-        val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
-        val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
-        val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
-        val threadVisualization = htmlThreadVisualizer.visualize(newThreadTranscript)
-        val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
+    val equalityDocuments = getEqualityDocuments()
+    val documentFragments = equalityDocuments.map { equalityDocument =>
+      val document = equalityDocument.value
+      val equalitySentences = getEqualitySentences(document)
+      val sentenceFragments = equalitySentences.map { equalitySentence =>
+        val sentence = equalitySentence.value.asInstanceOf[Sentence]
+        val htmlSentenceVisualization = htmlSentenceVisualizer.visualize(sentence)
+        val equalityExtractors = getEqualityExtractors(sentence)
+        val extractorFragments = equalityExtractors.map { equalityExtractor =>
+          val extractor = equalityExtractor.value.asInstanceOf[Extractor]
 
-        frag(
-          h2("Extractor"),
-          p(extractor.name),
-          h3("Rule View"),
-          htmlRuleVisualization.fragment,
-          h3("Textual Extractor View"),
-          htmlExtractorVisualization.fragment,
-          h3("Inst View"),
-          instVisualization.fragment,
-          h3("Thread View"),
-          threadVisualization.fragment,
-          h3("Graphical Extractor View"),
-          graphicalExtractorVisualization.fragment,
-          h3("Action View"),
-          actionVisualization.fragment
+          val newInstTranscript = instTranscript.filter { finishedInst =>
+            finishedInst.debuggerRecord.document.eq(document) &&
+            finishedInst.debuggerRecord.sentence.eq(sentence) &&
+            finishedInst.debuggerRecord.extractor.eq(extractor)
+          }
+          val newThreadTranscript = threadTranscript.filter { finishedThread =>
+            finishedThread.debuggerRecord.document.eq(document) &&
+            finishedThread.debuggerRecord.sentence.eq(sentence) &&
+            finishedThread.debuggerRecord.extractor.eq(extractor)
+          }
+          val newLocalActionTranscript = localActionTranscript.filter { finishedLocalAction =>
+            finishedLocalAction.debuggerRecord.document.eq(document) &&
+            finishedLocalAction.debuggerRecord.sentence.eq(sentence) &&
+            finishedLocalAction.debuggerRecord.extractor.eq(extractor)
+          }
+          val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
+          val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
+          val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
+          val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
+          val threadVisualization = htmlThreadVisualizer.visualize(newThreadTranscript)
+          val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
+
+          frag(
+            h3("Extractor"),
+            p(extractor.name),
+            h4("Rule View"),
+            htmlRuleVisualization.fragment,
+            h4("Textual Extractor View"),
+            htmlExtractorVisualization.fragment,
+            h4("Inst View"),
+            instVisualization.fragment,
+            h4("Thread View"),
+            threadVisualization.fragment,
+            h4("Local Action View"),
+            actionVisualization.fragment,
+            h4("Graphical Extractor View"),
+            graphicalExtractorVisualization.fragment,
+          )
+        }
+        val sentenceFragment = frag(
+          h2("Sentence"),
+          p(sentence.getSentenceText),
+          h3("Parse View"),
+          htmlSentenceVisualization.fragment,
+          extractorFragments.toSeq
         )
+
+        sentenceFragment
+      }.toSeq
+      val newGlobalActionTranscript = globalActionTranscript.filter { finishedGlobalAction =>
+        finishedGlobalAction.debuggerRecord.document.eq(document)
       }
-      val sentenceFragment = frag(
-        h1("Sentence"),
-        p(sentence.getSentenceText),
-        htmlSentenceVisualization.fragment,
-        extractorFragments.toSeq
+      val actionVisualization = htmlActionVisualizer.visualizeGlobal(newGlobalActionTranscript)
+      val documentTextFragment = document.text
+          .map { text =>
+            val maxLength = 100
+            val shortText = text.take(maxLength)
+            val ellipse = if (text.length <= maxLength) "" else "..."
+
+            frag(s"$shortText$ellipse")
+          }
+          .getOrElse(
+            frag(span(`class` := red)("The document text was not saved when it was parsed, for example, with keepText = true.  Please see the individual sentence texts."))
+          )
+      val documentFragment = frag(
+        h1("Document"),
+        p(documentTextFragment),
+        h2("Global Action View"),
+        actionVisualization.fragment,
+        sentenceFragments
       )
 
-      sentenceFragment
-    }.toSeq
-    val bodyFragment = frag(sentenceFragments)
+      documentFragment
+    }
+    val bodyFragment = frag(documentFragments)
     val htmlPage = mkHtml(bodyFragment).toString
 
     Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>

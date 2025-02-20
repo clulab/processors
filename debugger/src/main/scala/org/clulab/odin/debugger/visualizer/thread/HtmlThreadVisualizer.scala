@@ -8,11 +8,9 @@ import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.processors.Sentence
 import scalatags.Text.all._
 
-import scala.collection.mutable
-
 class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
 
-  def mkThreadView(transcript: mutable.Buffer[FinishedThread], sentence: Sentence): Fragment = {
+  def mkThreadView(transcript: Seq[FinishedThread], sentence: Sentence): Fragment = {
 
     @annotation.tailrec
     def loop(singleThread: SingleThread, singleThreads: List[SingleThread]): List[SingleThread] = {
@@ -45,7 +43,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
       loop(finishedThread.thread, 1)
     }
 
-    def sortFinishedThreads(finishedThreads: mutable.Buffer[FinishedThread]): mutable.Buffer[FinishedThread] = {
+    def sortFinishedThreads(finishedThreads: Seq[FinishedThread]): Seq[FinishedThread] = {
       // This assumes ties are broken by the original order.
       // Recalculation of the sort key is fairly expensive, unfortunately, so there might be a better option.
 
@@ -106,7 +104,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
     view
   }
 
-  override def visualize(transcript: mutable.Buffer[FinishedThread]): HtmlVisualization = {
+  override def visualize(transcript: Seq[FinishedThread]): HtmlVisualization = {
     val allSentences = transcript.map { finishedThread =>
       EqualityByIdentity(finishedThread.debuggerRecord.sentence)
     }

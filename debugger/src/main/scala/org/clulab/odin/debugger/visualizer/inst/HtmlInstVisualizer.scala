@@ -8,11 +8,9 @@ import org.clulab.odin.impl.Inst
 import org.clulab.processors.Sentence
 import scalatags.Text.all._
 
-import scala.collection.mutable
-
 class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
 
-  def mkInstView(transcript: mutable.Buffer[FinishedInst], sentence: Sentence): Fragment = {
+  def mkInstView(transcript: Seq[FinishedInst], sentence: Sentence): Fragment = {
     val sentenceTranscript = transcript.filter { finishedInst =>
       finishedInst.debuggerRecord.sentence.eq(sentence)
     }
@@ -76,7 +74,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
     tableFragment
   }
 
-  def visualize(transcript: mutable.Buffer[FinishedInst]): HtmlVisualization = {
+  def visualize(transcript: Seq[FinishedInst]): HtmlVisualization = {
     val allSentences = transcript.map { finishedInst =>
       EqualityByIdentity(finishedInst.debuggerRecord.sentence)
     }

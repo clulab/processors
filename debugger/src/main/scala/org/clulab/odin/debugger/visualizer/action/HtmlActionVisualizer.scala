@@ -26,23 +26,25 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     val allPairs = leftPairs ++ bothPairs ++ rightPairs
     val topRows = Seq(
       tr(
-        th(colspan := 3)("Incoming"),
-        th(colspan := 3)("Outgoing")
+        th(colspan := 4)("Incoming Mention"),
+        th(colspan := 4)("Outgoing Mention")
       ),
       tr(
-        th("Type"), th("Label"), th("Text"),
-        th("Type"), th("Label"), th("Text")
+        th("Rule"), th("Label"), th("Type"), th("Text"),
+        th("Rule"), th("Label"), th("Type"), th("Text")
       )
     )
 
     def mkTds(mentionOpt: Option[Mention]): Fragment = {
       val simpleName = mentionOpt.map(_.getClass.getSimpleName).getOrElse("")
+      val rule = mentionOpt.map(_.foundBy).getOrElse("")
       val label = mentionOpt.map(_.label).getOrElse("")
       val text = mentionOpt.map(_.text).getOrElse("")
 
       frag(
-        td(simpleName),
+        td(rule),
         td(label),
+        td(simpleName),
         td(text)
       )
     }
@@ -61,7 +63,7 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     new HtmlVisualization(tableFragment)
   }
 
-  override def visualizeLocal(transcript: mutable.Buffer[FinishedLocalAction]): HtmlVisualization = {
+  override def visualizeLocal(transcript: Seq[FinishedLocalAction]): HtmlVisualization = {
     val inMentions = transcript.flatMap { finishedLocalAction =>
       finishedLocalAction.inMentions
     }
@@ -71,7 +73,7 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
      visualize(inMentions, outMentions)
   }
 
-  override def visualizeGlobal(transcript: mutable.Buffer[FinishedGlobalAction]): HtmlVisualization = {
+  override def visualizeGlobal(transcript: Seq[FinishedGlobalAction]): HtmlVisualization = {
     val inMentions = transcript.flatMap { finishedGlobalAction =>
       finishedGlobalAction.inMentions
     }
