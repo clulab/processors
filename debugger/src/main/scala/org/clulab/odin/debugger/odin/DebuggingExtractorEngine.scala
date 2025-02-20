@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.odin
 
-import org.clulab.odin.debugger.debug.{FinishedInst, FinishedThread}
+import org.clulab.odin.debugger.debug.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedThread}
 import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
@@ -38,15 +38,16 @@ object InnerDebuggingExtractorEngine {
 
 class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, active: Boolean, verbose: Boolean)
     extends ExtractorEngine(extractors, globalAction) {
-  val transcript: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
+  val finishedInsts: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
   val finishedThreads: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
+  val finishedLocalActions: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
+  val finishedGlobalActions: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
 
-  def extractTranscript(debugger: Debugger): Unit = synchronized {
-    transcript.appendAll(debugger.instTranscript)
-  }
-
-  def extractFinishedThreads(debugger: Debugger): Unit = synchronized {
+  def finish(debugger: Debugger): Unit = synchronized {
+    finishedInsts.appendAll(debugger.instTranscript)
     finishedThreads.appendAll(debugger.threadTranscript)
+    finishedLocalActions.appendAll(debugger.localActionTranscript)
+    finishedGlobalActions.appendAll(debugger.globalActionTranscript)
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {
@@ -54,8 +55,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
 
-    extractTranscript(debugger)
-    extractFinishedThreads(debugger)
+    finish(debugger)
     result
   }
 
@@ -64,8 +64,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(document, initialState)
 
-    extractTranscript(debugger)
-    extractFinishedThreads(debugger)
+    finish(debugger)
     result
   }
 
@@ -74,8 +73,7 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractByType[M](document, initialState)
 
-    extractTranscript(debugger)
-    extractFinishedThreads(debugger)
+    finish(debugger)
     result
   }
 

@@ -112,7 +112,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
     }
     val distinctSentences = allSentences.distinct
     val sentences = distinctSentences.map { equalityByIdentity =>
-      equalityByIdentity.value.asInstanceOf[Sentence]
+      equalityByIdentity.value
     }
     val htmlTables = sentences.map { mkThreadView(transcript, _) }.toSeq
     val fragment = frag(htmlTables)

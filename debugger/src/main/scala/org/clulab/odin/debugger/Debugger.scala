@@ -1,14 +1,14 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedInst, FinishedThread, SourceCode, StackFrame, ThreadMatch}
-import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
-import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
+import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedThread, SourceCode, StackFrame, ThreadMatch}
+import org.clulab.odin.impl.ThompsonVM.SingleThread
+import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
 
-import scala.collection.mutable.Buffer
+import scala.collection.mutable
 
 // TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
 
@@ -17,8 +17,11 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
   protected val context = new DebuggerContext()
-  val instTranscript: Buffer[FinishedInst] = Buffer.empty
-  val threadTranscript: Buffer[FinishedThread] = Buffer.empty
+  val instTranscript: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
+  val threadTranscript: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
+  val localActionTranscript: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
+  val globalActionTranscript: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
+  // TODO: Add things for mentions
 
   def activate(): Unit = active = true
 
@@ -328,7 +331,10 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
 
     if (active) {
       if (verbose) println(message)
-//      actionTranscript += context.setInstMatches(inMentions, outMentions)
+      if (this.context.getExtractorOpt.nonEmpty)
+        localActionTranscript += context.setLocalAction(inMentions, outMentions)
+      else
+        globalActionTranscript += context.setGlobalAction(inMentions, outMentions)
     }
   }
 

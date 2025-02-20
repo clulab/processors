@@ -1,5 +1,6 @@
 package org.clulab.odin.debugger.debug
 
+import org.clulab.odin.Mention
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
@@ -7,6 +8,7 @@ import org.clulab.struct.Interval
 
 class DebuggerContext(
   protected var depth: Int = 0,
+  // TODO: Add ExtractorEngine to this, because there may be multiple.
   protected var documents: List[Document] = List.empty,
   protected var loops: List[Int] = List.empty,
   protected var extractors: List[Extractor] = List.empty,
@@ -214,5 +216,34 @@ class DebuggerContext(
     }
 
     finishedThread
+  }
+
+  def setLocalAction(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedLocalAction = {
+    require(extractors.nonEmpty) // TODO: And other things
+
+    // Check to see whether still within an Extractor
+    val debuggerRecord = DebuggerRecordForLocalAction(
+      documents.head,
+      loops.head,
+      extractors.head,
+      // tokenPatterns.head, // Not for graph extractor
+      sentenceIndexes.head,
+      sentences.head
+    )
+    val finishedAction = FinishedLocalAction(inMentions, outMentions, debuggerRecord)
+
+    finishedAction
+  }
+
+  def setGlobalAction(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedGlobalAction = {
+    require(extractors.isEmpty)
+
+    val debuggerRecord = DebuggerRecordForGlobalAction(
+      documents.head,
+      loops.head
+    )
+    val finishedAction = FinishedGlobalAction(inMentions, outMentions, debuggerRecord)
+
+    finishedAction
   }
 }

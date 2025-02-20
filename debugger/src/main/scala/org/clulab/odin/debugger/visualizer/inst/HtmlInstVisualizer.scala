@@ -82,7 +82,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
     }
     val distinctSentences = allSentences.distinct
     val sentences = distinctSentences.map { equalityByIdentity =>
-      equalityByIdentity.value.asInstanceOf[Sentence]
+      equalityByIdentity.value
     }
     val htmlTables = sentences.map { mkInstView(transcript, _) }.toSeq
     val fragment = frag(htmlTables)
