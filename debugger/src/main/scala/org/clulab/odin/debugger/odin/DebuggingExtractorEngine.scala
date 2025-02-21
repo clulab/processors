@@ -25,11 +25,7 @@ object InnerDebuggingExtractorEngine {
 
   def apply(debugger: Debugger, extractorEngine: ExtractorEngine): InnerDebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
-    val debuggingExtractors = extractors.map {
-      case extractor: TokenExtractor => DebuggingTokenExtractor(debugger, extractor)
-      case extractor: GraphExtractor => DebuggingGraphExtractor(debugger, extractor)
-      case extractor: CrossSentenceExtractor => DebuggingCrossSentenceExtractor(debugger, extractor)
-    }
+    val debuggingExtractors = extractors.map(DebuggingExtractor(_, debugger))
     val globalAction = DebuggingAction(debugger, extractorEngine.globalAction, None)
 
     new InnerDebuggingExtractorEngine(debugger, debuggingExtractors, globalAction)

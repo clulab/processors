@@ -198,7 +198,9 @@ class DebuggingGraphExtractor(
   pattern: GraphPattern,
   config: OdinConfig,
   ruleOpt: Option[String]
-) extends GraphExtractor(name, labels, priority, keep, action, pattern, config, ruleOpt) {
+) extends GraphExtractor(name, labels, priority, keep, action, pattern.graphPattern, config, ruleOpt) with DebuggingExtractor {
+
+  def extractor: GraphExtractor = graphExtractor
 
   // This comes indirectly through Extractor.
   override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(graphExtractor) {
@@ -213,11 +215,7 @@ class DebuggingGraphExtractor(
 object DebuggingGraphExtractor {
 
   def apply(debugger: Debugger, graphExtractor: GraphExtractor): DebuggingGraphExtractor = {
-    val debuggingGraphPattern = graphExtractor.pattern match {
-      case graphPattern: TriggerPatternGraphPattern => DebuggingTriggerPatternGraphPattern(debugger, graphPattern)
-      case graphPattern: TriggerMentionGraphPattern => DebuggingTriggerMentionGraphPattern(debugger, graphPattern)
-      case graphPattern: RelationGraphPattern => DebuggingRelationGraphPattern(debugger, graphPattern)
-    }
+    val debuggingGraphPattern = DebuggingGraphPattern(graphExtractor.pattern, debugger)
 
     new DebuggingGraphExtractor(
       debugger,

@@ -2,19 +2,22 @@ package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.{Action, Mention, State}
-import org.clulab.odin.impl.{Priority, TokenExtractor, TokenPattern}
+import org.clulab.odin.impl.{Extractor, Priority, TokenExtractor, TokenPattern}
 import org.clulab.processors.Document
 
 class DebuggingTokenExtractor(
-   val debugger: Debugger,
+   override val debugger: Debugger,
    val tokenExtractor: TokenExtractor,
    name: String,
    labels: Seq[String],
    priority: Priority,
    keep: Boolean,
    action: Action,
-   pattern: TokenPattern
- ) extends TokenExtractor(name, labels, priority, keep, action, pattern) {
+   pattern: TokenPattern,
+   ruleOpt: Option[String]
+ ) extends TokenExtractor(name, labels, priority, keep, action, pattern, ruleOpt) with DebuggingExtractor {
+
+  def extractor: TokenExtractor = tokenExtractor
 
   // This comes indirectly through Extractor.
   override def findAllIn(doc: Document, state: State): Seq[Mention] = debugger.debugExtractor(tokenExtractor) {
@@ -30,7 +33,7 @@ class DebuggingTokenExtractor(
 
 object DebuggingTokenExtractor {
 
-  def apply(debugger: Debugger, tokenExtractor: TokenExtractor): DebuggingTokenExtractor = {
+  def apply(debugger: Debugger, tokenExtractor: TokenExtractor, ruleOpt: Option[String] = None): DebuggingTokenExtractor = {
     new DebuggingTokenExtractor(
       debugger,
       tokenExtractor,
@@ -39,7 +42,8 @@ object DebuggingTokenExtractor {
       tokenExtractor.priority,
       tokenExtractor.keep,
       DebuggingAction(debugger, tokenExtractor.action, Some(tokenExtractor)),
-      DebuggingTokenPattern(debugger, tokenExtractor.pattern)
+      DebuggingTokenPattern(debugger, tokenExtractor.pattern),
+      ruleOpt.orElse(tokenExtractor.ruleOpt)
     )
   }
 }
