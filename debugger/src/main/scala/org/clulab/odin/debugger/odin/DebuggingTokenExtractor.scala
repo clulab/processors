@@ -43,7 +43,7 @@ object DebuggingTokenExtractor {
       tokenExtractor.keep,
       DebuggingAction(debugger, tokenExtractor.action, Some(tokenExtractor)),
       DebuggingTokenPattern(debugger, tokenExtractor.pattern),
-      ruleOpt.orElse(tokenExtractor.ruleOpt)
+      tokenExtractor.ruleOpt
     )
   }
 }

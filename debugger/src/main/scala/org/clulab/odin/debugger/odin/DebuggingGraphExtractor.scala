@@ -198,7 +198,7 @@ class DebuggingGraphExtractor(
   pattern: GraphPattern,
   config: OdinConfig,
   ruleOpt: Option[String]
-) extends GraphExtractor(name, labels, priority, keep, action, pattern.graphPattern, config, ruleOpt) with DebuggingExtractor {
+) extends GraphExtractor(name, labels, priority, keep, action, pattern, config, ruleOpt) with DebuggingExtractor {
 
   def extractor: GraphExtractor = graphExtractor
 
@@ -215,8 +215,6 @@ class DebuggingGraphExtractor(
 object DebuggingGraphExtractor {
 
   def apply(debugger: Debugger, graphExtractor: GraphExtractor): DebuggingGraphExtractor = {
-    val debuggingGraphPattern = DebuggingGraphPattern(graphExtractor.pattern, debugger)
-
     new DebuggingGraphExtractor(
       debugger,
       graphExtractor,
@@ -225,7 +223,7 @@ object DebuggingGraphExtractor {
       graphExtractor.priority,
       graphExtractor.keep,
       DebuggingAction(debugger, graphExtractor.action, Some(graphExtractor)),
-      debuggingGraphPattern,
+      DebuggingGraphPattern(debugger, graphExtractor.pattern),
       graphExtractor.config,
       graphExtractor.ruleOpt
     )

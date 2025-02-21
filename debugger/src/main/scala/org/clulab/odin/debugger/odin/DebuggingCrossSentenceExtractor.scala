@@ -19,9 +19,10 @@ class DebuggingCrossSentenceExtractor(
   debuggingAnchorExtractor: DebuggingTokenExtractor,
   debuggingNeighborExtractor: DebuggingTokenExtractor,
   anchorRole: String,
-  neighborRole: String
+  neighborRole: String,
+  ruleOpt: Option[String]
 ) extends CrossSentenceExtractor(name, labels, priority, keep, action, leftWindow, rightWindow, debuggingAnchorExtractor,
-    debuggingNeighborExtractor, anchorRole, neighborRole) with DebuggingExtractor {
+    debuggingNeighborExtractor, anchorRole, neighborRole, ruleOpt) with DebuggingExtractor {
   // Check for valid window values.
   if (leftWindow < 0) throw OdinException(s"left-window for '$name' must be >= 0")
   if (rightWindow < 0) throw OdinException(s"right-window for '$name' must be >= 0")
@@ -90,19 +91,6 @@ class DebuggingCrossSentenceExtractor(
 object DebuggingCrossSentenceExtractor {
 
   def apply(debugger: Debugger, crossSentenceExtractor: CrossSentenceExtractor): DebuggingCrossSentenceExtractor = {
-    val ruleOpt = crossSentenceExtractor.ruleOpt
-    val (anchorRuleOpt, neighborRuleOpt) = (None, None) // ruleOpt.map { rule =>
-     /* val map = RuleUtils.toMap(rule)
-      val patternOpt = map.get("pattern") // Now find the trigger?
-
-      // check for
-      //     anaphor: Entity = [lemma="he"]
-      //    antecedent: Enti
-      println(patternOpt)
-
-      (Some("a"), Some("b"))
-    }.getOrElse((None, None))*/
-
     new DebuggingCrossSentenceExtractor(
       debugger,
       crossSentenceExtractor,
@@ -113,10 +101,11 @@ object DebuggingCrossSentenceExtractor {
       DebuggingAction(debugger, crossSentenceExtractor.action, Some(crossSentenceExtractor)),
       crossSentenceExtractor.leftWindow,
       crossSentenceExtractor.rightWindow,
-      DebuggingTokenExtractor(debugger, crossSentenceExtractor.anchorPattern, anchorRuleOpt),
-      DebuggingTokenExtractor(debugger, crossSentenceExtractor.neighborPattern, neighborRuleOpt),
+      DebuggingTokenExtractor(debugger, crossSentenceExtractor.anchorPattern),
+      DebuggingTokenExtractor(debugger, crossSentenceExtractor.neighborPattern),
       crossSentenceExtractor.anchorRole,
-      crossSentenceExtractor.neighborRole
+      crossSentenceExtractor.neighborRole,
+      crossSentenceExtractor.ruleOpt
     )
   }
 }

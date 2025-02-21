@@ -382,6 +382,13 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
     newTokenExtractor(name, labels, priority, keep, action, pattern, rule.textOpt)
   }
 
+  private def mkRuleText(map: JMap[String, Any]): String = {
+    val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+    val ruleText = yaml.dump(map)
+
+    ruleText
+  }
+
   private def mkCrossSentenceExtractor(rule: Rule): CrossSentenceExtractor = {
 
     val lw: Int = rule match {
@@ -429,7 +436,21 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       //println(s"labels for '$ruleName' with pattern '$pattern': '$labels'")
       // Do not apply cross-sentence rule's action to anchor and neighbor
       // This does not need to be stored
-      (role, new Rule(ruleName, labels, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.config, rule.textOpt))
+      val ruleTextOpt = rule.textOpt.map { text =>
+        val map = Map(
+          "name" -> ruleName,
+          "label" -> labels.asJava,
+          "type" -> "token",
+          "unit" -> rule.unit,
+          "priority" -> rule.priority,
+          "keep" -> false,
+          "pattern" -> pattern
+        ).asJava
+
+        mkRuleText(map)
+      }
+
+      (role, new Rule(ruleName, labels, "token", rule.unit, rule.priority, false, DefaultAction, pattern, rule.config, ruleTextOpt))
     }
 
     if (rolesWithRules.size != 2) throw OdinException(s"Pattern for '${rule.name}' must contain exactly two args")
@@ -444,8 +465,8 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       leftWindow = lw,
       // the maximum number of sentences to look ahead for pattern2
       rightWindow = rw,
-      anchorPattern = mkTokenExtractor(rolesWithRules.head._2),
-      neighborPattern = mkTokenExtractor(rolesWithRules.last._2),
+      anchorPattern = mkTokenExtractor(rolesWithRules.head._2), // TODO, this will have the wrong ruleOpt
+      neighborPattern = mkTokenExtractor(rolesWithRules.last._2), // TODO, this will have the wrong ruleOpt
       anchorRole = rolesWithRules.head._1,
       neighborRole = rolesWithRules.last._1,
       rule.textOpt

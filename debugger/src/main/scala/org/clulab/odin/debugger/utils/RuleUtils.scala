@@ -7,11 +7,21 @@ import java.util.{Map => JMap}
 import scala.jdk.CollectionConverters._
 
 object RuleUtils {
-  val yaml = new Yaml(new Constructor(classOf[JMap[String, Any]]))
+  type JavaRule = JMap[String, Any]
+  type ScalaRule = Map[String, Any]
 
-  def toMap(rule: String): Map[String, Any] = {
-    val map = yaml.load(rule).asInstanceOf[JMap[String, Any]].asScala.toMap
+  val yaml = new Yaml(new Constructor(classOf[JavaRule]))
 
-    map
+  def toScalaRule(rule: String): ScalaRule = {
+    val javaRule = yaml.load(rule).asInstanceOf[JavaRule]
+    val scalaRule = javaRule.asScala.toMap
+
+    scalaRule
+  }
+
+  def toRule(scalaRule: ScalaRule): String = {
+    val rule = yaml.dump(scalaRule.asJava)
+
+    rule
   }
 }

@@ -9,8 +9,8 @@ import scalatags.Text.all._
 class HtmlRuleVisualizer extends RuleVisualizer with HtmlVisualizing {
 
   def visualize(rule: String): Fragment = {
-    val longMap = RuleUtils.toMap(rule)
-    val rows = longMap.map { case (key, value) =>
+    val scalaRule = RuleUtils.toScalaRule(rule)
+    val rows = scalaRule.map { case (key, value) =>
       tr(
         td(`class` := right)(s"$key:"),
         td(toSpans(value.toString))
