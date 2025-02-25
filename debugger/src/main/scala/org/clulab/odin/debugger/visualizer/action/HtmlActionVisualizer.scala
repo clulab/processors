@@ -27,10 +27,12 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     val topRows = Seq(
       tr(
         th(colspan := 4)("Incoming Mention"),
+        th(raw("&nbsp;")),
         th(colspan := 4)("Outgoing Mention")
       ),
       tr(
         th("Rule"), th("Label"), th("Type"), th("Text"),
+        th(""),
         th("Rule"), th("Label"), th("Type"), th("Text")
       )
     )
@@ -52,6 +54,7 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     val botRows = allPairs.map { case (inMentionOpt, outMentionOpt) =>
       tr(
         mkTds(inMentionOpt),
+        td(),
         mkTds(outMentionOpt)
       )
     }

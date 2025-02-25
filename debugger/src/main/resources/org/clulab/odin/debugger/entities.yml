@@ -3,7 +3,7 @@
   label: Phrase
   type: token
   pattern: |
-    (?= [word='A']{3})[word='A']{4}
+    (?= [word='A']{3} (?= [word='D']) [word='B']{2} [word='C']{1} (?= [word='B'] (?= [word='C']) ) )[word='A']{4}
 
 - name: foods-from-lexicon
   priority: ${rulepriority}

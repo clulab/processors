@@ -7,5 +7,5 @@
   graph: hybrid
   pattern: |
     trigger = [word=/eat$/ & tag=/^V/]
-    food:Food = dobj
-    person:Person = nsubj
+    food: Food = dobj
+    person: Person = nsubj

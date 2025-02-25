@@ -10,7 +10,6 @@ import org.clulab.utils.{FileUtils, Test}
 import java.io.File
 
 class DebugCrossSentenceExtractor extends Test {
-  /*
   OdinConfig.keepRule = true
 
   val baseResourceDirName = "src/test/resources"
@@ -20,36 +19,35 @@ class DebugCrossSentenceExtractor extends Test {
 
   val customLexiconNer = LexiconNER(Seq(s"$baseResourceName/FOOD.tsv"), Seq(true), Some(resourceDir))
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
-  val document = processor.annotate("John eats cake.  He likes it.")
-  val sentence = document.sentences.head
-  val ruleName = "people-eat-food"
+  val document = processor.annotate("John eats cake.  He does so often.")
+  val sentence = document.sentences.last
+  val ruleName = "coref"
 
   val badRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/badMain.yml"))
   val badExtractorEngine = ExtractorEngine(badRules, ruleDir = Some(resourceDir))
   val badDebuggingExtractorEngine = DebuggingExtractorEngine(badExtractorEngine, active = true, verbose = false)
-  val badDebuggingExtractor = badDebuggingExtractorEngine.getExtractorByName(ruleName)
+  val badDebuggingExtractor = badDebuggingExtractorEngine // .getExtractorByName(ruleName)
   val badMentions = badDebuggingExtractorEngine.extractFrom(document)
 
   val goodRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/goodMain.yml"))
   val goodExtractorEngine = ExtractorEngine(goodRules, ruleDir = Some(resourceDir))
   val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
-  val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName)
+  val goodDebuggingExtractor = goodDebuggingExtractorEngine // .getExtractorByName(ruleName)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
-  */
 
   behavior of "debugger"
 
   it should "find problems with a CrossSentenceExtractor" in {
-//    Inspector(badDebuggingExtractorEngine)
-//        .inspectSentence(sentence)
-//        .inspectExtractor(badDebuggingExtractor)
-//        .inspectDynamicAsHtml("bad-debug.html")
-//    Inspector(goodDebuggingExtractorEngine)
-//        .inspectSentence(sentence)
-//        .inspectExtractor(goodDebuggingExtractor)
-//        .inspectDynamicAsHtml("good-debug.html")
-//
-//    badMentions.length should be (2)
-//    goodMentions.length should be (3)
+    Inspector(badDebuggingExtractorEngine)
+        //.inspectSentence(sentence)
+        //.inspectExtractor(badDebuggingExtractor)
+        .inspectDynamicAsHtml("bad-crossSentenceExtractor-debug.html")
+    Inspector(goodDebuggingExtractorEngine)
+        //.inspectSentence(sentence)
+        //.inspectExtractor(goodDebuggingExtractor)
+        .inspectDynamicAsHtml("good-crossSentenceExtractor-debug.html")
+
+    badMentions.length should be (2)
+    goodMentions.length should be (3)
   }
 }

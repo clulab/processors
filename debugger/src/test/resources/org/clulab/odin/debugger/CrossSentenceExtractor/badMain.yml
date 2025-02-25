@@ -1,0 +1,11 @@
+
+taxonomy:
+  - Entity:
+      - Person
+      - Pronoun
+  - Event:
+      - Coref
+
+rules:
+  - import: org/clulab/odin/debugger/CrossSentenceExtractor/entities.yml
+  - import: org/clulab/odin/debugger/CrossSentenceExtractor/badCrosses.yml

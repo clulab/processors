@@ -1,0 +1,9 @@
+
+- name: coref
+  label: Coref
+  priority: 3
+  type: cross-sentence
+  left-window: 1
+  pattern: |
+    anaphor: Entity = [lemma = "she"]
+    antecendent: Entity = @Person
