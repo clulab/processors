@@ -194,11 +194,11 @@ class DebuggingGraphExtractor(
   labels: Seq[String],
   priority: Priority,
   keep: Boolean,
-  action: Action,
+  debuggingAction: DebuggingAction,
   pattern: GraphPattern,
   config: OdinConfig,
   ruleOpt: Option[String]
-) extends GraphExtractor(name, labels, priority, keep, action, pattern, config, ruleOpt) with DebuggingExtractor {
+) extends GraphExtractor(name, labels, priority, keep, debuggingAction, pattern, config, ruleOpt) with DebuggingExtractor {
 
   def extractor: GraphExtractor = graphExtractor
 

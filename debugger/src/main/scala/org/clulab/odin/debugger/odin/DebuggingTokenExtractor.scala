@@ -12,10 +12,10 @@ class DebuggingTokenExtractor(
    labels: Seq[String],
    priority: Priority,
    keep: Boolean,
-   action: Action,
+   debuggingAction: DebuggingAction,
    pattern: TokenPattern,
    ruleOpt: Option[String]
- ) extends TokenExtractor(name, labels, priority, keep, action, pattern, ruleOpt) with DebuggingExtractor {
+ ) extends TokenExtractor(name, labels, priority, keep, debuggingAction, pattern, ruleOpt) with DebuggingExtractor {
 
   def extractor: TokenExtractor = tokenExtractor
 
