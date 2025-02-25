@@ -5,5 +5,5 @@
   type: cross-sentence
   left-window: 1
   pattern: |
-    anaphor: Entity = [lemma = "he"]
-    antecendent: Entity = [lemma = "john"]
+    anaphor: Entity = @Pronoun
+    antecendent: Entity = @Person

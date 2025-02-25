@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.odin
 
-import org.clulab.odin.debugger.debug.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedThread}
+import org.clulab.odin.debugger.debug.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.Debugger
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
@@ -38,12 +38,14 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
   val finishedThreads: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
   val finishedLocalActions: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
   val finishedGlobalActions: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
+  val finishedMentions: mutable.Buffer[FinishedMention] = mutable.Buffer.empty
 
   def finish(debugger: Debugger): Unit = synchronized {
     finishedInsts.appendAll(debugger.instTranscript)
     finishedThreads.appendAll(debugger.threadTranscript)
     finishedLocalActions.appendAll(debugger.localActionTranscript)
     finishedGlobalActions.appendAll(debugger.globalActionTranscript)
+    finishedMentions.appendAll(debugger.mentionTranscript)
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {

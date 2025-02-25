@@ -42,7 +42,7 @@ class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
         words.map { word =>
           th(word)
         },
-        th(raw("&nbsp;"))
+        th(nbsp())
       ),
       words.indices.map { start =>
         tr(

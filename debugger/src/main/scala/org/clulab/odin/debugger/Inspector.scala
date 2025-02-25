@@ -1,16 +1,17 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.debugger.debug.{DebuggerRecord, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedThread}
+import org.clulab.odin.debugger.debug.{DebuggerRecord, DebuggerRecordForLocalAction, DebuggerRecordForMention, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualizer.action.HtmlActionVisualizer
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.debugger.visualizer.inst.HtmlInstVisualizer
+import org.clulab.odin.debugger.visualizer.mention.HtmlMentionVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
 import org.clulab.odin.debugger.visualizer.sentence.HtmlSentenceVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
-import org.clulab.odin.impl.Extractor
+import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.FileUtils
 import scalatags.Text.all._
@@ -22,7 +23,8 @@ class Inspector(
   val instTranscript: Seq[FinishedInst],
   val threadTranscript: Seq[FinishedThread],
   val localActionTranscript: Seq[FinishedLocalAction],
-  val globalActionTranscript: Seq[FinishedGlobalAction]
+  val globalActionTranscript: Seq[FinishedGlobalAction],
+  val mentionTranscript: Seq[FinishedMention]
 ) extends HtmlVisualizing {
 
   def copy(
@@ -30,31 +32,59 @@ class Inspector(
     instTranscript: Seq[FinishedInst] = this.instTranscript,
     threadTranscript: Seq[FinishedThread] = this.threadTranscript,
     localActionTranscript: Seq[FinishedLocalAction] = this.localActionTranscript,
-    globalActionTranscript: Seq[FinishedGlobalAction] = this.globalActionTranscript
+    globalActionTranscript: Seq[FinishedGlobalAction] = this.globalActionTranscript,
+    mentionTranscript: Seq[FinishedMention] = this.mentionTranscript
   ): Inspector = {
-    new Inspector(extractors, instTranscript, threadTranscript, localActionTranscript, globalActionTranscript)
+    new Inspector(
+      extractors,
+      instTranscript,
+      threadTranscript,
+      localActionTranscript,
+      globalActionTranscript,
+      mentionTranscript
+    )
+  }
+
+  def inspectTokenExtractor(extractor: TokenExtractor): Inspector = {
+    filter { debuggerRecord =>
+      debuggerRecord.extractor.eq(extractor)
+    }
+  }
+
+  def inspectGraphExtractor(extractor: GraphExtractor): Inspector = {
+    filter { debuggerRecord =>
+      debuggerRecord.extractor.eq(extractor)
+    }
+  }
+
+  def inspectCrossSentenceExtractor(extractor: CrossSentenceExtractor): Inspector = {
+    val relatedExtractors = Seq(extractor, extractor.anchorPattern, extractor.neighborPattern)
+
+    filter { debuggerRecord =>
+      relatedExtractors.exists { relatedExtractor =>
+        relatedExtractor.eq(debuggerRecord.extractor)
+      }
+    }
   }
 
   def inspectExtractor(extractor: Extractor): Inspector = {
-    val newInstTranscript = filterInstTranscript { debuggerRecord =>
+    filter { debuggerRecord =>
       debuggerRecord.extractor.eq(extractor)
     }
-    val newThreadTranscript = filterThreadTranscript { debuggerRecord =>
-      debuggerRecord.extractor.eq(extractor)
-    }
-
-    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
-    val newInstTranscript = filterInstTranscript { debuggerRecord =>
+    filter { debuggerRecord =>
       debuggerRecord.sentence.eq(sentence)
     }
-    val newThreadTranscript = filterThreadTranscript { debuggerRecord =>
-      debuggerRecord.sentence.eq(sentence)
-    }
+  }
 
-    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
+  def inspectSentences(sentences: Seq[Sentence]): Inspector = {
+    filter { debuggerRecord =>
+      sentences.exists { sentence =>
+        sentence.eq(debuggerRecord.sentence)
+      }
+    }
   }
 
   def filterInstTranscript(f: DebuggerRecord => Boolean): Seq[FinishedInst] = {
@@ -73,11 +103,37 @@ class Inspector(
     newThreadTranscript
   }
 
+  def filterLocalActionTranscript(f: DebuggerRecordForLocalAction => Boolean): Seq[FinishedLocalAction] = {
+    val newLocalActionTranscript = localActionTranscript.filter { finishedLocalAction =>
+      f(finishedLocalAction.debuggerRecord)
+    }
+
+    newLocalActionTranscript
+  }
+
+  def filterMentionTranscript(f: DebuggerRecordForMention => Boolean): Seq[FinishedMention] = {
+    val newMentionTranscript = mentionTranscript.filter { finishedMention =>
+      f(finishedMention.debuggerRecord)
+    }
+
+    newMentionTranscript
+  }
+
   def filter(f: DebuggerRecord => Boolean): Inspector = {
     val newInstTranscript = filterInstTranscript(f)
     val newThreadTranscript = filterThreadTranscript(f)
+    val newLocalActionTranscript = localActionTranscript
+    // val newLocalActionTranscript = filterLocalActionTranscript(f)
+    val newMentionTranscript = mentionTranscript
+//    val newMentionTranscript = filterMentionTranscript(f)
 
-    copy(instTranscript = newInstTranscript, threadTranscript = newThreadTranscript)
+    // TODO
+    copy(
+      instTranscript = newInstTranscript,
+      threadTranscript = newThreadTranscript,
+      localActionTranscript = newLocalActionTranscript,
+      mentionTranscript = newMentionTranscript
+    )
   }
 
   def mkHtml(fragment: Fragment): Fragment = {
@@ -185,6 +241,7 @@ class Inspector(
     val htmlInstVisualizer = new HtmlInstVisualizer()
     val htmlThreadVisualizer = new HtmlThreadVisualizer()
     val htmlActionVisualizer = new HtmlActionVisualizer()
+    val htmlMentionVisualizer = new HtmlMentionVisualizer()
 
     val equalityDocuments = getEqualityDocuments()
     val documentFragments = equalityDocuments.map { equalityDocument =>
@@ -212,12 +269,14 @@ class Inspector(
             finishedLocalAction.debuggerRecord.sentence.eq(sentence) &&
             finishedLocalAction.debuggerRecord.extractor.eq(extractor)
           }
+          val newMentionTranscript = mentionTranscript // TODO
           val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
           val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
           val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
           val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
           val threadVisualization = htmlThreadVisualizer.visualize(newThreadTranscript)
           val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
+          val mentionVisualization = htmlMentionVisualizer.visualize(newMentionTranscript)
 
           frag(
             h3("Extractor"),
@@ -230,6 +289,8 @@ class Inspector(
             instVisualization.fragment,
             h4("Thread View"),
             threadVisualization.fragment,
+            h4("Mention View"),
+            mentionVisualization.fragment,
             h4("Local Action View"),
             actionVisualization.fragment,
             h4("Graphical Extractor View"),
@@ -289,7 +350,8 @@ object Inspector {
       debuggingExtractorEngine.finishedInsts,
       debuggingExtractorEngine.finishedThreads,
       debuggingExtractorEngine.finishedLocalActions,
-      debuggingExtractorEngine.finishedGlobalActions
+      debuggingExtractorEngine.finishedGlobalActions,
+      debuggingExtractorEngine.finishedMentions
     )
   }
 }

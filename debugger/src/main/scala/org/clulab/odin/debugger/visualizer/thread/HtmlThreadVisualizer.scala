@@ -78,12 +78,9 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
         td(span(`class` := color)(posIds))
       }
       val reasonFrag = finishedThread.threadMatch.reason
-      val survivedClass = if (finishedThread.threadMatch.matches) green else red
-      val survivedValue = if (finishedThread.threadMatch.matches) raw("&#9745;") else raw("&#9746;")
-
       val result = tr(
         td((index + 1).toString),
-        td(span(`class` := survivedClass)(survivedValue)),
+        td(check(finishedThread.threadMatch.matches)),
         tds,
         td(reasonFrag)
       )
@@ -93,10 +90,10 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
     val view = table(`class` := bordered)(
       tr(
         th("#"),
-        th(raw("&#9744;")),
+        th(checkEmpty),
         words.map(th(_)),
-        th(raw("&nbsp;")),
-        th("reason")
+        th(nbsp()),
+        th("Reason")
       ),
       rows
     )

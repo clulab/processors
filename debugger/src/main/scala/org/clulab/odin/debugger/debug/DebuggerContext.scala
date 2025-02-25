@@ -179,6 +179,16 @@ class DebuggerContext(
     )
   }
 
+  def mkDebuggerRecordForMention(): DebuggerRecordForMention = {
+    DebuggerRecordForMention(
+      documents.head,
+      loops.head,
+      extractors.head,
+      sentenceIndexes.head,
+      sentences.head
+    )
+  }
+
   def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
 
     if (!isInstComplete) {
@@ -216,6 +226,16 @@ class DebuggerContext(
     }
 
     finishedThread
+  }
+
+  def setMentionMatches(mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch]): FinishedMention = {
+    val debuggerRecord = mkDebuggerRecordForMention()
+    val finishedMention = FinishedMention(mention, stateMentions, mentionMatches, debuggerRecord)
+
+//    if (!isComplete)
+//      println("The record is not complete!")// TODO: Depends on what kind of extractor
+
+    finishedMention
   }
 
   def setLocalAction(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedLocalAction = {

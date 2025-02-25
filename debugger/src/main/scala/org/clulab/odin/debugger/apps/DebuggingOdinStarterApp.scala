@@ -5,7 +5,7 @@ import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
 import org.clulab.odin.impl.OdinConfig
-import org.clulab.odin.{ExtractorEngine, Mention}
+import org.clulab.odin.{ExtractorEngine, Mention, State}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
@@ -31,6 +31,15 @@ object DebuggingOdinStarterApp extends App {
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+  val globalAction = (inMentions: Seq[Mention], state: State) => {
+    val outMentions = inMentions.map { mention =>
+      if (mention.words.length % 2 == 0)
+        mention.withAttachments(Seq.empty)
+      else mention
+    }
+
+    outMentions
+  }
   val extractorEngine = {
     val masterResource = "/org/clulab/odin/debugger/main.yml"
     // We usually want to reload rules during development,
@@ -46,10 +55,10 @@ object DebuggingOdinStarterApp extends App {
     else {
       // Read rules from resource in jar.
       val rules = FileUtils.getTextFromResource(masterResource)
-      ExtractorEngine(rules, ruleDir = None)
+      ExtractorEngine(rules, ruleDir = None, globalAction = globalAction)
     }
   }
-  val document = processor.annotate("John Doe eats cake.  His brothers, Brad and Dean, do not eat cake.")
+  val document = processor.annotate("John Doe eats cake.  His brothers, Brad and Dean, do not eat cake.", keepText = true)
   val mentions = extractorEngine.extractFrom(document).sortBy(_.arguments.size)
 
   for (mention <- mentions)
@@ -102,8 +111,8 @@ object DebuggingOdinStarterApp extends App {
 
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
-      .inspectStaticAsHtml("rules.html")
+      .inspectStaticAsHtml("../debug-static.html")
 //      .inspectExtractor(extractor)
       .inspectSentence(sentence)
-      .inspectDynamicAsHtml("debug.html")
+      .inspectDynamicAsHtml("../debug-dynamic.html")
 }

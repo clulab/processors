@@ -27,12 +27,11 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     val topRows = Seq(
       tr(
         th(colspan := 4)("Incoming Mention"),
-        th(raw("&nbsp;")),
+        th(rowspan := 2)(nbsp()),
         th(colspan := 4)("Outgoing Mention")
       ),
       tr(
         th("Rule"), th("Label"), th("Type"), th("Text"),
-        th(""),
         th("Rule"), th("Label"), th("Type"), th("Text")
       )
     )

@@ -9,7 +9,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
 
   def visualizeCrossSentenceExtractor(indent: Int, crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val anchorExtraction = textVisualizer.extractTokenPattern(indent, crossSentenceExtractor.anchorPattern.pattern).map { case (name, value) =>
       (s"anchorPattern:pattern:$name", value)
     }
@@ -41,7 +41,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
           td(placeholder),
           td(`class` := right)(number),
           td(
-            raw("&nbsp;" * indent.length),
+            nbsp(indent.length),
             rest
           )
         )
@@ -62,7 +62,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
 
   def visualizeGraphExtractor(indent: Int, graphExtractor: GraphExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractGraphPattern(indent, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
@@ -87,7 +87,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
           td(placeholder),
           td(`class` := right)(number),
           td(
-            raw("&nbsp;" * indent.length),
+            nbsp(indent.length),
             rest
           )
         )
@@ -108,7 +108,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
 
   def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
@@ -132,7 +132,7 @@ class HtmlExtractorVisualizer extends ExtractorVisualizer with HtmlVisualizing {
           td(placeholder),
           td(`class` := right)(number),
           td(
-            raw("&nbsp;" * indent.length),
+            nbsp(indent.length),
             rest
           )
         )

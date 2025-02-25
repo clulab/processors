@@ -1,7 +1,8 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedThread, SourceCode, StackFrame, ThreadMatch}
+import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread, MentionMatch, SourceCode, StackFrame, ThreadMatch}
+import org.clulab.odin.debugger.odin.DebuggingExtractor
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
@@ -21,7 +22,7 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   val threadTranscript: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
   val localActionTranscript: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
   val globalActionTranscript: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
-  // TODO: Add things for mentions
+  val mentionTranscript: mutable.Buffer[FinishedMention] = mutable.Buffer.empty
 
   def activate(): Unit = active = true
 
@@ -122,7 +123,8 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
 
       message
     }
-
+if (extractor.isInstanceOf[DebuggingExtractor])
+  println("This is not right")
     val message = mkMessage(context.getDepth) _
     context.setExtractor(extractor)
     val result = debugWithMessage(message)(stackFrame)(block)
@@ -364,6 +366,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
   }
 
+  protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {
+    // Does this need a message?
+    if (active) {
+      mentionTranscript += context.setMentionMatches(mention, stateMentions, mentionMatches)
+    }
+  }
+
   def showTrace(stack: Debugger.Stack): Unit = {
     stack.zipWithIndex.foreach { case (stackFrame, index) =>
       println(s"$index: $stackFrame")
@@ -449,6 +458,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     val stackFrame = new StackFrame(sourceCode)
 
     innerDebugThreadMatches(matches, thread, threadMatch)(stackFrame)
+  }
+
+  def debugMentionMatches(mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+    val sourceCode = new SourceCode(line, fileName, enclosing)
+    val stackFrame = new StackFrame(sourceCode)
+
+    innerDebugMentionMatches(mention, stateMentions, mentionMatches)(stackFrame)
   }
 
   def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {

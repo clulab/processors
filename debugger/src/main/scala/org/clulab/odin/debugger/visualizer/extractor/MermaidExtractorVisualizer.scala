@@ -13,7 +13,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val anchorExtraction = ("anchorPattern:pattern:", crossSentenceExtractor.anchorPattern.pattern)
     val neighborExtraction = ("neighborPattern:pattern:", crossSentenceExtractor.neighborPattern.pattern)
     val extractions = Seq(anchorExtraction, neighborExtraction)
@@ -57,7 +57,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeGraphExtractor(graphExtractor: GraphExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractGraphPattern(0, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
@@ -222,7 +222,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }

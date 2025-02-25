@@ -42,3 +42,11 @@ case class DebuggerRecordForGlobalAction(
   document: Document,
   loop: Int
 )
+
+case class DebuggerRecordForMention(
+  document: Document,
+  loop: Int,
+  extractor: Extractor,
+  sentenceIndex: Int,
+  sentence: Sentence
+)

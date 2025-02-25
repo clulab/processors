@@ -3,6 +3,7 @@ taxonomy:
   - Entity:
       - Person
       - Pronoun
+      - Noun
   - Event:
       - Coref
 
