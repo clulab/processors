@@ -193,9 +193,13 @@ class Inspector(
     val threadEqualityDocuments = threadTranscript.map { finishedThread =>
       EqualityByIdentity(finishedThread.debuggerRecord.document)
     }.distinct
-    val equalitySentences = (instEqualityDocuments ++ threadEqualityDocuments).distinct
+    // TODO: Actions
+    val mentionEqualityDocuments = mentionTranscript.map { finishedMention =>
+       EqualityByIdentity(finishedMention.debuggerRecord.document)
+    }
+    val equalityDocuments = (instEqualityDocuments ++ threadEqualityDocuments ++ mentionEqualityDocuments).distinct
 
-    equalitySentences
+    equalityDocuments
   }
 
   def getEqualitySentences(document: Document): Seq[EqualityByIdentity[Sentence]] = {
@@ -208,27 +212,39 @@ class Inspector(
     val threadEqualitySentences = threadTranscript.map { finishedThread =>
       EqualityByIdentity(finishedThread.debuggerRecord.sentence)
     }.distinct
-    val equalitySentences = (instEqualitySentences ++ threadEqualitySentences).distinct
+    // TODO, add Actions
+    val mentionEqualitySentences = mentionTranscript.map { finishedMention =>
+      EqualityByIdentity(finishedMention.debuggerRecord.sentence)
+    }
+    val equalitySentences = (instEqualitySentences ++ threadEqualitySentences ++ mentionEqualitySentences).distinct
 
     equalitySentences
   }
 
   def getEqualityExtractors(sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
     val instEqualityExtractors = instTranscript
-      .filter { finishedInst =>
-        finishedInst.debuggerRecord.sentence.eq(sentence)
-      }
-      .map { finishedInst =>
-        EqualityByIdentity(finishedInst.debuggerRecord.extractor)
-      }
+        .filter { finishedInst =>
+          finishedInst.debuggerRecord.sentence.eq(sentence)
+        }
+        .map { finishedInst =>
+          EqualityByIdentity(finishedInst.debuggerRecord.extractor)
+        }
     val threadEqualityExtractors = threadTranscript
-      .filter { finishedThread =>
-        finishedThread.debuggerRecord.sentence.eq(sentence)
-      }
-      .map { finishedThread =>
-        EqualityByIdentity(finishedThread.debuggerRecord.extractor)
-      }
-    val equalityExtractors = (instEqualityExtractors ++ threadEqualityExtractors).distinct
+        .filter { finishedThread =>
+          finishedThread.debuggerRecord.sentence.eq(sentence)
+        }
+        .map { finishedThread =>
+          EqualityByIdentity(finishedThread.debuggerRecord.extractor)
+        }
+    // TODO Actions
+    val mentionEqualityExtractors = mentionTranscript
+        .filter { finishedMention =>
+          finishedMention.debuggerRecord.sentence.eq(sentence)
+        }
+        .map { finishedMention =>
+          EqualityByIdentity(finishedMention.debuggerRecord.extractor)
+        }
+    val equalityExtractors = (instEqualityExtractors ++ threadEqualityExtractors ++ mentionEqualityExtractors).distinct
 
     equalityExtractors
   }

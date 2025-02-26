@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.debug.MentionMatch
 import org.clulab.odin.{Action, EventMention, Mention, RelationMention, State, TextBoundMention, mkTokenInterval}
 import org.clulab.odin.impl.{ArgumentPattern, GraphExtractor, GraphPattern, OdinConfig, Priority, RelationGraphPattern, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.processors.Document
@@ -8,10 +9,10 @@ import org.clulab.struct.Interval
 
 class DebuggingTriggerPatternGraphPattern(
   val debugger: Debugger,
-  trigger: TokenPattern,
+  debuggingTrigger: DebuggingTokenPattern,
   arguments: Seq[ArgumentPattern], // TODO
   config: OdinConfig
-) extends TriggerPatternGraphPattern(trigger, arguments, config) {
+) extends TriggerPatternGraphPattern(debuggingTrigger, arguments, config) {
 
   override def getMentions(
     sent: Int,
@@ -24,24 +25,23 @@ class DebuggingTriggerPatternGraphPattern(
     debugger.debugTrigger(trigger) {
       debugger.debugTokenPattern(trigger) {
         val tokenPatternResults = trigger.findAllIn(sent, doc, state)
-        val mentions = tokenPatternResults.flatMap { tokenPatternResult =>
+        val eventMentions = tokenPatternResults.flatMap { tokenPatternResult =>
           val tokenInterval = Interval(tokenPatternResult.start, tokenPatternResult.end)
           val eventMentions = debugger.debugTokenInterval(tokenInterval) {
             lazy val tbmTrigger = new TextBoundMention(labels, tokenInterval, sent, doc, keep, ruleName)
             val arguments = extractArguments(tokenInterval, sent, doc, state)
+            // Is this a good place to record mention comparisons?
             val eventMentions = arguments.map { case (args, paths) =>
               new EventMention(labels, mkTokenInterval(tbmTrigger, args), tbmTrigger, args, paths, sent, doc, keep, ruleName)
             }
 
-            // val matches = eventMentions.nonEmpty
-            // debugger.debugTokenIntervalMatches(tokenInterval, matches) // TODO: This could be debug pair or something at the end
             eventMentions
           }
 
           eventMentions
         }
 
-        mentions
+        eventMentions
       }
     }
   }
@@ -62,9 +62,35 @@ object DebuggingTriggerPatternGraphPattern {
 class DebuggingTriggerMentionGraphPattern(
   val debugger: Debugger,
   triggerLabel: String,
-  arguments: Seq[ArgumentPattern], // TODO
+  arguments: Seq[ArgumentPattern],
   config: OdinConfig
 ) extends TriggerMentionGraphPattern(triggerLabel, arguments, config) {
+  val debuggingMention = DebuggingMention(triggerLabel)
+
+  def getMatchingMentionsFromState(state: State, sent: Int, allStateMentions: Seq[Mention]): Seq[TextBoundMention] = {
+    val mentionMentions = state.mentionsFor(sent)
+    val labelMentions = mentionMentions.filter { stateMention =>
+      stateMention.matches(triggerLabel)
+    }
+    val instancesOfTextBoundMentions = labelMentions.filter { stateMention =>
+      stateMention.isInstanceOf[TextBoundMention]
+    }
+    val textBoundMentions = instancesOfTextBoundMentions.map(_.asInstanceOf[TextBoundMention])
+
+    val mentionMatches = allStateMentions.map { stateMention =>
+      if (!mentionMentions.contains(stateMention))
+        MentionMatch.stateMismatch
+      else if (!labelMentions.contains(stateMention))
+        MentionMatch.labelMismatch
+      else if (!instancesOfTextBoundMentions.contains(stateMention))
+        MentionMatch.typeMismatch
+      else
+        MentionMatch.mentionMatch
+    }
+
+    debugger.debugMentionMatches(debuggingMention, allStateMentions, mentionMatches)
+    textBoundMentions
+  }
 
   override def getMentions(
     sent: Int,
@@ -74,38 +100,19 @@ class DebuggingTriggerMentionGraphPattern(
     keep: Boolean,
     ruleName: String
   ): Seq[Mention] = {
-    // TODO: record each mention and whether matched or not
-    // debugger.debugMention
-    // debugger.matches
-    val mentions1 = for {
-      mention <- state.mentionsFor(sent)
-      if mention matches triggerLabel
-      if mention.isInstanceOf[TextBoundMention]
-      trig = mention.asInstanceOf[TextBoundMention]
-      (args, paths) <- extractArguments(trig.tokenInterval, sent, doc, state)
-    } yield new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
-
-    val mentions = state.mentionsFor(sent).flatMap { mention =>
-      val matches =  mention.matches(triggerLabel) && mention.isInstanceOf[TextBoundMention]
-      val eventMentions = if (matches) {
-        val trig = mention.asInstanceOf[TextBoundMention]
-        val arguments = extractArguments(trig.tokenInterval, sent, doc, state)
-        val eventMentions = arguments.map { case (args, paths) =>
-          new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
-        }
-
-        eventMentions
+    val allStateMentions = state.allMentions // Only get this once.
+    val textBoundMentions = getMatchingMentionsFromState(state, sent, allStateMentions)
+    val eventMentions = textBoundMentions.flatMap { textBoundMention =>
+      val trig = textBoundMention
+      val arguments = extractArguments(trig.tokenInterval, sent, doc, state)
+      val eventMentions = arguments.map { case (args, paths) =>
+        new EventMention(labels, mkTokenInterval(trig, args), trig, args, paths, sent, doc, keep, ruleName)
       }
-      else Seq.empty
 
-      // val matches = eventMentions.nonEmpty
-      // debugger.debugMentionMatches(mention, matches) // TODO: This could be debug pair or something at the end
       eventMentions
     }
 
-    if (mentions1.length != mentions.length)
-      println("This is bad!")
-    mentions1
+    eventMentions
   }
 }
 

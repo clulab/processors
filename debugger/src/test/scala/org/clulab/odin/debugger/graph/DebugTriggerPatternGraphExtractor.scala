@@ -1,7 +1,8 @@
-package org.clulab.odin.debugger
+package org.clulab.odin.debugger.graph
 
 import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
+import org.clulab.odin.debugger.{DebugTest, Inspector}
 import org.clulab.odin.impl.{GraphExtractor, OdinConfig}
 import org.clulab.processors.clu.CluProcessor
 import org.clulab.sequences.LexiconNER
@@ -9,11 +10,11 @@ import org.clulab.utils.FileUtils
 
 import java.io.File
 
-class DebugGraphExtractor extends DebugTest {
+class DebugTriggerPatternGraphExtractor extends DebugTest {
   OdinConfig.keepRule = true
 
   val baseResourceDirName = "src/test/resources"
-  val baseResourceName = "org/clulab/odin/debugger/GraphExtractor"
+  val baseResourceName = "org/clulab/odin/debugger/GraphExtractor/triggerPattern"
   val resourceDirName = if (!new File(baseResourceDirName).exists()) s"./debugger/$baseResourceDirName" else baseResourceDirName
   val resourceDir: File = new File(resourceDirName)
 
@@ -42,11 +43,11 @@ class DebugGraphExtractor extends DebugTest {
     Inspector(badDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectGraphExtractor(badDebuggingExtractor)
-        .inspectDynamicAsHtml("../debug-dynamic-graphExtractor-bad.html")
+        .inspectDynamicAsHtml("../debug-dynamic-triggerPatternGraphExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectGraphExtractor(goodDebuggingExtractor)
-        .inspectDynamicAsHtml("../debug-dynamic-graphExtractor-good.html")
+        .inspectDynamicAsHtml("../debug-dynamic-triggerPatternGraphExtractor-good.html")
 
     badMentions.length should be (2)
     goodMentions.length should be (3)
