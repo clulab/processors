@@ -14,7 +14,7 @@ class DebugRelationGraphExtractor extends DebugTest {
   OdinConfig.keepRule = true
 
   val baseResourceDirName = "src/test/resources"
-  val baseResourceName = "org/clulab/odin/debugger/GraphExtractor"
+  val baseResourceName = "org/clulab/odin/debugger/GraphExtractor/relation"
   val resourceDirName = if (!new File(baseResourceDirName).exists()) s"./debugger/$baseResourceDirName" else baseResourceDirName
   val resourceDir: File = new File(resourceDirName)
 
@@ -43,13 +43,13 @@ class DebugRelationGraphExtractor extends DebugTest {
     Inspector(badDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectGraphExtractor(badDebuggingExtractor)
-        .inspectDynamicAsHtml("../debug-dynamic-graphExtractor-bad.html")
+        .inspectDynamicAsHtml("../debug-dynamic-relationGraphExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .inspectSentence(sentence)
         .inspectGraphExtractor(goodDebuggingExtractor)
-        .inspectDynamicAsHtml("../debug-dynamic-graphExtractor-good.html")
+        .inspectDynamicAsHtml("../debug-dynamic-relationGraphExtractor-good.html")
 
-    badMentions.length should be (2)
-    goodMentions.length should be (3)
+    badMentions.length should be (3)
+    goodMentions.length should be (4)
   }
 }
