@@ -1,8 +1,8 @@
 package org.clulab.odin.debugger.visualizer.action
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{FinishedGlobalAction, FinishedLocalAction}
-import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedLocalAction}
+import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import scalatags.Text.all._
@@ -65,21 +65,21 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
     new HtmlVisualization(tableFragment)
   }
 
-  override def visualizeLocal(transcript: Seq[FinishedLocalAction]): HtmlVisualization = {
-    val inMentions = transcript.flatMap { finishedLocalAction =>
+  override def visualizeLocal(transcript: Transcript[FinishedLocalAction]): HtmlVisualization = {
+    val inMentions = transcript.values.flatMap { finishedLocalAction =>
       finishedLocalAction.inMentions
     }
-    val outMentions = transcript.flatMap { finishedLocalAction =>
+    val outMentions = transcript.values.flatMap { finishedLocalAction =>
       finishedLocalAction.outMentions
     }
      visualize(inMentions, outMentions)
   }
 
-  override def visualizeGlobal(transcript: Seq[FinishedGlobalAction]): HtmlVisualization = {
-    val inMentions = transcript.flatMap { finishedGlobalAction =>
+  override def visualizeGlobal(transcript: Transcript[FinishedGlobalAction]): HtmlVisualization = {
+    val inMentions = transcript.values.flatMap { finishedGlobalAction =>
       finishedGlobalAction.inMentions
     }
-    val outMentions = transcript.flatMap { finishedGlobalAction =>
+    val outMentions = transcript.values.flatMap { finishedGlobalAction =>
       finishedGlobalAction.outMentions
     }
     visualize(inMentions, outMentions)

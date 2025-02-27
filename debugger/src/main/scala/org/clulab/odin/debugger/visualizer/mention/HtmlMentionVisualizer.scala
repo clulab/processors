@@ -1,7 +1,9 @@
 package org.clulab.odin.debugger.visualizer.mention
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{FinishedMention, MentionMatch}
+import org.clulab.odin.debugger.debug.MentionMatch
+import org.clulab.odin.debugger.debug.finished.FinishedMention
+import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import scalatags.Text.all._
@@ -14,8 +16,8 @@ case class FlatFinishedMention(
 
 class HtmlMentionVisualizer extends MentionVisualizer with HtmlVisualizing {
 
-  def visualize(finishedMentions: Seq[FinishedMention]): HtmlVisualization = {
-    val flatFinishedMentions = finishedMentions.flatMap { finishedMention =>
+  def visualize(finishedMentions: Transcript[FinishedMention]): HtmlVisualization = {
+    val flatFinishedMentions = finishedMentions.values.flatMap { finishedMention =>
       finishedMention.stateMentions.zip(finishedMention.mentionMatches).map { case (stateMention, mentionMatches) =>
         FlatFinishedMention(finishedMention.mention, stateMention, mentionMatches)
       }

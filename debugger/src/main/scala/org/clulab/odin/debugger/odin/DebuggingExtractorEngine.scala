@@ -1,7 +1,8 @@
 package org.clulab.odin.debugger.odin
 
-import org.clulab.odin.debugger.debug.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document
@@ -34,11 +35,11 @@ object InnerDebuggingExtractorEngine {
 
 class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, active: Boolean, verbose: Boolean)
     extends ExtractorEngine(extractors, globalAction) {
-  val finishedInsts: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
-  val finishedThreads: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
-  val finishedLocalActions: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
-  val finishedGlobalActions: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
-  val finishedMentions: mutable.Buffer[FinishedMention] = mutable.Buffer.empty
+  val finishedInsts  = Transcript[FinishedInst]()
+  val finishedThreads = Transcript[FinishedThread]()
+  val finishedLocalActions = Transcript[FinishedLocalAction]()
+  val finishedGlobalActions = Transcript[FinishedGlobalAction]()
+  val finishedMentions = Transcript[FinishedMention]()
 
   def finish(debugger: Debugger): Unit = synchronized {
     finishedInsts.appendAll(debugger.instTranscript)

@@ -1,34 +1,41 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{DebuggerContext, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread, MentionMatch, SourceCode, StackFrame, ThreadMatch}
+import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.debug.{DynamicDebuggerContext, MentionMatch, SourceCode, StackFrame, ThreadMatch}
 import org.clulab.odin.debugger.odin.DebuggingExtractor
+import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl.ThompsonVM.SingleThread
-import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
+import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
-
-import scala.collection.mutable
-
-// TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
 
 class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
-  protected val context = new DebuggerContext()
-  val instTranscript: mutable.Buffer[FinishedInst] = mutable.Buffer.empty
-  val threadTranscript: mutable.Buffer[FinishedThread] = mutable.Buffer.empty
-  val localActionTranscript: mutable.Buffer[FinishedLocalAction] = mutable.Buffer.empty
-  val globalActionTranscript: mutable.Buffer[FinishedGlobalAction] = mutable.Buffer.empty
-  val mentionTranscript: mutable.Buffer[FinishedMention] = mutable.Buffer.empty
+  protected val context = new DynamicDebuggerContext()
+
+  val instTranscript = Transcript[FinishedInst]()
+  val threadTranscript = Transcript[FinishedThread]()
+  val localActionTranscript = Transcript[FinishedLocalAction]()
+  val globalActionTranscript = Transcript[FinishedGlobalAction]()
+  val mentionTranscript = Transcript[FinishedMention]()
+
+  val transcripts: Seq[Transcript[_]] = Seq(
+    instTranscript,
+    threadTranscript,
+    localActionTranscript,
+    globalActionTranscript,
+    mentionTranscript
+  )
 
   def activate(): Unit = active = true
 
   def deactivate(): Unit = active = false
 
-  def clear(): Unit = instTranscript.clear()
+  def clear(): Unit = transcripts.foreach(_.clear)
 
   protected def innerDebug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
     if (active) {
@@ -110,8 +117,6 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   }
 
   protected def innerDebugExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
@@ -125,6 +130,9 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 if (extractor.isInstanceOf[DebuggingExtractor])
   println("This is not right")
+
+    // TODO: This could keep track of the mentions returned from the block and
+    // do something special if there are none.
     val message = mkMessage(context.getDepth) _
     context.setExtractor(extractor)
     val result = debugWithMessage(message)(stackFrame)(block)
@@ -133,8 +141,6 @@ if (extractor.isInstanceOf[DebuggingExtractor])
   }
 
   protected def innerDebugAnchorExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
@@ -147,6 +153,8 @@ if (extractor.isInstanceOf[DebuggingExtractor])
       message
     }
 
+    // TODO: This could keep track of the mentions returned from the block and
+    // do something special if there are none.
     val message = mkMessage(context.getDepth) _
     context.setExtractor(extractor)
     val result = debugWithMessage(message)(stackFrame)(block)
@@ -155,8 +163,6 @@ if (extractor.isInstanceOf[DebuggingExtractor])
   }
 
   protected def innerDebugNeighborExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
@@ -169,6 +175,8 @@ if (extractor.isInstanceOf[DebuggingExtractor])
       message
     }
 
+    // TODO: This could keep track of the mentions returned from the block and
+    // do something special if there are none.
     val message = mkMessage(context.getDepth) _
     context.setExtractor(extractor)
     val result = debugWithMessage(message)(stackFrame)(block)
@@ -215,6 +223,7 @@ if (extractor.isInstanceOf[DebuggingExtractor])
   }
 
   protected def innerDebugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
+
 
     // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
@@ -316,15 +325,41 @@ if (extractor.isInstanceOf[DebuggingExtractor])
     result
   }
 
-  protected def innerDebugAction[StackFrameType <: StackFrame](inMentions: Seq[Mention], outMentions: Seq[Mention])(stackFrame: StackFrameType): Unit = {
+  protected def innerDebugInstMatches[StackFrameType <: StackFrame](matches: Boolean, tok: Int, inst: Inst)(stackFrame: StackFrameType): Unit = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
+      val what = "instMatches"
+      val where = stackFrame.sourceCode.toString
+      val evaluatorString = "[]"
+      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString}, ...)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth)
+    if (context.getTokOpt.isEmpty)
+//    if (tok != context.getTokOpt.get)
+      println("Why is this?")
+//    if (inst != context.getInstOpt.get)
+//      println("Or this?")
+    if (active) {
+      if (verbose) println(message)
+      instTranscript.append(context.setInstMatches(matches, tok, inst))
+    }
+  }
+
+  protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
+    if (instMatches)
+      println("Take that!")
+    innerDebugInstMatches(instMatches, thread.tok, thread.inst)(stackFrame)
+
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
-      val what = "action"
+      val what = "threadMatches"
       val where = stackFrame.sourceCode.toString
       val extractorString = "[]"
-      val message = s"""${tabs}${side} $what $where$extractorString"""
+      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
 
       message
     }
@@ -333,43 +368,50 @@ if (extractor.isInstanceOf[DebuggingExtractor])
 
     if (active) {
       if (verbose) println(message)
-      if (this.context.getExtractorOpt.nonEmpty)
-        localActionTranscript += context.setLocalAction(inMentions, outMentions)
-      else
-        globalActionTranscript += context.setGlobalAction(inMentions, outMentions)
-    }
-  }
-
-  protected def innerDebugInstMatches[StackFrameType <: StackFrame](matches: Boolean, tok: Int, inst: Inst)(stackFrame: StackFrameType): Unit = {
-
-    def mkMessage(depth: Int): String = {
-      val tabs = "\t" * depth
-      val what = "matches"
-      val where = stackFrame.sourceCode.toString
-      val evaluatorString = "[]"
-      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString})"""
-
-      message
-    }
-
-    val message = mkMessage(context.getDepth)
-
-    if (active) {
-      if (verbose) println(message)
-      instTranscript += context.setInstMatches(matches, tok, inst)
-    }
-  }
-
-  protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
-    if (active) {
-      threadTranscript += context.setThreadMatches(thread, instMatches, threadMatch)
+      threadTranscript.append(context.setThreadMatches(thread, threadMatch))
     }
   }
 
   protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {
-    // Does this need a message?
+
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = "mentionMatches"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
     if (active) {
-      mentionTranscript += context.setMentionMatches(mention, stateMentions, mentionMatches)
+      if (verbose) println(message)
+      mentionTranscript.append(context.setMentionMatches(mention, stateMentions, mentionMatches))
+    }
+  }
+
+
+  protected def innerDebugActionMatches[StackFrameType <: StackFrame](inMentions: Seq[Mention], outMentions: Seq[Mention])(stackFrame: StackFrameType): Unit = {
+    val isLocal = context.getExtractorOpt.nonEmpty
+
+    def mkMessage(depth: Int)(side: String): String = {
+      val tabs = "\t" * depth
+      val what = if (isLocal) "localActionMatches" else "globalActionMatches"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth) _
+    if (active) {
+      if (verbose) println(message)
+      if (isLocal)
+        localActionTranscript.append(context.setLocalAction(inMentions, outMentions))
+      else
+        globalActionTranscript.append(context.setGlobalAction(inMentions, outMentions))
     }
   }
 
@@ -438,14 +480,14 @@ if (extractor.isInstanceOf[DebuggingExtractor])
 
     innerDebugTok(tok)(stackFrame)(block)
   }
-
+/*
   def debugInst[ResultType](inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
     innerDebugInst(inst)(stackFrame)(block)
   }
-
+*/
   def debugInstMatches(matches: Boolean, tok: Int, inst: Inst)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
@@ -509,7 +551,7 @@ if (extractor.isInstanceOf[DebuggingExtractor])
     val sourceCode = new SourceCode(line, fileName, enclosing)
     val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugAction(inMentions, outMentions)(stackFrame)
+    innerDebugActionMatches(inMentions, outMentions)(stackFrame)
   }
 }
 

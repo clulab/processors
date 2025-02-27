@@ -1,8 +1,9 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.debugger.debug.{DebuggerRecord, DebuggerRecordForLocalAction, DebuggerRecordForMention, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.debug.{DebuggerFilter, StaticDebuggerContext}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
-import org.clulab.odin.debugger.utils.EqualityByIdentity
+import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualizer.action.HtmlActionVisualizer
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
@@ -20,20 +21,20 @@ import scala.util.Using
 
 class Inspector(
   val extractors: Seq[Extractor],
-  val instTranscript: Seq[FinishedInst],
-  val threadTranscript: Seq[FinishedThread],
-  val localActionTranscript: Seq[FinishedLocalAction],
-  val globalActionTranscript: Seq[FinishedGlobalAction],
-  val mentionTranscript: Seq[FinishedMention]
+  val instTranscript: Transcript[FinishedInst],
+  val threadTranscript: Transcript[FinishedThread],
+  val localActionTranscript: Transcript[FinishedLocalAction],
+  val globalActionTranscript: Transcript[FinishedGlobalAction],
+  val mentionTranscript: Transcript[FinishedMention]
 ) extends HtmlVisualizing {
 
   def copy(
     extractors: Seq[Extractor] = this.extractors,
-    instTranscript: Seq[FinishedInst] = this.instTranscript,
-    threadTranscript: Seq[FinishedThread] = this.threadTranscript,
-    localActionTranscript: Seq[FinishedLocalAction] = this.localActionTranscript,
-    globalActionTranscript: Seq[FinishedGlobalAction] = this.globalActionTranscript,
-    mentionTranscript: Seq[FinishedMention] = this.mentionTranscript
+    instTranscript: Transcript[FinishedInst] = this.instTranscript,
+    threadTranscript: Transcript[FinishedThread] = this.threadTranscript,
+    localActionTranscript: Transcript[FinishedLocalAction] = this.localActionTranscript,
+    globalActionTranscript: Transcript[FinishedGlobalAction] = this.globalActionTranscript,
+    mentionTranscript: Transcript[FinishedMention] = this.mentionTranscript
   ): Inspector = {
     new Inspector(
       extractors,
@@ -45,81 +46,65 @@ class Inspector(
     )
   }
 
+  // TODO: Instead, have something return the approprate filter to use.
+  // It should be usable for the debugger as well.
   def inspectTokenExtractor(extractor: TokenExtractor): Inspector = {
-    filter { debuggerRecord =>
-      debuggerRecord.extractor.eq(extractor)
-    }
+    inspectExtractor(extractor)
   }
 
   def inspectGraphExtractor(extractor: GraphExtractor): Inspector = {
-    filter { debuggerRecord =>
-      debuggerRecord.extractor.eq(extractor)
-    }
+    inspectExtractor(extractor)
   }
 
   def inspectCrossSentenceExtractor(extractor: CrossSentenceExtractor): Inspector = {
     val relatedExtractors = Seq(extractor, extractor.anchorPattern, extractor.neighborPattern)
-
-    filter { debuggerRecord =>
+    val f = (debuggerContext: StaticDebuggerContext) => {
+      debuggerContext.extractorOpt.isDefined &&
       relatedExtractors.exists { relatedExtractor =>
-        relatedExtractor.eq(debuggerRecord.extractor)
+        relatedExtractor.eq(debuggerContext.extractor)
       }
     }
+
+    filter(DebuggerFilter(f))
   }
 
   def inspectExtractor(extractor: Extractor): Inspector = {
-    filter { debuggerRecord =>
-      debuggerRecord.extractor.eq(extractor)
-    }
+    filter(DebuggerFilter.extractorFilter(extractor))
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
-    filter { debuggerRecord =>
-      debuggerRecord.sentence.eq(sentence)
-    }
+    filter(DebuggerFilter.sentenceFilter(sentence))
   }
 
   def inspectSentences(sentences: Seq[Sentence]): Inspector = {
-    filter { debuggerRecord =>
-      sentences.exists { sentence =>
-        sentence.eq(debuggerRecord.sentence)
-      }
-    }
+    filter(DebuggerFilter.sentencesFilter(sentences))
   }
 
-  def filterInstTranscript(f: DebuggerRecord => Boolean): Seq[FinishedInst] = {
-    val newInstTranscript = instTranscript.filter { finishedInst =>
-      f(finishedInst.debuggerRecord)
-    }
+  def filterInstTranscript(f: DebuggerFilter): Transcript[FinishedInst] = {
+    val newInstTranscript = instTranscript.filter(f)
 
     newInstTranscript
   }
 
-  def filterThreadTranscript(f: DebuggerRecord => Boolean): Seq[FinishedThread] = {
-    val newThreadTranscript = threadTranscript.filter { finishedThread =>
-      f(finishedThread.debuggerRecord)
-    }
+  def filterThreadTranscript(f: DebuggerFilter): Transcript[FinishedThread] = {
+    val newThreadTranscript = threadTranscript.filter(f)
 
     newThreadTranscript
   }
 
-  def filterLocalActionTranscript(f: DebuggerRecordForLocalAction => Boolean): Seq[FinishedLocalAction] = {
-    val newLocalActionTranscript = localActionTranscript.filter { finishedLocalAction =>
-      f(finishedLocalAction.debuggerRecord)
-    }
+  def filterLocalActionTranscript(f: DebuggerFilter): Transcript[FinishedLocalAction] = {
+    val newLocalActionTranscript = localActionTranscript.filter(f)
 
     newLocalActionTranscript
   }
 
-  def filterMentionTranscript(f: DebuggerRecordForMention => Boolean): Seq[FinishedMention] = {
-    val newMentionTranscript = mentionTranscript.filter { finishedMention =>
-      f(finishedMention.debuggerRecord)
-    }
+  def filterMentionTranscript(f: DebuggerFilter): Transcript[FinishedMention] = {
+    val newMentionTranscript = mentionTranscript.filter(f)
 
     newMentionTranscript
   }
 
-  def filter(f: DebuggerRecord => Boolean): Inspector = {
+  def filter(f: DebuggerFilter): Inspector = {
     val newInstTranscript = filterInstTranscript(f)
     val newThreadTranscript = filterThreadTranscript(f)
     val newLocalActionTranscript = localActionTranscript
@@ -188,14 +173,14 @@ class Inspector(
 
   def getEqualityDocuments(): Seq[EqualityByIdentity[Document]] = {
     val instEqualityDocuments = instTranscript.map { finishedInst =>
-      EqualityByIdentity(finishedInst.debuggerRecord.document)
+      EqualityByIdentity(finishedInst.debuggerContext.document)
     }.distinct
     val threadEqualityDocuments = threadTranscript.map { finishedThread =>
-      EqualityByIdentity(finishedThread.debuggerRecord.document)
+      EqualityByIdentity(finishedThread.debuggerContext.document)
     }.distinct
     // TODO: Actions
     val mentionEqualityDocuments = mentionTranscript.map { finishedMention =>
-       EqualityByIdentity(finishedMention.debuggerRecord.document)
+       EqualityByIdentity(finishedMention.debuggerContext.document)
     }
     val equalityDocuments = (instEqualityDocuments ++ threadEqualityDocuments ++ mentionEqualityDocuments).distinct
 
@@ -207,14 +192,14 @@ class Inspector(
     // different, especially since Threads might never have gotten around
     // to match so that no Sentence would ever be recorded.
     val instEqualitySentences = instTranscript.map { finishedInst =>
-      EqualityByIdentity(finishedInst.debuggerRecord.sentence)
+      EqualityByIdentity(finishedInst.debuggerContext.sentence)
     }.distinct
     val threadEqualitySentences = threadTranscript.map { finishedThread =>
-      EqualityByIdentity(finishedThread.debuggerRecord.sentence)
+      EqualityByIdentity(finishedThread.debuggerContext.sentence)
     }.distinct
     // TODO, add Actions
     val mentionEqualitySentences = mentionTranscript.map { finishedMention =>
-      EqualityByIdentity(finishedMention.debuggerRecord.sentence)
+      EqualityByIdentity(finishedMention.debuggerContext.sentence)
     }
     val equalitySentences = (instEqualitySentences ++ threadEqualitySentences ++ mentionEqualitySentences).distinct
 
@@ -222,27 +207,23 @@ class Inspector(
   }
 
   def getEqualityExtractors(sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
+    val sentenceFilter = DebuggerFilter.sentenceFilter(sentence)
+
     val instEqualityExtractors = instTranscript
-        .filter { finishedInst =>
-          finishedInst.debuggerRecord.sentence.eq(sentence)
-        }
+        .filter(sentenceFilter)
         .map { finishedInst =>
-          EqualityByIdentity(finishedInst.debuggerRecord.extractor)
+          EqualityByIdentity(finishedInst.debuggerContext.extractor)
         }
     val threadEqualityExtractors = threadTranscript
-        .filter { finishedThread =>
-          finishedThread.debuggerRecord.sentence.eq(sentence)
-        }
+        .filter(sentenceFilter)
         .map { finishedThread =>
-          EqualityByIdentity(finishedThread.debuggerRecord.extractor)
+          EqualityByIdentity(finishedThread.debuggerContext.extractor)
         }
     // TODO Actions
     val mentionEqualityExtractors = mentionTranscript
-        .filter { finishedMention =>
-          finishedMention.debuggerRecord.sentence.eq(sentence)
-        }
+        .filter(sentenceFilter)
         .map { finishedMention =>
-          EqualityByIdentity(finishedMention.debuggerRecord.extractor)
+          EqualityByIdentity(finishedMention.debuggerContext.extractor)
         }
     val equalityExtractors = (instEqualityExtractors ++ threadEqualityExtractors ++ mentionEqualityExtractors).distinct
 
@@ -262,6 +243,7 @@ class Inspector(
     val equalityDocuments = getEqualityDocuments()
     val documentFragments = equalityDocuments.map { equalityDocument =>
       val document = equalityDocument.value
+      val documentFilter = DebuggerFilter.documentFilter(document)
       val equalitySentences = getEqualitySentences(document)
       val sentenceFragments = equalitySentences.map { equalitySentence =>
         val sentence = equalitySentence.value.asInstanceOf[Sentence]
@@ -269,22 +251,11 @@ class Inspector(
         val equalityExtractors = getEqualityExtractors(sentence)
         val extractorFragments = equalityExtractors.map { equalityExtractor =>
           val extractor = equalityExtractor.value.asInstanceOf[Extractor]
+          val multiFilter = DebuggerFilter.multiFilter(document, sentence, extractor)
 
-          val newInstTranscript = instTranscript.filter { finishedInst =>
-            finishedInst.debuggerRecord.document.eq(document) &&
-            finishedInst.debuggerRecord.sentence.eq(sentence) &&
-            finishedInst.debuggerRecord.extractor.eq(extractor)
-          }
-          val newThreadTranscript = threadTranscript.filter { finishedThread =>
-            finishedThread.debuggerRecord.document.eq(document) &&
-            finishedThread.debuggerRecord.sentence.eq(sentence) &&
-            finishedThread.debuggerRecord.extractor.eq(extractor)
-          }
-          val newLocalActionTranscript = localActionTranscript.filter { finishedLocalAction =>
-            finishedLocalAction.debuggerRecord.document.eq(document) &&
-            finishedLocalAction.debuggerRecord.sentence.eq(sentence) &&
-            finishedLocalAction.debuggerRecord.extractor.eq(extractor)
-          }
+          val newInstTranscript = instTranscript.filter(multiFilter)
+          val newThreadTranscript = threadTranscript.filter(multiFilter)
+          val newLocalActionTranscript = localActionTranscript.filter(multiFilter)
           val newMentionTranscript = mentionTranscript // TODO
           val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
           val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
@@ -323,9 +294,7 @@ class Inspector(
 
         sentenceFragment
       }.toSeq
-      val newGlobalActionTranscript = globalActionTranscript.filter { finishedGlobalAction =>
-        finishedGlobalAction.debuggerRecord.document.eq(document)
-      }
+      val newGlobalActionTranscript = globalActionTranscript.filter(documentFilter)
       val actionVisualization = htmlActionVisualizer.visualizeGlobal(newGlobalActionTranscript)
       val documentTextFragment = document.text
           .map { text =>
