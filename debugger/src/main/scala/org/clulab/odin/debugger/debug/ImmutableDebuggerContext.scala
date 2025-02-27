@@ -1,10 +1,10 @@
 package org.clulab.odin.debugger.debug
 
-import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
+import org.clulab.odin.impl.{Extractor, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 
-case class StaticDebuggerContext(
+case class ImmutableDebuggerContext(
   depth: Int = 0,
   documents: List[Document] = List.empty,
   loops: List[Int] = List.empty,
@@ -14,7 +14,6 @@ case class StaticDebuggerContext(
   sentences: List[Sentence] = List.empty,
   starts: List[Int] = List.empty,
   toks: List[Int] = List.empty,
-  insts: List[Inst] = List.empty, // TODO remove
   tokenIntervals: List[Interval] = List.empty
 ) {
 
@@ -46,9 +45,6 @@ case class StaticDebuggerContext(
 
   def tokOpt: Option[Int] = getOpt(toks)
   def tok: Int = get(toks)
-
-  def instOpt: Option[Inst] = getOpt(insts)
-  def inst: Inst = get(insts)
 
   def tokenIntervalOpt: Option[Interval] = getOpt(tokenIntervals)
   def tokenInterval: Interval = get(tokenIntervals)

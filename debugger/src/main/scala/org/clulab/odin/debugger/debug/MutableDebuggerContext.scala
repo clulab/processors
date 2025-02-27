@@ -7,7 +7,7 @@ import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 
-class DynamicDebuggerContext(
+class MutableDebuggerContext(
   protected var depth: Int = 0,
   // TODO: Add ExtractorEngine to this, because there may be multiple.
   protected var documents: List[Document] = List.empty,
@@ -18,10 +18,9 @@ class DynamicDebuggerContext(
   protected var sentences: List[Sentence] = List.empty,
   protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
   protected var toks: List[Int] = List.empty, // The current token index
-  protected var insts: List[Inst] = List.empty, // TODO: Remove
   protected var tokenIntervals: List[Interval] = List.empty
 ) {
-  def getDepth: Int = depth
+  def getDepth: Int = depth - 1
 
   def setValue[T](list: List[T], value: T): List[T] = {
     depth += 1
@@ -35,15 +34,15 @@ class DynamicDebuggerContext(
     list.tail
   }
 
-  def newStaticDebuggerContext(tok: Int): StaticDebuggerContext = {
+  def newStaticDebuggerContext(tok: Int): ImmutableDebuggerContext = {
     newStaticDebuggerContext(setValue(toks, tok))
   }
 
-  def newStaticDebuggerContext(): StaticDebuggerContext = {
+  def newStaticDebuggerContext(): ImmutableDebuggerContext = {
     newStaticDebuggerContext(toks)
   }
 
-  def newStaticDebuggerContext(toks: List[Int]): StaticDebuggerContext = StaticDebuggerContext(
+  def newStaticDebuggerContext(toks: List[Int]): ImmutableDebuggerContext = ImmutableDebuggerContext(
     depth,
     documents,
     loops,
@@ -53,25 +52,46 @@ class DynamicDebuggerContext(
     sentences,
     starts,
     toks,
-    insts,
     tokenIntervals
   )
+
+  def beforeDuringAfter[ResultType](before: => Unit, during: => ResultType, after: => Unit): ResultType = {
+    before
+    try {
+      during
+    }
+    finally {
+      after
+    }
+  }
 
   def setDocument(document: Document): Unit = documents = setValue(documents, document)
   def getDocumentOpt: Option[Document] = getValueOpt(documents)
   def resetDocument(): Unit = documents = resetValue(documents)
+  def withDocument[ResultType](document: Document)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setDocument(document), block, resetDocument())
+  }
 
   def setLoop(loop: Int): Unit = loops = setValue(loops, loop)
   def getLoopOpt: Option[Int] = getValueOpt(loops)
   def resetLoop(): Unit = loops = resetValue(loops)
+  def withLoop[ResultType](loop: Int)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setLoop(loop), block, resetLoop())
+  }
 
   def setExtractor(extractor: Extractor): Unit = extractors = setValue(extractors, extractor)
   def getExtractorOpt: Option[Extractor] = getValueOpt(extractors)
   def resetExtractor(): Unit = extractors = resetValue(extractors)
+  def withExtractor[ResultType](extractor: Extractor)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setExtractor(extractor), block, resetExtractor())
+  }
 
   def setTokenPattern(tokenPattern: TokenPattern): Unit = tokenPatterns = setValue(tokenPatterns, tokenPattern)
   def getTokenPattern: Option[TokenPattern] = getValueOpt(tokenPatterns)
   def resetTokenPattern(): Unit = tokenPatterns = resetValue(tokenPatterns)
+  def withTokenPattern[ResultType](tokenPattern: TokenPattern)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setTokenPattern(tokenPattern), block, resetTokenPattern())
+  }
 
   def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
     sentenceIndexes = setValue(sentenceIndexes, sentenceIndex)
@@ -84,22 +104,30 @@ class DynamicDebuggerContext(
     sentences = resetValue(sentences)
     sentenceIndexes = resetValue(sentenceIndexes)
   }
+  def withSentence[ResultType](sentenceIndex: Int, sentence: Sentence)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setSentence(sentenceIndex, sentence), block, resetSentence())
+  }
 
   def setStart(start: Int): Unit = starts = setValue(starts, start)
   def getStartOpt: Option[Int] = getValueOpt(starts)
   def resetStart(): Unit = starts = resetValue(starts)
+  def withStart[ResultType](start: Int)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setStart(start), block, resetStart())
+  }
 
   def setTok(tok: Int): Unit = toks = setValue(toks, tok)
   def getTokOpt: (Option[Int]) = getValueOpt(toks)
   def resetTok(): Unit = toks = resetValue(toks)
+  def withTok[ResultType](tok: Int)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setTok(tok), block, resetTok())
+  }
 
   def setTokenInterval(tokenInterval: Interval): Unit = tokenIntervals = setValue(tokenIntervals, tokenInterval)
   def getTokenIntervalOpt: (Option[Interval]) = getValueOpt(tokenIntervals)
   def resetTokenInterval(): Unit = tokenIntervals = resetValue(tokenIntervals)
-
-  def setInst(inst: Inst): Unit = insts = setValue(insts, inst)
-  def getInstOpt: Option[Inst] = getValueOpt(insts)
-  def resetInst(): Unit = insts = resetValue(insts)
+  def withTokenInterval[ResultType](tokenInterval: Interval)(block: => ResultType): ResultType = {
+    beforeDuringAfter(setTokenInterval(tokenInterval), block, resetTokenInterval())
+  }
 
   def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
     new FinishedInst(newStaticDebuggerContext(tok), inst, matches)
@@ -113,11 +141,11 @@ class DynamicDebuggerContext(
     new FinishedMention(newStaticDebuggerContext(), mention, stateMentions, mentionMatches)
   }
 
-  def setLocalAction(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedLocalAction = {
+  def setLocalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedLocalAction = {
     new FinishedLocalAction(newStaticDebuggerContext(), inMentions, outMentions)
   }
 
-  def setGlobalAction(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedGlobalAction = {
+  def setGlobalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedGlobalAction = {
     new FinishedGlobalAction(newStaticDebuggerContext(), inMentions, outMentions)
   }
 }

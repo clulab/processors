@@ -11,7 +11,7 @@ class DebuggingAction(debugger: Debugger, action: Action, val extractorOpt: Opti
     val outMentions = action(mentions, state)
 
     // TODO: Report the extractor in use or None
-    debugger.debugAction(inMentions, outMentions)
+    debugger.debugActionMatches(inMentions, outMentions)
     outMentions
   }
 }

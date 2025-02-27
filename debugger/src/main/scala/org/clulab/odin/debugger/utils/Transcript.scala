@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.utils
 
-import org.clulab.odin.debugger.debug.DebuggerFilter
+import org.clulab.odin.debugger.debug.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.Finished
 
 import scala.collection.mutable
@@ -13,7 +13,7 @@ class Transcript[T <: Finished](val values: mutable.Buffer[T]) {
 
   def appendAll(transcript: Transcript[T]): Unit = values.appendAll(transcript.values)
 
-  def filter(f: DebuggerFilter): Transcript[T] = {
+  def filter(f: DynamicDebuggerFilter): Transcript[T] = {
     val newValues = values.filter { value =>
       f(value.debuggerContext)
     }

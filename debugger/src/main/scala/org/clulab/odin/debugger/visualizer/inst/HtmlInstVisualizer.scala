@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.inst
 
-import org.clulab.odin.debugger.debug.DebuggerFilter
+import org.clulab.odin.debugger.debug.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.FinishedInst
 import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualization.HtmlVisualization
@@ -12,11 +12,11 @@ import scalatags.Text.all._
 class HtmlInstVisualizer() extends InstVisualizer with HtmlVisualizing {
 
   def mkInstView(transcript: Transcript[FinishedInst], sentence: Sentence): Fragment = {
-    val sentenceFilter = DebuggerFilter.sentenceFilter(sentence)
+    val sentenceFilter = DynamicDebuggerFilter.sentenceFilter(sentence)
     val sentenceTranscript = transcript.filter(sentenceFilter)
 
     def findMatches(start: Int, tok: Int): Seq[(Inst, Option[Boolean])] = {
-      val startTokFilter = DebuggerFilter.startTokFilter(start, tok)
+      val startTokFilter = DynamicDebuggerFilter.startTokFilter(start, tok)
       val matchTranscript = sentenceTranscript.filter(startTokFilter)
       val trues = matchTranscript.values.filter(_.instMatch).map(_.inst).distinct.toSet
       val falses = matchTranscript.values.filter(!_.instMatch).map(_.inst).distinct.toSet

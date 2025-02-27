@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger.apps
 
 import org.clulab.odin.debugger.Inspector
+import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, StaticDebuggerFilter}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
@@ -31,7 +32,7 @@ object DebuggingOdinStarterApp extends App {
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
   val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
-  val globalAction = (inMentions: Seq[Mention], state: State) => {
+  val exampleGlobalAction = (inMentions: Seq[Mention], state: State) => {
     val outMentions = inMentions.map { mention =>
       if (mention.words.length % 2 == 0)
         mention.withAttachments(Seq.empty)
@@ -55,7 +56,7 @@ object DebuggingOdinStarterApp extends App {
     else {
       // Read rules from resource in jar.
       val rules = FileUtils.getTextFromResource(masterResource)
-      ExtractorEngine(rules, ruleDir = None, globalAction = globalAction)
+      ExtractorEngine(rules, ruleDir = None, globalAction = exampleGlobalAction)
     }
   }
   val document = processor.annotate("John Doe eats cake.  His brothers, Brad and Dean, do not eat cake.", keepText = true)
@@ -83,36 +84,44 @@ object DebuggingOdinStarterApp extends App {
     println()
   }
 
+  {
+    // Just for kicks, print all the rules and extractors being used.
+    val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
+    val textRuleVisualizer = new TextRuleVisualizer()
+    val textExtractorVisualizer = new TextExtractorVisualizer()
+
+    debuggingExtractorEngine.extractors.foreach { extractor =>
+      val textRuleVisualization = textRuleVisualizer.visualize(extractor).toString
+      val textExtractorVisualization = textExtractorVisualizer.visualize(extractor).toString
+
+      println()
+      println()
+      println(textRuleVisualization)
+      println()
+      println(textExtractorVisualization)
+    }
+  }
+
+  // Track down the extractor that isn't working.
+  val extractor = DebuggingExtractorEngine.getExtractorByName(extractorEngine, "person-from-lexicon")
+  // Track down the sentence that isn't working.
+  val sentence = document.sentences.head
+
+  // Make the filters.
+  val dynamicDebuggerFilter = DynamicDebuggerFilter.extractorFilter(extractor).sentenceFilter(sentence)
+  val staticDebuggerFilter = StaticDebuggerFilter.extractorFilter(extractor)
+
   // Create a debugging extractor engine from the extractor engine already in use.
-  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine, active = true, verbose = false)
+  val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine,
+      dynamicDebuggerFilter = dynamicDebuggerFilter, staticDebuggerFilter = staticDebuggerFilter,
+      active = true, verbose = false)
+
   // Do the same to it as was done before.
   val debuggingMentions = debuggingExtractorEngine.extractFrom(document).sortBy(_.arguments.size)
   // The result should be the same whether debugging or not.
   assert(mentions.length == debuggingMentions.length)
-
-  // Just for kicks, print all the rules and extractors being used.
-  val textRuleVisualizer = new TextRuleVisualizer()
-  val textExtractorVisualizer = new TextExtractorVisualizer()
-  debuggingExtractorEngine.extractors.foreach { extractor =>
-    val textRuleVisualization = textRuleVisualizer.visualize(extractor).toString
-    val textExtractorVisualization = textExtractorVisualizer.visualize(extractor).toString
-
-    println()
-    println()
-    println(textRuleVisualization)
-    println()
-    println(textExtractorVisualization)
-  }
-
-  // Track down the extractor that isn't working.
-  val extractor = debuggingExtractorEngine.getExtractorByName("person-from-lexicon")
-  // Track down the sentence that isn't working.
-  val sentence = document.sentences.head
-
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
-      .inspectStaticAsHtml("../debug-static.html")
-//      .inspectExtractor(extractor)
-      .inspectSentence(sentence)
-      .inspectDynamicAsHtml("../debug-dynamic.html")
+      .inspectStaticAsHtml("../debug-static.html", verbose = true)
+      .inspectDynamicAsHtml("../debug-dynamic.html", verbose = true)
 }

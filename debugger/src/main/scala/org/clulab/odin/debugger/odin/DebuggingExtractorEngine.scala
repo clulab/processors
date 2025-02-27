@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, StaticDebuggerFilter}
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl._
@@ -33,8 +34,14 @@ object InnerDebuggingExtractorEngine {
   }
 }
 
-class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalAction: Action, active: Boolean, verbose: Boolean)
-    extends ExtractorEngine(extractors, globalAction) {
+class DebuggingExtractorEngine protected (
+  extractors: Vector[Extractor],
+  globalAction: Action,
+  val dynamidDebuggerFilter: DynamicDebuggerFilter,
+  val staticDebuggerFilter: StaticDebuggerFilter,
+  active: Boolean,
+  verbose: Boolean
+) extends ExtractorEngine(extractors, globalAction) {
   val finishedInsts  = Transcript[FinishedInst]()
   val finishedThreads = Transcript[FinishedThread]()
   val finishedLocalActions = Transcript[FinishedLocalAction]()
@@ -87,9 +94,24 @@ class DebuggingExtractorEngine protected (extractors: Vector[Extractor], globalA
 
 object DebuggingExtractorEngine {
 
-  def apply(extractorEngine: ExtractorEngine, active: Boolean = true, verbose: Boolean = false): DebuggingExtractorEngine = {
+  def apply(
+    extractorEngine: ExtractorEngine,
+    dynamicDebuggerFilter: DynamicDebuggerFilter = DynamicDebuggerFilter.trueFilter,
+    staticDebuggerFilter: StaticDebuggerFilter = StaticDebuggerFilter.trueFilter,
+    active: Boolean = true,
+    verbose: Boolean = false
+  ): DebuggingExtractorEngine = {
     val extractors = extractorEngine.extractors
 
-    new DebuggingExtractorEngine(extractors, extractorEngine.globalAction, active, verbose)
+    new DebuggingExtractorEngine(extractors, extractorEngine.globalAction, dynamicDebuggerFilter,
+        staticDebuggerFilter, active, verbose)
+  }
+
+  def getExtractorByNameOpt(extractorEngine: ExtractorEngine, name: String): Option[Extractor] = {
+    extractorEngine.extractors.find(_.name == name)
+  }
+
+  def getExtractorByName(extractorEngine: ExtractorEngine, name: String): Extractor = {
+    getExtractorByNameOpt(extractorEngine, name).get
   }
 }

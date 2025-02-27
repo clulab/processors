@@ -1,10 +1,10 @@
 package org.clulab.odin.debugger.debug.finished
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.{MentionMatch, StaticDebuggerContext}
+import org.clulab.odin.debugger.debug.{MentionMatch, ImmutableDebuggerContext}
 
 class FinishedMention(
-  debuggerContext: StaticDebuggerContext,
+  debuggerContext: ImmutableDebuggerContext,
   val mention: Mention,
   val stateMentions: Seq[Mention],
   val mentionMatches: Seq[MentionMatch]

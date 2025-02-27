@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.debug.finished
 
-import org.clulab.odin.debugger.debug.StaticDebuggerContext
+import org.clulab.odin.debugger.debug.ImmutableDebuggerContext
 
-class Finished(val debuggerContext: StaticDebuggerContext) {
+class Finished(val debuggerContext: ImmutableDebuggerContext) {
 
 }

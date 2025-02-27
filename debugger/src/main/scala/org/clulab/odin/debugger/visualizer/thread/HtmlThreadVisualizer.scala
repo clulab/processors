@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.thread
 
-import org.clulab.odin.debugger.debug.DebuggerFilter
+import org.clulab.odin.debugger.debug.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.FinishedThread
 import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualization.HtmlVisualization
@@ -57,7 +57,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
 
     // TODO: Assume all threads for now, but these need to be filtered as well.
     // They need to know about their sentence then
-    val sentenceFilter = DebuggerFilter.sentenceFilter(sentence)
+    val sentenceFilter = DynamicDebuggerFilter.sentenceFilter(sentence)
     val sentenceTranscript = transcript.filter(sentenceFilter)
     val words = sentence.words
     val sortedFinishedThreads = sortFinishedThreads(sentenceTranscript.values)

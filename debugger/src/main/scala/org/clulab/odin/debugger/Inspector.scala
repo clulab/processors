@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
-import org.clulab.odin.debugger.debug.{DebuggerFilter, StaticDebuggerContext}
+import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, ImmutableDebuggerContext, StaticDebuggerFilter}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualizer.action.HtmlActionVisualizer
@@ -21,6 +21,7 @@ import scala.util.Using
 
 class Inspector(
   val extractors: Seq[Extractor],
+  val staticDebuggerFilter: StaticDebuggerFilter,
   val instTranscript: Transcript[FinishedInst],
   val threadTranscript: Transcript[FinishedThread],
   val localActionTranscript: Transcript[FinishedLocalAction],
@@ -30,6 +31,7 @@ class Inspector(
 
   def copy(
     extractors: Seq[Extractor] = this.extractors,
+    staticDebuggerFilter: StaticDebuggerFilter = this.staticDebuggerFilter,
     instTranscript: Transcript[FinishedInst] = this.instTranscript,
     threadTranscript: Transcript[FinishedThread] = this.threadTranscript,
     localActionTranscript: Transcript[FinishedLocalAction] = this.localActionTranscript,
@@ -38,6 +40,7 @@ class Inspector(
   ): Inspector = {
     new Inspector(
       extractors,
+      staticDebuggerFilter,
       instTranscript,
       threadTranscript,
       localActionTranscript,
@@ -58,53 +61,53 @@ class Inspector(
 
   def inspectCrossSentenceExtractor(extractor: CrossSentenceExtractor): Inspector = {
     val relatedExtractors = Seq(extractor, extractor.anchorPattern, extractor.neighborPattern)
-    val f = (debuggerContext: StaticDebuggerContext) => {
+    val f = (debuggerContext: ImmutableDebuggerContext) => {
       debuggerContext.extractorOpt.isDefined &&
       relatedExtractors.exists { relatedExtractor =>
         relatedExtractor.eq(debuggerContext.extractor)
       }
     }
 
-    filter(DebuggerFilter(f))
+    filter(DynamicDebuggerFilter(f))
   }
 
   def inspectExtractor(extractor: Extractor): Inspector = {
-    filter(DebuggerFilter.extractorFilter(extractor))
+    filter(DynamicDebuggerFilter.extractorFilter(extractor))
   }
 
   def inspectSentence(sentence: Sentence): Inspector = {
-    filter(DebuggerFilter.sentenceFilter(sentence))
+    filter(DynamicDebuggerFilter.sentenceFilter(sentence))
   }
 
   def inspectSentences(sentences: Seq[Sentence]): Inspector = {
-    filter(DebuggerFilter.sentencesFilter(sentences))
+    filter(DynamicDebuggerFilter.sentencesFilter(sentences))
   }
 
-  def filterInstTranscript(f: DebuggerFilter): Transcript[FinishedInst] = {
+  def filterInstTranscript(f: DynamicDebuggerFilter): Transcript[FinishedInst] = {
     val newInstTranscript = instTranscript.filter(f)
 
     newInstTranscript
   }
 
-  def filterThreadTranscript(f: DebuggerFilter): Transcript[FinishedThread] = {
+  def filterThreadTranscript(f: DynamicDebuggerFilter): Transcript[FinishedThread] = {
     val newThreadTranscript = threadTranscript.filter(f)
 
     newThreadTranscript
   }
 
-  def filterLocalActionTranscript(f: DebuggerFilter): Transcript[FinishedLocalAction] = {
+  def filterLocalActionTranscript(f: DynamicDebuggerFilter): Transcript[FinishedLocalAction] = {
     val newLocalActionTranscript = localActionTranscript.filter(f)
 
     newLocalActionTranscript
   }
 
-  def filterMentionTranscript(f: DebuggerFilter): Transcript[FinishedMention] = {
+  def filterMentionTranscript(f: DynamicDebuggerFilter): Transcript[FinishedMention] = {
     val newMentionTranscript = mentionTranscript.filter(f)
 
     newMentionTranscript
   }
 
-  def filter(f: DebuggerFilter): Inspector = {
+  def filter(f: DynamicDebuggerFilter): Inspector = {
     val newInstTranscript = filterInstTranscript(f)
     val newThreadTranscript = filterThreadTranscript(f)
     val newLocalActionTranscript = localActionTranscript
@@ -138,15 +141,21 @@ class Inspector(
     htmlFragment
   }
 
-  def inspectStaticAsHtml(fileName: String): Inspector = {
+  def inspectStaticAsHtml(fileName: String, verbose: Boolean = false): Inspector = {
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
 
-    val extractorFragments = extractors.map { extractor =>
+    val extractorFragments = extractors.filter(staticDebuggerFilter(_)).map { extractor =>
       val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
       val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
       val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
+      val graphicalExtractorFragment =
+          if (verbose) frag(
+            h3("Graphical Extractor View"),
+            graphicalExtractorVisualization.fragment
+          )
+          else frag()
 
       frag(
         h2("Extractor"),
@@ -155,8 +164,7 @@ class Inspector(
         htmlRuleVisualization.fragment,
         h3("Textual Extractor View"),
         htmlExtractorVisualization.fragment,
-        h3("Graphical Extractor View"),
-        graphicalExtractorVisualization.fragment
+        graphicalExtractorFragment
       )
     }
     val bodyFragment = frag(
@@ -207,7 +215,7 @@ class Inspector(
   }
 
   def getEqualityExtractors(sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
-    val sentenceFilter = DebuggerFilter.sentenceFilter(sentence)
+    val sentenceFilter = DynamicDebuggerFilter.sentenceFilter(sentence)
 
     val instEqualityExtractors = instTranscript
         .filter(sentenceFilter)
@@ -230,7 +238,7 @@ class Inspector(
     equalityExtractors
   }
 
-  def inspectDynamicAsHtml(fileName: String): Inspector = {
+  def inspectDynamicAsHtml(fileName: String, verbose: Boolean = false): Inspector = {
     val htmlSentenceVisualizer = new HtmlSentenceVisualizer()
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
@@ -243,7 +251,7 @@ class Inspector(
     val equalityDocuments = getEqualityDocuments()
     val documentFragments = equalityDocuments.map { equalityDocument =>
       val document = equalityDocument.value
-      val documentFilter = DebuggerFilter.documentFilter(document)
+      val documentFilter = DynamicDebuggerFilter.documentFilter(document)
       val equalitySentences = getEqualitySentences(document)
       val sentenceFragments = equalitySentences.map { equalitySentence =>
         val sentence = equalitySentence.value.asInstanceOf[Sentence]
@@ -251,7 +259,7 @@ class Inspector(
         val equalityExtractors = getEqualityExtractors(sentence)
         val extractorFragments = equalityExtractors.map { equalityExtractor =>
           val extractor = equalityExtractor.value.asInstanceOf[Extractor]
-          val multiFilter = DebuggerFilter.multiFilter(document, sentence, extractor)
+          val multiFilter = DynamicDebuggerFilter.multiFilter(document, sentence, extractor)
 
           val newInstTranscript = instTranscript.filter(multiFilter)
           val newThreadTranscript = threadTranscript.filter(multiFilter)
@@ -332,6 +340,7 @@ object Inspector {
   def apply(debuggingExtractorEngine: DebuggingExtractorEngine): Inspector = {
     new Inspector(
       debuggingExtractorEngine.extractors,
+      debuggingExtractorEngine.staticDebuggerFilter,
       debuggingExtractorEngine.finishedInsts,
       debuggingExtractorEngine.finishedThreads,
       debuggingExtractorEngine.finishedLocalActions,
