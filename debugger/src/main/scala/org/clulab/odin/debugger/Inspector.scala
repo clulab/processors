@@ -28,6 +28,13 @@ class Inspector(
   val globalActionTranscript: Transcript[FinishedGlobalAction],
   val mentionTranscript: Transcript[FinishedMention]
 ) extends HtmlVisualizing {
+  val transcripts: Seq[Transcript[_ <: Finished]] = Seq(
+    instTranscript,
+    threadTranscript,
+    localActionTranscript,
+    globalActionTranscript,
+    mentionTranscript
+  )
 
   def copy(
     extractors: Seq[Extractor] = this.extractors,
@@ -131,60 +138,33 @@ class Inspector(
   }
 
   def getEqualityDocuments(): Seq[EqualityByIdentity[Document]] = {
-    val instEqualityDocuments = instTranscript.map { finishedInst =>
-      EqualityByIdentity(finishedInst.debuggerContext.document)
-    }.distinct
-    val threadEqualityDocuments = threadTranscript.map { finishedThread =>
-      EqualityByIdentity(finishedThread.debuggerContext.document)
-    }.distinct
-    // TODO: Actions
-    val mentionEqualityDocuments = mentionTranscript.map { finishedMention =>
-       EqualityByIdentity(finishedMention.debuggerContext.document)
+    val equalityDocuments = transcripts.flatMap { transcript =>
+      transcript.values.flatMap { finished =>
+        finished.debuggerContext.documentOpt.map(EqualityByIdentity(_))
+      }
     }
-    val equalityDocuments = (instEqualityDocuments ++ threadEqualityDocuments ++ mentionEqualityDocuments).distinct
 
-    equalityDocuments
+    equalityDocuments.distinct
   }
 
   def getEqualitySentences(document: Document): Seq[EqualityByIdentity[Sentence]] = {
-    // It is possible that the sentences for the Insts and Threads are
-    // different, especially since Threads might never have gotten around
-    // to match so that no Sentence would ever be recorded.
-    val instEqualitySentences = instTranscript.map { finishedInst =>
-      EqualityByIdentity(finishedInst.debuggerContext.sentence)
-    }.distinct
-    val threadEqualitySentences = threadTranscript.map { finishedThread =>
-      EqualityByIdentity(finishedThread.debuggerContext.sentence)
-    }.distinct
-    // TODO, add Actions
-    val mentionEqualitySentences = mentionTranscript.map { finishedMention =>
-      EqualityByIdentity(finishedMention.debuggerContext.sentence)
+    val documentFilter = DynamicDebuggerFilter.documentFilter(document)
+    val equalitySentences = transcripts.flatMap { transcript =>
+      transcript.filter(documentFilter).values.flatMap { finished =>
+        finished.debuggerContext.sentenceOpt.map(EqualityByIdentity(_))
+      }
     }
-    val equalitySentences = (instEqualitySentences ++ threadEqualitySentences ++ mentionEqualitySentences).distinct
 
-    equalitySentences
+    equalitySentences.distinct
   }
 
-  def getEqualityExtractors(sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
-    val sentenceFilter = DynamicDebuggerFilter.sentenceFilter(sentence)
-
-    val instEqualityExtractors = instTranscript
-        .filter(sentenceFilter)
-        .map { finishedInst =>
-          EqualityByIdentity(finishedInst.debuggerContext.extractor)
-        }
-    val threadEqualityExtractors = threadTranscript
-        .filter(sentenceFilter)
-        .map { finishedThread =>
-          EqualityByIdentity(finishedThread.debuggerContext.extractor)
-        }
-    // TODO Actions
-    val mentionEqualityExtractors = mentionTranscript
-        .filter(sentenceFilter)
-        .map { finishedMention =>
-          EqualityByIdentity(finishedMention.debuggerContext.extractor)
-        }
-    val equalityExtractors = (instEqualityExtractors ++ threadEqualityExtractors ++ mentionEqualityExtractors).distinct
+  def getEqualityExtractors(document: Document, sentence: Sentence): Seq[EqualityByIdentity[Extractor]] = {
+    val sentenceFilter = DynamicDebuggerFilter.documentFilter(document).sentenceFilter(sentence)
+    val equalityExtractors = transcripts.flatMap { transcript =>
+      transcript.filter(sentenceFilter).values.flatMap { finished =>
+        finished.debuggerContext.extractorOpt.map(EqualityByIdentity(_))
+      }
+    }
 
     equalityExtractors
   }
@@ -205,23 +185,25 @@ class Inspector(
     val equalityDocuments = getEqualityDocuments()
     val documentFragments = equalityDocuments.map { equalityDocument =>
       val document = equalityDocument.value
-      val documentFilter = DynamicDebuggerFilter.documentFilter(document)
       val equalitySentences = getEqualitySentences(document)
       val sentenceFragments = equalitySentences.map { equalitySentence =>
-        val sentence = equalitySentence.value.asInstanceOf[Sentence]
+        val sentence = equalitySentence.value
         val htmlSentenceVisualization = htmlSentenceVisualizer.visualize(sentence)
-        val equalityExtractors = getEqualityExtractors(sentence)
+        val equalityExtractors = getEqualityExtractors(document, sentence)
         val extractorFragments = equalityExtractors.map { equalityExtractor =>
-          val extractor = equalityExtractor.value.asInstanceOf[Extractor]
+          val extractor = equalityExtractor.value
+
+          val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
+          val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
+          val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
+
           val multiFilter = DynamicDebuggerFilter.multiFilter(document, sentence, extractor)
 
           val newInstTranscript = instTranscript.filter(multiFilter)
           val newThreadTranscript = threadTranscript.filter(multiFilter)
           val newLocalActionTranscript = localActionTranscript.filter(multiFilter)
-          val newMentionTranscript = mentionTranscript // TODO
-          val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
-          val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
-          val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
+          val newMentionTranscript = mentionTranscript.filter(multiFilter)
+
           val instVisualization = htmlInstVisualizer.visualize(newInstTranscript)
           val threadVisualization = htmlThreadVisualizer.visualize(newThreadTranscript)
           val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
@@ -272,6 +254,7 @@ class Inspector(
 
         sentenceFragment
       }.toSeq
+      val documentFilter = DynamicDebuggerFilter.documentFilter(document)
       val newGlobalActionTranscript = globalActionTranscript.filter(documentFilter)
       val actionVisualization = htmlActionVisualizer.visualizeGlobal(newGlobalActionTranscript)
       val documentTextFragment = document.text
