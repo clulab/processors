@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.graph
+package org.clulab.odin.debugger.extractor.graph
 
 import org.clulab.odin.ExtractorEngine
 import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter

@@ -1,9 +1,10 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, StaticDebuggerFilter}
+import org.clulab.odin.debugger.debug.Transcript
+import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, DynamicInspectorFilter, StaticDebuggerFilter, StaticInspectorFilter}
 import org.clulab.odin.debugger.debug.finished.{Finished, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
-import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
+import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualizer.action.HtmlActionVisualizer
 import org.clulab.odin.debugger.visualizer.extractor.{HtmlExtractorVisualizer, MermaidExtractorVisualizer}
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
@@ -21,7 +22,6 @@ import scala.util.Using
 
 class Inspector(
   val extractors: Seq[Extractor],
-  val staticDebuggerFilter: StaticDebuggerFilter,
   val instTranscript: Transcript[FinishedInst],
   val threadTranscript: Transcript[FinishedThread],
   val localActionTranscript: Transcript[FinishedLocalAction],
@@ -31,7 +31,6 @@ class Inspector(
 
   def copy(
     extractors: Seq[Extractor] = this.extractors,
-    staticDebuggerFilter: StaticDebuggerFilter = this.staticDebuggerFilter,
     instTranscript: Transcript[FinishedInst] = this.instTranscript,
     threadTranscript: Transcript[FinishedThread] = this.threadTranscript,
     localActionTranscript: Transcript[FinishedLocalAction] = this.localActionTranscript,
@@ -40,7 +39,6 @@ class Inspector(
   ): Inspector = {
     new Inspector(
       extractors,
-      staticDebuggerFilter,
       instTranscript,
       threadTranscript,
       localActionTranscript,
@@ -88,30 +86,36 @@ class Inspector(
     htmlFragment
   }
 
-  def inspectStaticAsHtml(fileName: String, filter: StaticDebuggerFilter = StaticDebuggerFilter.trueFilter, verbose: Boolean = false): Inspector = {
+  def conditional(condition: Boolean, fragment: Fragment): Fragment = if (condition) fragment else frag()
+
+  def inspectStaticAsHtml(fileName: String, verbose: Boolean = false): Inspector =
+      inspectStaticAsHtml(fileName, if (verbose) StaticInspectorFilter.verbose else StaticInspectorFilter.concise)
+
+  def inspectStaticAsHtml(fileName: String, filter: StaticInspectorFilter): Inspector = {
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
 
-    val extractorFragments = extractors.filter(staticDebuggerFilter(_)).map { extractor =>
+    val extractorFragments = extractors.map { extractor =>
       val htmlRuleVisualization = htmlRuleVisualizer.visualize(extractor)
       val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
       val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
-      val graphicalExtractorFragment =
-          if (verbose) frag(
-            h3("Graphical Extractor View"),
-            graphicalExtractorVisualization.fragment
-          )
-          else frag()
 
       frag(
         h2("Extractor"),
         p(extractor.name),
-        h3("Rule View"),
-        htmlRuleVisualization.fragment,
-        h3("Textual Extractor View"),
-        htmlExtractorVisualization.fragment,
-        graphicalExtractorFragment
+        conditional(filter.showRuleView(extractor), frag(
+          h3("Rule View"),
+          htmlRuleVisualization.fragment
+        )),
+        conditional(filter.showTextualView(extractor), frag(
+          h3("Textual Extractor View"),
+          htmlExtractorVisualization.fragment
+        )),
+        conditional(filter.showGraphicalView(extractor), frag(
+          h3("Graphical Extractor View"),
+          graphicalExtractorVisualization.fragment
+        ))
       )
     }
     val bodyFragment = frag(
@@ -185,7 +189,10 @@ class Inspector(
     equalityExtractors
   }
 
-  def inspectDynamicAsHtml(fileName: String, filter: DynamicDebuggerFilter = DynamicDebuggerFilter.trueFilter, verbose: Boolean = false): Inspector = {
+  def inspectDynamicAsHtml(fileName: String, verbose: Boolean = false): Inspector =
+      inspectDynamicAsHtml(fileName, if (verbose) DynamicInspectorFilter.verbose else DynamicInspectorFilter.concise)
+
+  def inspectDynamicAsHtml(fileName: String, filter: DynamicInspectorFilter): Inspector = {
     val htmlSentenceVisualizer = new HtmlSentenceVisualizer()
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
@@ -220,31 +227,46 @@ class Inspector(
           val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
           val mentionVisualization = htmlMentionVisualizer.visualize(newMentionTranscript)
 
-          // TODO: What of this is verbose?
           frag(
             h3("Extractor"),
             p(extractor.name),
-            h4("Rule View"),
-            htmlRuleVisualization.fragment,
-            h4("Textual Extractor View"),
-            htmlExtractorVisualization.fragment,
-            h4("Inst View"),
-            instVisualization.fragment,
-            h4("Thread View"),
-            threadVisualization.fragment,
-            h4("Mention View"),
-            mentionVisualization.fragment,
-            h4("Local Action View"),
-            actionVisualization.fragment,
-            h4("Graphical Extractor View"),
-            graphicalExtractorVisualization.fragment,
+            conditional(filter.showRuleView(extractor, sentence), frag(
+              h4("Rule View"),
+              htmlRuleVisualization.fragment
+            )),
+            conditional(filter.showTextualView(extractor, sentence), frag(
+              h4("Textual Extractor View"),
+              htmlExtractorVisualization.fragment
+            )),
+            conditional(filter.showInstView(extractor, sentence, newInstTranscript), frag(
+              h4("Inst View"),
+              instVisualization.fragment
+            )),
+            conditional(filter.showThreadView(extractor, sentence, newThreadTranscript), frag(
+              h4("Thread View"),
+              threadVisualization.fragment
+            )),
+            conditional(filter.showMentionView(extractor, sentence, newMentionTranscript), frag(
+              h4("Mention View"),
+              mentionVisualization.fragment
+            )),
+            conditional(filter.showLocalActionView(extractor, sentence, newLocalActionTranscript), frag(
+              h4("Local Action View"),
+              actionVisualization.fragment
+            )),
+            conditional(filter.showGraphicalView(extractor, sentence), frag(
+              h4("Graphical Extractor View"),
+              graphicalExtractorVisualization.fragment
+            ))
           )
         }
         val sentenceFragment = frag(
           h2("Sentence"),
           p(sentence.getSentenceText),
-          h3("Parse View"),
-          htmlSentenceVisualization.fragment,
+          conditional(filter.showParseView(sentence), frag(
+            h3("Parse View"),
+            htmlSentenceVisualization.fragment
+          )),
           extractorFragments.toSeq
         )
 
@@ -266,8 +288,10 @@ class Inspector(
       val documentFragment = frag(
         h1("Document"),
         p(documentTextFragment),
-        h2("Global Action View"),
-        actionVisualization.fragment,
+        conditional(filter.showGlobalActionView(newGlobalActionTranscript), frag(
+          h2("Global Action View"),
+          actionVisualization.fragment
+        )),
         sentenceFragments
       )
 
@@ -286,14 +310,16 @@ class Inspector(
 object Inspector {
 
   def apply(debuggingExtractorEngine: DebuggingExtractorEngine): Inspector = {
-    new Inspector(
+    val inspector = new Inspector(
       debuggingExtractorEngine.extractors,
-      debuggingExtractorEngine.staticDebuggerFilter,
       debuggingExtractorEngine.finishedInsts,
       debuggingExtractorEngine.finishedThreads,
       debuggingExtractorEngine.finishedLocalActions,
       debuggingExtractorEngine.finishedGlobalActions,
       debuggingExtractorEngine.finishedMentions
     )
+
+    inspector
+        .filter(debuggingExtractorEngine.staticDebuggerFilter)
   }
 }

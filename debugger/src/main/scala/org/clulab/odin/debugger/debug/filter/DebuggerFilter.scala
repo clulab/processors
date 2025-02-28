@@ -1,5 +1,5 @@
 package org.clulab.odin.debugger.debug.filter
 
-trait Filter[ArgumentType] {
+trait DebuggerFilter[ArgumentType] {
   def apply(argument: ArgumentType): Boolean
 }

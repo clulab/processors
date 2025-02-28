@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.debug
+package org.clulab.odin.debugger.debug.context
 
 import org.clulab.odin.impl.{Extractor, TokenPattern}
 import org.clulab.processors.{Document, Sentence}

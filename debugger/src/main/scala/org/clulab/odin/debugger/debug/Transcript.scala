@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.utils
+package org.clulab.odin.debugger.debug
 
 import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.Finished

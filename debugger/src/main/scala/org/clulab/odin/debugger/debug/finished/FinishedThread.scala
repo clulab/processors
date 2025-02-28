@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger.debug.finished
 
-import org.clulab.odin.debugger.debug.{ImmutableDebuggerContext, ThreadMatch}
+import org.clulab.odin.debugger.debug.ThreadMatch
+import org.clulab.odin.debugger.debug.context.ImmutableDebuggerContext
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 
 class FinishedThread(

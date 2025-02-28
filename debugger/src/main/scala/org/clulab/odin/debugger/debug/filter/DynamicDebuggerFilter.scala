@@ -1,10 +1,10 @@
 package org.clulab.odin.debugger.debug.filter
 
-import org.clulab.odin.debugger.debug.ImmutableDebuggerContext
+import org.clulab.odin.debugger.debug.context.ImmutableDebuggerContext
 import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
 import org.clulab.processors.{Document, Sentence}
 
-class DynamicDebuggerFilter(f: DynamicDebuggerFilter.FilterType) extends Filter[DynamicDebuggerFilter.ArgumentType] {
+class DynamicDebuggerFilter(f: DynamicDebuggerFilter.FilterType) extends DebuggerFilter[DynamicDebuggerFilter.ArgumentType] {
 
   def apply(debuggerContext: ImmutableDebuggerContext): Boolean = f(debuggerContext)
 

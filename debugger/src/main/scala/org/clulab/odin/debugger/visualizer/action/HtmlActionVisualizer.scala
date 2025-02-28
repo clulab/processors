@@ -1,8 +1,9 @@
 package org.clulab.odin.debugger.visualizer.action
 
 import org.clulab.odin.Mention
+import org.clulab.odin.debugger.debug.Transcript
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedLocalAction}
-import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
+import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import scalatags.Text.all._

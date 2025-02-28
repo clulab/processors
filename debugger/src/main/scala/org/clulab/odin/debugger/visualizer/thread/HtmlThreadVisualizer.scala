@@ -1,8 +1,9 @@
 package org.clulab.odin.debugger.visualizer.thread
 
+import org.clulab.odin.debugger.debug.Transcript
 import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.FinishedThread
-import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
+import org.clulab.odin.debugger.utils.EqualityByIdentity
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.ThompsonVM.SingleThread

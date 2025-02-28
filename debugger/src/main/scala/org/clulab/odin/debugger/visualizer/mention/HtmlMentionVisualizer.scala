@@ -1,9 +1,8 @@
 package org.clulab.odin.debugger.visualizer.mention
 
 import org.clulab.odin.Mention
-import org.clulab.odin.debugger.debug.MentionMatch
+import org.clulab.odin.debugger.debug.{MentionMatch, Transcript}
 import org.clulab.odin.debugger.debug.finished.FinishedMention
-import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.debugger.visualization.HtmlVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import scalatags.Text.all._

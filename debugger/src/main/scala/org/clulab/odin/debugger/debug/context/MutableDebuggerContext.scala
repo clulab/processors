@@ -1,8 +1,9 @@
-package org.clulab.odin.debugger.debug
+package org.clulab.odin.debugger.debug.context
 
 import org.clulab.odin.Mention
 import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
-import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.debug.finished._
+import org.clulab.odin.debugger.debug.{MentionMatch, ThreadMatch}
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}

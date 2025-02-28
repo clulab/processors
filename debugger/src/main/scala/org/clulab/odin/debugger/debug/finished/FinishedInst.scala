@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.debug.finished
 
-import org.clulab.odin.debugger.debug.ImmutableDebuggerContext
+import org.clulab.odin.debugger.debug.context.ImmutableDebuggerContext
 import org.clulab.odin.impl.Inst
 
 class FinishedInst(

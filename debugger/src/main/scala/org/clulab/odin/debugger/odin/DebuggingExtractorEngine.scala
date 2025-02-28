@@ -1,9 +1,9 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.debug.Transcript
 import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, StaticDebuggerFilter}
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
-import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl._
 import org.clulab.odin.{Action, ExtractorEngine, Mention, State}
 import org.clulab.processors.Document

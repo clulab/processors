@@ -122,9 +122,9 @@ object DebuggingOdinStarterApp extends App {
   assert(mentions.length == debuggingMentions.length)
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
-      // Filters can also be applied afterward.
+      // Filters can also be applied afterward or added during inspection.
       .filter(staticDebuggerFilter)
       .filter(dynamicDebuggerFilter)
-      .inspectStaticAsHtml("../debug-static.html", verbose = true)
-      .inspectDynamicAsHtml("../debug-dynamic.html", verbose = true)
+      .inspectStaticAsHtml("../debug-static.html", verbose = false) // filter = StaticInspectorFilter.verbose
+      .inspectDynamicAsHtml("../debug-dynamic.html", verbose = false) // filter = StaticInspectorFilter.concise
 }

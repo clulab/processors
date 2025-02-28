@@ -2,7 +2,7 @@ package org.clulab.odin.debugger.debug.filter
 
 import org.clulab.odin.impl.Extractor
 
-class StaticDebuggerFilter(f: StaticDebuggerFilter.FilterType) extends Filter[StaticDebuggerFilter.ArgumentType] {
+class StaticDebuggerFilter(f: StaticDebuggerFilter.FilterType) extends DebuggerFilter[StaticDebuggerFilter.ArgumentType] {
 
   def apply(extractor: Extractor): Boolean = f(extractor)
 
