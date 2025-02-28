@@ -12,5 +12,5 @@ class FinishedLocalAction(
 class FinishedGlobalAction(
   debuggerContext: ImmutableDebuggerContext,
   val inMentions: Seq[Mention],
-  val outMentions: Seq[Mention],
+  val outMentions: Seq[Mention]
 ) extends Finished(debuggerContext)

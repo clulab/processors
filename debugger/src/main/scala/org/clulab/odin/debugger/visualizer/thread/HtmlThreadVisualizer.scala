@@ -61,7 +61,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
     val sentenceFilter = DynamicDebuggerFilter.sentenceFilter(sentence)
     val sentenceTranscript = transcript.filter(sentenceFilter)
     val words = sentence.words
-    val sortedFinishedThreads = sortFinishedThreads(sentenceTranscript.values)
+    val sortedFinishedThreads = sortFinishedThreads(sentenceTranscript.values.toSeq)
     val rows = sortedFinishedThreads.zipWithIndex.map { case (finishedThread, index) =>
       val singleThreads = loop(finishedThread.thread, List.empty)
       val byTok = singleThreads.groupBy(_.tok)

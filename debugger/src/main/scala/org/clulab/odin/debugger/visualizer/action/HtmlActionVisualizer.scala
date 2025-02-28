@@ -69,20 +69,20 @@ class HtmlActionVisualizer extends ActionVisualizer with HtmlVisualizing {
   override def visualizeLocal(transcript: Transcript[FinishedLocalAction]): HtmlVisualization = {
     val inMentions = transcript.values.flatMap { finishedLocalAction =>
       finishedLocalAction.inMentions
-    }
+    }.toSeq
     val outMentions = transcript.values.flatMap { finishedLocalAction =>
       finishedLocalAction.outMentions
-    }
+    }.toSeq
      visualize(inMentions, outMentions)
   }
 
   override def visualizeGlobal(transcript: Transcript[FinishedGlobalAction]): HtmlVisualization = {
     val inMentions = transcript.values.flatMap { finishedGlobalAction =>
       finishedGlobalAction.inMentions
-    }
+    }.toSeq
     val outMentions = transcript.values.flatMap { finishedGlobalAction =>
       finishedGlobalAction.outMentions
-    }
+    }.toSeq
     visualize(inMentions, outMentions)
   }
 }

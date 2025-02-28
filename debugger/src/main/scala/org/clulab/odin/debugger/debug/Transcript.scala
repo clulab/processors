@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 class Transcript[T <: Finished](val values: mutable.Buffer[T]) {
 
-  def clear: Unit = values.clear
+  def clear: Unit = values.clear()
 
   def append(value: T): Unit = values += value
 
@@ -23,7 +23,7 @@ class Transcript[T <: Finished](val values: mutable.Buffer[T]) {
     new Transcript(newValues)
   }
 
-  def map[A](f: T => A): Seq[A] = values.map(f)
+  def map[A](f: T => A): mutable.Buffer[A] = values.map(f)
 }
 
 object Transcript {

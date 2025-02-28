@@ -437,7 +437,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       // Do not apply cross-sentence rule's action to anchor and neighbor
       // This does not need to be stored
       val ruleTextOpt = rule.textOpt.map { text =>
-        val map = Map(
+        val map: JMap[String, Any] = Map(
           "name" -> ruleName,
           "label" -> labels.asJava,
           "type" -> "token",
@@ -465,8 +465,8 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
       leftWindow = lw,
       // the maximum number of sentences to look ahead for pattern2
       rightWindow = rw,
-      anchorPattern = mkTokenExtractor(rolesWithRules.head._2), // TODO, this will have the wrong ruleOpt
-      neighborPattern = mkTokenExtractor(rolesWithRules.last._2), // TODO, this will have the wrong ruleOpt
+      anchorPattern = mkTokenExtractor(rolesWithRules.head._2),
+      neighborPattern = mkTokenExtractor(rolesWithRules.last._2),
       anchorRole = rolesWithRules.head._1,
       neighborRole = rolesWithRules.last._1,
       rule.textOpt

@@ -31,7 +31,7 @@ class HtmlMentionVisualizer extends MentionVisualizer with HtmlVisualizing {
       ),
       tr(
         th("Rule"), th("Label"), th("Type"), th("Text"),
-        th("Rule"), th("Label"), th("Type"), th("Text"),
+        th("Rule"), th("Label"), th("Type"), th("Text")
       )
     )
 
@@ -57,7 +57,7 @@ class HtmlMentionVisualizer extends MentionVisualizer with HtmlVisualizing {
         mkTds(flatFinishedMention.stateMention),
         td(flatFinishedMention.mentionMatch.reason)
       )
-    }
+    }.toSeq
     val tableFragment = table(`class` := bordered)(
       topRows,
       botRows
