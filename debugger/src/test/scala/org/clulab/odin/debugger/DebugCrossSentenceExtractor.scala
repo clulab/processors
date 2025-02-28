@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.ExtractorEngine
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.impl.{CrossSentenceExtractor, OdinConfig}
 import org.clulab.processors.clu.CluProcessor
@@ -26,23 +27,23 @@ class DebugCrossSentenceExtractor extends DebugTest {
   val badDebuggingExtractorEngine = DebuggingExtractorEngine(badExtractorEngine, active = true, verbose = false)
   val badMentions = badDebuggingExtractorEngine.extractFrom(document)
   val badDebuggingExtractor = badDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[CrossSentenceExtractor]
+  val badDynamicDebuggerFilter = DynamicDebuggerFilter.crossSentenceExtractorFilter(badDebuggingExtractor).sentencesFilter(sentences)
 
   val goodRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/goodMain.yml"))
   val goodExtractorEngine = ExtractorEngine(goodRules, ruleDir = Some(resourceDir))
   val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
   val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[CrossSentenceExtractor]
+  val goodDynamicDebuggerFilter = DynamicDebuggerFilter.crossSentenceExtractorFilter(goodDebuggingExtractor).sentencesFilter(sentences)
 
   behavior of "debugger"
 
   it should "find problems with a CrossSentenceExtractor" in {
     Inspector(badDebuggingExtractorEngine)
-        .inspectSentences(sentences)
-        .inspectCrossSentenceExtractor(badDebuggingExtractor)
+        .filter(badDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-crossSentenceExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
-        .inspectSentences(sentences)
-        .inspectCrossSentenceExtractor(goodDebuggingExtractor)
+        .filter(goodDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-crossSentenceExtractor-good.html")
 
     badMentions.length should be (2)

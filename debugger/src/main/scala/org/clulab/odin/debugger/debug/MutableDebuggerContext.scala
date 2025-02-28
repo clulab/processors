@@ -1,25 +1,26 @@
 package org.clulab.odin.debugger.debug
 
 import org.clulab.odin.Mention
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.impl.ThompsonVM.SingleThread
 import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 
-class MutableDebuggerContext(
-  protected var depth: Int = 0,
+class MutableDebuggerContext(filter: DynamicDebuggerFilter) {
+  protected var depth: Int = 0
   // TODO: Add ExtractorEngine to this, because there may be multiple.
-  protected var documents: List[Document] = List.empty,
-  protected var loops: List[Int] = List.empty,
-  protected var extractors: List[Extractor] = List.empty,
-  protected var tokenPatterns: List[TokenPattern] = List.empty,
-  protected var sentenceIndexes: List[Int] = List.empty,
-  protected var sentences: List[Sentence] = List.empty,
-  protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
-  protected var toks: List[Int] = List.empty, // The current token index
+  protected var documents: List[Document] = List.empty
+  protected var loops: List[Int] = List.empty
+  protected var extractors: List[Extractor] = List.empty
+  protected var tokenPatterns: List[TokenPattern] = List.empty
+  protected var sentenceIndexes: List[Int] = List.empty
+  protected var sentences: List[Sentence] = List.empty
+  protected var starts: List[Int] = List.empty // Where in the sentence we are starting.
+  protected var toks: List[Int] = List.empty // The current token index
   protected var tokenIntervals: List[Interval] = List.empty
-) {
+
   def getDepth: Int = depth - 1
 
   def setValue[T](list: List[T], value: T): List[T] = {
@@ -69,6 +70,9 @@ class MutableDebuggerContext(
   def getDocumentOpt: Option[Document] = getValueOpt(documents)
   def resetDocument(): Unit = documents = resetValue(documents)
   def withDocument[ResultType](document: Document)(block: => ResultType): ResultType = {
+    // Note that we can only filter at the very end.  At this stage, neither the
+    // Extractor nor Sentence is defined in the context, so the context recordkeeping
+    // would not be performed.
     beforeDuringAfter(setDocument(document), block, resetDocument())
   }
 
@@ -129,24 +133,47 @@ class MutableDebuggerContext(
     beforeDuringAfter(setTokenInterval(tokenInterval), block, resetTokenInterval())
   }
 
-  def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
-    new FinishedInst(newStaticDebuggerContext(tok), inst, matches)
+  def setInstMatches(matches: Boolean, tok: Int, inst: Inst): Option[FinishedInst] = {
+    val staticDebuggerContext = newStaticDebuggerContext(tok)
+
+    // Here the filter is used, because it decides whether Finisheds are added to the Transcripts.
+    if (filter(staticDebuggerContext))
+      Some(new FinishedInst(staticDebuggerContext, inst, matches))
+    else None
   }
 
-  def setThreadMatches(thread: SingleThread, threadMatch: ThreadMatch): FinishedThread = {
-    new FinishedThread(newStaticDebuggerContext(), thread, threadMatch)
+  def setThreadMatches(thread: SingleThread, threadMatch: ThreadMatch): Option[FinishedThread] = {
+    val staticDebuggerContext = newStaticDebuggerContext()
+
+    if (filter(staticDebuggerContext))
+      Some(new FinishedThread(newStaticDebuggerContext(), thread, threadMatch))
+    else None
   }
 
-  def setMentionMatches(mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch]): FinishedMention = {
-    new FinishedMention(newStaticDebuggerContext(), mention, stateMentions, mentionMatches)
+  def setMentionMatches(mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch]): Option[FinishedMention] = {
+    val staticDebuggerContext = newStaticDebuggerContext()
+
+    if (filter(staticDebuggerContext))
+      Some(new FinishedMention(newStaticDebuggerContext(), mention, stateMentions, mentionMatches))
+    else None
   }
 
-  def setLocalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedLocalAction = {
-    new FinishedLocalAction(newStaticDebuggerContext(), inMentions, outMentions)
+  def setLocalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): Option[FinishedLocalAction] = {
+    val staticDebuggerContext = newStaticDebuggerContext()
+
+    if (filter(staticDebuggerContext))
+      Some(new FinishedLocalAction(newStaticDebuggerContext(), inMentions, outMentions))
+    else None
   }
 
-  def setGlobalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): FinishedGlobalAction = {
-    new FinishedGlobalAction(newStaticDebuggerContext(), inMentions, outMentions)
+  def setGlobalActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention]): Option[FinishedGlobalAction] = {
+    val staticDebuggerContext = newStaticDebuggerContext()
+
+    // Do not filter the global actions unless we are very careful about the filter.
+    // It has only the document and the loop.
+//    if (filter(staticDebuggerContext))
+      Some(new FinishedGlobalAction(newStaticDebuggerContext(), inMentions, outMentions))
+//    else None
   }
 }
 

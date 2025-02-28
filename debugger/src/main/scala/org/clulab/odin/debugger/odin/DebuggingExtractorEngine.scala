@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
-import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, StaticDebuggerFilter}
+import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, StaticDebuggerFilter}
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl._
@@ -37,7 +37,7 @@ object InnerDebuggingExtractorEngine {
 class DebuggingExtractorEngine protected (
   extractors: Vector[Extractor],
   globalAction: Action,
-  val dynamidDebuggerFilter: DynamicDebuggerFilter,
+  val dynamicDebuggerFilter: DynamicDebuggerFilter,
   val staticDebuggerFilter: StaticDebuggerFilter,
   active: Boolean,
   verbose: Boolean
@@ -57,7 +57,7 @@ class DebuggingExtractorEngine protected (
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {
-    val debugger = new Debugger(active, verbose)
+    val debugger = new Debugger(dynamicDebuggerFilter, active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(doc)
 
@@ -66,7 +66,7 @@ class DebuggingExtractorEngine protected (
   }
 
   override def extractFrom(document: Document, initialState: State): Seq[Mention] = {
-    val debugger = new Debugger(active, verbose)
+    val debugger = new Debugger(dynamicDebuggerFilter, active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractFrom(document, initialState)
 
@@ -75,7 +75,7 @@ class DebuggingExtractorEngine protected (
   }
 
   override def extractByType[M <: Mention : ClassTag](document: Document, initialState: State): Seq[M] = {
-    val debugger = new Debugger(active, verbose)
+    val debugger = new Debugger(dynamicDebuggerFilter, active, verbose)
     val inner = InnerDebuggingExtractorEngine(debugger, this)
     val result = inner.extractByType[M](document, initialState)
 

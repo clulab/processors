@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.apps
 
 import org.clulab.odin.debugger.Inspector
-import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, StaticDebuggerFilter}
+import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, StaticDebuggerFilter}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
@@ -85,7 +85,7 @@ object DebuggingOdinStarterApp extends App {
   }
 
   {
-    // Just for kicks, print all the rules and extractors being used.
+    // To investigate the situation, print all the rules and extractors being used.
     val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine)
     val textRuleVisualizer = new TextRuleVisualizer()
     val textExtractorVisualizer = new TextExtractorVisualizer()
@@ -107,7 +107,7 @@ object DebuggingOdinStarterApp extends App {
   // Track down the sentence that isn't working.
   val sentence = document.sentences.head
 
-  // Make the filters.
+  // Make the filters, this time in advance.
   val dynamicDebuggerFilter = DynamicDebuggerFilter.extractorFilter(extractor).sentenceFilter(sentence)
   val staticDebuggerFilter = StaticDebuggerFilter.extractorFilter(extractor)
 
@@ -122,6 +122,9 @@ object DebuggingOdinStarterApp extends App {
   assert(mentions.length == debuggingMentions.length)
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
+      // Filters can also be applied afterward.
+      .filter(staticDebuggerFilter)
+      .filter(dynamicDebuggerFilter)
       .inspectStaticAsHtml("../debug-static.html", verbose = true)
       .inspectDynamicAsHtml("../debug-dynamic.html", verbose = true)
 }

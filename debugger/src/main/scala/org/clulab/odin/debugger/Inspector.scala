@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
-import org.clulab.odin.debugger.debug.{DynamicDebuggerFilter, ImmutableDebuggerContext, StaticDebuggerFilter}
+import org.clulab.odin.debugger.debug.filter.{DynamicDebuggerFilter, StaticDebuggerFilter}
+import org.clulab.odin.debugger.debug.finished.{Finished, FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualizer.action.HtmlActionVisualizer
@@ -12,7 +12,7 @@ import org.clulab.odin.debugger.visualizer.mention.HtmlMentionVisualizer
 import org.clulab.odin.debugger.visualizer.rule.HtmlRuleVisualizer
 import org.clulab.odin.debugger.visualizer.sentence.HtmlSentenceVisualizer
 import org.clulab.odin.debugger.visualizer.thread.HtmlThreadVisualizer
-import org.clulab.odin.impl.{CrossSentenceExtractor, Extractor, GraphExtractor, TokenExtractor}
+import org.clulab.odin.impl.Extractor
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.utils.FileUtils
 import scalatags.Text.all._
@@ -49,77 +49,24 @@ class Inspector(
     )
   }
 
-  // TODO: Instead, have something return the approprate filter to use.
-  // It should be usable for the debugger as well.
-  def inspectTokenExtractor(extractor: TokenExtractor): Inspector = {
-    inspectExtractor(extractor)
-  }
+  def filter(f: StaticDebuggerFilter): Inspector = {
+    val newExtractors = extractors.filter(f(_))
 
-  def inspectGraphExtractor(extractor: GraphExtractor): Inspector = {
-    inspectExtractor(extractor)
-  }
-
-  def inspectCrossSentenceExtractor(extractor: CrossSentenceExtractor): Inspector = {
-    val relatedExtractors = Seq(extractor, extractor.anchorPattern, extractor.neighborPattern)
-    val f = (debuggerContext: ImmutableDebuggerContext) => {
-      debuggerContext.extractorOpt.isDefined &&
-      relatedExtractors.exists { relatedExtractor =>
-        relatedExtractor.eq(debuggerContext.extractor)
-      }
-    }
-
-    filter(DynamicDebuggerFilter(f))
-  }
-
-  def inspectExtractor(extractor: Extractor): Inspector = {
-    filter(DynamicDebuggerFilter.extractorFilter(extractor))
-  }
-
-  def inspectSentence(sentence: Sentence): Inspector = {
-    filter(DynamicDebuggerFilter.sentenceFilter(sentence))
-  }
-
-  def inspectSentences(sentences: Seq[Sentence]): Inspector = {
-    filter(DynamicDebuggerFilter.sentencesFilter(sentences))
-  }
-
-  def filterInstTranscript(f: DynamicDebuggerFilter): Transcript[FinishedInst] = {
-    val newInstTranscript = instTranscript.filter(f)
-
-    newInstTranscript
-  }
-
-  def filterThreadTranscript(f: DynamicDebuggerFilter): Transcript[FinishedThread] = {
-    val newThreadTranscript = threadTranscript.filter(f)
-
-    newThreadTranscript
-  }
-
-  def filterLocalActionTranscript(f: DynamicDebuggerFilter): Transcript[FinishedLocalAction] = {
-    val newLocalActionTranscript = localActionTranscript.filter(f)
-
-    newLocalActionTranscript
-  }
-
-  def filterMentionTranscript(f: DynamicDebuggerFilter): Transcript[FinishedMention] = {
-    val newMentionTranscript = mentionTranscript.filter(f)
-
-    newMentionTranscript
+    copy(extractors = newExtractors)
   }
 
   def filter(f: DynamicDebuggerFilter): Inspector = {
-    val newInstTranscript = filterInstTranscript(f)
-    val newThreadTranscript = filterThreadTranscript(f)
-    val newLocalActionTranscript = localActionTranscript
-    // val newLocalActionTranscript = filterLocalActionTranscript(f)
-    val newMentionTranscript = mentionTranscript
-//    val newMentionTranscript = filterMentionTranscript(f)
+    val newInstTranscript = instTranscript.filter(f)
+    val newThreadTranscript = threadTranscript.filter(f)
+    val newLocalActionTranscript = localActionTranscript.filter(f)
+    val newGlobalActionTranscript = globalActionTranscript.filter(f)
+    val newMentionTranscript = mentionTranscript.filter(f)
 
-    // TODO
     copy(
       instTranscript = newInstTranscript,
       threadTranscript = newThreadTranscript,
       localActionTranscript = newLocalActionTranscript,
+      globalActionTranscript = newGlobalActionTranscript,
       mentionTranscript = newMentionTranscript
     )
   }
@@ -141,7 +88,7 @@ class Inspector(
     htmlFragment
   }
 
-  def inspectStaticAsHtml(fileName: String, verbose: Boolean = false): Inspector = {
+  def inspectStaticAsHtml(fileName: String, filter: StaticDebuggerFilter = StaticDebuggerFilter.trueFilter, verbose: Boolean = false): Inspector = {
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
     val mermaidExtractorVisualizer = new MermaidExtractorVisualizer()
@@ -238,7 +185,7 @@ class Inspector(
     equalityExtractors
   }
 
-  def inspectDynamicAsHtml(fileName: String, verbose: Boolean = false): Inspector = {
+  def inspectDynamicAsHtml(fileName: String, filter: DynamicDebuggerFilter = DynamicDebuggerFilter.trueFilter, verbose: Boolean = false): Inspector = {
     val htmlSentenceVisualizer = new HtmlSentenceVisualizer()
     val htmlRuleVisualizer = new HtmlRuleVisualizer()
     val htmlExtractorVisualizer = new HtmlExtractorVisualizer()
@@ -273,6 +220,7 @@ class Inspector(
           val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
           val mentionVisualization = htmlMentionVisualizer.visualize(newMentionTranscript)
 
+          // TODO: What of this is verbose?
           frag(
             h3("Extractor"),
             p(extractor.name),

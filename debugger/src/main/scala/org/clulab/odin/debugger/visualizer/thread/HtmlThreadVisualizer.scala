@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.thread
 
-import org.clulab.odin.debugger.debug.DynamicDebuggerFilter
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.FinishedThread
 import org.clulab.odin.debugger.utils.{EqualityByIdentity, Transcript}
 import org.clulab.odin.debugger.visualization.HtmlVisualization

@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.ExtractorEngine
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.impl.{OdinConfig, TokenExtractor}
 import org.clulab.processors.clu.CluProcessor
@@ -25,23 +26,23 @@ class DebugTokenExtractor extends DebugTest {
   val badDebuggingExtractorEngine = DebuggingExtractorEngine(badExtractorEngine, active = true, verbose = false)
   val badMentions = badDebuggingExtractorEngine.extractFrom(document)
   val badDebuggingExtractor = badDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[TokenExtractor]
+  val badDynamicDebuggerFilter = DynamicDebuggerFilter.tokenExtractorFilter(badDebuggingExtractor).sentenceFilter(sentence)
 
   val goodRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/goodMain.yml"))
   val goodExtractorEngine = ExtractorEngine(goodRules, ruleDir = Some(resourceDir))
   val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
   val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[TokenExtractor]
+  val goodDynamicDebuggerFilter = DynamicDebuggerFilter.tokenExtractorFilter(goodDebuggingExtractor).sentenceFilter(sentence)
 
   behavior of "debugger"
 
   it should "find problems with a TokenExtractor" in {
     Inspector(badDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectTokenExtractor(badDebuggingExtractor)
+        .filter(badDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-tokenExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectTokenExtractor(goodDebuggingExtractor)
+        .filter(goodDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-tokenExtractor-good.html")
 
     badMentions.length should be (0)

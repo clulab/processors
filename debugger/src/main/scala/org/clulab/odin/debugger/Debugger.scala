@@ -1,21 +1,21 @@
 package org.clulab.odin.debugger
 
 import org.clulab.odin.Mention
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
-import org.clulab.odin.debugger.debug.{MutableDebuggerContext, MentionMatch, SourceCode, StackFrame, ThreadMatch}
-import org.clulab.odin.debugger.odin.DebuggingExtractor
+import org.clulab.odin.debugger.debug.{MentionMatch, MutableDebuggerContext, SourceCode, StackFrame, ThreadMatch}
 import org.clulab.odin.debugger.utils.Transcript
 import org.clulab.odin.impl.ThompsonVM.SingleThread
-import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
+import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
 
-class Debugger(var active: Boolean = true, verbose: Boolean = false) {
+class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, verbose: Boolean = false) {
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
-  protected val context = new MutableDebuggerContext()
+  protected val context = new MutableDebuggerContext(filter)
 
   val instTranscript = Transcript[FinishedInst]()
   val threadTranscript = Transcript[FinishedThread]()
@@ -282,7 +282,7 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     val message = mkMessage(context.getDepth)
 
     if (verbose) println(message)
-    instTranscript.append(context.setInstMatches(matches, tok, inst))
+    instTranscript.appendOpt(context.setInstMatches(matches, tok, inst))
   }
 
   protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
@@ -301,7 +301,7 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     val message = mkMessage(context.getDepth) _
 
     if (verbose) println(message)
-    threadTranscript.append(context.setThreadMatches(thread, threadMatch))
+    threadTranscript.appendOpt(context.setThreadMatches(thread, threadMatch))
   }
 
   protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {
@@ -319,7 +319,7 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     val message = mkMessage(context.getDepth) _
 
     if (verbose) println(message)
-    mentionTranscript.append(context.setMentionMatches(mention, stateMentions, mentionMatches))
+    mentionTranscript.appendOpt(context.setMentionMatches(mention, stateMentions, mentionMatches))
   }
 
 
@@ -340,9 +340,9 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
 
     if (verbose) println(message)
     if (isLocal)
-      localActionTranscript.append(context.setLocalActionMatches(inMentions, outMentions))
+      localActionTranscript.appendOpt(context.setLocalActionMatches(inMentions, outMentions))
     else
-      globalActionTranscript.append(context.setGlobalActionMatches(inMentions, outMentions))
+      globalActionTranscript.appendOpt(context.setGlobalActionMatches(inMentions, outMentions))
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {

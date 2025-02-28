@@ -1,6 +1,7 @@
 package org.clulab.odin.debugger.graph
 
 import org.clulab.odin.ExtractorEngine
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
 import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 import org.clulab.odin.debugger.{DebugTest, Inspector}
 import org.clulab.odin.impl.{GraphExtractor, OdinConfig}
@@ -29,24 +30,23 @@ class DebugTriggerMentionGraphExtractor extends DebugTest {
   val badDebuggingExtractorEngine = DebuggingExtractorEngine(badExtractorEngine, active = true, verbose = false)
   val badMentions = badDebuggingExtractorEngine.extractFrom(document)
   val badDebuggingExtractor = badDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[GraphExtractor]
-
+  val badDynamicDebuggerFilter = DynamicDebuggerFilter.graphExtractorFilter(badDebuggingExtractor).sentenceFilter(sentence)
 
   val goodRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/goodMain.yml"))
   val goodExtractorEngine = ExtractorEngine(goodRules, ruleDir = Some(resourceDir))
   val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
   val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[GraphExtractor]
+  val goodDynamicDebuggerFilter = DynamicDebuggerFilter.graphExtractorFilter(goodDebuggingExtractor).sentenceFilter(sentence)
 
   behavior of "debugger"
 
   it should "find problems with a GraphExtractor" in {
     Inspector(badDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectGraphExtractor(badDebuggingExtractor)
+        .filter(badDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-triggerMentionGraphExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
-        .inspectSentence(sentence)
-        .inspectGraphExtractor(goodDebuggingExtractor)
+        .filter(goodDynamicDebuggerFilter)
         .inspectDynamicAsHtml("../debug-dynamic-triggerMentionGraphExtractor-good.html")
 
     badMentions.length should be (3)
