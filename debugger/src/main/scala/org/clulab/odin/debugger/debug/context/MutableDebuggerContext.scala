@@ -143,11 +143,11 @@ class MutableDebuggerContext(filter: DynamicDebuggerFilter) {
     else None
   }
 
-  def setThreadMatches(thread: SingleThread, threadMatch: ThreadMatch): Option[FinishedThread] = {
+  def setThreadMatches(thread: SingleThread, instMatch: Boolean, threadMatch: ThreadMatch): Option[FinishedThread] = {
     val staticDebuggerContext = newStaticDebuggerContext()
 
     if (filter(staticDebuggerContext))
-      Some(new FinishedThread(newStaticDebuggerContext(), thread, threadMatch))
+      Some(new FinishedThread(newStaticDebuggerContext(), thread, instMatch, threadMatch))
     else None
   }
 

@@ -301,7 +301,7 @@ class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, ve
     val message = mkMessage(context.getDepth) _
 
     if (verbose) println(message)
-    threadTranscript.appendOpt(context.setThreadMatches(thread, threadMatch))
+    threadTranscript.appendOpt(context.setThreadMatches(thread, instMatches, threadMatch))
   }
 
   protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {

@@ -125,6 +125,6 @@ object DebuggingOdinStarterApp extends App {
       // Filters can also be applied afterward or added during inspection.
       .filter(staticDebuggerFilter)
       .filter(dynamicDebuggerFilter)
-      .inspectStaticAsHtml("../debug-static.html", verbose = false) // filter = StaticInspectorFilter.verbose
-      .inspectDynamicAsHtml("../debug-dynamic.html", verbose = false) // filter = StaticInspectorFilter.concise
+      .inspectStaticAsHtml("../debug-static.html", verbose = true) // filter = StaticInspectorFilter.verbose
+      .inspectDynamicAsHtml("../debug-dynamic.html", verbose = true) // filter = StaticInspectorFilter.concise
 }

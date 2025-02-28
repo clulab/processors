@@ -73,7 +73,7 @@ class HtmlThreadVisualizer() extends ThreadVisualizer with HtmlVisualizing {
           tokSingleThread.inst.getPosId
         }.mkString(" ")
         val color =
-          if (tok != maxTok || finishedThread.threadMatch.matches) green
+          if (tok != maxTok || finishedThread.instMatch) green
           else red
 
         td(span(`class` := color)(posIds))

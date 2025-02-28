@@ -73,7 +73,7 @@ object DynamicDebuggerFilter {
 
   def documentFilter(document: Document): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.documentOpt.exists(document.eq)
+      debuggerContext.documentOpt.forall(document.eq)
     }
 
     DynamicDebuggerFilter(f)
@@ -81,7 +81,7 @@ object DynamicDebuggerFilter {
 
   def extractorFilter(extractor: Extractor): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.extractorOpt.exists(extractor.eq)
+      debuggerContext.extractorOpt.forall(extractor.eq)
     }
 
     DynamicDebuggerFilter(f)
@@ -89,7 +89,7 @@ object DynamicDebuggerFilter {
 
   def extractorsFilter(outerExtractors: Seq[Extractor]): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.extractorOpt.exists { innerExtractor =>
+      debuggerContext.extractorOpt.forall { innerExtractor =>
         outerExtractors.exists { outerExtractor =>
           outerExtractor.eq(innerExtractor)
         }
@@ -101,7 +101,7 @@ object DynamicDebuggerFilter {
 
   def sentenceFilter(sentence: Sentence): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.sentenceOpt.exists(sentence.eq)
+      debuggerContext.sentenceOpt.forall(sentence.eq)
     }
 
     DynamicDebuggerFilter(f)
@@ -109,7 +109,7 @@ object DynamicDebuggerFilter {
 
   def sentencesFilter(outerSentences: Seq[Sentence]): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.sentenceOpt.exists { innerSentence =>
+      debuggerContext.sentenceOpt.forall { innerSentence =>
         outerSentences.exists { outerSentence =>
           outerSentence.eq(innerSentence)
         }
@@ -121,9 +121,9 @@ object DynamicDebuggerFilter {
 
   def multiFilter(document: Document, sentence: Sentence, extractor: Extractor): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.documentOpt.exists(document.eq) &&
-      debuggerContext.sentenceOpt.exists(sentence.eq) &&
-      debuggerContext.extractorOpt.exists(extractor.eq)
+      debuggerContext.documentOpt.forall(document.eq) &&
+      debuggerContext.sentenceOpt.forall(sentence.eq) &&
+      debuggerContext.extractorOpt.forall(extractor.eq)
     }
 
     DynamicDebuggerFilter(f)
@@ -131,8 +131,8 @@ object DynamicDebuggerFilter {
 
   def startTokFilter(start: Int, tok: Int): DynamicDebuggerFilter = {
     val f = (debuggerContext: ArgumentType) => {
-      debuggerContext.startOpt.contains(start) &&
-      debuggerContext.tokOpt.contains(tok)
+      debuggerContext.startOpt.forall(_ == start) &&
+      debuggerContext.tokOpt.forall(_ == tok)
     }
 
     DynamicDebuggerFilter(f)

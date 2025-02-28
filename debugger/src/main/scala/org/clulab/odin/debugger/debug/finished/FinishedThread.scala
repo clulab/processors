@@ -7,5 +7,6 @@ import org.clulab.odin.impl.ThompsonVM.SingleThread
 class FinishedThread(
   debuggerContext: ImmutableDebuggerContext,
   val thread: SingleThread,
+  val instMatch: Boolean,
   val threadMatch: ThreadMatch
 ) extends Finished(debuggerContext)
