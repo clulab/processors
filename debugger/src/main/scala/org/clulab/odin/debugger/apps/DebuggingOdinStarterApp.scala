@@ -113,7 +113,7 @@ object DebuggingOdinStarterApp extends App {
 
   // Create a debugging extractor engine from the extractor engine already in use.
   val debuggingExtractorEngine = DebuggingExtractorEngine(extractorEngine,
-      dynamicDebuggerFilter = dynamicDebuggerFilter, /*staticDebuggerFilter = staticDebuggerFilter,*/
+      dynamicDebuggerFilter = dynamicDebuggerFilter, staticDebuggerFilter = staticDebuggerFilter,
       active = true, verbose = false)
 
   // Do the same to it as was done before.
@@ -123,7 +123,7 @@ object DebuggingOdinStarterApp extends App {
   // Take a closer look at what happened.
   Inspector(debuggingExtractorEngine)
       // Filters can also be applied afterward or added during inspection.
-      //.filter(staticDebuggerFilter)
+      .filter(staticDebuggerFilter)
       .filter(dynamicDebuggerFilter)
       .inspectStaticAsHtml("../debug-static.html", verbose = true) // filter = StaticInspectorFilter.verbose
       .inspectDynamicAsHtml("../debug-dynamic.html", verbose = true) // filter = StaticInspectorFilter.concise

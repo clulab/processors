@@ -122,6 +122,17 @@ class Inspector(
 
   def conditional(condition: Boolean, fragment: Fragment): Fragment = if (condition) fragment else frag()
 
+  def collapsing(collapser: Fragment, collapsible: Fragment): Fragment = {
+    frag(
+      button(`class` := "collapser")(
+        collapser
+      ),
+      div(`class` := "collapsible")(
+        collapsible
+      )
+    )
+  }
+
   def inspectStaticAsHtml(fileName: String, verbose: Boolean = false): Inspector =
       inspectStaticAsHtml(fileName, if (verbose) StaticInspectorFilter.verbose else StaticInspectorFilter.concise)
 
@@ -135,36 +146,30 @@ class Inspector(
       val htmlExtractorVisualization = htmlExtractorVisualizer.visualize(extractor)
       val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
 
-      frag(
-        button(`class` := "collapser")(
+      collapsing(
+        frag(
           h2("Extractor"),
           p(extractor.name)
         ),
-        div(`class` := "collapsible")(
-          conditional(filter.showRuleView(extractor), frag(
-            button(`class` := "collapser")(
-              h3("Rule View")
-            ),
-            div(`class` := "collapsible")(
+        frag(
+          conditional(filter.showRuleView(extractor),
+            collapsing(
+              h3("Rule View"),
               htmlRuleVisualization.fragment
             )
-          )),
-          conditional(filter.showTextualView(extractor), frag(
-            button(`class` := "collapser")(
-              h3("Textual Extractor View")
-            ),
-            div(`class` := "collapsible")(
+          ),
+          conditional(filter.showTextualView(extractor),
+            collapsing(
+              h3("Textual Extractor View"),
               htmlExtractorVisualization.fragment
             )
-          )),
-          conditional(filter.showGraphicalView(extractor), frag(
-            button(`class` := "collapser")(
-              h3("Graphical Extractor View")
-            ),
-            div(`class` := "collapsible")(
+          ),
+          conditional(filter.showGraphicalView(extractor),
+            collapsing(
+              h3("Graphical Extractor View"),
               graphicalExtractorVisualization.fragment
             )
-          ))
+          )
         )
       )
     }
@@ -252,49 +257,71 @@ class Inspector(
           val actionVisualization = htmlActionVisualizer.visualizeLocal(newLocalActionTranscript)
           val mentionVisualization = htmlMentionVisualizer.visualize(newMentionTranscript)
 
-          frag(
-            button(
-              h3("Extractor"),
+          collapsing(
+            frag(
+              h4("Extractor"),
               p(extractor.name),
             ),
-            conditional(filter.showRuleView(extractor, sentence), frag(
-              h4("Rule View"),
-              htmlRuleVisualization.fragment
-            )),
-            conditional(filter.showTextualView(extractor, sentence), frag(
-              h4("Textual Extractor View"),
-              htmlExtractorVisualization.fragment
-            )),
-            conditional(filter.showInstView(extractor, sentence, newInstTranscript), frag(
-              h4("Inst View"),
-              instVisualization.fragment
-            )),
-            conditional(filter.showThreadView(extractor, sentence, newThreadTranscript), frag(
-              h4("Thread View"),
-              threadVisualization.fragment
-            )),
-            conditional(filter.showMentionView(extractor, sentence, newMentionTranscript), frag(
-              h4("Mention View"),
-              mentionVisualization.fragment
-            )),
-            conditional(filter.showLocalActionView(extractor, sentence, newLocalActionTranscript), frag(
-              h4("Local Action View"),
-              actionVisualization.fragment
-            )),
-            conditional(filter.showGraphicalView(extractor, sentence), frag(
-              h4("Graphical Extractor View"),
-              graphicalExtractorVisualization.fragment
-            ))
+            frag(
+              conditional(filter.showRuleView(extractor, sentence),
+                collapsing(
+                  frag(h5("Rule View")),
+                  htmlRuleVisualization.fragment
+                )
+              ),
+              conditional(filter.showTextualView(extractor, sentence),
+                collapsing(
+                  frag(h5("Textual Extractor View")),
+                  htmlExtractorVisualization.fragment
+                )
+              ),
+              conditional(filter.showInstView(extractor, sentence, newInstTranscript),
+                collapsing(
+                  frag(h5("Inst View")),
+                  instVisualization.fragment
+                )
+              ),
+              conditional(filter.showThreadView(extractor, sentence, newThreadTranscript),
+                collapsing(
+                  frag(h5("Thread View")),
+                  threadVisualization.fragment
+                )
+              ),
+              conditional(filter.showMentionView(extractor, sentence, newMentionTranscript),
+                collapsing(
+                  frag(h5("Mention View")),
+                  mentionVisualization.fragment
+                )
+              ),
+              conditional(filter.showLocalActionView(extractor, sentence, newLocalActionTranscript),
+                collapsing(
+                  h5("Local Action View"),
+                  actionVisualization.fragment
+                )
+              ),
+              conditional(filter.showGraphicalView(extractor, sentence),
+                collapsing(
+                  frag(h5("Graphical Extractor View")),
+                  graphicalExtractorVisualization.fragment
+                )
+              )
+            )
           )
         }
-        val sentenceFragment = frag(
-          h2("Sentence"),
-          p(sentence.getSentenceText),
-          conditional(filter.showParseView(sentence), frag(
-            h3("Parse View"),
-            htmlSentenceVisualization.fragment
-          )),
-          extractorFragments.toSeq
+        val sentenceFragment = collapsing(
+          frag(
+            h3("Sentence"),
+            p(sentence.getSentenceText)
+          ),
+          frag(
+            conditional(filter.showParseView(sentence),
+              collapsing(
+                h4("Parse View"),
+                htmlSentenceVisualization.fragment
+              )
+            ),
+            extractorFragments.toSeq
+          )
         )
 
         sentenceFragment
@@ -313,19 +340,28 @@ class Inspector(
           .getOrElse(
             frag(span(`class` := red)("The document text was not saved when it was parsed, for example, with keepText = true.  Please see the individual sentence texts."))
           )
-      val documentFragment = frag(
-        h1("Document"),
-        p(documentTextFragment),
-        conditional(filter.showGlobalActionView(newGlobalActionTranscript), frag(
-          h2("Global Action View"),
-          actionVisualization.fragment
-        )),
-        sentenceFragments
+      val documentFragment = collapsing(
+        frag(
+          h2("Document"),
+          p(documentTextFragment)
+        ),
+        frag(
+          conditional(filter.showGlobalActionView(newGlobalActionTranscript),
+            collapsing(
+              h3("Global Action View"),
+              actionVisualization.fragment
+            )
+          ),
+          sentenceFragments
+        )
       )
 
       documentFragment
     }
-    val bodyFragment = frag(documentFragments)
+    val bodyFragment = frag(
+      h1("Documents"),
+      documentFragments
+    )
     val htmlPage = mkHtml(bodyFragment).toString
 
     Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>
