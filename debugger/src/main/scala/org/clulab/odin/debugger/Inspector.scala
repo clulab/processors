@@ -28,6 +28,35 @@ class Inspector(
   val globalActionTranscript: Transcript[FinishedGlobalAction],
   val mentionTranscript: Transcript[FinishedMention]
 ) extends HtmlVisualizing {
+  val mermaidScript = script(`type` := "module")("""
+    |import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    |mermaid.initialize({ startOnLoad: true });
+  """.stripMargin)
+  val collapseScript = script(raw("""
+    |var collapsers = document.getElementsByClassName("collapser");
+    |var i;
+    |
+    |for (i = 0; i < collapsers.length; i++) {
+    |  var collapser = collapsers[i];
+    |
+    |  // Set the initial conditions.
+    |  collapser.classList.toggle("active");
+    |  var content = collapser.nextElementSibling;
+    |  content.style.display = "block";
+    |
+    |  // Toggle the conditions.
+    |  collapser.addEventListener("click", function() {
+    |    this.classList.toggle("active");
+    |    var content = this.nextElementSibling;
+    |    if (content.style.display === "block") {
+    |      content.style.display = "none";
+    |    }
+    |    else {
+    |      content.style.display = "block";
+    |    }
+    |  });
+    |}
+    |""".stripMargin))
   val transcripts: Seq[Transcript[_ <: Finished]] = Seq(
     instTranscript,
     threadTranscript,
@@ -80,13 +109,11 @@ class Inspector(
     val htmlFragment = html(
       head(
         style,
-        script(`type` := "module")("""
-          import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-          mermaid.initialize({ startOnLoad: true });
-        """)
+        mermaidScript
       ),
       body(
-        fragment
+        fragment,
+        collapseScript
       )
     )
 
@@ -109,20 +136,36 @@ class Inspector(
       val graphicalExtractorVisualization = mermaidExtractorVisualizer.visualize(extractor)
 
       frag(
-        h2("Extractor"),
-        p(extractor.name),
-        conditional(filter.showRuleView(extractor), frag(
-          h3("Rule View"),
-          htmlRuleVisualization.fragment
-        )),
-        conditional(filter.showTextualView(extractor), frag(
-          h3("Textual Extractor View"),
-          htmlExtractorVisualization.fragment
-        )),
-        conditional(filter.showGraphicalView(extractor), frag(
-          h3("Graphical Extractor View"),
-          graphicalExtractorVisualization.fragment
-        ))
+        button(`class` := "collapser")(
+          h2("Extractor"),
+          p(extractor.name)
+        ),
+        div(`class` := "collapsible")(
+          conditional(filter.showRuleView(extractor), frag(
+            button(`class` := "collapser")(
+              h3("Rule View")
+            ),
+            div(`class` := "collapsible")(
+              htmlRuleVisualization.fragment
+            )
+          )),
+          conditional(filter.showTextualView(extractor), frag(
+            button(`class` := "collapser")(
+              h3("Textual Extractor View")
+            ),
+            div(`class` := "collapsible")(
+              htmlExtractorVisualization.fragment
+            )
+          )),
+          conditional(filter.showGraphicalView(extractor), frag(
+            button(`class` := "collapser")(
+              h3("Graphical Extractor View")
+            ),
+            div(`class` := "collapsible")(
+              graphicalExtractorVisualization.fragment
+            )
+          ))
+        )
       )
     }
     val bodyFragment = frag(
@@ -210,8 +253,10 @@ class Inspector(
           val mentionVisualization = htmlMentionVisualizer.visualize(newMentionTranscript)
 
           frag(
-            h3("Extractor"),
-            p(extractor.name),
+            button(
+              h3("Extractor"),
+              p(extractor.name),
+            ),
             conditional(filter.showRuleView(extractor, sentence), frag(
               h4("Rule View"),
               htmlRuleVisualization.fragment

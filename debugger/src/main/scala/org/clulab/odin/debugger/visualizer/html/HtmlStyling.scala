@@ -45,6 +45,35 @@ trait HtmlStyling {
     |  font-size: 8pt;
     |}
     |
+    |.collapser {
+    |  background-color: #999;
+    |  /*color: white;*/
+    |  cursor: pointer;
+    |  padding: 4px;
+    |  margin: 4px;
+    |  width: 100%;
+    |  border: none;
+    |  text-align: left;
+    |  outline: none;
+    |}
+    |
+    |.active, .collapser:hover {
+    |  /*padding: 4px;
+    |  margin: 4px;*/
+    |  background-color: #777;
+    |}
+    |
+    |.active.collapser:hover {
+    |  background-color: #555;
+    |}
+    |
+    |.collapsible {
+    |  /*padding: 0 8px;*/
+    |  margin: 8px;
+    |  display: block;
+    |  overflow: hidden;
+    |  background-color: #f1f1f1;
+    |}
     |""".stripMargin
   )
 }
