@@ -60,4 +60,14 @@ object StaticDebuggerFilter {
 
     StaticDebuggerFilter(f)
   }
+
+  def extractorsFilter(outerExtractors: Seq[Extractor]): StaticDebuggerFilter = {
+    val f = (innerExtractor: Extractor) => {
+      outerExtractors.exists { outerExtractor =>
+        outerExtractor.eq(innerExtractor)
+      }
+    }
+
+    StaticDebuggerFilter(f)
+  }
 }

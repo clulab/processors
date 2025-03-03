@@ -33,21 +33,20 @@ class Inspector(
     |mermaid.initialize({ startOnLoad: true });
   """.stripMargin)
   val collapseScript = script(raw("""
-    |var collapsers = document.getElementsByClassName("collapser");
-    |var i;
+    |const collapsers = document.getElementsByClassName("collapser");
     |
-    |for (i = 0; i < collapsers.length; i++) {
-    |  var collapser = collapsers[i];
+    |for (let i = 0; i < collapsers.length; i++) {
+    |  const collapser = collapsers[i];
     |
     |  // Set the initial conditions.
     |  collapser.classList.toggle("active");
-    |  var content = collapser.nextElementSibling;
+    |  const content = collapser.nextElementSibling;
     |  content.style.display = "block";
     |
     |  // Toggle the conditions.
     |  collapser.addEventListener("click", function() {
     |    this.classList.toggle("active");
-    |    var content = this.nextElementSibling;
+    |    const content = this.nextElementSibling;
     |    if (content.style.display === "block") {
     |      content.style.display = "none";
     |    }
@@ -214,7 +213,7 @@ class Inspector(
       }
     }
 
-    equalityExtractors
+    equalityExtractors.distinct
   }
 
   def inspectDynamicAsHtml(fileName: String, verbose: Boolean = false): Inspector =
