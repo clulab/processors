@@ -36,15 +36,7 @@ class MutableDebuggerContext(filter: DynamicDebuggerFilter) {
     list.tail
   }
 
-  def newStaticDebuggerContext(tok: Int): ImmutableDebuggerContext = {
-    newStaticDebuggerContext(setValue(toks, tok))
-  }
-
-  def newStaticDebuggerContext(): ImmutableDebuggerContext = {
-    newStaticDebuggerContext(toks)
-  }
-
-  def newStaticDebuggerContext(toks: List[Int]): ImmutableDebuggerContext = ImmutableDebuggerContext(
+  def newStaticDebuggerContext(): ImmutableDebuggerContext = ImmutableDebuggerContext(
     depth,
     documents,
     loops,
@@ -135,12 +127,18 @@ class MutableDebuggerContext(filter: DynamicDebuggerFilter) {
   }
 
   def setInstMatches(matches: Boolean, tok: Int, inst: Inst): Option[FinishedInst] = {
-    val staticDebuggerContext = newStaticDebuggerContext(tok)
+    beforeDuringAfter(
+      setTok(tok),
+      {
+        val staticDebuggerContext = newStaticDebuggerContext()
 
-    // Here the filter is used, because it decides whether Finisheds are added to the Transcripts.
-    if (filter(staticDebuggerContext))
-      Some(new FinishedInst(staticDebuggerContext, inst, matches))
-    else None
+        // Here the filter is used, because it decides whether Finisheds are added to the Transcripts.
+        if (filter(staticDebuggerContext))
+          Some(new FinishedInst(staticDebuggerContext, inst, matches))
+        else None
+      },
+      resetTok()
+    )
   }
 
   def setThreadMatches(thread: SingleThread, instMatch: Boolean, threadMatch: ThreadMatch): Option[FinishedThread] = {

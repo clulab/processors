@@ -288,17 +288,17 @@ class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, ve
   protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
     innerDebugInstMatches(instMatches, thread.tok, thread.inst)(stackFrame)
 
-    def mkMessage(depth: Int)(side: String): String = {
+    def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
       val what = "threadMatches"
       val where = stackFrame.sourceCode.toString
       val extractorString = "[]"
-      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
+      val message = s"""${tabs}$what $where$extractorString(...)"""
 
       message
     }
 
-    val message = mkMessage(context.getDepth) _
+    val message = mkMessage(context.getDepth)
 
     if (verbose) println(message)
     threadTranscript.appendOpt(context.setThreadMatches(thread, instMatches, threadMatch))
@@ -306,17 +306,17 @@ class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, ve
 
   protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {
 
-    def mkMessage(depth: Int)(side: String): String = {
+    def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
       val what = "mentionMatches"
       val where = stackFrame.sourceCode.toString
       val extractorString = "[]"
-      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
+      val message = s"""${tabs}$what $where$extractorString(...)"""
 
       message
     }
 
-    val message = mkMessage(context.getDepth) _
+    val message = mkMessage(context.getDepth)
 
     if (verbose) println(message)
     mentionTranscript.appendOpt(context.setMentionMatches(mention, stateMentions, mentionMatches))
@@ -326,17 +326,17 @@ class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, ve
   protected def innerDebugActionMatches[StackFrameType <: StackFrame](inMentions: Seq[Mention], outMentions: Seq[Mention])(stackFrame: StackFrameType): Unit = {
     val isLocal = context.getExtractorOpt.nonEmpty
 
-    def mkMessage(depth: Int)(side: String): String = {
+    def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
       val what = if (isLocal) "localActionMatches" else "globalActionMatches"
       val where = stackFrame.sourceCode.toString
       val extractorString = "[]"
-      val message = s"""${tabs}${side} $what $where$extractorString(...)"""
+      val message = s"""${tabs}$what $where$extractorString(...)"""
 
       message
     }
 
-    val message = mkMessage(context.getDepth) _
+    val message = mkMessage(context.getDepth)
 
     if (verbose) println(message)
     if (isLocal)
