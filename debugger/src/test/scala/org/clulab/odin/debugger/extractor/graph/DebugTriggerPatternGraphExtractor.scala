@@ -44,9 +44,11 @@ class DebugTriggerPatternGraphExtractor extends DebugTest {
   it should "find problems with a GraphExtractor" in {
     Inspector(badDebuggingExtractorEngine)
         .filter(badDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-triggerPatternGraphExtractor-bad.html")
         .inspectDynamicAsHtml("../debug-dynamic-triggerPatternGraphExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .filter(goodDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-triggerPatternGraphExtractor-good.html")
         .inspectDynamicAsHtml("../debug-dynamic-triggerPatternGraphExtractor-good.html")
 
     badMentions.length should be (2)

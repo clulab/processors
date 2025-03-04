@@ -32,7 +32,7 @@ class DebugCrossSentenceExtractor extends DebugTest {
 
   val goodRules = FileUtils.getTextFromFile(new File(resourceDir, s"$baseResourceName/goodMain.yml"))
   val goodExtractorEngine = ExtractorEngine(goodRules, ruleDir = Some(resourceDir))
-  val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = false)
+  val goodDebuggingExtractorEngine = DebuggingExtractorEngine(goodExtractorEngine, active = true, verbose = true)
   val goodMentions = goodDebuggingExtractorEngine.extractFrom(document)
   val goodDebuggingExtractor = goodDebuggingExtractorEngine.getExtractorByName(ruleName).asInstanceOf[CrossSentenceExtractor]
   val goodDynamicDebuggerFilter = DynamicDebuggerFilter.crossSentenceExtractorFilter(goodDebuggingExtractor).sentencesFilter(sentences)
@@ -42,9 +42,11 @@ class DebugCrossSentenceExtractor extends DebugTest {
   it should "find problems with a CrossSentenceExtractor" in {
     Inspector(badDebuggingExtractorEngine)
         .filter(badDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-crossSentenceExtractor-bad.html")
         .inspectDynamicAsHtml("../debug-dynamic-crossSentenceExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .filter(goodDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-crossSentenceExtractor-good.html")
         .inspectDynamicAsHtml("../debug-dynamic-crossSentenceExtractor-good.html")
 
     badMentions.length should be (2)

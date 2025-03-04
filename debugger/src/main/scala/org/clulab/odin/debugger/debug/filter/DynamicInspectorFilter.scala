@@ -25,8 +25,5 @@ object DynamicInspectorFilter {
     override def showRuleView(extractor: Extractor, sentence: Sentence): Boolean = false
     override def showTextualView(extractor: Extractor, sentence: Sentence): Boolean = false
     override def showGraphicalView(extractor: Extractor, sentence: Sentence): Boolean = false
-
-    override def showLocalActionView(extractor: Extractor, sentence: Sentence, transcript: Transcript[FinishedLocalAction]): Boolean = false
-    override def showGlobalActionView(transcript: Transcript[FinishedGlobalAction]): Boolean = false
   }
 }

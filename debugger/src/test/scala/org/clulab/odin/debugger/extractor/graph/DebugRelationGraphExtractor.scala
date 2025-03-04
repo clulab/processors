@@ -44,9 +44,11 @@ class DebugRelationGraphExtractor extends DebugTest {
   it should "find problems with a GraphExtractor" in {
     Inspector(badDebuggingExtractorEngine)
         .filter(badDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-relationGraphExtractor-bad.html")
         .inspectDynamicAsHtml("../debug-dynamic-relationGraphExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .filter(goodDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-relationGraphExtractor-good.html")
         .inspectDynamicAsHtml("../debug-dynamic-relationGraphExtractor-good.html")
 
     badMentions.length should be (3)

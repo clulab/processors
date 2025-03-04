@@ -41,9 +41,11 @@ class DebugTokenExtractor extends DebugTest {
   it should "find problems with a TokenExtractor" in {
     Inspector(badDebuggingExtractorEngine)
         .filter(badDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-tokenExtractor-bad.html")
         .inspectDynamicAsHtml("../debug-dynamic-tokenExtractor-bad.html")
     Inspector(goodDebuggingExtractorEngine)
         .filter(goodDynamicDebuggerFilter)
+        .inspectStaticAsHtml("../debug-static-tokenExtractor-good.html")
         .inspectDynamicAsHtml("../debug-dynamic-tokenExtractor-good.html")
 
     badMentions.length should be (0)
