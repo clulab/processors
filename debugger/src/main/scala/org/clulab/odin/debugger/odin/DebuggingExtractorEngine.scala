@@ -42,18 +42,18 @@ class DebuggingExtractorEngine protected (
   active: Boolean,
   verbose: Boolean
 ) extends ExtractorEngine(extractors, globalAction) {
-  val finishedInsts  = Transcript[FinishedInst]()
-  val finishedThreads = Transcript[FinishedThread]()
-  val finishedLocalActions = Transcript[FinishedLocalAction]()
-  val finishedGlobalActions = Transcript[FinishedGlobalAction]()
-  val finishedMentions = Transcript[FinishedMention]()
+  val instTranscript  = Transcript[FinishedInst]()
+  val threadTranscript = Transcript[FinishedThread]()
+  val localActionTranscript = Transcript[FinishedLocalAction]()
+  val globalActionTranscript = Transcript[FinishedGlobalAction]()
+  val mentionTranscript = Transcript[FinishedMention]()
 
   def finish(debugger: Debugger): Unit = synchronized {
-    finishedInsts.appendAll(debugger.instTranscript)
-    finishedThreads.appendAll(debugger.threadTranscript)
-    finishedLocalActions.appendAll(debugger.localActionTranscript)
-    finishedGlobalActions.appendAll(debugger.globalActionTranscript)
-    finishedMentions.appendAll(debugger.mentionTranscript)
+    instTranscript.appendAll(debugger.instTranscript)
+    threadTranscript.appendAll(debugger.threadTranscript)
+    localActionTranscript.appendAll(debugger.localActionTranscript)
+    globalActionTranscript.appendAll(debugger.globalActionTranscript)
+    mentionTranscript.appendAll(debugger.mentionTranscript)
   }
 
   override def extractFrom(doc: Document): Seq[Mention] = {

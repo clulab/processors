@@ -375,11 +375,11 @@ object Inspector {
   def apply(debuggingExtractorEngine: DebuggingExtractorEngine): Inspector = {
     val inspector = new Inspector(
       debuggingExtractorEngine.extractors,
-      debuggingExtractorEngine.finishedInsts,
-      debuggingExtractorEngine.finishedThreads,
-      debuggingExtractorEngine.finishedLocalActions,
-      debuggingExtractorEngine.finishedGlobalActions,
-      debuggingExtractorEngine.finishedMentions
+      debuggingExtractorEngine.instTranscript,
+      debuggingExtractorEngine.threadTranscript,
+      debuggingExtractorEngine.localActionTranscript,
+      debuggingExtractorEngine.globalActionTranscript,
+      debuggingExtractorEngine.mentionTranscript
     )
 
     inspector
