@@ -259,7 +259,7 @@ class Inspector(
           collapsing(
             frag(
               h4("Extractor"),
-              p(extractor.name),
+              p(extractor.name)
             ),
             frag(
               conditional(filter.showRuleView(extractor, sentence),
