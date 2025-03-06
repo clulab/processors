@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.debugger.Debugger
-import org.clulab.odin.debugger.debug.MentionMatch
+import org.clulab.odin.debugger.debug.matches.MentionMatch
 import org.clulab.odin.impl.{ArgumentPattern, OdinConfig, TriggerMentionGraphPattern}
 import org.clulab.odin.{EventMention, Mention, State, TextBoundMention, mkTokenInterval}
 import org.clulab.processors.Document

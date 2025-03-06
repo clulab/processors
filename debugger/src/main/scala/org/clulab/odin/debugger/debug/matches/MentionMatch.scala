@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.debug
+package org.clulab.odin.debugger.debug.matches
 
 case class MentionMatch(matches: Boolean, reason: String)
 

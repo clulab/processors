@@ -2,7 +2,7 @@ package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.{Mention, State}
 import org.clulab.odin.debugger.Debugger
-import org.clulab.odin.debugger.debug.MentionMatch
+import org.clulab.odin.debugger.debug.matches.MentionMatch
 import org.clulab.odin.impl.{CrossSentenceExtractor, OdinException, Priority}
 import org.clulab.processors.Document
 

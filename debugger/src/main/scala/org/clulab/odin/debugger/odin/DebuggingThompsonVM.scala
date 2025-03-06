@@ -1,8 +1,8 @@
 package org.clulab.odin.debugger.odin
 
 import org.clulab.odin.State
-import org.clulab.odin.debugger.debug.ThreadMatch
 import org.clulab.odin.debugger.Debugger
+import org.clulab.odin.debugger.debug.matches.ThreadMatch
 import org.clulab.odin.impl.{Done, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split, ThompsonVM}
 import org.clulab.odin.impl.ThompsonVM.{Direction, NamedGroups, NamedMentions, PartialGroups, SingleThread, Thread, ThreadBundle}
 import org.clulab.processors.Document

@@ -1,4 +1,4 @@
-package org.clulab.odin.debugger.debug
+package org.clulab.odin.debugger.debug.matches
 
 case class ThreadMatch(matches: Boolean, reason: String)
 
