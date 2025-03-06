@@ -29,7 +29,7 @@ The version number should match whatever you are using for processors.  Changes 
 
 ## Usage
 
-The debugger is designed in a somewhat aspect-oriented way, attempting to add behavior to Odin without affecting the existing code.  Regular Odin usage involves creating an [ExtractorEngine](TODO) with some rules.  In order to debug, one needs to take that extractor engine and use it to construct a [DebuggingExtractorEngine](TODO), which will take the original one and duplicate it with debugging versions of applicable parts.  With that debugging extractor engine, one should have the program do something very similar to what it does to the original extractor engine.  While that is being done, the debugging version will collect information about program execution that can be used to generate reports (the printfs).  For example, if the original program says
+The debugger is designed in a somewhat aspect-oriented way, attempting to add behavior to Odin without affecting the existing code.  Regular Odin usage involves creating an [ExtractorEngine](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/ExtractorEngine.scala) with some rules.  In order to debug, one needs to take that extractor engine and use it to construct a [DebuggingExtractorEngine](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/odin/DebuggingExtractorEngine.scala), which will take the original one and duplicate it with debugging versions of applicable parts.  With that debugging extractor engine, one should have the program do something very similar to what it does to the original extractor engine.  While that is being done, the debugging version will collect information about program execution that can be used to generate reports (the printfs).  For example, if the original program says
 
 ```scala
 import org.clulab.odin.ExtractorEngine
@@ -75,20 +75,21 @@ import org.clulab.processors.clu.CluProcessor
 There are examples of this strategy in several source files including
 
 * main/apps
-  * [DebuggingOdinStarterApp](TODO)
+  * [DebuggingOdinStarterApp](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/apps/DebuggingOdinStarterApp.scala)
 * test/extractor
-  * [DebugTokenExtractor](TODO)
-  * [DebugCrossSentenceExtractor](TODO)
   * graph
-    * [DebugTriggerPatternGraphExtractor](TODO)
-    * [DebugTriggerMentionGraphExtractor](TODO)
-    * [DebugRelationGraphExtractor](TODO)
+    * [DebugRelationGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugRelationGraphExtractor.scala)
+    * [DebugTriggerMentionGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugTriggerMentionGraphExtractor.scala)
+    * [DebugTriggerPatternGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugTriggerPatternGraphExtractor.scala)
+  * [DebugCrossSentenceExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/DebugCrossSentenceExtractor.scala)
+  * [DebugTokenExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/DebugTokenExtractor.scala)
 
-Instructions above have described the debugger with little d.  There is also a [Debugger](TODO) with big D.  The DebuggingExtractorEngine and other [debugging](TODO) classes talk to it behind the scenes. In order to find out what information the Debugger has collected, one makes use of an [Inspector](TODO), the second major component of the debugger:
+
+Instructions above have described the debugger with little d.  There is also a [Debugger](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Debugger.scala) with big D.  The DebuggingExtractorEngine and other [debugging](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/odin) classes talk to it behind the scenes. In order to find out what information the Debugger has collected, one makes use of an [Inspector](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Inspector.scala), the second major component of the debugger:
 
 * debugger
-  * [Debugger](TODO)
-  * [Inspector](TODO)
+  * [Debugger](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Debugger.scala)
+  * [Inspector](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Inspector.scala)
 
 The Inspector is created with the help of the DebuggingExtractorEngine and can thereafter be used to inspect the operations that the Debugger has noted:
 
@@ -108,42 +109,42 @@ As hinted in the code above, there are two basic kinds of information collected 
 
 * Static views
   * HTML
-    * [Rule View](TODO) - shows in a simple table format a visualization of rules that otherwise usually appear in yaml format.  Studying this view may clear up problems related to indentation, special characters, or formatting of the yaml file and explain unexpected behavior.
-    * [Textual Extractor View](TODO) - shows the data structures of parsed and compiled rules which have been converted into [Extractors](TODO) of several types.  With this information, a somewhat experienced rule writer can verify that a rule is properly understood by Odin and not somehow misunderstood because of an issue with Odin syntax, a typo, a misnamed identifier, etc.  Extractor types are
-      * [TokenExtractor](TODO) for "token" rules,
-      * [GraphExtractor](TODO) for "dependency" rules, and
-      * [CrossSentenceExtractor](TODO) for "cross-sentence" rules.
-    * [Graphical Extractor View](TODO) - turns some of the internal structures of Extractors into a directed graph showing possible states that something called a [Thread](TODO) can be in as an extractor eventually executes.  Key things to notice here are loops and branches related to `*`, `+`, and `|` operations in [TokenPatterns](TODO).  For rules to match, the outermost [Done](TODO) [Inst](TODO) needs to be reached.  [Mermaid](https://mermaid.js.org/) is used to produce the graphic and access to its content delivery network needs to be available when the HTML output is observed in the browser. 
+    * **Rule View** - shows in a simple table format a visualization of rules that otherwise usually appear in yaml format.  Studying this view may clear up problems related to indentation, special characters, or formatting of the yaml file and explain unexpected behavior.
+    * **Textual Extractor View** - shows the data structures of parsed and compiled rules which have been converted into [Extractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala)s of several types.  With this information, a somewhat experienced rule writer can verify that a rule is properly understood by Odin and not somehow misunderstood because of an issue with Odin syntax, a typo, a misnamed identifier, etc.  Extractor types are
+      * [TokenExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala) for "token" rules,
+      * [GraphExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala) for "dependency" rules, and
+      * [CrossSentenceExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala) for "cross-sentence" rules.
+    * **Graphical Extractor View** - turns some of the internal structures of Extractors into a directed graph showing possible states that something called a [Thread](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala) can be in as an extractor eventually executes.  Key things to notice here are loops and branches related to `*`, `+`, and `|` operations in [TokenPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/TokenPattern.scala)s.  For rules to match, the outermost [Done](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala) [Inst](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala) needs to be reached.  [Mermaid](https://mermaid.js.org/) is used to produce the graphic and access to its content delivery network needs to be available when the HTML output is observed in the browser. 
   * Text
-    * [Rule View](TODO) - offers a version of the HTML Rule View that can simply be printed to the console and observed by a human without assistance of a web browser.
-    * [Extractor View](TODO) - as with the HTML version, shows the data structure, but this time in a text-only format.
+    * **Rule View** - offers a version of the HTML Rule View that can simply be printed to the console and observed by a human without assistance of a web browser.
+    * **Extractor View** - as with the HTML version, shows the data structure, but this time in a text-only format.
 
-Next there is the dynamic information that gets collected as extractors process rules against particular sentences, resulting in matches that are turned into [Mentions](TODO).  In this case the sentences themselves also need to be diagramed so that one can understand what the Extractors are matching against.  The different kinds of Extractors match in different ways and in different steps, so there are several views involved:
+Next there is the dynamic information that gets collected as extractors process rules against particular sentences, resulting in matches that are turned into [Mention](://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/Mention.scala)s.  In this case the sentences themselves also need to be diagramed so that one can understand what the Extractors are matching against.  The different kinds of Extractors match in different ways and in different steps, so there are several views involved:
 
 * Dynamic views
   * HTML
-    * [Global Action View](TODO) - is usually located at the top of an HTML report because it summarizes the Mentions found across an entire document by all the rules and one can check here first before looking into more details.  On the left are listed the Mentions that enter the global action and on the right are those that exit.  Mentions that are either filtered out or transformed into different mentions (they are compared with `eq()` rather than `equals()` or `==`, so that means reference comparison) appear only on the left.  New Mentions appear only on the right.  If your rules are actually working, but something is wrong with the action, clues can be found here.
-    * [Parse View](TODO) - applies to sentences and resembles the [webapp]() output.  This shows the tokenization, part-of-speech tags, named entities, dependencies, etc. of sentences that are being processed.  The parse for each sentence will be followed by views for all the Extractors being applied to the sentence.  It is possible for the parse to be wrong and that to be the cause of unexpected rule behavior.
-    * [Inst View](TODO) - shows how [Insts](TODO) match at consecutive sentence tokens.  [TokenPatterns](TODO) are composed of a graph of Insts which either invoke some comparison with the sentence (e.g., [MatchToken](TODO), [MatchSentenceStart](TODO)) or regulate [Threads]() that the [ThompsonVM](TODO) uses to negotiate possible rule matches (e.g., [Split](TODO), [MatchLookAhead](TODO)).  Insts are numbered as shown in the Extractor View.  If the Inst matches each time at a particular token, its number is displayed in green.  If it always fails at the token, its number is displayed in red.  If it sometimes passes and sometimes fails, the display is gray.  A green 0 indicates that [Done](TODO) matches, that the TokenPattern is complete, and that a rule matched the tokens to the left of the zero.  A careful study of the numbers and colors can explain unexpected behavior.
-    * [Thread View](TODO) - organizes sequences of Insts that have formed at least a portion of a match of a rule across tokens.  They usually start with a couple of green Inst numbers and then end with a red number because of a mismatch or a green 0 indicating a complete match.  Complete matches are not always used because we also want the longest complete match starting at any token.  Used Threads are marked with a green &#9745; and unused with a red &#9746;.  A reason ([ThreadMatch]()) is always given for the outcome and it may be useful to track down where these are assigned in the code:
+    * **Global Action View** - is usually located at the top of an HTML report because it summarizes the Mentions found across an entire document by all the rules and one can check here first before looking into more details.  On the left are listed the Mentions that enter the global action and on the right are those that exit.  Mentions that are either filtered out or transformed into different mentions (they are compared with `eq()` rather than `equals()` or `==`, so that means reference comparison) appear only on the left.  New Mentions appear only on the right.  If your rules are actually working, but something is wrong with the action, clues can be found here.
+    * **Parse View** - applies to sentences and resembles the [webapp](https://processors.clulab.org) output.  This shows the tokenization, part-of-speech tags, named entities, dependencies, etc. of sentences that are being processed.  The parse for each sentence will be followed by views for all the Extractors being applied to the sentence.  It is possible for the parse to be wrong and that to be the cause of unexpected rule behavior.
+    * **Inst View** - shows how [Inst](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)s match at consecutive sentence tokens.  [TokenPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/TokenPattern.scala)s are composed of a graph of Insts which either invoke some comparison with the sentence (e.g., [MatchToken](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala), [MatchSentenceStart](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)) or regulate [Thread](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)s that the [ThompsonVM](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala) uses to negotiate possible rule matches (e.g., [Split](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala), [MatchLookAhead](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)).  Insts are numbered as shown in the Extractor View.  If the Inst matches each time at a particular token, its number is displayed in green.  If it always fails at the token, its number is displayed in red.  If it sometimes passes and sometimes fails, the display is gray.  A green 0 indicates that [Done](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala) matches, that the TokenPattern is complete, and that a rule matched the tokens to the left of the zero.  A careful study of the numbers and colors can explain unexpected behavior.
+    * **Thread View** - organizes sequences of Insts that have formed at least a portion of a match of a rule across tokens.  They usually start with a couple of green Inst numbers and then end with a red number because of a mismatch or a green 0 indicating a complete match.  Complete matches are not always used because we also want the longest complete match starting at any token.  Used Threads are marked with a green &#9745; and unused with a red &#9746;.  A reason ([ThreadMatch](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/matches/ThreadMatch.scala)) is always given for the outcome and it may be useful to track down where these are assigned in the code:
       * &#9746; Inst mismatch
       * &#9746; Thread empty
       * &#9746; Thread not the best
       * &#9746; Thread superseded
       * &#9745; Thread survived
-    * [Mention View](TODO) - for some kinds of Extractors, details the comparisons made between a reference [Mention](TODO) and Mentions in the [State](TODO).  The former is a model of something being looked for and the latter are the possible matches, everything being a Mention.  This view is pertinent to the 
-      * [CrossSentenceExtractor](TODO) for a [CrossSentenceRule](TODO) indicated with the type "cross-sentence",
-      * [GraphExtractor](TODO) for either a [TriggerMentionGraphPattern](TODO) or a [RelationGraphPattern](TODO) that is part of a [GraphRule](TODO) indicated with the type "dependency".
+    * **Mention View** - for some kinds of Extractors, details the comparisons made between a reference [Mention](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/Mention.scala) and Mentions in the [State](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/State.scala).  The former is a model of something being looked for and the latter are the possible matches, everything being a Mention.  This view is pertinent to the 
+      * [CrossSentenceExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala) for a [CrossSentenceRule](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/RuleReader.scala) indicated with the type "cross-sentence",
+      * [GraphExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala) for either a [TriggerMentionGraphPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/GraphPattern.scala) or a [RelationGraphPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/GraphPattern.scala) that is part of a graph rule indicated with the type "dependency".
 
-      As with the Thread View, a reason for the match or mismatch is always given in the form of a [MentionMatch](TODO) and strange values can be clues:
+      As with the Thread View, a reason for the match or mismatch is always given in the form of a [MentionMatch](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/matches/MentionMatch.scala) and strange values can be clues:
       * &#9746; State mismatch
       * &#9746; Interval mismatch
       * &#9746; Label mismatch
       * &#9746; Type mismatch
       * &#9745; Mention match
-    * [Local Action View](TODO) - is the same as the Global Action View, but pertains not to the entire document, but just a sentence and the Mentions found by a particular Extractor.
+    * **Local Action View** - is the same as the Global Action View, but pertains not to the entire document, but just a sentence and the Mentions found by a particular Extractor.
 
-There is one additional view which should be classified as dynamic but does not act the same as the others.  It does not appear in the HTML output.  In fact, the values it tracks are not stored because they would be too many.  The [Stack View](TODO) is printed to `System.out` directly by the Debugger during the execution of the DebuggingExtractorEngine if its `verbose` has been set to `true`.  It shows the pertinent stack frames that the Odin algorithm uses while searching for text that matches the rules.  This visualizes the looping through of Documents, rule priorities, Sentences, Extractors, starting tokens, Insts, etc.  The output is formatted so that links appear in the IntelliJ Debug tab and you can click on them to go directly to the code and, for example, set a breakpoint to catch unexpected behavior in the act:
+There is one additional view which should be classified as dynamic but does not act the same as the others.  It does not appear in the HTML output.  In fact, the values it tracks are not stored because they would be too many.  The Stack View is printed to `System.out` directly by the Debugger during the execution of the DebuggingExtractorEngine if its `verbose` has been set to `true`.  It shows the pertinent stack frames that the Odin algorithm uses while searching for text that matches the rules.  This visualizes the looping through of Documents, rule priorities, Sentences, Extractors, starting tokens, Insts, etc.  The output is formatted so that links appear in the IntelliJ Debug tab and you can click on them to go directly to the code and, for example, set a breakpoint to catch unexpected behavior in the act:
 
 ```
 beg loop org.clulab.odin.debugger.odin.InnerDebuggingExtractorEngine#extract(DebuggingExtractorEngine.scala:17)[](loop = 1)
@@ -160,12 +161,12 @@ beg loop org.clulab.odin.debugger.odin.InnerDebuggingExtractorEngine#extract(Deb
 
 ## Filters
 
-It works best to use the debugger with only a small number of rules and sentences.  However, it may be difficult to manipulate an existing, complex program into one that runs on just a small subset of rules and sentences.  Also, one might not know in advance where to look and need to spread a wide net.  In these situations, [Filters](TODO) might help.  There are four kinds:
+It works best to use the debugger with only a small number of rules and sentences.  However, it may be difficult to manipulate an existing, complex program into one that runs on just a small subset of rules and sentences.  Also, one might not know in advance where to look and need to spread a wide net.  In these situations, [filter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter)s might help.  There are four kinds:
 
 | | Static | Dynamic |
 | --- | --- | --- |
-| Debugger | [StaticDebuggerFilter](TODO) | [DynamicDebuggerFilter](TODO) |
-| Inspector | [StaticInspectorFilter](TODO) | [DynamicInspectorFilter](TODO) |
+| Debugger | [StaticDebuggerFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticDebuggerFilter.scala) | [DynamicDebuggerFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicDebuggerFilter.scala) |
+| Inspector | [StaticInspectorFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala) | [DynamicInspectorFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala) |
 
 The static and dynamic match the idea from the views above with static having to do with Rules and Extractors before they are applied to sentences and dynamic while they are.  The Debugger works dynamically and simply passes any StaticDebuggerFilter it knows about to the Inspector when it gets that far.  Filters can be created by subclassing from the classes in the table above or by having a filter generated by their companion objects, for example, like this:
 ```scala
@@ -186,7 +187,7 @@ import org.clulab.odin.debugger.odin.DebuggingExtractorEngine
 
 ```
 
-In this example, the Debugger will only collect information related to the particular extractor and sentence in its [Transcripts](TODO).  When the Inspector gets created, the DebuggingExtractorEngine will also, in this case redundantly, tell the Inspector to only concern itself with information about the one extractor as it takes over the Transcripts.  Filters can be applied at other times.  If the `dynamicDebuggerFilter` is not added to the `debuggingExtractorEngine` in advance, the filtering can take place after the fact, at the Inspector, by calling `inspector.filter(dynamicDebuggerFilter)`.  There is a similar `inspector.filter(staticDebuggerFilter)` allowed, both returning new Inspectors.
+In this example, the Debugger will only collect information related to the particular extractor and sentence in its [Transcript](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/Transcript.scala)s.  When the Inspector gets created, the DebuggingExtractorEngine will also, in this case redundantly, tell the Inspector to only concern itself with information about the one extractor as it takes over the Transcripts.  Filters can be applied at other times.  If the `dynamicDebuggerFilter` is not added to the `debuggingExtractorEngine` in advance, the filtering can take place after the fact, at the Inspector, by calling `inspector.filter(dynamicDebuggerFilter)`.  There is a similar `inspector.filter(staticDebuggerFilter)` allowed, both returning new Inspectors.
 
 The Inspector filters tell the Inspector which kinds of views to show.  StaticInspectorFilters control the static views and DynamicInspectorFilters include both the static and dynamic ones (so that the two kinds of views can be mixed and matched in a single HTML page).  If you don't care about local actions, for instance, all of those views can be suppressed.  These filters are added to the calls to `inspectStaticAsHtm()` and `inspectDynamicAsHtm()`.  Here are examples:
 
@@ -215,14 +216,14 @@ import org.clulab.processors.Sentence
 ## Verbosity
 
 As mentioned earlier, display of the Stack View can be turned on and off by controlling the verbose argument to the constructor of the DebuggingExtractorEngine.  There are also filters
-  * [StaticInspectorFilter.verbose](TODO) - shows all static views, so the Rule, Textual, and Graphical Views.  It can be used directly or be activated when `verbose = true` in the call to `inspectStaticAsHtml()`.
-  * [StaticInspectorFilter.concise](TODO) - skips the Graphical View and is used when `verbose = false` in the call to `inspectStaticAsHtml()`
-  * [DynamicInspectorFilter.verbose](TODO) - shows all static and dynamic views.  It can be used explicitly in the call to `inspectDynamicAsHtml()` or implicitly by setting `verbose = true`.
-  * [DynamicInspectorFilter.concise](TODO) - skips the static views in the dynamic output and is used if `verbose = false` in the call.
+  * [StaticInspectorFilter.verbose](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala) - shows all static views, so the Rule, Textual, and Graphical Views.  It can be used directly or be activated when `verbose = true` in the call to `inspectStaticAsHtml()`.
+  * [StaticInspectorFilter.concise](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala) - skips the Graphical View and is used when `verbose = false` in the call to `inspectStaticAsHtml()`
+  * [DynamicInspectorFilter.verbose](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala) - shows all static and dynamic views.  It can be used explicitly in the call to `inspectDynamicAsHtml()` or implicitly by setting `verbose = true`.
+  * [DynamicInspectorFilter.concise](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala) - skips the static views in the dynamic output and is used if `verbose = false` in the call.
 
 ## Context
 
-As the debugger runs, it keeps track of what Odin is working on, like an instance of Sentence, Extractor, or Pattern, in a [Context](TODO).  Presently, the context is separated into lists/stacks differentiated by the instance type.  Some ordering information is lost with this scheme and an alternative design would store the instances in a single, mixed stack that would be more accurate but more complex to query.  If the Odin algorithm changes, or the ordering of the Context becomes important for some other reason, an updated design might be warranted.
+As the debugger runs, it keeps track of what Odin is working on, like an instance of Sentence, Extractor, or Pattern, in a [context](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/context).  Presently, the context is separated into lists/stacks differentiated by the instance type.  Some ordering information is lost with this scheme and an alternative design would store the instances in a single, mixed stack that would be more accurate but more complex to query.  If the Odin algorithm changes, or the ordering of the Context becomes important for some other reason, an updated design might be warranted.
 
 ## Output
 
@@ -231,3 +232,67 @@ Here are examples of both static and dynamic output in HTML format:
     ![debug-static.png](./images/debug-static.png?raw=True")
   * Dynamic
     ![debug-dynamic.png](./images/debug-dynamic.png?raw=True")
+
+## Classes
+
+The following classes (and sometimes packages or class members) are mentioned above.  The outline below shows how they are organized and includes links to their files and directories.
+
+* processors-apps
+  * org.clulab.processors.apps
+    * [CommandLineInterface](https://github.com/clulab/processors/blob/master/apps/src/main/scala/org/clulab/processors/apps/CommandLineInterface.scala)
+* [processors-debugger](https://github.com/clulab/processors/tree/master/debugger)
+  * main
+    * org.clulab.odin.debugger
+      * [Debugger](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Debugger.scala)
+      * [Inspector](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/Inspector.scala)
+      * apps
+        * [DebuggingOdinStarterApp](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/apps/DebuggingOdinStarterApp.scala)
+      * debug
+        * [Transcript](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/Transcript.scala)
+        * [context](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/context)
+        * [filter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter)
+          * [DynamicDebuggerFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicDebuggerFilter.scala)
+          * [DynamicInspectorFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala)
+            * [concise](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala)
+            * [verbose](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/DynamicInspectorFilter.scala)
+          * [StaticDebuggerFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticDebuggerFilter.scala)
+          * [StaticInspectorFilter](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala)
+            * [concise](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala)
+            * [verbose](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/filter/StaticInspectorFilter.scala)
+        * matches
+          * [MentionMatch](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/matches/MentionMatch.scala)
+          * [ThreadMatch](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/debug/matches/ThreadMatch.scala)
+      * [odin](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/odin) (debugging classes)
+        * [DebuggingExtractorEngine](https://github.com/clulab/processors/blob/master/debugger/src/main/scala/org/clulab/odin/debugger/odin/DebuggingExtractorEngine.scala)
+  * test
+    * org.clulab.odin.debugger.extractor
+      * [DebugCrossSentenceExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/DebugCrossSentenceExtractor.scala)
+      * [DebugTokenExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/DebugTokenExtractor.scala)
+      * graph
+        * [DebugRelationGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugRelationGraphExtractor.scala)
+        * [DebugTriggerMentionGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugTriggerMentionGraphExtractor.scala)
+        * [DebugTriggerPatternGraphExtractor](https://github.com/clulab/processors/blob/master/debugger/src/test/scala/org/clulab/odin/debugger/extractor/graph/DebugTriggerPatternGraphExtractor.scala)
+* processors-library
+  * org.clulab.odin
+    * [ExtractorEngine](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/ExtractorEngine.scala)
+    * [Mention](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/Mention.scala)
+    * [State](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/State.scala)
+    * impl
+      * [CrossSentenceExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala)
+      * [Done](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [Extractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala)
+      * [GraphExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala)
+      * [Inst](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [MatchLookAhead](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [MatchSentenceStart](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [MatchToken](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [RelationGraphPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/GraphPattern.scala)
+      * RuleReader
+        * [CrossSentenceRule](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/RuleReader.scala)
+      * [Split](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [ThompsonVM](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+        * [Thread](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/ThompsonVM.scala)
+      * [TokenExtractor](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/Extractor.scala)
+      * [TokenPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/TokenPattern.scala)
+      * [TriggerMentionGraphPattern](https://github.com/clulab/processors/blob/master/library/src/main/scala/org/clulab/odin/impl/GraphPattern.scala)
+
