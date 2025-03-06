@@ -1,318 +1,72 @@
 package org.clulab.odin.debugger
 
-import org.clulab.odin.impl.ThompsonVM.{SingleThread, Thread}
-import org.clulab.odin.impl.{Done, Extractor, Inst, TokenPattern}
+import org.clulab.odin.Mention
+import org.clulab.odin.debugger.debug.context.MutableDebuggerContext
+import org.clulab.odin.debugger.debug.filter.DynamicDebuggerFilter
+import org.clulab.odin.debugger.debug.finished.{FinishedGlobalAction, FinishedInst, FinishedLocalAction, FinishedMention, FinishedThread}
+import org.clulab.odin.debugger.debug.matches.{MentionMatch, ThreadMatch}
+import org.clulab.odin.debugger.debug.{SourceCode, StackFrame, Transcript}
+import org.clulab.odin.impl.ThompsonVM.SingleThread
+import org.clulab.odin.impl.{Extractor, Inst, TokenPattern}
 import org.clulab.processors.{Document, Sentence}
 import org.clulab.struct.Interval
 import org.clulab.utils.StringUtils
 
-import scala.collection.mutable.Buffer
-
-case class ThreadMatch(matches: Boolean, reason: String)
-
-object ThreadMatch {
-  val instMismatch = ThreadMatch(false, "Inst mismatch")
-  val empty = ThreadMatch(false, "Thread empty")
-  val lowerPriority = ThreadMatch(false, "Thread not the best")
-  val superseded = ThreadMatch(false, "Thread superseded")
-  val survivor = ThreadMatch(true, "Thread survived")
-}
-
-case class FinishedThread(
-  thread: SingleThread,
-  instMatch: Boolean,
-  threadMatch: ThreadMatch,
-  debuggerRecord: DebuggerRecord
-)
-
-case class FinishedInst(
-  inst: Inst,
-  instMatch: Boolean,
-  debuggerRecord: DebuggerRecord
-)
-
-// Turn into SearchRecord, InstRecord, ThreadRecord
-case class DebuggerRecord(
-  // TODO: Maybe include depth?
-  document: Document,
-  loop: Int,
-  extractor: Extractor,
-
-  tokenPattern: TokenPattern,
-  sentenceIndex: Int,
-  sentence: Sentence,
-
-  startOpt: Option[Int] = None,
-  tokOpt: Option[Int] = None, // TODO: Maybe skip
-  tokenIntervalOpt: Option[Interval] = None
-)
-
-class DebuggerContext(
-  protected var depth: Int = 0,
-  protected var documents: List[Document] = List.empty,
-  protected var loops: List[Int] = List.empty,
-  protected var extractors: List[Extractor] = List.empty,
-  protected var tokenPatterns: List[TokenPattern] = List.empty,
-  protected var sentenceIndexes: List[Int] = List.empty,
-  protected var sentences: List[Sentence] = List.empty,
-  protected var starts: List[Int] = List.empty, // Where in the sentence we are starting.
-  protected var toks: List[Int] = List.empty, // The current token index
-  protected var insts: List[Inst] = List.empty, // TODO: skip toks and insts because of Threads
-  protected var tokenIntervals: List[Interval] = List.empty
-) {
-  def isComplete: Boolean = {
-    documents.nonEmpty &&
-    loops.nonEmpty &&
-    extractors.nonEmpty &&
-    tokenPatterns.nonEmpty &&
-    sentenceIndexes.nonEmpty &&
-    sentences.nonEmpty
-
-    // tokenIntervals
-  }
-
-  def isInstComplete: Boolean = {
-    isComplete && {
-      starts.nonEmpty &&
-      toks.nonEmpty //&&
-//      insts.nonEmpty
-    }
-  }
-
-  def isThreadComplete: Boolean = {
-    isComplete && {
-      starts.nonEmpty
-    }
-  }
-
-  def getDepth: Int = depth
-
-  def setDocument(document: Document): Unit = {
-    documents = document :: documents
-    depth += 1
-  }
-
-  def getDocumentOpt: Option[Document] = documents.headOption
-
-  def resetDocument(): Unit = {
-    documents = documents.tail
-    depth -= 1
-  }
-
-  def setLoop(loop: Int): Unit = {
-    loops = loop :: loops
-    depth += 1
-  }
-
-  def getLoopOpt: Option[Int] = loops.headOption
-
-  def resetLoop(): Unit = {
-    loops = loops.tail
-    depth -= 1
-  }
-
-  def setExtractor(extractor: Extractor): Unit = {
-    extractors = extractor :: extractors
-    depth += 1
-  }
-
-  def getExtractorOpt: Option[Extractor] = extractors.headOption
-
-  def resetExtractor(): Unit = {
-    extractors = extractors.tail
-    depth -= 1
-  }
-
-  def setTokenPattern(tokenPattern: TokenPattern): Unit = {
-    tokenPatterns = tokenPattern :: tokenPatterns
-    depth += 1
-  }
-
-  def getTokenPattern: Option[TokenPattern] = tokenPatterns.headOption
-
-  def resetTokenPattern(): Unit = {
-    tokenPatterns = tokenPatterns.tail
-    depth -= 1
-  }
-
-  def setSentence(sentenceIndex: Int, sentence: Sentence): Unit = {
-    sentenceIndexes = sentenceIndex :: sentenceIndexes
-    sentences = sentence :: sentences
-    depth += 1
-  }
-
-  def getSentenceOpt: (Option[Int], Option[Sentence]) = (sentenceIndexes.headOption, sentences.headOption)
-
-  def resetSentence(): Unit = {
-    sentenceIndexes = sentenceIndexes.tail
-    sentences = sentences.tail
-    depth -= 1
-  }
-
-  def setStart(start: Int): Unit = {
-    starts = start :: starts
-    depth += 1
-  }
-
-  def getStartOpt: Option[Int] = starts.headOption
-
-  def resetStart(): Unit = {
-    starts = starts.tail
-    depth -= 1
-  }
-
-  def setTok(tok: Int): Unit = {
-    toks = tok :: toks
-    depth += 1
-  }
-
-  def getTokOpt: (Option[Int]) = toks.headOption
-
-  def getToksLength: Int = toks.length
-
-  def resetTok(): Unit = {
-    toks = toks.tail
-    depth -= 1
-  }
-
-  def setTokenInterval(tokenInterval: Interval): Unit = {
-    tokenIntervals = tokenInterval :: tokenIntervals
-    depth += 1
-  }
-
-  def getTokenIntervalOpt: (Option[Interval]) = tokenIntervals.headOption
-
-  def resetTokenInterval(): Unit = {
-    tokenIntervals = tokenIntervals.tail
-    depth -= 1
-  }
-
-
-  def setInst(inst: Inst): Unit = {
-    insts = inst :: insts
-    depth += 1
-  }
-
-  def getInstOpt: Option[Inst] = insts.headOption
-
-  def getInstsLength: Int = insts.length
-
-  def resetInst(): Unit = {
-    insts = insts.tail
-    depth -= 1
-  }
-
-  def mkDebuggerRecord(tok: Int): DebuggerRecord = {
-    DebuggerRecord(
-      documents.head,
-      loops.head,
-      extractors.head,
-      tokenPatterns.head,
-      sentenceIndexes.head,
-      sentences.head,
-
-      starts.headOption,
-      Some(tok) // ,
-      //      Some(inst),
-      //      tokenIntervals.headOption,
-      //      matches
-    )
-  }
-
-  def setInstMatches(matches: Boolean, tok: Int, inst: Inst): FinishedInst = {
-
-    if (!isInstComplete) {
-      if (inst != Done)
-        println("The record is not complete!")
-
-    } // TODO: Depends on what kind of extractor.  How does one know?  Check most recent extractor?
-    // Leave something else on the stack.
-
-
-    if (tokenIntervals.nonEmpty) {
-      // This is for cross
-      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
-    }
-    else {
-      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
-    }
-
-    FinishedInst(inst, matches, mkDebuggerRecord(tok))
-  }
-
-  def setThreadMatches(thread: SingleThread, instMatches: Boolean, threadMatch: ThreadMatch): FinishedThread = {
-    val debuggerRecord = mkDebuggerRecord(thread.tok)
-    val finishedThread = FinishedThread(thread, instMatches, threadMatch, debuggerRecord)
-
-    if (!isComplete)
-      println("The record is not complete!")// TODO: Depends on what kind of extractor
-
-    if (tokenIntervals.nonEmpty) {
-      // This is for cross
-      val asExpected = starts.isEmpty && toks.isEmpty && insts.isEmpty
-    }
-    else {
-      val asExpected = starts.nonEmpty && toks.nonEmpty && insts.nonEmpty
-    }
-
-    finishedThread
-  }
-}
-
-// TODO: There need to be different kinds of debuggers or at least contexts for different extractors.
-
-class Debugger(var active: Boolean = true, verbose: Boolean = false) {
+class Debugger(val filter: DynamicDebuggerFilter, var active: Boolean = true, verbose: Boolean = false) {
   protected var stack: Debugger.Stack = List()
   protected var maxDepth = 0
   protected var maxStack: Debugger.Stack = stack
-  protected val context = new DebuggerContext()
-  val instTranscript: Buffer[FinishedInst] = Buffer.empty
-  val threadTranscript: Buffer[FinishedThread] = Buffer.empty
+  protected val context = new MutableDebuggerContext(filter)
+
+  val instTranscript = Transcript[FinishedInst]()
+  val threadTranscript = Transcript[FinishedThread]()
+  val localActionTranscript = Transcript[FinishedLocalAction]()
+  val globalActionTranscript = Transcript[FinishedGlobalAction]()
+  val mentionTranscript = Transcript[FinishedMention]()
+
+  val transcripts: Seq[Transcript[_]] = Seq(
+    instTranscript,
+    threadTranscript,
+    localActionTranscript,
+    globalActionTranscript,
+    mentionTranscript
+  )
 
   def activate(): Unit = active = true
 
   def deactivate(): Unit = active = false
 
-  def clear(): Unit = instTranscript.clear()
+  def clear(): Unit = transcripts.foreach(_.clear)
 
   protected def innerDebug[ResultType, StackFrameType <: StackFrame](stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    if (active) {
-      stack = stackFrame :: stack
-      if (stack.length > maxDepth)
-        maxStack = stack
+    // Active should have been handled by now.
+    stack = stackFrame :: stack
+    if (stack.length > maxDepth)
+      maxStack = stack
 
-      val result = try {
-        block
-      }
-      finally {
-        stack = stack.tail
-      }
-      val execTime = stackFrame.stopTimer()
-      //      println(s"Execution time for stack frame: $execTime nanoseconds")
-      result
-    }
-    else {
+    val result = try {
       block
     }
+    finally {
+      stack = stack.tail
+    }
+    val execTime = stackFrame.stopTimer()
+    //      println(s"Execution time for stack frame: $execTime nanoseconds")
+    result
   }
 
-  protected def debugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
+  protected def innerDebugWithMessage[ResultType, StackFrameType <: StackFrame](mkMessage: (String) => String)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    if (active) {
-      if (verbose) println(mkMessage("beg"))
-      val result = innerDebug(stackFrame)(block)
-      if (verbose) println(mkMessage("end"))
-      result
-    }
-    else {
-      block
-    }
+    // Active should have been handled by now.
+    if (verbose) println(mkMessage("beg"))
+    val result = innerDebug(stackFrame)(block)
+    if (verbose) println(mkMessage("end"))
+    result
   }
 
   protected def innerDebugDoc[ResultType, StackFrameType <: StackFrame](doc: Document)
       (stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "doc"
@@ -326,16 +80,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setDocument(doc)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetDocument()
+    val result = context.withDocument(doc) { innerDebugWithMessage(message)(stackFrame)(block) }
 
     result
   }
 
   protected def innerDebugLoop[ResultType, StackFrameType <: StackFrame](loop: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "loop"
@@ -348,17 +99,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setLoop(loop)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetLoop()
+    val result = context.withLoop(loop) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
-    // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "extractor"
@@ -370,15 +117,12 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setExtractor(extractor)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetExtractor()
+    val result = context.withExtractor(extractor) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugAnchorExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
     // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
@@ -392,17 +136,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setExtractor(extractor)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetExtractor()
+    val result = context.withExtractor(extractor) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugNeighborExtractor[ResultType, StackFrameType <: StackFrame](extractor: Extractor)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-    // TODO: This could keep track of the mentions returned from the block and
-    // do something special if there are none.
 
-    // TODO: This could be part of a stack frame, no longer generic, like the TokenExtractorFrame.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "neighborExtractor"
@@ -414,9 +154,8 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setExtractor(extractor)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetExtractor()
+    val result = context.withExtractor(extractor) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
@@ -433,9 +172,8 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setTokenPattern(tokenPattern)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetTokenPattern()
+    val result = context.withTokenPattern(tokenPattern) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
@@ -452,15 +190,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setTokenPattern(tokenPattern)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetTokenPattern()
+    val result = context.withTokenPattern(tokenPattern) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugSentence[ResultType, StackFrameType <: StackFrame](index: Int, sentence: Sentence)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "sentence"
@@ -473,15 +209,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setSentence(index, sentence)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetSentence()
+    val result = context.withSentence(index, sentence) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugStart[ResultType, StackFrameType <: StackFrame](start: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "start"
@@ -493,15 +227,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setStart(start)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetStart()
+    val result = context.withStart(start) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
   protected def innerDebugTok[ResultType, StackFrameType <: StackFrame](tok: Int)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "tok"
@@ -513,36 +245,13 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setTok(tok)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetTok()
-    result
-  }
+    val result = context.withTok(tok) { innerDebugWithMessage(message)(stackFrame)(block) }
 
-  protected def innerDebugInst[ResultType, StackFrameType <: StackFrame](inst: Inst)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
-
-    // TODO: This could be part of a stack frame, no longer generic.
-    def mkMessage(depth: Int)(side: String): String = {
-      val tabs = "\t" * depth
-      val what = "inst"
-      val where = stackFrame.sourceCode.toString
-      val evaluatorString = "[]"
-      val instString = inst.toString()
-      val message = s"""${tabs}${side} $what $where$evaluatorString(inst = $instString)"""
-
-      message
-    }
-
-    val message = mkMessage(context.getDepth) _
-    context.setInst(inst)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetInst()
     result
   }
 
   protected def innerDebugTokenInterval[ResultType, StackFrameType <: StackFrame](tokenInterval: Interval)(stackFrame: StackFrameType)(block: => ResultType): ResultType = {
 
-    // TODO: This could be part of a stack frame, no longer generic.
     def mkMessage(depth: Int)(side: String): String = {
       val tabs = "\t" * depth
       val what = "tokenInterval"
@@ -554,9 +263,8 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
     }
 
     val message = mkMessage(context.getDepth) _
-    context.setTokenInterval(tokenInterval)
-    val result = debugWithMessage(message)(stackFrame)(block)
-    context.resetTokenInterval()
+    val result = context.withTokenInterval(tokenInterval) { innerDebugWithMessage(message)(stackFrame)(block) }
+
     result
   }
 
@@ -564,26 +272,78 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
 
     def mkMessage(depth: Int): String = {
       val tabs = "\t" * depth
-      val what = "matches"
+      val what = "instMatches"
       val where = stackFrame.sourceCode.toString
       val evaluatorString = "[]"
-      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString})"""
+      val message = s"""${tabs}$what $where$evaluatorString(matches = ${matches.toString}, ...)"""
 
       message
     }
 
     val message = mkMessage(context.getDepth)
 
-    if (active) {
-      if (verbose) println(message)
-      instTranscript += context.setInstMatches(matches, tok, inst)
-    }
+    if (verbose) println(message)
+    instTranscript.appendOpt(context.setInstMatches(matches, tok, inst))
   }
 
   protected def innerDebugThreadMatches[StackFrameType <: StackFrame](instMatches: Boolean, thread: SingleThread, threadMatch: ThreadMatch)(stackFrame: StackFrameType): Unit = {
-    if (active) {
-      threadTranscript += context.setThreadMatches(thread, instMatches, threadMatch)
+    innerDebugInstMatches(instMatches, thread.tok, thread.inst)(stackFrame)
+
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
+      val what = "threadMatches"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}$what $where$extractorString(...)"""
+
+      message
     }
+
+    val message = mkMessage(context.getDepth)
+
+    if (verbose) println(message)
+    threadTranscript.appendOpt(context.setThreadMatches(thread, instMatches, threadMatch))
+  }
+
+  protected def innerDebugMentionMatches[StackFrameType <: StackFrame](mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(stackFrame: StackFrameType): Unit = {
+
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
+      val what = "mentionMatches"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}$what $where$extractorString(...)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth)
+
+    if (verbose) println(message)
+    mentionTranscript.appendOpt(context.setMentionMatches(mention, stateMentions, mentionMatches))
+  }
+
+
+  protected def innerDebugActionMatches[StackFrameType <: StackFrame](inMentions: Seq[Mention], outMentions: Seq[Mention])(stackFrame: StackFrameType): Unit = {
+    val isLocal = context.getExtractorOpt.nonEmpty
+
+    def mkMessage(depth: Int): String = {
+      val tabs = "\t" * depth
+      val what = if (isLocal) "localActionMatches" else "globalActionMatches"
+      val where = stackFrame.sourceCode.toString
+      val extractorString = "[]"
+      val message = s"""${tabs}$what $where$extractorString(...)"""
+
+      message
+    }
+
+    val message = mkMessage(context.getDepth)
+
+    if (verbose) println(message)
+    if (isLocal)
+      localActionTranscript.appendOpt(context.setLocalActionMatches(inMentions, outMentions))
+    else
+      globalActionTranscript.appendOpt(context.setGlobalActionMatches(inMentions, outMentions))
   }
 
   def showTrace(stack: Debugger.Stack): Unit = {
@@ -610,105 +370,153 @@ class Debugger(var active: Boolean = true, verbose: Boolean = false) {
   // The extractorEngine needs to come in with the doc so that client code does not need to call debug
   // methods on the extractorEngine itself.
   def debugDoc[ResultType](doc: Document)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugDoc(doc)(stackFrame)(block)
+      context.withDocument(doc) { innerDebugDoc(doc)(stackFrame)(block) }
+    }
+    else block
   }
 
   def debugLoop[ResultType](loop: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugLoop(loop)(stackFrame)(block)
+      innerDebugLoop(loop)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugExtractor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugExtractor(extractor)(stackFrame)(block)
+      innerDebugExtractor(extractor)(stackFrame)(block)
+    }
+    else block
   }
 
   // TODO: We should know the document already, so the index should suffice.
   def debugSentence[ResultType](index: Int, sentence: Sentence)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugSentence(index, sentence)(stackFrame)(block)
+      innerDebugSentence(index, sentence)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugStart[ResultType](start: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugStart(start)(stackFrame)(block)
+      innerDebugStart(start)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugTok[ResultType](tok: Int)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugTok(tok)(stackFrame)(block)
-  }
-
-  def debugInst[ResultType](inst: Inst)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
-
-    innerDebugInst(inst)(stackFrame)(block)
+      innerDebugTok(tok)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugInstMatches(matches: Boolean, tok: Int, inst: Inst)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugInstMatches(matches, tok, inst)(stackFrame)
+      innerDebugInstMatches(matches, tok, inst)(stackFrame)
+    }
   }
 
   def debugThreadMatches(thread: SingleThread, matches: Boolean, threadMatch: ThreadMatch)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugThreadMatches(matches, thread, threadMatch)(stackFrame)
+      innerDebugThreadMatches(matches, thread, threadMatch)(stackFrame)
+    }
+  }
+
+  def debugMentionMatches(mention: Mention, stateMentions: Seq[Mention], mentionMatches: Seq[MentionMatch])(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
+
+      innerDebugMentionMatches(mention, stateMentions, mentionMatches)(stackFrame)
+    }
   }
 
   def debugAnchor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    // TODO: Record some kind of cross type "anchor"
-    innerDebugAnchorExtractor(extractor)(stackFrame)(block)
+      // TODO: Record some kind of cross type "anchor"
+      innerDebugAnchorExtractor(extractor)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugNeighbor[ResultType](extractor: Extractor)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    // TODO: Record some kind of cross type "neighbor"
-    innerDebugNeighborExtractor(extractor)(stackFrame)(block)
+      // TODO: Record some kind of cross type "neighbor"
+      innerDebugNeighborExtractor(extractor)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugTokenPattern[ResultType](tokenPattern: TokenPattern)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugTokenPattern(tokenPattern)(stackFrame)(block)
+      innerDebugTokenPattern(tokenPattern)(stackFrame)(block)
+    }
+    else block
   }
 
   // This skips the TokenExtractor and goes straight for the TokenPattern
   def debugTrigger[ResultType](tokenPattern: TokenPattern)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugTriggerTokenPattern(tokenPattern)(stackFrame)(block)
+      innerDebugTriggerTokenPattern(tokenPattern)(stackFrame)(block)
+    }
+    else block
   }
 
   def debugTokenInterval[ResultType](tokenInterval: Interval)(block: => ResultType)(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): ResultType = {
-    val sourceCode = new SourceCode(line, fileName, enclosing)
-    val stackFrame = new StackFrame(sourceCode)
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
 
-    innerDebugTokenInterval(tokenInterval)(stackFrame)(block)
+      innerDebugTokenInterval(tokenInterval)(stackFrame)(block)
+    }
+    else block
+  }
+
+  def debugActionMatches(inMentions: Seq[Mention], outMentions: Seq[Mention])(implicit line: sourcecode.Line, fileName: sourcecode.FileName, enclosing: sourcecode.Enclosing): Unit = {
+    if (active) {
+      val sourceCode = new SourceCode(line, fileName, enclosing)
+      val stackFrame = new StackFrame(sourceCode)
+
+      innerDebugActionMatches(inMentions, outMentions)(stackFrame)
+    }
   }
 }
 

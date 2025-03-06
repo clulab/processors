@@ -1,6 +1,6 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
-import org.clulab.odin.debugger.visualization.HtmlVisualization
+import org.clulab.odin.debugger.visualization.MermaidVisualization
 import org.clulab.odin.debugger.visualizer.html.HtmlVisualizing
 import org.clulab.odin.impl.{CrossSentenceExtractor, Done, Extractor, GraphExtractor, GraphPattern, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, RelationGraphPattern, SaveEnd, SaveStart, Split, TokenExtractor, TokenPattern, TriggerMentionGraphPattern, TriggerPatternGraphPattern}
 import org.clulab.utils.StringUtils
@@ -13,7 +13,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeCrossSentenceExtractor(crossSentenceExtractor: CrossSentenceExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val anchorExtraction = ("anchorPattern:pattern:", crossSentenceExtractor.anchorPattern.pattern)
     val neighborExtraction = ("neighborPattern:pattern:", crossSentenceExtractor.neighborPattern.pattern)
     val extractions = Seq(anchorExtraction, neighborExtraction)
@@ -57,7 +57,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeGraphExtractor(graphExtractor: GraphExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractGraphPattern(0, graphExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
@@ -222,7 +222,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
 
   def visualizeTokenExtractor(tokenExtractor: TokenExtractor): Fragment = {
     val textVisualizer = new TextExtractorVisualizer()
-    val placeholder = raw("&nbsp;" * 2)
+    val placeholder = nbsp(2)
     val extractions = textVisualizer.extractTokenPattern(0, tokenExtractor.pattern).map { case (name, value) =>
       (s"pattern:$name", value)
     }
@@ -254,7 +254,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
     )
   }
 
-  override def visualize(extractor: Extractor): HtmlVisualization = {
+  override def visualize(extractor: Extractor): MermaidVisualization = {
 
     val frag = extractor match {
       case tokenExtractor: TokenExtractor => visualizeTokenExtractor(tokenExtractor)
@@ -262,7 +262,7 @@ class MermaidExtractorVisualizer() extends ExtractorVisualizer() with HtmlVisual
       case crossSentenceExtractor: CrossSentenceExtractor => visualizeCrossSentenceExtractor(crossSentenceExtractor)
       case _ => throw new RuntimeException(s"Unrecognized extractor: ${extractor.toString}")
     }
-    val visualization = new HtmlVisualization(frag)
+    val visualization = new MermaidVisualization(frag)
 
     visualization
   }

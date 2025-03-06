@@ -1,11 +1,10 @@
 package org.clulab.odin.debugger.visualizer.inst
 
-import org.clulab.odin.debugger.FinishedInst
+import org.clulab.odin.debugger.debug.Transcript
+import org.clulab.odin.debugger.debug.finished.FinishedInst
 import org.clulab.odin.debugger.visualization.Visualization
-
-import scala.collection.mutable
 
 abstract class InstVisualizer {
 
-  def visualize(transcript: mutable.Buffer[FinishedInst]): Visualization
+  def visualize(transcript: Transcript[FinishedInst]): Visualization
 }

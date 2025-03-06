@@ -1,0 +1,14 @@
+
+- name: person
+  priority: 1
+  label: Person
+  type: token
+  pattern: |
+    [entity='B-PER'] [entity='I-PER']*
+
+- name: pronoun
+  priority: 1
+  label: Pronoun
+  type: token
+  pattern: |
+    [tag='PRP']

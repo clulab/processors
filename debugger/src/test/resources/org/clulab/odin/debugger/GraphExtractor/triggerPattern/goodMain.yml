@@ -1,0 +1,11 @@
+
+taxonomy:
+  - Entity:
+    - Food
+    - Person
+  - Event:
+    - Eating
+
+rules:
+  - import: org/clulab/odin/debugger/GraphExtractor/triggerPattern/entities.yml
+  - import: org/clulab/odin/debugger/GraphExtractor/triggerPattern/goodEvents.yml

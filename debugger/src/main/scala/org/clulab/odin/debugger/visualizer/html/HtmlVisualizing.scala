@@ -1,11 +1,26 @@
 package org.clulab.odin.debugger.visualizer.html
 
+import org.clulab.odin.debugger.visualization.HtmlFragment
 import scalatags.Text.all._
-import scalatags.generic.Frag
-import scalatags.text.Builder
 
 trait HtmlVisualizing extends HtmlStyling {
-  type Fragment = Frag[Builder, String]
+  type Fragment = HtmlFragment.Fragment
+
+  val checkTrue: Fragment = span(`class` := green)(raw("&#9745;"))
+  val checkFalse: Fragment = span(`class` := red)(raw("&#9746;"))
+  val checkEmpty: Fragment = raw("&#9744;")
+
+  def check(value: Boolean): Fragment = if (value) checkTrue else checkFalse
+
+  val nbspString = "&nbsp;"
+  val rawNbsp1 = raw(nbspString * 1)
+  val rawNbsp2 = raw(nbspString * 2)
+
+  def nbsp(count: Int = 1): Fragment = {
+    if (count == 1) rawNbsp1
+    else if (count == 2) rawNbsp2
+    else raw(nbspString * count)
+  }
 
   // Turn it into multiple table rows, preserving indentation.
   def toRows(lines: Seq[String], colCount: Int): Seq[Fragment] = {
@@ -13,7 +28,7 @@ trait HtmlVisualizing extends HtmlStyling {
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
       val fragment = frag(
-        span(raw("&nbsp;" * indent.length)),
+        span(nbsp(indent.length)),
         span(rest)
       )
 
@@ -34,7 +49,7 @@ trait HtmlVisualizing extends HtmlStyling {
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
       val spans = Seq(
-        span(raw("&nbsp;" * indent.length)),
+        span(nbsp(indent.length)),
         span(rest)
       )
 
@@ -54,7 +69,7 @@ trait HtmlVisualizing extends HtmlStyling {
       val indent = line.takeWhile(_ == ' ')
       val rest = line.drop(indent.length)
       val spans = Seq(
-        span(raw("&nbsp;" * indent.length)),
+        span(nbsp(indent.length)),
         span(rest)
       )
 

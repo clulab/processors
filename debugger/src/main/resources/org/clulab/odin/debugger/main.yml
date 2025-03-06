@@ -3,8 +3,6 @@ taxonomy:
   - Entity:
     - Food
     - Person
-    - Word
-    - Phrase
   - Event:
     - Eating
 
@@ -16,6 +14,6 @@ rules:
       # used in the entities.yml rules
       rulepriority: "1"
 
-  - import: org/clulab/odinstarter/events.yml
+  - import: org/clulab/odin/debugger/events.yml
     vars:
       rulepriority: "2"
