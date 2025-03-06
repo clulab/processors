@@ -229,8 +229,10 @@ As the debugger runs, it keeps track of what Odin is working on, like an instanc
 
 Here are examples of both static and dynamic output in HTML format:
   * Static
+
     ![debug-static.png](./images/debug-static.png?raw=True")
   * Dynamic
+  
     ![debug-dynamic.png](./images/debug-dynamic.png?raw=True")
 
 ## Classes
