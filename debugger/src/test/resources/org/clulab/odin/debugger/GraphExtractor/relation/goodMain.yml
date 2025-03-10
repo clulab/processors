@@ -1,0 +1,11 @@
+
+taxonomy:
+  - Entity:
+    - Food
+    - Person
+  - Event:
+    - Eating
+
+rules:
+  - import: org/clulab/odin/debugger/GraphExtractor/relation/entities.yml
+  - import: org/clulab/odin/debugger/GraphExtractor/relation/goodEvents.yml

@@ -30,4 +30,5 @@ object OdinConfig {
     GraphMap.ENHANCED_SEMANTIC_ROLES,
     GraphMap.HYBRID_DEPENDENCIES
   )
+  var keepRule = false
 }

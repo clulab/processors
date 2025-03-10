@@ -54,7 +54,7 @@ object OdinResourceManager {
            throw new OdinCompileException(s"invalid path given for 'embeddings': $p")
         }
         //val pair = ("embeddings", Some(new EmbeddingsResource(source)))
-        val pair = ("embeddings", Some(new EmbeddingsResource(is)))
+        val pair = ("embeddings", Some(new EmbeddingsResource(is, p)))
         //source.close()
         */
 

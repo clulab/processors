@@ -1,0 +1,7 @@
+
+- name: person
+  priority: 1
+  label: Person
+  type: token
+  pattern: |
+    [entity='B-PER'] [entity='I-PER']+

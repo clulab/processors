@@ -1,0 +1,11 @@
+
+- name: people-eat-food
+  priority: 2
+  label: Eating
+  type: dependency
+  example: John eats cake
+  graph: hybrid
+  pattern: |
+    trigger: Food
+    food: Food = dobj
+    person: Person = nsubj
