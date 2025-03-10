@@ -157,27 +157,27 @@ class Constant(val value: Double) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double = value
 }
 
-class Addition(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class Addition(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) + rhs.number(tok, sent, doc, state)
 }
 
-class Subtraction(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class Subtraction(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) - rhs.number(tok, sent, doc, state)
 }
 
-class Multiplication(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class Multiplication(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) * rhs.number(tok, sent, doc, state)
 }
 
-class Division(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class Division(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     lhs.number(tok, sent, doc, state) / rhs.number(tok, sent, doc, state)
 }
 
-class EuclideanQuotient(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class EuclideanQuotient(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
     val a = lhs.number(tok, sent, doc, state)
     val n = rhs.number(tok, sent, doc, state)
@@ -185,7 +185,7 @@ class EuclideanQuotient(lhs: NumericExpression, rhs: NumericExpression) extends 
   }
 }
 
-class EuclideanRemainder(lhs: NumericExpression, rhs: NumericExpression) extends NumericExpression {
+class EuclideanRemainder(val lhs: NumericExpression, val rhs: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
     val a = lhs.number(tok, sent, doc, state)
     val n = math.abs(rhs.number(tok, sent, doc, state))
@@ -193,13 +193,13 @@ class EuclideanRemainder(lhs: NumericExpression, rhs: NumericExpression) extends
   }
 }
 
-class NegativeExpression(expr: NumericExpression) extends NumericExpression {
+class NegativeExpression(val expr: NumericExpression) extends NumericExpression {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double =
     -expr.number(tok, sent, doc, state)
 }
 
 /** matcher must be an exact string matcher, so that a particular word vector can be retrieved */
-class SimilarityConstraint(w1: String, embeddings: EmbeddingsResource) extends NumericExpression with Values {
+class SimilarityConstraint(val w1: String, val embeddings: EmbeddingsResource) extends NumericExpression with Values {
   def number(tok: Int, sent: Int, doc: Document, state: State): Double = {
     // current word
     val w2 = word(tok, sent, doc)
@@ -210,32 +210,32 @@ class SimilarityConstraint(w1: String, embeddings: EmbeddingsResource) extends N
   }
 }
 
-class GreaterThan(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class GreaterThan(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) > rhs.number(tok, sent, doc, state)
 }
 
-class LessThan(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class LessThan(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) < rhs.number(tok, sent, doc, state)
 }
 
-class GreaterThanOrEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class GreaterThanOrEqual(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) >= rhs.number(tok, sent, doc, state)
 }
 
-class LessThanOrEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class LessThanOrEqual(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) <= rhs.number(tok, sent, doc, state)
 }
 
-class Equal(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class Equal(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) == rhs.number(tok, sent, doc, state)
 }
 
-class NotEqual(lhs: NumericExpression, rhs: NumericExpression) extends TokenConstraint {
+class NotEqual(val lhs: NumericExpression, val rhs: NumericExpression) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.number(tok, sent, doc, state) != rhs.number(tok, sent, doc, state)
 }
@@ -246,48 +246,48 @@ object TokenWildcard extends TokenConstraint {
     doc.sentences(sent).words.isDefinedAt(tok)
 }
 
-class WordConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class WordConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches word(tok, sent, doc)
 }
 
-class LemmaConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class LemmaConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches lemma(tok, sent, doc)
 }
 
-class TagConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class TagConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches tag(tok, sent, doc)
 }
 
-class EntityConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class EntityConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches entity(tok, sent, doc)
 }
 
-class ChunkConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class ChunkConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches chunk(tok, sent, doc)
 }
 
-class NormConstraint(matcher: StringMatcher) extends TokenConstraint with Values {
+class NormConstraint(val matcher: StringMatcher) extends TokenConstraint with Values {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     matcher matches norm(tok, sent, doc)
 }
 
-class IncomingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {
+class IncomingConstraint(val matcher: StringMatcher, val graphName: String) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     incoming(tok, sent, doc, graphName) exists matcher.matches
 }
 
-class OutgoingConstraint(matcher: StringMatcher, graphName: String) extends TokenConstraint with Graph {
+class OutgoingConstraint(val matcher: StringMatcher, val graphName: String) extends TokenConstraint with Graph {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     outgoing(tok, sent, doc, graphName) exists matcher.matches
 }
 
 // checks that a token is inside a mention
-class MentionConstraint(matcher: StringMatcher, arg: Option[String]) extends TokenConstraint {
+class MentionConstraint(val matcher: StringMatcher, val arg: Option[String]) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean = {
     val mentions = state.mentionsFor(sent, tok).filter(_ matches matcher)
     val results = arg match {
@@ -303,17 +303,17 @@ class MentionConstraint(matcher: StringMatcher, arg: Option[String]) extends Tok
   }
 }
 
-class NegatedConstraint(constraint: TokenConstraint) extends TokenConstraint {
+class NegatedConstraint(val constraint: TokenConstraint) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     !constraint.matches(tok, sent, doc, state)
 }
 
-class ConjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
+class ConjunctiveConstraint(val lhs: TokenConstraint, val rhs: TokenConstraint) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) && rhs.matches(tok, sent, doc, state)
 }
 
-class DisjunctiveConstraint(lhs: TokenConstraint, rhs: TokenConstraint) extends TokenConstraint {
+class DisjunctiveConstraint(val lhs: TokenConstraint, val rhs: TokenConstraint) extends TokenConstraint {
   def matches(tok: Int, sent: Int, doc: Document, state: State): Boolean =
     lhs.matches(tok, sent, doc, state) || rhs.matches(tok, sent, doc, state)
 }

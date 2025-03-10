@@ -1,0 +1,7 @@
+
+taxonomy:
+  - Entity:
+    - Person
+
+rules:
+  - import: org/clulab/odin/debugger/TokenExtractor/badEntities.yml

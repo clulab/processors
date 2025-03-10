@@ -280,7 +280,7 @@ object IncomingWildcard extends GraphPatternNode with Graph {
   }
 }
 
-class OutgoingGraphPattern(matcher: StringMatcher)
+class OutgoingGraphPattern(val matcher: StringMatcher)
 extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
@@ -301,7 +301,7 @@ extends GraphPatternNode with Graph {
   }
 }
 
-class IncomingGraphPattern(matcher: StringMatcher)
+class IncomingGraphPattern(val matcher: StringMatcher)
 extends GraphPatternNode with Graph {
   def findAllIn(
       tok: Int,
@@ -322,7 +322,7 @@ extends GraphPatternNode with Graph {
   }
 }
 
-class ConcatGraphPattern(lhs: GraphPatternNode, rhs: GraphPatternNode)
+class ConcatGraphPattern(val lhs: GraphPatternNode, val rhs: GraphPatternNode)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
@@ -340,7 +340,7 @@ extends GraphPatternNode {
   }
 }
 
-class DisjunctiveGraphPattern(lhs: GraphPatternNode, rhs: GraphPatternNode)
+class DisjunctiveGraphPattern(val lhs: GraphPatternNode, val rhs: GraphPatternNode)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
@@ -356,7 +356,7 @@ extends GraphPatternNode {
   }
 }
 
-class TokenConstraintGraphPattern(constraint: TokenConstraint)
+class TokenConstraintGraphPattern(val constraint: TokenConstraint)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
@@ -370,7 +370,7 @@ extends GraphPatternNode {
   }
 }
 
-class LookaroundGraphPattern(lookaround: GraphPatternNode, negative: Boolean)
+class LookaroundGraphPattern(val lookaround: GraphPatternNode, val negative: Boolean)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
@@ -385,7 +385,7 @@ extends GraphPatternNode {
   }
 }
 
-class OptionalGraphPattern(pattern: GraphPatternNode)
+class OptionalGraphPattern(val pattern: GraphPatternNode)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
@@ -399,7 +399,7 @@ extends GraphPatternNode {
   }
 }
 
-class KleeneGraphPattern(pattern: GraphPatternNode)
+class KleeneGraphPattern(val pattern: GraphPatternNode)
 extends GraphPatternNode {
   def findAllIn(
       tok: Int,
