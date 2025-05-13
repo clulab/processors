@@ -2,7 +2,7 @@ package org.clulab.processors.clu
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.clulab.numeric.{NumericEntityRecognizer, setLabelsAndNorms}
+import org.clulab.numeric.{NumericEntityRecognizer, mkLabelsAndNorms}
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.tokenizer._
 import org.clulab.scala.WrappedArray._
@@ -13,12 +13,11 @@ import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
-
 import org.clulab.odin.Mention
-
 import BalaurProcessor._
 import PostProcessor._
 import org.clulab.processors.hexatagging.HexaDecoder
+import org.clulab.struct.GraphMap.GraphMap
 
 class BalaurProcessor protected (
   val config: Config,
@@ -91,29 +90,27 @@ class BalaurProcessor protected (
     throw new RuntimeException("ERROR: cannot call this method on its own in this processor!")
   }
 
-  /** Lematization; modifies the document in place */
-  override def lemmatize(doc: Document): Unit = {
-    for(sent <- doc.sentences) {
-      val lemmas = new Array[String](sent.size)
-      for(i <- sent.words.indices) {
-        lemmas(i) = wordLemmatizer.lemmatizeWord(sent.words(i))
+  /** Lemmatization; modifies the document in place */
+  override def lemmatize(words: Array[String]): Array[String] = {
+    val lemmas = words.zipWithIndex.map { case (word, index) =>
+      val lemma = wordLemmatizer.lemmatizeWord(word)
+      // a lemma may be empty in some weird Unicode situations
+      val nonEmptyLemma =
+          if (lemma.isEmpty) {
+            logger.debug(s"""WARNING: Found empty lemma for word #$index "$word" in sentence: ${words.mkString(" ")}""")
+            word.toLowerCase()
+          }
+          else lemma
 
-        // a lemma may be empty in some weird Unicode situations
-        if(lemmas(i).isEmpty) {
-          logger.debug(s"""WARNING: Found empty lemma for word #$i "${sent.words(i)}" in sentence: ${sent.words.mkString(" ")}""")
-          lemmas(i) = sent.words(i).toLowerCase()
-        }
-      }
-      sent.lemmas = Some(lemmas)
+      nonEmptyLemma
     }
+
+    lemmas
   }
 
   /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
-  def cheapLemmatize(doc:Document): Unit = {
-    for(sent <- doc.sentences) {
-      val lemmas = sent.words.map(_.toLowerCase()).toArray
-      sent.lemmas = Some(lemmas)
-    }
+  def cheapLemmatize(sentence: Sentence): Array[String] = {
+    sentence.words.map(_.toLowerCase())
   }
 
   override def recognizeNamedEntities(doc: Document): Unit = {
@@ -144,64 +141,86 @@ class BalaurProcessor protected (
     throw new RuntimeException("ERROR: functionality not supported in this procecessor!")
   }
 
-  override def annotate(doc: Document): Document = {
-    val verbose = false
+  override def annotate(document: Document): Document = {
+    // Process one sentence at a time through the MTL framework.
+    val partlyAnnotatedSentences = document.sentences.map { sentence =>
+      val words = sentence.words
+      // Lemmas are created deterministically, not through the MTL framework.
+      val lemmas = lemmatize(words)
 
-    // lemmas are created deterministically, not through the MTL framework
-    lemmatize(doc)
-
-    // process one sentence at a time through the MTL framework
-    for (sent <- doc.sentences) {
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(sent.words)
-        assignPosTags(allLabelsAndScores(TASK_TO_INDEX(POS_TASK)), sent)
-        assignNamedEntityLabels(allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), sent)
-        assignChunkLabels(allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)), sent)
-        assignDependencyLabelsUsingHexaTags(
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK)), 
-          sent
-        )
-      } catch {
-        case e: EncoderMaxTokensRuntimeException => 
-          // this sentence exceeds the maximum number of tokens for the encoder
-          // TODO: at some point do something smart here
-          println(s"ERROR: this sentence exceeds the maximum number of tokens for the encoder and will not be annotated: ${sent.words.mkString(" ")}")
+        val allLabelsAndScores = tokenClassifier.predictWithScores(words)
+        val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
+        val entities = {
+          val optionalEntities = mkOptionalNerLabels(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
+          mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
+        }
+        val chunks = mkChunkLabels(words, allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)))
+        val graphs = mkDependencyLabelsUsingHexaTags(
+          words, lemmas, tags,
+          allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
+          allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
+        )
+        // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
+        val partlyAnnotatedDocument = sentence.copy(
+          tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
+        )
+
+        partlyAnnotatedDocument
+      }
+      catch {
+        // No values, not even lemmas, will be included in the annotation is there was an exception.
+        case e: EncoderMaxTokensRuntimeException =>
+          // TODO: at some point do something smart here
+          println(s"ERROR: This sentence exceeds the maximum number of tokens for the encoder and will not be annotated: ${sentence.words.mkString(" ")}")
+          sentence
+        case e: AssertionError =>
+          println(s"ERROR: The output of predictWithScores does not satisfy assertions.  The sentence will not be annotated: ${sentence.words.mkString(" ")}")
+          sentence
       }
     }
+    val partlyAnnotatedDocument = document.copy(sentences = partlyAnnotatedSentences)
+    val fullyAnnotatedDocument =
+        if (numericEntityRecognizerOpt.nonEmpty) {
+          val numericMentions = numericEntityRecognizerOpt.get.extractFrom(partlyAnnotatedDocument)
+          val (newLabels, newNorms) = mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
+          val fullyAnnotatedSentences = partlyAnnotatedDocument.sentences.indices.map { index =>
+            partlyAnnotatedDocument.sentences(index).copy(
+              entities = Some(newLabels(index)),
+              norms = Some(newNorms(index))
+            )
+          }.toArray
 
-    // numeric entities using our numeric entity recognizer based on Odin rules
-    if(numericEntityRecognizerOpt.nonEmpty) {
-      val numericMentions = extractNumericEntityMentions(doc)
-      setLabelsAndNorms(doc, numericMentions)
-    }
+          partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
+        }
+        else partlyAnnotatedDocument
 
-    doc
+    fullyAnnotatedDocument
   }
 
-  def extractNumericEntityMentions(doc:Document): Seq[Mention] = {
-    numericEntityRecognizerOpt.get.extractFrom(doc)
+  private def mkPosTags(words: Array[String], labels: Array[Array[(String, Float)]]): Array[String] = {
+    assert(labels.length == words.length)
+
+    val tags = labels.map(_.head._1).toArray
+
+    postprocessPartOfSpeechTags(words, tags)
+    tags
   }
 
-  private def assignPosTags(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
-    assert(labels.length == sent.words.length)
-    sent.tags = Some(postprocessPartOfSpeechTags(sent.words, labels.map(_.head._1).toArray))
-  }
-
-  /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def assignNamedEntityLabels(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
-    assert(labels.length == sent.words.length)
-
+  private def mkOptionalNerLabels(
+    words: Array[String], startOffsets: Array[Int], endOffsets: Array[Int],
+    tags: Array[String], lemmas: Array[String]
+  ): Option[Array[String]] = {
     // NER labels from the custom NER
-    val optionalNERLabels: Option[Array[String]] = optionalNER.map { ner =>
+    optionalNER.map { ner =>
       val sentence = Sentence(
-        sent.words,
-        sent.startOffsets,
-        sent.endOffsets,
-        sent.words,
-        sent.tags,
-        sent.lemmas,
+        words, // Why isn't this raw?
+        startOffsets,
+        endOffsets,
+        words,
+        Some(tags),
+        Some(lemmas),
         entities = None,
         norms = None,
         chunks = None,
@@ -212,18 +231,24 @@ class BalaurProcessor protected (
 
       ner.find(sentence)
     }
+  }
+
+  /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
+  private def mkNamedEntityLabels(words: Array[String], labels: Array[Array[(String, Float)]], optionalNERLabels: Option[Array[String]]): Array[String] = {
+    assert(labels.length == words.length)
 
     val genericLabels = NamedEntity.patch(labels.map(_.head._1).toArray)
 
-    if(optionalNERLabels.isEmpty) {
-      sent.entities = Some(genericLabels)
-    } else {
+    if (optionalNERLabels.isEmpty) {
+      genericLabels
+    }
+    else {
       //println(s"MERGING NE labels for sentence: ${sent.words.mkString(" ")}")
       //println(s"Generic labels: ${NamedEntity.patch(labels).mkString(", ")}")
       //println(s"Optional labels: ${optionalNERLabels.get.mkString(", ")}")
       val mergedLabels = NamedEntity.patch(mergeNerLabels(genericLabels, optionalNERLabels.get))
       //println(s"Merged labels: ${mergedLabels.mkString(", ")}")
-      sent.entities = Some(mergedLabels)
+      mergedLabels
     }
   }
 
@@ -246,9 +271,10 @@ class BalaurProcessor protected (
     }
   }
 
-  private def assignChunkLabels(labels: Array[Array[(String, Float)]], sent: Sentence): Unit = {
-    assert(labels.length == sent.words.length)
-    sent.chunks = Some(labels.map(_.head._1).toArray)
+  private def mkChunkLabels(words: Array[String], labels: Array[Array[(String, Float)]]): Array[String] = {
+    assert(labels.length == words.length)
+
+    labels.map(_.head._1).toArray
   }
 
   // The head has one score, the label has another.  Here the two scores are interpolated
@@ -286,11 +312,14 @@ class BalaurProcessor protected (
     sentDependencies.toArray
   }
 
-  private def assignDependencyLabelsUsingHexaTags(
+  private def mkDependencyLabelsUsingHexaTags(
+    words: Array[String], lemmas: Array[String], tags: Array[String],
     termTags: Array[Array[PredictionScore]],
-    nonTermTags: Array[Array[PredictionScore]],
-    sent: Sentence): Unit = {
+    nonTermTags: Array[Array[PredictionScore]]
+  ): GraphMap = {
     val verbose = false
+    val graphs = GraphMap()
+    val size = words.length
 
     // bht is used just for debugging purposes here
     val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, topK = 25, verbose)
@@ -301,20 +330,21 @@ class BalaurProcessor protected (
       println("Roots: " + roots.get.mkString(", "))
     }
 
-    if(deps.nonEmpty && roots.nonEmpty) {
+    if (deps.nonEmpty && roots.nonEmpty) {
       // basic dependencies that replicate treebank annotations
-      val depGraph = new DirectedGraph[String](deps.get, Some(sent.size), roots)
-      sent.graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
+      val depGraph = new DirectedGraph[String](deps.get, Some(size), roots)
+      graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
 
       // enhanced dependencies as defined by Manning
-      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(sent, depGraph)
-      sent.graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
+      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(words, lemmas, tags, depGraph)
+      graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
 
       // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
       // however, this processor produces only syntactic dependencies
-      sent.graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+      graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
     }
-  }  
+    graphs
+  }
 }
 
 object BalaurProcessor {
