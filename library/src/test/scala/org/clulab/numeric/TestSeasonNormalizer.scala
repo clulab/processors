@@ -15,9 +15,9 @@ class TestSeasonNormalizer extends Test {
 
   def mkEntitiesAndNorms(processor: BalaurProcessor, text: String): (Array[String], Array[String]) = {
     val document = processor.annotate(text)
-    val mentions = processor.extractNumericEntityMentions(document)
+    val mentions = processor.numericEntityRecognizerOpt.get.extractFrom(document)
 
-    setLabelsAndNorms(document, mentions)
+    mkLabelsAndNorms(document, mentions)
     (document.sentences.head.entities.get, document.sentences.head.norms.get)
   }
 

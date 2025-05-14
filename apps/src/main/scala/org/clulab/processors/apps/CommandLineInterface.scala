@@ -36,7 +36,7 @@ object CommandLineInterface extends App {
       } else if(props.containsKey(TOKENS)) {
         // one sentence per line; sentences are tokenized
         val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
-        val tokenizedSents = sents.map(_.split("\\s+").toIterable)
+        val tokenizedSents = sents.map(_.split("\\s+").toSeq)
         proc.annotateFromTokens(tokenizedSents)
       } else {
         // assume raw text

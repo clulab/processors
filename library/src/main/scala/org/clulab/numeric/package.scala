@@ -70,58 +70,62 @@ package object numeric {
     * @param doc This document is modified in place
     * @param mentions The numeric mentions previously extracted
     */
-  def setLabelsAndNorms(doc: Document, mentions: Seq[Mention]): Unit = {
-    //
-    // initialize entities and norms
-    //
-    for (sentence <- doc.sentences) {
-      sentence.entities = sentence.entities.orElse(Some(Array.fill(sentence.size)("O")))
-      sentence.norms    = sentence.norms   .orElse(Some(Array.fill(sentence.size)("")))
+  def mkLabelsAndNorms(doc: Document, mentions: Seq[Mention]): (Array[Array[String]], Array[Array[String]]) = {
+    val allEntities = doc.sentences.map { sentence =>
+      sentence.entities.getOrElse(Array.fill(sentence.size)("O"))
+    }
+    val allNorms = doc.sentences.map { sentence =>
+      sentence.norms.getOrElse(Array.fill(sentence.size)(""))
     }
 
-    //
-    // convert numeric entities to entity labels and norms
-    //
-    for(mention <- mentions) {
-      if(NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
-        addLabelsAndNorms(mention.asInstanceOf[Norm], mention.sentenceObj, mention.tokenInterval)
+    for (mention <- mentions) {
+      if (NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
+        val sentenceIndex = mention.sentence
+        val entities = allEntities(sentenceIndex)
+        val norms = allNorms(sentenceIndex)
+
+        addLabelsAndNorms(mention.asInstanceOf[Norm], entities, norms, mention.tokenInterval)
+        removeOneEntityBeforeAnother(entities, norms, "B-LOC", "MEASUREMENT-LENGTH")
       }
     }
-    removeOneEntityBeforeAnother(doc, "B-LOC", "MEASUREMENT-LENGTH")
+
+    (allEntities, allNorms)
   }
 
-  def removeOneEntityBeforeAnother(doc: Document, triggerEntity: String, toBeRemovedShortened: String): Unit = {
+  def removeOneEntityBeforeAnother(entities: Array[String], norms: Array[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
     // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
     // toBeRemovedShortened is entity without BIO-
-    for(s <- doc.sentences) {
-      val zippedEntities = s.entities.get.zipWithIndex
-      for ((e, i) <- zippedEntities) {
-        if (i > 0 && e == triggerEntity && s.entities.get(i-1).endsWith(toBeRemovedShortened)) {
-          s.entities.get(i - 1) = "O"
-          // go in reverse replacing indices and norms in the immediate preceding mention
-          breakable {
-            for ((en, j) <- zippedEntities.slice(0, i ).reverse) {
-              if (en.endsWith(toBeRemovedShortened)) {
-                s.entities.get(j) = "O"
-                s.norms.get(j) = ""
-              } else break()
-            }
+    val zippedEntities = entities.zipWithIndex
+
+    zippedEntities.foreach { case (outerEntity, outerIndex) =>
+      if (outerIndex > 0 && outerEntity == triggerEntity && entities(outerIndex - 1).endsWith(toBeRemovedShortened)) {
+        // Go in reverse replacing indices and norms in the immediate preceding mention.
+        zippedEntities.slice(0, outerIndex).reverse
+        breakable { // TODO: rewrite
+          for ((innerEntity, innerIndex) <- zippedEntities.slice(0, outerIndex).reverse) {
+            if (innerEntity.endsWith(toBeRemovedShortened)) {
+              entities(innerIndex) = "O"
+              norms(innerIndex) = ""
+            } else break()
           }
         }
       }
     }
   }
 
-  private def addLabelsAndNorms(m: Norm, s: Sentence, tokenInt: Interval): Unit = {
-    var first = true
+  private def addLabelsAndNorms(m: Norm, entities: Array[String], norms: Array[String], tokenInt: Interval): Unit = {
+    val label = m.neLabel
     val norm = m.neNorm
+
     // careful here: we may override some existing entities and norms
     // but, given that the numeric entity rules tend to be high precision, this is probably Ok...
-    for(i <- tokenInt.indices) {
-      val prefix = if(first) "B-" else "I-"
-      s.entities.get(i) = prefix + m.neLabel
-      s.norms.get(i) = norm
-      first = false
+    tokenInt.headOption.foreach { index =>
+      entities(index) = "B-" + label
+      norms(index) = norm
+    }
+    tokenInt.tail.foreach { index =>
+      entities(index) = "I-" + label
+      norms(index) = norm
     }
   }
 }

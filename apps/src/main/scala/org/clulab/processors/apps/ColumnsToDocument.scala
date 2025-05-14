@@ -138,8 +138,10 @@ object ColumnsToDocument {
       }
     }
     if(words.nonEmpty) {
-      val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray)
-      s.tags = Some(labels.toArray)
+      val s = new Sentence(
+        words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray,
+        tags = Some(labels.toArray)
+      )
       sentences += s
     }
     logger.debug(s"Loaded ${sentences.size} sentences.")
@@ -149,27 +151,6 @@ object ColumnsToDocument {
 
     d
 
-  }
-
-  def setTags(s:Sentence, tags:Array[String]): Unit = {
-    s.tags = Some(tags)
-  }
-
-  def setChunks(s:Sentence, chunks:Array[String]): Unit = {
-    s.chunks = Some(chunks)
-  }
-
-  def setEntities(s:Sentence, entities:Array[String]): Unit = {
-    s.entities = Some(entities)
-  }
-
-  def annotateLemmas(doc:Document): Unit = {
-    proc.lemmatize(doc) // some features use lemmas, which are not available in the CoNLL data
-  }
-
-  def annotateLemmmaTags(doc:Document): Unit = {
-    proc.lemmatize(doc)
-    proc.tagPartsOfSpeech(doc)
   }
 
   def annotateNil(doc:Document): Unit = {}

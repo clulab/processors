@@ -17,8 +17,9 @@ object DocumentMaker {
                  text:String,
                  keepText:Boolean): Document = {
     val sents = tokenizer.tokenize(text)
-    val doc = new Document(sents)
-    if(keepText) doc.text = Some(text)
+    val textOpt = Option.when(keepText)(text)
+    val doc = Document(sents, textOpt)
+
     doc
   }
 
@@ -46,8 +47,9 @@ object DocumentMaker {
       //println("End offsets: " + sent.endOffsets.mkString(", "))
       sents += sent
     }
-    val doc = new Document(sents.toArray)
-    if(keepText) doc.text = Some(sentences.mkString(mkSep(charactersBetweenSentences)))
+    val textOpt = Option.when(keepText)(sentences.mkString(mkSep(charactersBetweenSentences)))
+    val doc = Document(sents.toArray, textOpt)
+
     doc
   }
 
@@ -77,8 +79,9 @@ object DocumentMaker {
       }
     }
 
-    val doc = new Document(sents.toArray)
-    if(keepText) doc.text = Some(text.toString)
+    val textOpt = Option.when(keepText)(text.toString)
+    val doc = Document(sents.toArray, textOpt)
+
     doc
   }
 

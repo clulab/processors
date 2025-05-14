@@ -2,6 +2,8 @@ package org.clulab.processors
 
 import org.clulab.processors.clu.BalaurProcessor
 
+import scala.collection.mutable
+
 /**
   * User: mihais
   * Date: 3/1/13
@@ -21,31 +23,37 @@ trait Processor {
     require(documents.length > 1)
     val headDocument = documents.head
     val tailDocuments = documents.tail
-    val combinedSentences = documents.flatMap(_.sentences).toArray
-    val combinedDocument = new Document(combinedSentences)
 
     val headId = headDocument.id
     require(tailDocuments.forall(_.id == headId))
-    combinedDocument.id = headId
-
-    require(combinedDocument.text.isEmpty)
-    combinedDocument.text = combinedTextOpt
-
+    val headDctOpt = headDocument.getDCT
+    require(documents.tail.forall(_.getDCT == headDctOpt))
     // Coreference chains involve Mentions that include references to documents.  The Mentions are being
     // moved to a new Document and it would be infeasible to move the chains.
-    require(combinedDocument.coreferenceChains.isEmpty)
     require(documents.forall(_.coreferenceChains.isEmpty))
+
+    val attachments = mutable.HashMap[String, DocumentAttachment]()
 
     documents.foreach { document =>
       document.getAttachmentKeys.foreach { attachmentKey =>
-        require(combinedDocument.getAttachment(attachmentKey).forall(_ == document.getAttachment(attachmentKey).get))
-        combinedDocument.addAttachment(attachmentKey, document.getAttachment(attachmentKey).get)
+        val valueOpt = attachments.get(attachmentKey)
+        val isValid = valueOpt.forall(_ == document.getAttachment(attachmentKey).get)
+
+        require(isValid, "The attachments cannot contradict each other.")
+        attachments(attachmentKey) = document.getAttachment(attachmentKey).get
       }
     }
 
-    val headDctOpt = headDocument.getDCT
-    require(documents.tail.forall(_.getDCT == headDctOpt))
-    headDctOpt.foreach(combinedDocument.setDCT)
+    val combinedSentences = documents.flatMap(_.sentences).toArray
+    val combinedDocument = new Document(
+      sentences = combinedSentences,
+      id = headId,
+      coreferenceChains = None,
+      text = combinedTextOpt,
+      attachments = Some(attachments),
+      documentCreationTime = headDctOpt
+    )
+
     combinedDocument
   }
 
@@ -94,10 +102,10 @@ trait Processor {
   //   (2) It is more efficient during annotate() where all the possible operations are chained.
 
   /** Part of speech tagging; modifies the document in place. */
-  def tagPartsOfSpeech (doc:Document): Unit
+  def tagPartsOfSpeech(doc: Document): Unit
 
-  /** Lematization; modifies the document in place. */
-  def lemmatize (doc:Document): Unit
+  /** Lemmatization; modifies the document in place. */
+  def lemmatize(words: Array[String]): Array[String]
 
   /** Named Entity Recognition; modifies the document in place. */
   def recognizeNamedEntities (doc:Document): Unit

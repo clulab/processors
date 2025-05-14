@@ -29,10 +29,17 @@ class Document(
   protected val documentCreationTime:Option[String] = None
 ) extends Serializable {
 
-  def copy(sentences: Array[Sentence]): Document = ???
+  def copy(
+    sentences: Array[Sentence] = sentences,
+    id: Option[String] = id,
+    coreferenceChains: Option[CorefChains] = coreferenceChains,
+    text: Option[String] = text,
+    attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
+    documentCreationTime: Option[String] = documentCreationTime
+  ): Document = new Document(sentences, id, coreferenceChains, text, attachments, documentCreationTime)
 
   /** Clears any internal state potentially constructed by the annotators */
-  def clear(): Unit = { }
+  // def clear(): Unit = { }
 
   /**
     * Used to compare Documents.
@@ -172,20 +179,6 @@ class Document(
         }
       }
     })
-  }
-
-  // sentences are a val, so they must be initialized through the construction of a new Document.
-  // Thereafter, the remaining values can be assimilated from the old document.  The shortcut
-  // is used so that subclasses don't have to duplicate almost everything in their copy.
-  def copy(sentences: Array[Sentence] = sentences, textOpt: Option[String] = text): Document = {
-    new Document(
-      sentences = sentences, // not this
-      id = this.id,
-      coreferenceChains = this.coreferenceChains,
-      text = textOpt, // not this
-      attachments = this.attachments,
-      documentCreationTime = this.documentCreationTime
-    )
   }
 
   def offset(offset: Int): Document =

@@ -23,29 +23,29 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 object ToEnhancedDependencies {
   type EdgeSpec = (Int, Int, String)
 
-  def generateStanfordEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
+  def generateStanfordEnhancedDependencies(words: Array[String], tags: Array[String], dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
-    collapsePrepositionsStanford(sentence, dgi)
+    collapsePrepositionsStanford(words, dgi)
     raiseSubjects(dgi)
-    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = false)
-    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = false)
-    propagateConjSubjectsAndObjects(sentence, dgi)
-    dgi.toDirectedGraph(Some(sentence.size))
+    pushSubjectsObjectsInsideRelativeClauses(tags, dgi, universal = false)
+    propagateSubjectsAndObjectsInConjVerbs(tags, dgi, universal = false)
+    propagateConjSubjectsAndObjects(tags, dgi)
+    dgi.toDirectedGraph(Some(words.length))
   }
 
-  def generateUniversalEnhancedDependencies(sentence:Sentence, dg:DirectedGraph[String]): DirectedGraph[String] = {
+  def generateUniversalEnhancedDependencies(words: Array[String], lemmas: Array[String], tags: Array[String], dg: DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
-    collapseMWEs(sentence, dgi)
-    val collapsedNmods = collapsePrepositionsUniversal(sentence, dgi)
+    collapseMWEs(lemmas, tags, dgi)
+    val collapsedNmods = collapsePrepositionsUniversal(words, lemmas, tags, dgi)
     replicateCollapsedNmods(collapsedNmods, dgi)
     raiseSubjects(dgi)
-    pushSubjectsObjectsInsideRelativeClauses(sentence, dgi, universal = true)
-    propagateSubjectsAndObjectsInConjVerbs(sentence, dgi, universal = true)
-    propagateConjSubjectsAndObjects(sentence, dgi)
+    pushSubjectsObjectsInsideRelativeClauses(tags, dgi, universal = true)
+    propagateSubjectsAndObjectsInConjVerbs(tags, dgi, universal = true) // requires tags
+    propagateConjSubjectsAndObjects(tags, dgi)
     mergeNsubjXcomp(dgi)
-    replicateCopulativeSubjects(sentence, dgi)
-    expandConj(sentence, dgi) // this must be last because several of the above methods expect "conj" labels
-    dgi.toDirectedGraph(Some(sentence.size))
+    replicateCopulativeSubjects(dgi)
+    expandConj(words, dgi) // this must be last because several of the above methods expect "conj" labels
+    dgi.toDirectedGraph(Some(words.length))
   }
 
   /**
@@ -66,7 +66,7 @@ object ToEnhancedDependencies {
    * Replicates copulative subjects across conjunctions
    * It is difficult and expensive => nsubj from 2 to 0 and from 4 to 0
    */
-  def replicateCopulativeSubjects(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+  def replicateCopulativeSubjects(dgi: DirectedGraphIndex[String]): Unit = {
     val nsubjs = dgi.findByName("nsubj")
     for(nsubj <- nsubjs) {
       val cops = dgi.findByHeadAndName(nsubj.source, "cop")
@@ -102,13 +102,13 @@ object ToEnhancedDependencies {
    * @param sentence
    * @param dgi
    */
-  def expandConj(sentence: Sentence, dgi: DirectedGraphIndex[String]): Unit = {
+  def expandConj(words: Array[String], dgi: DirectedGraphIndex[String]): Unit = {
     val toRemove = new ListBuffer[Edge[String]]
     val conjs = dgi.findByName("conj")
     for (conj <- conjs) {
       var shouldRemove = false
       for(cc <- dgi.findByName("cc").filter(_.source == conj.source)) {
-        val ccWord = sentence.words(cc.destination).toLowerCase()
+        val ccWord = words(cc.destination).toLowerCase()
         dgi.addEdge(conj.source, conj.destination, s"conj_$ccWord")
         shouldRemove = true
       }
@@ -125,12 +125,12 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def collapsePrepositionsStanford(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
+  def collapsePrepositionsStanford(words: Array[String], dgi:DirectedGraphIndex[String]): Unit = {
     val toRemove = new ListBuffer[Edge[String]]
     val preps = dgi.findByName("prep")
     for(prep <- preps) {
       toRemove += prep
-      val word = sentence.words(prep.destination)
+      val word = words(prep.destination)
       for(pobj <- dgi.findByName("pobj").filter(_.source == prep.destination)) {
         dgi.addEdge(prep.source, pobj.destination, s"prep_$word")
         toRemove += pobj
@@ -140,12 +140,12 @@ object ToEnhancedDependencies {
   }
 
   def collapsePrepositionsUniversal(
-    sentence:Sentence, 
+    words: Array[String], lemmas: Array[String], tags: Array[String],
     dgi:DirectedGraphIndex[String]): Seq[EdgeSpec] = {
 
     val collapsedNmods = new ArrayBuffer[EdgeSpec]()
-    collapsePrepositionsUniversalNmodCase(sentence, dgi, collapsedNmods)
-    collapsePrepositionsUniversalDueTo(sentence, dgi, collapsedNmods)
+    collapsePrepositionsUniversalNmodCase(words, dgi, collapsedNmods)
+    collapsePrepositionsUniversalDueTo(lemmas, tags, dgi, collapsedNmods)
     collapsedNmods
   }
 
@@ -156,7 +156,7 @@ object ToEnhancedDependencies {
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversalNmodCase(
-    sentence:Sentence, 
+    words: Array[String],
     dgi:DirectedGraphIndex[String],
     collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
@@ -166,9 +166,9 @@ object ToEnhancedDependencies {
     for(prep <- preps) {
       toRemove += prep
       for(c <- dgi.findByName("case").filter(_.source == prep.destination)) {
-        val word = sentence.words(c.destination).toLowerCase()
+        val word = words(c.destination).toLowerCase()
         // find multi-word prepositions such as "such as"
-        val mwe = findMultiWord(word, c.destination, sentence, dgi)
+        val mwe = findMultiWord(word, c.destination, words, dgi)
 
         // TODO: add nmod:agent (if word == "by") and passive voice here?
         dgi.addEdge(prep.source, prep.destination, s"nmod_$mwe")
@@ -189,16 +189,15 @@ object ToEnhancedDependencies {
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversalDueTo(
-    sentence:Sentence, 
+    lemmas: Array[String], tags: Array[String],
     dgi:DirectedGraphIndex[String], 
     collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
-    val tags = sentence.tags.get
     val toRemove = new ListBuffer[Edge[String]]
     var shouldRemove = false
     val preps = dgi.findByName("mwe")
     for(prep <- preps) {
-      if(sentence.lemmas.get(prep.source) == "due" && sentence.lemmas.get(prep.destination) == "to") {
+      if(lemmas(prep.source) == "due" && lemmas(prep.destination) == "to") {
         // found a "due to" MWE
         for(leftDep <- dgi.findByModifier(prep.source)) {
           // found the dep from "famine" to "due"
@@ -235,15 +234,15 @@ object ToEnhancedDependencies {
     * @param dgi
     */
   def collapseMWEs(
-    sentence:Sentence, 
+    lemmas: Array[String],
+    tags: Array[String],
     dgi:DirectedGraphIndex[String]): Unit = {
 
-    val lemmas = sentence.lemmas.get
-    val tags = sentence.tags.get
+    val size = lemmas.length
     val toRemove = new ListBuffer[Edge[String]]
     var shouldRemove = true
     
-    for(i <- 0 until sentence.size - 1) {
+    for(i <- 0 until size - 1) {
       if(lemmas(i) == "due" && lemmas(i + 1) == "to" && tags(i) == "IN") {
         val toHeads = dgi.findByModifier(i + 1)
         var found = false
@@ -262,7 +261,7 @@ object ToEnhancedDependencies {
     if(shouldRemove) remove(toRemove, dgi)
   }
 
-  def findMultiWord(first: String, firstPos: Int, sentence: Sentence, dgi:DirectedGraphIndex[String]): String = {
+  def findMultiWord(first: String, firstPos: Int, words: Array[String], dgi:DirectedGraphIndex[String]): String = {
     val buffer = new StringBuilder
     buffer.append(first)
 
@@ -273,7 +272,7 @@ object ToEnhancedDependencies {
       if(mods.isEmpty) {
         done = true
       } else {
-        val word = sentence.words(mods.head.destination).toLowerCase()
+        val word = words(mods.head.destination).toLowerCase()
         buffer.append("_")
         buffer.append(word)
         head = mods.head.destination
@@ -303,9 +302,8 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateSubjectsAndObjectsInConjVerbs(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
+  def propagateSubjectsAndObjectsInConjVerbs(tags: Array[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
-    val tags = sentence.tags.get
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
       val right = math.max(conj.source, conj.destination)
@@ -387,9 +385,8 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateConjSubjectsAndObjects(sentence:Sentence, dgi:DirectedGraphIndex[String]): Unit = {
+  def propagateConjSubjectsAndObjects(tags: Array[String], dgi:DirectedGraphIndex[String]): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
-    val tags = sentence.tags.get
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
       val right = math.max(conj.source, conj.destination)
@@ -424,11 +421,10 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def pushSubjectsObjectsInsideRelativeClauses(sentence:Sentence, dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
+  def pushSubjectsObjectsInsideRelativeClauses(tags: Array[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val rels =
       if(universal) dgi.findByName("acl:relcl")
       else dgi.findByName("rcmod")
-    val tags = sentence.tags.get
 
     for(rel <- rels) {
       val head = rel.source

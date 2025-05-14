@@ -1,6 +1,6 @@
 package org.clulab.processors.apps
 
-import org.clulab.numeric.{displayMentions, setLabelsAndNorms}
+import org.clulab.numeric.{displayMentions, mkLabelsAndNorms}
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
@@ -37,7 +37,7 @@ class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends Reloadabl
     val doc = proc.get.annotate(text)
     val mentions = proc.get.numericEntityRecognizerOpt.map(_.extractFrom(doc)).getOrElse(Seq.empty)
 
-    setLabelsAndNorms(doc, mentions)
+    mkLabelsAndNorms(doc, mentions)
     displayMentions(mentions, doc)
   }
 

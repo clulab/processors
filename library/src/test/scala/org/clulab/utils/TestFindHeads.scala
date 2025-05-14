@@ -9,10 +9,12 @@ class TestFindHeads extends Test {
   def newSentence(words: Array[String], directedGraph: DirectedGraph[String]): Sentence = {
     val startOffsets = Array(0) // unused
     val   endOffsets = Array(0) // unused
-    val sentence = new Sentence(words, startOffsets, endOffsets, words)
+    val sentence = new Sentence(
+      words, startOffsets, endOffsets, words,
+      tags = Some(words)
+    )
 
     sentence.graphs(UNIVERSAL_BASIC) = directedGraph
-    sentence.tags = Some(words)
     sentence
   }
 

@@ -1,7 +1,6 @@
 package org.clulab.struct
 
-import org.clulab.processors.Document
-import org.clulab.processors.Sentence
+import org.clulab.processors.{Document, DocumentAttachment, Sentence}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.serialization.json._
 import org.clulab.struct.test.CaseClass
@@ -17,6 +16,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import scala.collection.mutable
 import scala.util.Using
 
 class TestDocumentAttachment extends Test {
@@ -124,12 +124,13 @@ class TestDocumentAttachment extends Test {
 //  }
 
   "Document with TextNameDocumentAttachment" should "serialize as text" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = mutable.HashMap[String, DocumentAttachment](
+      (FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     val documentString = documentSerializer.save(oldDocument)
@@ -146,12 +147,13 @@ class TestDocumentAttachment extends Test {
   }
 
   "Document with ObjectNameDocumentAttachment" should "serialize as text" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = mutable.HashMap[String, DocumentAttachment](
+      (FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     // This should be a messy string.
@@ -169,12 +171,14 @@ class TestDocumentAttachment extends Test {
   }
 
   "Document with TextNameDocumentAttachments" should "serialize as json" in {
-    val oldDocument = new Document(Array.empty[Sentence])
+    val oldAttachments = mutable.HashMap[String, DocumentAttachment](
+      (FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
 
-    oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     // This shouldn't compile.
     /*oldDocument.addAttachment("wrong", new NameMethodAttachment("name"))*/
 
@@ -193,12 +197,13 @@ class TestDocumentAttachment extends Test {
   }
 
   "Document with ObjectNameDocumentAttachment" should "serialize as json" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = mutable.HashMap[String, DocumentAttachment](
+      (FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(Array.empty[Sentence], attachments = Some(oldAttachments))
 
     // This should be a messy string.
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
@@ -214,4 +219,3 @@ class TestDocumentAttachment extends Test {
     /*require(newDocument == oldDocument)*/
   }
 }
-

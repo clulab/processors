@@ -8,6 +8,66 @@ import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable
 
+case class WordTokenization(raw: String, startOffset: Int, endOffset: Int, word: String)
+
+// Is this SentenceTokenization, ArraySeq of WordTokenization
+// Tokenation, Tokse
+// Parseation, Parse
+case class Tokenization(
+  raw: Array[String],
+  startOffsets: Array[Int],
+  endOffsets: Array[Int],
+  words: Array[String]
+) {
+
+  def reverse: Tokenization = {
+    Tokenization(
+      raw = raw.reverse,
+      startOffsets = startOffsets.reverse,
+      endOffsets = endOffsets.reverse,
+      words = words.reverse
+    )
+  }
+}
+
+// These are by the word ones and then there are relationships between words.
+// So parse, might not be a thing that is per word.
+//case class WordParse(tag: String, lemma: String, entity: String, norm: String, chunk: String)
+
+//case class SentenceParse(tags: Array[String], cyntacticTree, graphs, relations)
+
+// Again is this SentenceParse
+case class Parse(
+  tags: Option[Array[String]] = None,
+  /** Lemmas */
+  lemmas: Option[Array[String]] = None,
+  /** NE labels */
+  entities: Option[Array[String]] = None,
+  /** Normalized values of named/numeric entities, such as dates */
+  norms: Option[Array[String]] = None,
+  /** Shallow parsing labels */
+  chunks: Option[Array[String]] = None,
+  /** Constituent tree of this sentence; includes head words */
+  syntacticTree: Option[Tree] = None,
+  /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
+  graphs: GraphMap = GraphMap(),
+  /** Relation triples from OpenIE */
+  relations:Option[Array[RelationTriple]] = None
+) {
+
+  def reverse: Parse = {
+    Parse(
+      tags = tags.map(_.reverse),
+      lemmas = lemmas.map(_.reverse),
+      entities = entities.map(_.reverse),
+      norms = norms.map(_.reverse),
+      chunks = chunks.map(_.reverse)
+      // TODO: reverse syntacticTree, graphs, and relations!
+    )
+  }
+}
+
+
 /** Stores the annotations for a single sentence */
 class Sentence(
   /** Raw tokens in this sentence; these MUST match the original text */
@@ -24,25 +84,33 @@ class Sentence(
     * However, the number of raw tokens MUST always equal the number of words, so if the exact text must be recovered,
     *   please use the raw tokens with the same positions
     */
-  val words: Array[String]) extends Serializable {
+  val words: Array[String],
 
   /** POS tags for words */
-  var tags: Option[Array[String]] = None
+  val tags: Option[Array[String]] = None,
   /** Lemmas */
-  var lemmas: Option[Array[String]] = None
+  val lemmas: Option[Array[String]] = None,
   /** NE labels */
-  var entities: Option[Array[String]] = None
+  val entities: Option[Array[String]] = None,
   /** Normalized values of named/numeric entities, such as dates */
-  var norms: Option[Array[String]] = None
+  val norms: Option[Array[String]] = None,
   /** Shallow parsing labels */
-  var chunks: Option[Array[String]] = None
+  val chunks: Option[Array[String]] = None,
   /** Constituent tree of this sentence; includes head words */
-  var syntacticTree: Option[Tree] = None
+  val syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  var graphs: GraphMap = GraphMap()
+  val graphs: GraphMap = GraphMap(),
   /** Relation triples from OpenIE */
-  var relations:Option[Array[RelationTriple]] = None
+  val relations:Option[Array[RelationTriple]] = None
+) extends Serializable {
 
+  def getTokenization: Tokenization = {
+    Tokenization(raw, startOffsets, endOffsets, words)
+  }
+
+  def getParse: Parse = {
+    Parse(tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations)
+  }
 
   def size:Int = raw.length
 
@@ -150,42 +218,47 @@ class Sentence(
   }
 
   /** Reverts the current sentence */
-  def revert():Sentence = {
-    val reverted = new Sentence(
-      SeqUtils.revert(raw).toArray,
-      SeqUtils.revert(startOffsets).toArray,
-      SeqUtils.revert(endOffsets).toArray,
-      SeqUtils.revert(words).toArray)
-    if(tags.nonEmpty)
-      reverted.tags = Some(SeqUtils.revert(tags.get).toArray)
-    if(lemmas.nonEmpty)
-      reverted.lemmas = Some(SeqUtils.revert(lemmas.get).toArray)
-    if(entities.nonEmpty)
-      reverted.entities = Some(SeqUtils.revert(entities.get).toArray)
-    if(norms.nonEmpty)
-      reverted.norms = Some(SeqUtils.revert(norms.get).toArray)
-    if(chunks.nonEmpty)
-      reverted.chunks = Some(SeqUtils.revert(chunks.get).toArray)
+  def revert(): Sentence = {
+    val reversedTokenization = this.getTokenization.reverse
+    val reversedParse = this.getParse.reverse
+    val reversedSentence = Sentence(
+      reversedTokenization.raw,
+      reversedTokenization.startOffsets,
+      reversedTokenization.endOffsets,
+      reversedTokenization.words
+    )
 
+    // TODO: Make this work
+//    reversedSentence.tags = reversedParse.tags
+//    reversedSentence.lemmas = reversedParse.lemmas
+//    reversedSentence.entities = reversedParse.entities
+//    reversedSentence.norms = reversedParse.norms
+//    reversedSentence.chunks = reversedParse.chunks
     // TODO: revert syntacticTree and graphs!
 
-    reverted
+    reversedSentence
   }
 
-  def assimilate(sentence: Sentence): Sentence = {
-    tags = sentence.tags
-    lemmas = sentence.lemmas
-    entities = sentence.entities
-    norms = sentence.norms
-    chunks = sentence.chunks
-    syntacticTree = sentence.syntacticTree
-    graphs = sentence.graphs
-    relations = sentence.relations
-    this
-  }
+  // TODO
+  def copy(
+    raw: Array[String] = raw,
+    startOffsets: Array[Int] = startOffsets,
+    endOffsets: Array[Int] = endOffsets,
+    words: Array[String] = words,
 
-  def copy(raw: Array[String] = raw, startOffsets: Array[Int] = startOffsets, endOffsets: Array[Int] = endOffsets, words: Array[String] = words): Sentence =
-      new Sentence(raw, startOffsets, endOffsets, words).assimilate(this)
+    tags: Option[Array[String]] = tags,
+    lemmas: Option[Array[String]] = lemmas,
+    entities: Option[Array[String]] = entities,
+    norms: Option[Array[String]] = norms,
+    chunks: Option[Array[String]] = chunks,
+    syntacticTree: Option[Tree] = syntacticTree,
+    graphs: GraphMap = graphs,
+    relations: Option[Array[RelationTriple]] = relations
+  ): Sentence =
+    new Sentence(
+      raw, startOffsets, endOffsets, words,
+      tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations
+    )
 
   def offset(offset: Int): Sentence = {
     if (offset == 0) this
@@ -227,17 +300,9 @@ object Sentence {
     deps: GraphMap,
     relations: Option[Array[RelationTriple]]
   ): Sentence = {
-    val s = Sentence(raw, startOffsets, endOffsets, words)
-    // update annotations
-    s.tags = tags
-    s.lemmas = lemmas
-    s.entities = entities
-    s.norms = norms
-    s.chunks = chunks
-    s.syntacticTree = tree
-    s.graphs = deps
-    s.relations = relations
-    s
+    new Sentence(
+      raw, startOffsets, endOffsets, words,
+      tags, lemmas, entities, norms, chunks, tree, deps, relations
+    )
   }
-
 }

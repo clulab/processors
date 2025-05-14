@@ -48,7 +48,7 @@ class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   }
 
   protected def unveilDocument(veiledDocument: Document): Document = {
-    val unveiledDocument = veiledDocument.copy(textOpt = Some(originalText))
+    val unveiledDocument = veiledDocument.copy(text = Some(originalText))
 
     unveiledDocument
   }
@@ -164,21 +164,27 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     val unveiledStartOffsets = originalSentence.startOffsets
     val unveiledEndOffsets = originalSentence.endOffsets
     val unveiledWords = originalSentence.words
+
     val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
 
     def unveilStringArray(veiledArrayOpt: Option[Array[String]], veil: String): Option[Array[String]] =
         this.unveilStringArray(veiledArrayOpt, sentenceIndex, veil)
 
-    unveiledSentence.tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)
-    unveiledSentence.lemmas   = unveilStringArray(unveiledSentence.lemmas,   Veil.veiledLemma)
-    unveiledSentence.entities = unveilStringArray(unveiledSentence.entities, Veil.veiledEntity)
-    unveiledSentence.norms    = unveilStringArray(unveiledSentence.norms,    Veil.veiledNorm)
-    unveiledSentence.chunks   = unveilStringArray(unveiledSentence.chunks,   Veil.veiledChunk)
+    val tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)
+    val lemmas   = unveilStringArray(unveiledSentence.lemmas,   Veil.veiledLemma)
+    val entities = unveilStringArray(unveiledSentence.entities, Veil.veiledEntity)
+    val norms    = unveilStringArray(unveiledSentence.norms,    Veil.veiledNorm)
+    val chunks   = unveilStringArray(unveiledSentence.chunks,   Veil.veiledChunk)
 
-    unveiledSentence.syntacticTree = unveilSyntacticTree(unveiledSentence.syntacticTree)
-    unveiledSentence.graphs = unveilGraphs(unveiledSentence.graphs, sentenceIndex)
-    unveiledSentence.relations = unveilRelations(unveiledSentence.relations)
-    unveiledSentence
+    val syntacticTree = unveilSyntacticTree(unveiledSentence.syntacticTree)
+    val graphs = unveilGraphs(unveiledSentence.graphs, sentenceIndex)
+    val relations = unveilRelations(unveiledSentence.relations)
+
+    val newSentence = Sentence(
+      unveiledSentence.raw, unveiledSentence.startOffsets, unveiledSentence.endOffsets, unveiledSentence.words,
+      tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations
+    )
+    newSentence
   }
 
   protected def unveilDocument(veiledDocument: Document): Document = {

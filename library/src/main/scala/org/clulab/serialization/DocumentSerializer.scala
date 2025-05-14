@@ -102,13 +102,9 @@ class DocumentSerializer extends Logging {
 
       assert(bits(0) == END_OF_DOCUMENT, s"END_OF_DOCUMENT expected, found ${bits(0)}")
 
-      val doc = Document(sents.toArray)
-      doc.coreferenceChains = coref
-      doc.text = text
-
-
       // TODO: Hack by Enrique to resolve the document object for the relations
-      for(sen <- doc.sentences){
+      /*
+      val relationsOpt = for(sen <- sents){
         sen.relations match {
           case Some(relations) =>
             val newRelations = relations.map(r => RelationTriple(r.confidence, r.subjectInterval, r.relationInterval, r.objectInterval))
@@ -116,12 +112,20 @@ class DocumentSerializer extends Logging {
           case None => ()
         }
       }
+      */
 
-      namedDocumentAttachmentsOpt.foreach { namedDocumentAttachments =>
-        namedDocumentAttachments.foreach { case (name: String, documentAttachment: DocumentAttachment) =>
-          doc.addAttachment(name, documentAttachment)
-        }
+      val attachmentsOpt = namedDocumentAttachmentsOpt.map { namedDocumentAttachments =>
+        val attachments = mutable.HashMap[String, DocumentAttachment]()
+
+        attachments.addAll(namedDocumentAttachments)
+        attachments
       }
+
+      val doc = new Document(
+        sentences = sents.toArray,
+        text = text,
+        attachments = attachmentsOpt
+      )
 
       doc
     }
