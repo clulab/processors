@@ -16,21 +16,20 @@ import scala.collection.mutable
   *   Written by: Mihai Surdeanu and Gus Hahn-Powell.
   *   Last Modified: Add apply method to copy Document.
   */
-class Document(val sentences: Array[Sentence]) extends Serializable {
-
+class Document(
+  val sentences: Array[Sentence],
   /** Unique id for this document, if any */
-  var id: Option[String] = None
-
+  val id: Option[String] = None,
   /** Clusters of coreferent mentions */
-  var coreferenceChains: Option[CorefChains] = None
-
+  val coreferenceChains: Option[CorefChains] = None,
   /** The original text corresponding to this document, if it was preserved by the corresponding processor */
-  var text: Option[String] = None
-
+  val text: Option[String] = None,
   /** Map of any arbitrary document attachments such as document creation time */
-  protected var attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None
+  protected val attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
+  protected val documentCreationTime:Option[String] = None
+) extends Serializable {
 
-  protected var documentCreationTime:Option[String] = None
+  def copy(sentences: Array[Sentence]): Document = ???
 
   /** Clears any internal state potentially constructed by the annotators */
   def clear(): Unit = { }
@@ -67,11 +66,11 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
   )
 
   /** Adds an attachment to the document's attachment map */
-  def addAttachment(name: String, attachment: DocumentAttachment): Unit = {
-    if (attachments.isEmpty)
-      attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
-    attachments.get += name -> attachment
-  }
+//  def addAttachment(name: String, attachment: DocumentAttachment): Unit = {
+//    if (attachments.isEmpty)
+//      attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
+//    attachments.get += name -> attachment
+//  }
 
   /** Retrieves the attachment with the given name */
   def getAttachment(name: String): Option[DocumentAttachment] = attachments.flatMap(_.get(name))
@@ -96,14 +95,13 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
    * The DCT will impacts how Sentence.norms are generated for DATE expressions
    * @param dct Document creation time
    */
-  def setDCT(dct:String): Unit = documentCreationTime = Some(dct)
+//  def setDCT(dct:String): Unit = documentCreationTime = Some(dct)
 
   def getDCT: Option[String] = documentCreationTime
 
   def prettyPrint(pw: PrintWriter): Unit = {
     // let's print the sentence-level annotations
-    var sentenceCount = 0
-    for (sentence <- sentences) {
+    sentences.zipWithIndex.foreach { case (sentence, sentenceCount) =>
       pw.println("Sentence #" + sentenceCount + ":")
       pw.println("Tokens: " + sentence.words.zipWithIndex.mkString(" "))
       pw.println("Start character offsets: " + sentence.startOffsets.mkString(" "))
@@ -157,7 +155,6 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
         // on syntactic trees, including access to head phrases/words
       })
 
-      sentenceCount += 1
       pw.println("\n")
     }
 
@@ -177,20 +174,18 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     })
   }
 
-  def assimilate(document: Document, textOpt: Option[String]): Document = {
-    id = document.id
-    coreferenceChains = document.coreferenceChains
-    text = textOpt
-    attachments = document.attachments
-    documentCreationTime = document.documentCreationTime
-    this
-  }
-
   // sentences are a val, so they must be initialized through the construction of a new Document.
   // Thereafter, the remaining values can be assimilated from the old document.  The shortcut
   // is used so that subclasses don't have to duplicate almost everything in their copy.
   def copy(sentences: Array[Sentence] = sentences, textOpt: Option[String] = text): Document = {
-    new Document(sentences).assimilate(this, textOpt)
+    new Document(
+      sentences = sentences, // not this
+      id = this.id,
+      coreferenceChains = this.coreferenceChains,
+      text = textOpt, // not this
+      attachments = this.attachments,
+      documentCreationTime = this.documentCreationTime
+    )
   }
 
   def offset(offset: Int): Document =
@@ -202,20 +197,37 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 
 object Document {
 
-  def apply(sentences: Array[Sentence]): Document = new Document(sentences)
+  def apply(sentences: Array[Sentence]): Document = apply(sentences, text = None)
+
+  def apply(sentences: Array[Sentence], text: Option[String]): Document = apply(id = None, sentences, coref = None, text)
 
   def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
-    val d = Document(sentences)
-    d.id = id
-    d.coreferenceChains = coref
-    d.text = text
-    d
+    val document = new Document(
+      sentences,
+      id = id,
+      coreferenceChains = coref,
+      text = text
+    )
+
+    document
   }
 
-  /** Return a new Document with relevant fields copied from the given Document. */
-  def apply (doc: Document): Document =
-    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
+  /** Return a new Document with some relevant fields copied from the given Document. */
+  def apply(doc: Document): Document =
+    apply(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
 
+  def apply(doc: Document, sentences: Array[Sentence]): Document = {
+    val newDocument = new Document(
+      sentences,
+      id = doc.id,
+      coreferenceChains = doc.coreferenceChains,
+      text = doc.text,
+      attachments = doc.attachments,
+      documentCreationTime = doc.documentCreationTime
+    )
+
+    newDocument
+  }
 }
 
 /**
