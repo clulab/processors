@@ -23,7 +23,7 @@ object NamedEntity {
   val INSIDE = "I-"
   val OUTSIDE = "O"
 
-  def collect(bioLabels: IndexedSeq[String]): IndexedSeq[NamedEntity] = {
+  def collect(bioLabels: Seq[String]): Seq[NamedEntity] = {
 
     def mkNamedEntity(label: String, begin: Int): NamedEntity = {
       // Start looking for the end one after the begin.

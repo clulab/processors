@@ -7,7 +7,7 @@ import org.clulab.numeric.NumericUtils
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, Lemmatizer, OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer, PortugueseLemmatizer, SpanishLemmatizer, Tokenizer}
 import org.clulab.processors.hexatagging.HexaDecoder
-//import org.clulab.scala.WrappedArray._
+import org.clulab.utils.WrappedArraySeq
 import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
 import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.sequences.{LexiconNER, NamedEntity}
@@ -16,8 +16,6 @@ import org.clulab.struct.GraphMap
 import org.clulab.struct.GraphMap.GraphMapType
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
-
-import scala.collection.compat.immutable.ArraySeq
 
 import BalaurProcessor._
 
@@ -151,7 +149,7 @@ class BalaurProcessor protected (
       val lemmas = lemmatize(words)
 
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(ArraySeq.unsafeWrapArray(words))
+        val allLabelsAndScores = tokenClassifier.predictWithScores(WrappedArraySeq(words).toImmutableSeq)
         val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
         val entities = {
           val optionalEntities = mkOptionalNerLabels(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
@@ -257,13 +255,13 @@ class BalaurProcessor protected (
   private def mergeNerLabels(generic: Array[String], custom: Array[String]): Array[String] = {
     require(generic.length == custom.length)
 
-    val customNamedEntities = NamedEntity.collect(ArraySeq.unsafeWrapArray(custom))
+    val customNamedEntities = NamedEntity.collect(WrappedArraySeq(custom).toImmutableSeq)
     val result = generic.toArray // A copy of the generic labels is created here.
 
     if (customNamedEntities.isEmpty)
       result
     else {
-      val genericNamedEntities = NamedEntity.collect(ArraySeq.unsafeWrapArray(generic))
+      val genericNamedEntities = NamedEntity.collect(WrappedArraySeq(generic).toImmutableSeq)
 
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
       //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")
