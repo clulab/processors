@@ -3,9 +3,11 @@ package org.clulab.processors.clu
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.clulab.numeric.{NumericEntityRecognizer, mkLabelsAndNorms}
+import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, Lemmatizer, OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer, PortugueseLemmatizer, SpanishLemmatizer, Tokenizer}
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.processors.clu.tokenizer._
-import org.clulab.scala.WrappedArray._
+
+import scala.collection.immutable.ArraySeq
+//import org.clulab.scala.WrappedArray._
 import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
 import org.clulab.sequences.{LexiconNER, NamedEntity}
@@ -13,7 +15,6 @@ import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
-import org.clulab.odin.Mention
 import BalaurProcessor._
 import PostProcessor._
 import org.clulab.processors.hexatagging.HexaDecoder
@@ -149,7 +150,7 @@ class BalaurProcessor protected (
       val lemmas = lemmatize(words)
 
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(words)
+        val allLabelsAndScores = tokenClassifier.predictWithScores(ArraySeq.unsafeWrapArray(words))
         val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
         val entities = {
           val optionalEntities = mkOptionalNerLabels(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
@@ -255,13 +256,13 @@ class BalaurProcessor protected (
   private def mergeNerLabels(generic: Array[String], custom: Array[String]): Array[String] = {
     require(generic.length == custom.length)
 
-    val customNamedEntities = NamedEntity.collect(custom)
+    val customNamedEntities = NamedEntity.collect(ArraySeq.unsafeWrapArray(custom))
     val result = generic.toArray // A copy of the generic labels is created here.
 
     if (customNamedEntities.isEmpty)
       result
     else {
-      val genericNamedEntities = NamedEntity.collect(generic)
+      val genericNamedEntities = NamedEntity.collect(ArraySeq.unsafeWrapArray(generic))
 
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
       //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")

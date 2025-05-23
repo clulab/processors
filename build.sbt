@@ -18,7 +18,7 @@ val scala37  = "3.7.0"   // up to 3.7.0
 // Scala33: This is the first official LTS, but hold off until necessary.
 val scala3 = scala33
 
-ThisBuild / crossScalaVersions := Seq(scala213) // , scala3)
+ThisBuild / crossScalaVersions := Seq(scala3, scala213)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
 
 lazy val root = (project in file("."))

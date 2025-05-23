@@ -1,7 +1,7 @@
 package org.clulab.serialization.json
 
 import java.io.File
-import org.clulab.processors.{Document, DocumentAttachment, DocumentAttachmentBuilderFromJson, Parse, Sentence}
+import org.clulab.processors.{Document, DocumentAttachment, DocumentAttachmentBuilderFromJson, Sentence}
 import org.clulab.struct.Edge
 import org.clulab.struct.{DirectedGraph, GraphMap}
 import org.clulab.utils.FileUtils

@@ -1,72 +1,10 @@
 package org.clulab.processors
 
-import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{DirectedGraph, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap._
 import org.clulab.utils.Hash
-import org.clulab.utils.SeqUtils
 
 import scala.collection.mutable
-
-case class WordTokenization(raw: String, startOffset: Int, endOffset: Int, word: String)
-
-// Is this SentenceTokenization, ArraySeq of WordTokenization
-// Tokenation, Tokse
-// Parseation, Parse
-case class Tokenization(
-  raw: Array[String],
-  startOffsets: Array[Int],
-  endOffsets: Array[Int],
-  words: Array[String]
-) {
-
-  def reverse: Tokenization = {
-    Tokenization(
-      raw = raw.reverse,
-      startOffsets = startOffsets.reverse,
-      endOffsets = endOffsets.reverse,
-      words = words.reverse
-    )
-  }
-}
-
-// These are by the word ones and then there are relationships between words.
-// So parse, might not be a thing that is per word.
-//case class WordParse(tag: String, lemma: String, entity: String, norm: String, chunk: String)
-
-//case class SentenceParse(tags: Array[String], cyntacticTree, graphs, relations)
-
-// Again is this SentenceParse
-case class Parse(
-  tags: Option[Array[String]] = None,
-  /** Lemmas */
-  lemmas: Option[Array[String]] = None,
-  /** NE labels */
-  entities: Option[Array[String]] = None,
-  /** Normalized values of named/numeric entities, such as dates */
-  norms: Option[Array[String]] = None,
-  /** Shallow parsing labels */
-  chunks: Option[Array[String]] = None,
-  /** Constituent tree of this sentence; includes head words */
-  syntacticTree: Option[Tree] = None,
-  /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  graphs: GraphMap = GraphMap(),
-  /** Relation triples from OpenIE */
-  relations:Option[Array[RelationTriple]] = None
-) {
-
-  def reverse: Parse = {
-    Parse(
-      tags = tags.map(_.reverse),
-      lemmas = lemmas.map(_.reverse),
-      entities = entities.map(_.reverse),
-      norms = norms.map(_.reverse),
-      chunks = chunks.map(_.reverse)
-      // TODO: reverse syntacticTree, graphs, and relations!
-    )
-  }
-}
-
 
 /** Stores the annotations for a single sentence */
 class Sentence(
@@ -103,14 +41,6 @@ class Sentence(
   /** Relation triples from OpenIE */
   val relations:Option[Array[RelationTriple]] = None
 ) extends Serializable {
-
-  def getTokenization: Tokenization = {
-    Tokenization(raw, startOffsets, endOffsets, words)
-  }
-
-  def getParse: Parse = {
-    Parse(tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations)
-  }
 
   def size:Int = raw.length
 
@@ -219,22 +149,21 @@ class Sentence(
 
   /** Reverts the current sentence */
   def revert(): Sentence = {
-    val reversedTokenization = this.getTokenization.reverse
-    val reversedParse = this.getParse.reverse
     val reversedSentence = Sentence(
-      reversedTokenization.raw,
-      reversedTokenization.startOffsets,
-      reversedTokenization.endOffsets,
-      reversedTokenization.words
+      raw.reverse,
+      startOffsets.reverse,
+      endOffsets.reverse,
+      words.reverse,
+      tags.map(_.reverse),
+      lemmas.map(_.reverse),
+      entities.map(_.reverse),
+      norms.map(_.reverse),
+      chunks.map(_.reverse),
+      // TODO: revert syntacticTree and graphs!
+      syntacticTree,
+      graphs,
+      relations
     )
-
-    // TODO: Make this work
-//    reversedSentence.tags = reversedParse.tags
-//    reversedSentence.lemmas = reversedParse.lemmas
-//    reversedSentence.entities = reversedParse.entities
-//    reversedSentence.norms = reversedParse.norms
-//    reversedSentence.chunks = reversedParse.chunks
-    // TODO: revert syntacticTree and graphs!
 
     reversedSentence
   }
