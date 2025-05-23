@@ -656,7 +656,7 @@ class TestNumericEntityRecognition extends Test {
   def numericParse(sentence: String): (Array[String], Array[String], Array[String]) = {
     val doc = proc.annotate(sentence)
     val mentions = ner.extractFrom(doc)
-    mkLabelsAndNorms(doc, mentions)
+    NumericUtils.mkLabelsAndNorms(doc, mentions)
 
     // assume 1 sentence per doc
     val sent = doc.sentences.head

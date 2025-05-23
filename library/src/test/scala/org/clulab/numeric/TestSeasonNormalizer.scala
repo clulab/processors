@@ -17,7 +17,7 @@ class TestSeasonNormalizer extends Test {
     val document = processor.annotate(text)
     val mentions = processor.numericEntityRecognizerOpt.get.extractFrom(document)
 
-    mkLabelsAndNorms(document, mentions)
+    NumericUtils.mkLabelsAndNorms(document, mentions)
     (document.sentences.head.entities.get, document.sentences.head.norms.get)
   }
 

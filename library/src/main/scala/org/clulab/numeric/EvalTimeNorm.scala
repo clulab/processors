@@ -34,7 +34,7 @@ object EvalTimeNorm {
       }
       val doc = proc.annotate(docText)
       val mentions = ner.extractFrom(doc)
-      mkLabelsAndNorms(doc, mentions)
+      NumericUtils.mkLabelsAndNorms(doc, mentions)
       val prediction =  mentions.collect{
         case m: Norm if m.neLabel.equals("DATE") || m.neLabel.equals("DATE-RANGE") =>
           (m.startOffset.toString, m.endOffset.toString, m.neNorm)

@@ -1,13 +1,14 @@
-package org.clulab
+package org.clulab.numeric
 
 import org.clulab.numeric.actions.NumericActions
-import org.clulab.numeric.mentions.{DateMention, DateRangeMention, MeasurementMention, Norm, PercentageMention}
+import org.clulab.numeric.mentions.Norm
 import org.clulab.odin.{EventMention, Mention}
-import org.clulab.processors.{Document, Sentence}
+import org.clulab.processors.Document
 import org.clulab.struct.Interval
+
 import _root_.scala.util.control.Breaks._
 
-package object numeric {
+object NumericUtils {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
     val mentionsBySentence = mentions.groupBy(_.sentence).map { case (sentence, mentions) =>
       sentence -> mentions.sortBy(_.start)
