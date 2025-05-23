@@ -77,21 +77,27 @@ object JSONSerializer {
 
   def toSentence(json: JValue): Sentence = {
 
-    def getLabels(json: JValue, k: String): Option[Array[String]] = json \ k match {
+    def getStrings(json: JValue, k: String): Array[String] = (json \ k).extract[Array[String]]
+
+    def getInts(json: JValue, k: String): Array[Int] = (json \ k).extract[Array[Int]]
+
+    def getLabelsOpt(json: JValue, k: String): Option[Array[String]] = json \ k match {
       case JNothing => None
       case contents => Some(contents.extract[Array[String]])
     }
 
-    val tokenizedSentence = json.extract[Sentence]
-
-    val tags = getLabels(json, "tags")
-    val lemmas = getLabels(json, "lemmas")
-    val entities = getLabels(json, "entities")
-    val norms = getLabels(json, "norms")
-    val chunks = getLabels(json, "chunks")
+    val raw = getStrings(json, "raw")
+    val startOffsets = getInts(json, "startOffsets")
+    val endOffsets = getInts(json, "endOffsets")
+    val words = getStrings(json, "words")
+    val tags = getLabelsOpt(json, "tags")
+    val lemmas = getLabelsOpt(json, "lemmas")
+    val entities = getLabelsOpt(json, "entities")
+    val norms = getLabelsOpt(json, "norms")
+    val chunks = getLabelsOpt(json, "chunks")
     val syntacticTree = None // TODO: Are these not serialized?
     val graphs = {
-      val preferredSize = tokenizedSentence.words.length
+      val preferredSize = words.length
       val graphs = (json \ "graphs").extract[JObject].obj.map { case (key, json) =>
         key -> toDirectedGraph(json, Some(preferredSize))
       }.toMap
@@ -100,7 +106,7 @@ object JSONSerializer {
     }
     val relations = None // TODO: Are these not serialized?
     val parsedSentence = Sentence(
-      tokenizedSentence.raw, tokenizedSentence.startOffsets, tokenizedSentence.endOffsets, tokenizedSentence.words,
+      raw, startOffsets, endOffsets, words,
       tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations
     )
 
