@@ -2,7 +2,7 @@ package org.clulab.processors.clu
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
-import org.clulab.struct.GraphMap._
+import org.clulab.struct.GraphMap.GraphMapType
 
 import scala.collection.mutable.{Set => MutableSet}
 
@@ -136,7 +136,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     }
   }
 
-  def unveilGraphs(veiledGraphs: GraphMap, sentenceIndex: Int): GraphMap = {
+  def unveilGraphs(veiledGraphs: GraphMapType, sentenceIndex: Int): GraphMapType = {
     val unveilArray = unveilArrays(sentenceIndex)
     val unveiledGraphs = GraphMap()
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
