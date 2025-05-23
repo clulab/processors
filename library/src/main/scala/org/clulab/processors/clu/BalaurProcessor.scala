@@ -2,23 +2,24 @@ package org.clulab.processors.clu
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.clulab.numeric.{NumericEntityRecognizer, mkLabelsAndNorms}
-import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, Lemmatizer, OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer, PortugueseLemmatizer, SpanishLemmatizer, Tokenizer}
+import org.clulab.numeric.NumericEntityRecognizer
+import org.clulab.numeric.NumericUtils
 import org.clulab.processors.{Document, Processor, Sentence}
-
-import scala.collection.immutable.ArraySeq
+import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, Lemmatizer, OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer, PortugueseLemmatizer, SpanishLemmatizer, Tokenizer}
+import org.clulab.processors.hexatagging.HexaDecoder
 //import org.clulab.scala.WrappedArray._
-import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
+import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
+import org.clulab.struct.GraphMap.GraphMapType
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.collection.compat.immutable.ArraySeq
+
 import BalaurProcessor._
-import PostProcessor._
-import org.clulab.processors.hexatagging.HexaDecoder
-import org.clulab.struct.GraphMap.GraphMap
 
 class BalaurProcessor protected (
   val config: Config,
@@ -40,8 +41,8 @@ class BalaurProcessor protected (
     config,
     optionalNER,
     newNumericEntityRecognizerOpt(seasonPathOpt),
-    mkTokenizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
-    mkLemmatizer(BalaurProcessor.getArgString(config, s"$prefix.language", Some("EN"))),
+    mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+    mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
     TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
   )
@@ -185,7 +186,7 @@ class BalaurProcessor protected (
     val fullyAnnotatedDocument =
         if (numericEntityRecognizerOpt.nonEmpty) {
           val numericMentions = numericEntityRecognizerOpt.get.extractFrom(partlyAnnotatedDocument)
-          val (newLabels, newNorms) = mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
+          val (newLabels, newNorms) = NumericUtils.mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
           val fullyAnnotatedSentences = partlyAnnotatedDocument.sentences.indices.map { index =>
             partlyAnnotatedDocument.sentences(index).copy(
               entities = Some(newLabels(index)),
@@ -205,7 +206,7 @@ class BalaurProcessor protected (
 
     val tags = labels.map(_.head._1).toArray
 
-    postprocessPartOfSpeechTags(words, tags)
+    PostProcessor.postprocessPartOfSpeechTags(words, tags)
     tags
   }
 
@@ -317,7 +318,7 @@ class BalaurProcessor protected (
     words: Array[String], lemmas: Array[String], tags: Array[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
-  ): GraphMap = {
+  ): GraphMapType = {
     val verbose = false
     val graphs = GraphMap()
     val size = words.length
@@ -391,7 +392,7 @@ object BalaurProcessor {
     }
   }
 
-  def getArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
+  def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
     if (config.hasPath(argPath)) config.getString(argPath)
     else if(defaultValue.nonEmpty) defaultValue.get
     else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
