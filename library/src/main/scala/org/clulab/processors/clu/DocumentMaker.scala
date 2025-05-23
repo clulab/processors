@@ -7,6 +7,8 @@ import org.clulab.processors.Document
 import scala.collection.mutable.ArrayBuffer
 import org.clulab.processors.Sentence
 
+import scala.collection.compat._
+
 class DocumentMaker
 
 object DocumentMaker {

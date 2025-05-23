@@ -117,7 +117,7 @@ class DocumentSerializer extends Logging {
       val attachmentsOpt = namedDocumentAttachmentsOpt.map { namedDocumentAttachments =>
         val attachments = mutable.HashMap[String, DocumentAttachment]()
 
-        attachments.addAll(namedDocumentAttachments)
+        attachments ++= namedDocumentAttachments
         attachments
       }
 
