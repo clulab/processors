@@ -91,7 +91,7 @@ class BalaurProcessor protected (
   }
 
   /** Lemmatization; modifies the document in place */
-  override def lemmatize(words: Array[String]): Array[String] = {
+  override def lemmatize(words: Seq[String]): Seq[String] = {
     val lemmas = words.zipWithIndex.map { case (word, index) =>
       val lemma = wordLemmatizer.lemmatizeWord(word)
       // a lemma may be empty in some weird Unicode situations
@@ -109,7 +109,7 @@ class BalaurProcessor protected (
   }
 
   /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
-  def cheapLemmatize(sentence: Sentence): Array[String] = {
+  def cheapLemmatize(sentence: Sentence): Seq[String] = {
     sentence.words.map(_.toLowerCase())
   }
 
@@ -149,7 +149,7 @@ class BalaurProcessor protected (
       val lemmas = lemmatize(words)
 
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(WrappedArraySeq(words).toImmutableSeq)
+        val allLabelsAndScores = tokenClassifier.predictWithScores(words)
         val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
         val entities = {
           val optionalEntities = mkOptionalNerLabels(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
@@ -199,7 +199,7 @@ class BalaurProcessor protected (
     fullyAnnotatedDocument
   }
 
-  private def mkPosTags(words: Array[String], labels: Array[Array[(String, Float)]]): Array[String] = {
+  private def mkPosTags(words: Seq[String], labels: Seq[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val tags = labels.map(_.head._1).toArray
@@ -209,9 +209,9 @@ class BalaurProcessor protected (
   }
 
   private def mkOptionalNerLabels(
-    words: Array[String], startOffsets: Array[Int], endOffsets: Array[Int],
-    tags: Array[String], lemmas: Array[String]
-  ): Option[Array[String]] = {
+    words: Seq[String], startOffsets: Seq[Int], endOffsets: Seq[Int],
+    tags: Seq[String], lemmas: Seq[String]
+  ): Option[Seq[String]] = {
     // NER labels from the custom NER
     optionalNER.map { ner =>
       val sentence = Sentence(
@@ -234,10 +234,10 @@ class BalaurProcessor protected (
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def mkNamedEntityLabels(words: Array[String], labels: Array[Array[(String, Float)]], optionalNERLabels: Option[Array[String]]): Array[String] = {
+  private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], optionalNERLabels: Option[Seq[String]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    val genericLabels = NamedEntity.patch(labels.map(_.head._1).toArray)
+    val genericLabels = NamedEntity.patch(labels.map(_.head._1))
 
     if (optionalNERLabels.isEmpty) {
       genericLabels
@@ -252,16 +252,16 @@ class BalaurProcessor protected (
     }
   }
 
-  private def mergeNerLabels(generic: Array[String], custom: Array[String]): Array[String] = {
+  private def mergeNerLabels(generic: Seq[String], custom: Seq[String]): Seq[String] = {
     require(generic.length == custom.length)
 
-    val customNamedEntities = NamedEntity.collect(WrappedArraySeq(custom).toImmutableSeq)
+    val customNamedEntities = NamedEntity.collect(custom)
     val result = generic.toArray // A copy of the generic labels is created here.
 
     if (customNamedEntities.isEmpty)
       result
     else {
-      val genericNamedEntities = NamedEntity.collect(WrappedArraySeq(generic).toImmutableSeq)
+      val genericNamedEntities = NamedEntity.collect(generic)
 
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
       //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")
@@ -271,10 +271,10 @@ class BalaurProcessor protected (
     }
   }
 
-  private def mkChunkLabels(words: Array[String], labels: Array[Array[(String, Float)]]): Array[String] = {
+  private def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    labels.map(_.head._1).toArray
+    labels.map(_.head._1)
   }
 
   // The head has one score, the label has another.  Here the two scores are interpolated
@@ -313,7 +313,7 @@ class BalaurProcessor protected (
   }
 
   private def mkDependencyLabelsUsingHexaTags(
-    words: Array[String], lemmas: Array[String], tags: Array[String],
+    words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
   ): GraphMapType = {

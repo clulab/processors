@@ -1,13 +1,14 @@
 package org.clulab.processors.clu
 
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
-import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.processors.Document
-import scala.collection.mutable.ArrayBuffer
 import org.clulab.processors.Sentence
+import org.clulab.processors.clu.tokenizer.Tokenizer
+import org.clulab.scala.WrappedArrayBuffer._
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import scala.collection.compat._
+import scala.collection.mutable.ArrayBuffer
 
 class DocumentMaker
 
@@ -73,7 +74,7 @@ object DocumentMaker {
         charOffset += charactersBetweenTokens
       }
       // note: NO postprocessing happens in this case, so use it carefully!
-      sents += new Sentence(sentence.toArray, startOffsets.toArray, endOffsets.toArray, sentence.toArray)
+      sents += new Sentence(sentence.toSeq, startOffsets, endOffsets, sentence.toSeq)
       charOffset += charactersBetweenSentences - charactersBetweenTokens
       if(keepText) {
         text.append(sentence.mkString(mkSep(charactersBetweenTokens)))

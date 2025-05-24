@@ -122,7 +122,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     originalDocument.copy(veiledSentences)
   }
 
-  def unveilStringArray(veiledArrayOpt: Option[Array[String]], sentenceIndex: Int, veil: String): Option[Array[String]] = {
+  def unveilStringArray(veiledArrayOpt: Option[Seq[String]], sentenceIndex: Int, veil: String): Option[Seq[String]] = {
     val unveilArray = unveilArrays(sentenceIndex)
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
 
@@ -156,7 +156,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   def unveilSyntacticTree(syntacticTreeOpt: Option[Tree]): Option[Tree] = syntacticTreeOpt
 
   // TODO
-  def unveilRelations(relations: Option[Array[RelationTriple]]): Option[Array[RelationTriple]] = relations
+  def unveilRelations(relations: Option[Seq[RelationTriple]]): Option[Seq[RelationTriple]] = relations
 
   protected def unveilSentence(veiledSentence: Sentence, sentenceIndex: Int): Sentence = {
     val originalSentence = originalDocument.sentences(sentenceIndex)
@@ -167,7 +167,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
 
     val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
 
-    def unveilStringArray(veiledArrayOpt: Option[Array[String]], veil: String): Option[Array[String]] =
+    def unveilStringArray(veiledArrayOpt: Option[Seq[String]], veil: String): Option[Seq[String]] =
         this.unveilStringArray(veiledArrayOpt, sentenceIndex, veil)
 
     val tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)

@@ -110,7 +110,7 @@ class SeparatedLexiconNER(
     labels
   }
 
-  protected def findAt(tokens: Array[String], caseInsensitiveTokens: Array[String], offset: Int): (Int, Int) = {
+  protected def findAt(tokens: Seq[String], caseInsensitiveTokens: Seq[String], offset: Int): (Int, Int) = {
     def findAt(matcher: BooleanHashTrie): Int =
         matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveTokens else tokens, offset).length
 

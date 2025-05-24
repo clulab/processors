@@ -56,7 +56,7 @@ class CompactLexiconNER(
 
   def getLabels: Seq[String] = labels
 
-  def find(sentence: Sentence): Array[String] = {
+  def find(sentence: Sentence): Seq[String] = {
     val caseSensitiveTokens = getTokens(sentence)
     val caseInsensitiveTokens =
       if (hasCaseInsensitive) caseSensitiveTokens.map(_.toLowerCase)
@@ -66,14 +66,14 @@ class CompactLexiconNER(
     seq
   }
 
-  protected def findLongestMatch(sentence: Sentence, caseSensitiveTokens: Array[String],
-      caseInsensitiveTokens: Array[String]): Array[String] = {
+  protected def findLongestMatch(sentence: Sentence, caseSensitiveTokens: Seq[String],
+      caseInsensitiveTokens: Seq[String]): Seq[String] = {
     val labels = new Array[String](caseSensitiveTokens.length)
     val length = labels.length
     var offset = 0
 
-    val   caseSensitiveStringIds = if (hasCaseSensitive)     caseSensitiveTokens.map(  caseSensitiveCompactTrie.stringIds) else Array.empty[Int]
-    val caseInsensitiveStringIds = if (hasCaseInsensitive) caseInsensitiveTokens.map(caseInsensitiveCompactTrie.stringIds) else Array.empty[Int]
+    val   caseSensitiveStringIds = if (hasCaseSensitive)     caseSensitiveTokens.map(  caseSensitiveCompactTrie.stringIds) else Seq.empty[Int]
+    val caseInsensitiveStringIds = if (hasCaseInsensitive) caseInsensitiveTokens.map(caseInsensitiveCompactTrie.stringIds) else Seq.empty[Int]
 
     // These are intended to cut down on the number of objects created.
     // It worked better when there was only one setting for case.
@@ -88,7 +88,7 @@ class CompactLexiconNER(
 
     def updateSpanAndIndex(): Unit = {
 
-      def innerGetSpanAndIndex(condition: Boolean, stringIds: Array[Int], spanAndIndex: SpanAndIndex,
+      def innerGetSpanAndIndex(condition: Boolean, stringIds: Seq[Int], spanAndIndex: SpanAndIndex,
           compactTrie: CompactTrie): SpanAndIndex = {
         if (condition) {
           val id = stringIds(offset)
@@ -136,7 +136,7 @@ class CompactLexiconNER(
     labels
   }
 
-  def findAt(ids: Array[Int], wordIndex: Int, nodeMatch: SpanAndIndex, compactTrie: CompactTrie): Unit = {
+  def findAt(ids: Seq[Int], wordIndex: Int, nodeMatch: SpanAndIndex, compactTrie: CompactTrie): Unit = {
 
     def linearSearch(value: Int, left: Int, right: Int): Int = {
       var index = left

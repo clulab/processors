@@ -105,7 +105,7 @@ trait Processor {
   def tagPartsOfSpeech(doc: Document): Unit
 
   /** Lemmatization; modifies the document in place. */
-  def lemmatize(words: Array[String]): Array[String]
+  def lemmatize(words: Seq[String]): Seq[String]
 
   /** Named Entity Recognition; modifies the document in place. */
   def recognizeNamedEntities (doc:Document): Unit

@@ -57,7 +57,7 @@ object NamedEntity {
     bioLabels
   }
 
-  def isValid(bioLabels: Array[String], index: Int): Boolean = {
+  def isValid(bioLabels: Seq[String], index: Int): Boolean = {
     val currBioLabel = bioLabels(index)
     !currBioLabel.startsWith(INSIDE) || {
       0 < index && {
@@ -69,7 +69,7 @@ object NamedEntity {
     }
   }
 
-  def isValid(bioLabels: Array[String]): Boolean =
+  def isValid(bioLabels: Seq[String]): Boolean =
       bioLabels.indices.forall(isValid(bioLabels, _))
 
   // Only INSIDEs can be invalid and they are made valid by
@@ -78,7 +78,7 @@ object NamedEntity {
       BEGIN + bioLabel.drop(INSIDE.length)
 
   // Note that this patches the array in place!
-  def patch(bioLabels: Array[String]): Array[String] = {
+  def patch(bioLabels: Seq[String]): Seq[String] = {
     bioLabels.indices.foreach { index =>
       if (!isValid(bioLabels, index))
         bioLabels(index) = toBegin(bioLabels(index))

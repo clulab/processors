@@ -64,7 +64,7 @@ class CombinedLexiconNER (
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence: Sentence): Array[String] = {
+  def find(sentence: Sentence): Seq[String] = {
     val caseSensitiveTokens = getTokens(sentence)
     val caseInsensitiveTokens = if (hasCaseInsensitive) caseSensitiveTokens.map(_.toLowerCase) else caseSensitiveTokens
     val seq = findLongestMatch(sentence, caseSensitiveTokens, caseInsensitiveTokens)
@@ -79,7 +79,7 @@ class CombinedLexiconNER (
     * This means that the longest match is always chosen, even if coming from a matcher with lower priority
     * Only ties are disambiguated according to the order provided in the constructor
     */
-  protected def findLongestMatch(sentence: Sentence, caseSensitiveTokens: Array[String], caseInsensitiveTokens: Array[String]): Array[String] = {
+  protected def findLongestMatch(sentence: Sentence, caseSensitiveTokens: Seq[String], caseInsensitiveTokens: Seq[String]): Seq[String] = {
     val labels = new Array[String](caseSensitiveTokens.length)
     val length = labels.length
     var offset = 0
@@ -91,7 +91,7 @@ class CombinedLexiconNER (
 
     def getSpanAndIndex: CombinedLexiconNER.SpanAndIndex = {
 
-      def innerGetSpanAndIndex(condition: Boolean, intHashTrie: IntHashTrie, tokens: => Array[String]): CombinedLexiconNER.SpanAndIndex = {
+      def innerGetSpanAndIndex(condition: Boolean, intHashTrie: IntHashTrie, tokens: => Seq[String]): CombinedLexiconNER.SpanAndIndex = {
         if (condition) {
           val intTrieNodeMatch = intHashTrie.findAt(tokens, offset)
           CombinedLexiconNER.SpanAndIndex(intTrieNodeMatch.length, intTrieNodeMatch.completePath)

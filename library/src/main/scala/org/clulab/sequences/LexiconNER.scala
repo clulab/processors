@@ -1,6 +1,7 @@
 package org.clulab.sequences
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.SeqView
 import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 import org.clulab.utils.ArrayView
@@ -55,7 +56,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence: Sentence): Array[String]
+  def find(sentence: Sentence): Seq[String]
   def getLabels: Seq[String]
 
   /**
@@ -74,49 +75,49 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     }
   }
 
-  def hasCondition(wordsView: ArrayView[String], condition: Char => Boolean): Boolean =
+  def hasCondition(wordsView: SeqView.Immutable[String], condition: Char => Boolean): Boolean =
     wordsView.exists(_.exists(condition))
 
-  def hasLetter(wordsView: ArrayView[String]): Boolean =
+  def hasLetter(wordsView: SeqView.Immutable[String]): Boolean =
     hasCondition(wordsView, Character.isLetter)
 
-  def hasDigit(wordsView: ArrayView[String]): Boolean =
+  def hasDigit(wordsView: SeqView.Immutable[String]): Boolean =
     hasCondition(wordsView, Character.isDigit)
 
-  def hasUpperCaseLetters(wordsView: ArrayView[String]): Boolean =
+  def hasUpperCaseLetters(wordsView: SeqView.Immutable[String]): Boolean =
     hasCondition(wordsView, Character.isUpperCase)
 
-  def hasSpace(wordsView: ArrayView[String]): Boolean = wordsView.length > 1
+  def hasSpace(wordsView: SeqView.Immutable[String]): Boolean = wordsView.size > 1
 
-  def countCharacters(wordsView: ArrayView[String]): Int =
+  def countCharacters(wordsView: SeqView.Immutable[String]): Int =
     // Go ahead and calculate them all even though we only need to know if they exceed a value.
     wordsView.foldLeft(0) { (sum, word) => sum + word.length }
 
-  val contentQualifiers: Array[ArrayView[String] => Boolean] = Array(
+  val contentQualifiers: Array[SeqView.Immutable[String] => Boolean] = Array(
     // Start with the quick and easy ones.
     hasSpace,
-    { wordsView => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
+    { (wordsView: SeqView.Immutable[String]) => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
     hasDigit,
     hasUpperCaseLetters,
-    { wordsView => knownCaseInsensitives.contains(wordsView.head) }
+    { (wordsView: SeqView.Immutable[String]) => knownCaseInsensitives.contains(wordsView.head) }
   )
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {
-    val wordsView = ArrayView(sentence.words, start, start + length)
+    val wordsView = sentence.words.view(start, start + length)
     // A valid view/span must have a letter and at least one of the other qualifiers.
     val contentful = hasLetter(wordsView) && contentQualifiers.exists(_(wordsView))
 
     contentful
   }
 
-  protected val getTokens: Sentence => Array[String] =
+  protected val getTokens: Sentence => Seq[String] =
     // Decide this once and for all and don't revisit it each time getTokens is called.
     if (useLemmas) getLemmas
     else getWords
 
-  protected def getLemmas(sentence: Sentence): Array[String] = sentence.lemmas.get
+  protected def getLemmas(sentence: Sentence): Seq[String] = sentence.lemmas.get
 
-  protected def getWords(sentence: Sentence): Array[String] = sentence.words
+  protected def getWords(sentence: Sentence): Seq[String] = sentence.words
 }
 
 object LexiconNER {

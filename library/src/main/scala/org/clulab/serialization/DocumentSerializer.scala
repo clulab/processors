@@ -3,6 +3,7 @@ package org.clulab.serialization
 import org.clulab.processors.DocumentAttachment
 import org.clulab.processors.DocumentAttachmentBuilderFromText
 import org.clulab.processors.{Document, Sentence}
+import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct._
 import org.clulab.utils.Logging
 import org.json4s.DefaultFormats
@@ -122,7 +123,7 @@ class DocumentSerializer extends Logging {
       }
 
       val doc = new Document(
-        sentences = sents.toArray,
+        sentences = sents,
         text = text,
         attachments = attachmentsOpt
       )
@@ -170,7 +171,7 @@ class DocumentSerializer extends Logging {
     Interval(t(0), t(1))
   }
 
-  private def loadRelations(r: BufferedReader, sz: Int):Option[Array[RelationTriple]] = {
+  private def loadRelations(r: BufferedReader, sz: Int):Option[Seq[RelationTriple]] = {
     val ret = (0 until sz) map {
       _ =>
         val line = r.readLine()
@@ -178,7 +179,7 @@ class DocumentSerializer extends Logging {
         val relInterval = tokens(2) match { case "N" => None; case s => Some(mkRelationInterval(s)) }
         RelationTriple(tokens(0).toFloat, mkRelationInterval(tokens(1)), relInterval, mkRelationInterval(tokens(3)))
     }
-    Some(ret.toArray)
+    Some(ret)
   }
 
   private def loadSentence(r:BufferedReader): Sentence = {
@@ -236,7 +237,7 @@ class DocumentSerializer extends Logging {
 
     var deps = GraphMap()
     var tree:Option[Tree] = None
-    var relations:Option[Array[RelationTriple]] = None
+    var relations:Option[Seq[RelationTriple]] = None
     while ({
       bits = read(r)
       if (bits(0) == START_DEPENDENCIES) {
@@ -256,10 +257,10 @@ class DocumentSerializer extends Logging {
     }) ()
 
     Sentence(
-      rawBuffer.toArray,
-      startOffsetBuffer.toArray,
-      endOffsetBuffer.toArray,
-      wordBuffer.toArray,
+      rawBuffer,
+      startOffsetBuffer,
+      endOffsetBuffer,
+      wordBuffer,
       bufferOption(tagBuffer, nilTags),
       bufferOption(lemmaBuffer, nilLemmas),
       bufferOption(entityBuffer, nilEntities),
@@ -292,10 +293,10 @@ class DocumentSerializer extends Logging {
     dg
   }
 
-  private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Array[T]] = {
+  private def bufferOption[T: ClassTag](b:ArrayBuffer[T], allNils:Boolean): Option[Seq[T]] = {
     if (b.isEmpty) None
     else if (allNils) None
-    else Some(b.toArray)
+    else Some(b)
   }
 
   def save(doc:Document, os:PrintWriter): Unit = save(doc, os, keepText = false)

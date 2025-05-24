@@ -8,7 +8,7 @@ object CoNLLUSerializer {
   val UNDEF = "_"
   val ROOT = "root"
 
-  def getOrElseUndef(stringsOpt: Option[Array[String]], i: Int): String =
+  def getOrElseUndef(stringsOpt: Option[Seq[String]], i: Int): String =
       stringsOpt.map(_(i)).getOrElse(UNDEF)
 
   /**

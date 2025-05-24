@@ -80,7 +80,7 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true) ex
     * When multiple paths are found, the longest one is kept
     * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
     */
-  def findAt(sequenceNormalized: Array[String], offset: Int): BooleanTrieNode.Match = {
+  def findAt(sequenceNormalized: Seq[String], offset: Int): BooleanTrieNode.Match = {
     val longestMatch = new BooleanTrieNode.Match()
 
     entries.get(sequenceNormalized(offset)).map { tree =>
@@ -129,7 +129,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
     * @param longestMatch      The value of the longest match interval
     * @return true if search should stop here; false otherwise
     */
-  def find(sequence: Array[String],
+  def find(sequence: Seq[String],
       startOffset: Int,
       currentSpanLength: Int,
       longestMatch: BooleanTrieNode.Match): Boolean = {

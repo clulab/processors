@@ -71,12 +71,12 @@ object NumericUtils {
     * @param doc This document is modified in place
     * @param mentions The numeric mentions previously extracted
     */
-  def mkLabelsAndNorms(doc: Document, mentions: Seq[Mention]): (Array[Array[String]], Array[Array[String]]) = {
+  def mkLabelsAndNorms(doc: Document, mentions: Seq[Mention]): (Seq[Seq[String]], Seq[Seq[String]]) = {
     val allEntities = doc.sentences.map { sentence =>
-      sentence.entities.getOrElse(Array.fill(sentence.size)("O"))
+      sentence.entities.getOrElse(Seq.fill(sentence.size)("O"))
     }
     val allNorms = doc.sentences.map { sentence =>
-      sentence.norms.getOrElse(Array.fill(sentence.size)(""))
+      sentence.norms.getOrElse(Seq.fill(sentence.size)(""))
     }
 
     for (mention <- mentions) {
@@ -93,7 +93,7 @@ object NumericUtils {
     (allEntities, allNorms)
   }
 
-  def removeOneEntityBeforeAnother(entities: Array[String], norms: Array[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
+  def removeOneEntityBeforeAnother(entities: Seq[String], norms: Seq[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
     // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
     // toBeRemovedShortened is entity without BIO-
     val zippedEntities = entities.zipWithIndex
@@ -114,7 +114,8 @@ object NumericUtils {
     }
   }
 
-  private def addLabelsAndNorms(m: Norm, entities: Array[String], norms: Array[String], tokenInt: Interval): Unit = {
+  // TODO: These need to be mutable
+  private def addLabelsAndNorms(m: Norm, entities: Seq[String], norms: Seq[String], tokenInt: Interval): Unit = {
     val label = m.neLabel
     val norm = m.neNorm
 

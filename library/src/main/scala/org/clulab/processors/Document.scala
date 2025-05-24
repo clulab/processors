@@ -17,7 +17,7 @@ import scala.collection.mutable
   *   Last Modified: Add apply method to copy Document.
   */
 class Document(
-  val sentences: Array[Sentence],
+  val sentences: Seq[Sentence],
   /** Unique id for this document, if any */
   val id: Option[String] = None,
   /** Clusters of coreferent mentions */
@@ -30,7 +30,7 @@ class Document(
 ) extends Serializable {
 
   def copy(
-    sentences: Array[Sentence] = sentences,
+    sentences: Seq[Sentence] = sentences,
     id: Option[String] = id,
     coreferenceChains: Option[CorefChains] = coreferenceChains,
     text: Option[String] = text,
@@ -190,11 +190,11 @@ class Document(
 
 object Document {
 
-  def apply(sentences: Array[Sentence]): Document = apply(sentences, text = None)
+  def apply(sentences: Seq[Sentence]): Document = apply(sentences, text = None)
 
-  def apply(sentences: Array[Sentence], text: Option[String]): Document = apply(id = None, sentences, coref = None, text)
+  def apply(sentences: Seq[Sentence], text: Option[String]): Document = apply(id = None, sentences, coref = None, text)
 
-  def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
+  def apply(id: Option[String], sentences: Seq[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
     val document = new Document(
       sentences,
       id = id,
@@ -209,7 +209,7 @@ object Document {
   def apply(doc: Document): Document =
     apply(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
 
-  def apply(doc: Document, sentences: Array[Sentence]): Document = {
+  def apply(doc: Document, sentences: Seq[Sentence]): Document = {
     val newDocument = new Document(
       sentences,
       id = doc.id,

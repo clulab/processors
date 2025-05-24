@@ -33,7 +33,7 @@ object ToEnhancedDependencies {
     dgi.toDirectedGraph(Some(words.length))
   }
 
-  def generateUniversalEnhancedDependencies(words: Array[String], lemmas: Array[String], tags: Array[String], dg: DirectedGraph[String]): DirectedGraph[String] = {
+  def generateUniversalEnhancedDependencies(words: Seq[String], lemmas: Seq[String], tags: Seq[String], dg: DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
     collapseMWEs(lemmas, tags, dgi)
     val collapsedNmods = collapsePrepositionsUniversal(words, lemmas, tags, dgi)
@@ -102,7 +102,7 @@ object ToEnhancedDependencies {
    * @param sentence
    * @param dgi
    */
-  def expandConj(words: Array[String], dgi: DirectedGraphIndex[String]): Unit = {
+  def expandConj(words: Seq[String], dgi: DirectedGraphIndex[String]): Unit = {
     val toRemove = new ListBuffer[Edge[String]]
     val conjs = dgi.findByName("conj")
     for (conj <- conjs) {
@@ -140,7 +140,7 @@ object ToEnhancedDependencies {
   }
 
   def collapsePrepositionsUniversal(
-    words: Array[String], lemmas: Array[String], tags: Array[String],
+    words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     dgi:DirectedGraphIndex[String]): Seq[EdgeSpec] = {
 
     val collapsedNmods = new ArrayBuffer[EdgeSpec]()
@@ -156,7 +156,7 @@ object ToEnhancedDependencies {
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversalNmodCase(
-    words: Array[String],
+    words: Seq[String],
     dgi:DirectedGraphIndex[String],
     collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
@@ -189,7 +189,7 @@ object ToEnhancedDependencies {
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
   def collapsePrepositionsUniversalDueTo(
-    lemmas: Array[String], tags: Array[String],
+    lemmas: Seq[String], tags: Seq[String],
     dgi:DirectedGraphIndex[String], 
     collapsedNmods: ArrayBuffer[EdgeSpec]): Unit = {
 
@@ -234,8 +234,8 @@ object ToEnhancedDependencies {
     * @param dgi
     */
   def collapseMWEs(
-    lemmas: Array[String],
-    tags: Array[String],
+    lemmas: Seq[String],
+    tags: Seq[String],
     dgi:DirectedGraphIndex[String]): Unit = {
 
     val size = lemmas.length
@@ -261,7 +261,7 @@ object ToEnhancedDependencies {
     if(shouldRemove) remove(toRemove, dgi)
   }
 
-  def findMultiWord(first: String, firstPos: Int, words: Array[String], dgi:DirectedGraphIndex[String]): String = {
+  def findMultiWord(first: String, firstPos: Int, words: Seq[String], dgi:DirectedGraphIndex[String]): String = {
     val buffer = new StringBuilder
     buffer.append(first)
 
@@ -302,7 +302,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateSubjectsAndObjectsInConjVerbs(tags: Array[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
+  def propagateSubjectsAndObjectsInConjVerbs(tags: Seq[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
@@ -385,7 +385,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def propagateConjSubjectsAndObjects(tags: Array[String], dgi:DirectedGraphIndex[String]): Unit = {
+  def propagateConjSubjectsAndObjects(tags: Seq[String], dgi:DirectedGraphIndex[String]): Unit = {
     val conjs = dgi.findByName("conj").sortBy(_.source)
     for(conj <- conjs) {
       val left = math.min(conj.source, conj.destination)
@@ -421,7 +421,7 @@ object ToEnhancedDependencies {
     * @param sentence The sentence to operate on
     * @param dgi The directed graph of collapsed dependencies at this stage
     */
-  def pushSubjectsObjectsInsideRelativeClauses(tags: Array[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
+  def pushSubjectsObjectsInsideRelativeClauses(tags: Seq[String], dgi:DirectedGraphIndex[String], universal:Boolean): Unit = {
     val rels =
       if(universal) dgi.findByName("acl:relcl")
       else dgi.findByName("rcmod")

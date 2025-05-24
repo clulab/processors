@@ -1,6 +1,7 @@
 package org.clulab.processors.clu.tokenizer
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArrayBuffer._
 
 import java.io.{BufferedReader, InputStreamReader}
 import scala.collection.mutable.ArrayBuffer
@@ -18,7 +19,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
     * Sentence splitting over a stream of tokens
     * This includes detection of abbreviations as well
     **/
-  override def split(tokens:Array[RawToken], sentenceSplit:Boolean):Array[Sentence] = {
+  override def split(tokens:Array[RawToken], sentenceSplit:Boolean):Seq[Sentence] = {
     val sentences = new ArrayBuffer[Sentence]()
     var raw = new ArrayBuffer[String]()
     var words = new ArrayBuffer[String]()
@@ -67,7 +68,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
 
         // found a valid end of sentence; start an empty one
         if (isEos) {
-          sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+          sentences += Sentence(raw.toSeq, beginPositions.toSeq, endPositions.toSeq, words.toSeq)
           raw = new ArrayBuffer[String]()
           words = new ArrayBuffer[String]()
           beginPositions = new ArrayBuffer[Int]()
@@ -104,7 +105,7 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
         //
         // create the current sentence
         //
-        sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+        sentences += Sentence(raw, beginPositions, endPositions, words)
         raw = new ArrayBuffer[String]()
         words = new ArrayBuffer[String]()
         beginPositions = new ArrayBuffer[Int]()
@@ -130,10 +131,10 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
 
     // a few words left over at the end
     if (words.nonEmpty) {
-      sentences += Sentence(raw.toArray, beginPositions.toArray, endPositions.toArray, words.toArray)
+      sentences += Sentence(raw, beginPositions, endPositions, words)
     }
 
-    sentences.toArray
+    sentences
   }
 
   def isAbbreviation(word:String):Boolean

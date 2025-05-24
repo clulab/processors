@@ -81,7 +81,7 @@ object JSONSerializer {
 
     def getInts(json: JValue, k: String): Array[Int] = (json \ k).extract[Array[Int]]
 
-    def getLabelsOpt(json: JValue, k: String): Option[Array[String]] = json \ k match {
+    def getLabelsOpt(json: JValue, k: String): Option[Seq[String]] = json \ k match {
       case JNothing => None
       case contents => Some(contents.extract[Array[String]])
     }

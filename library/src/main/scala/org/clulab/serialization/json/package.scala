@@ -22,7 +22,7 @@ package object json {
   }
 
   // Arrays cannot be directly converted to JValue
-  implicit class ArrayOps(s: Option[Array[String]]) {
+  implicit class ArrayOps(s: Option[Seq[String]]) {
     def toSerializableJSON: Option[List[String]] = s match {
       case Some(s) => Some(s.toList)
       case None => None

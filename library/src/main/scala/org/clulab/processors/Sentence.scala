@@ -9,11 +9,11 @@ import scala.collection.mutable
 /** Stores the annotations for a single sentence */
 class Sentence(
   /** Raw tokens in this sentence; these MUST match the original text */
-  val raw: Array[String],
+  val raw: Seq[String],
   /** Start character offsets for the raw tokens; start at 0 */
-  val startOffsets: Array[Int],
+  val startOffsets: Seq[Int],
   /** End character offsets for the raw tokens; start at 0 */
-  val endOffsets: Array[Int],
+  val endOffsets: Seq[Int],
 
   /**
     * Words produced from raw tokens, closer to what the downstream components expect
@@ -22,24 +22,24 @@ class Sentence(
     * However, the number of raw tokens MUST always equal the number of words, so if the exact text must be recovered,
     *   please use the raw tokens with the same positions
     */
-  val words: Array[String],
+  val words: Seq[String],
 
   /** POS tags for words */
-  val tags: Option[Array[String]] = None,
+  val tags: Option[Seq[String]] = None,
   /** Lemmas */
-  val lemmas: Option[Array[String]] = None,
+  val lemmas: Option[Seq[String]] = None,
   /** NE labels */
-  val entities: Option[Array[String]] = None,
+  val entities: Option[Seq[String]] = None,
   /** Normalized values of named/numeric entities, such as dates */
-  val norms: Option[Array[String]] = None,
+  val norms: Option[Seq[String]] = None,
   /** Shallow parsing labels */
-  val chunks: Option[Array[String]] = None,
+  val chunks: Option[Seq[String]] = None,
   /** Constituent tree of this sentence; includes head words */
   val syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   val graphs: GraphMapType = GraphMap(),
   /** Relation triples from OpenIE */
-  val relations:Option[Array[RelationTriple]] = None
+  val relations:Option[Seq[RelationTriple]] = None
 ) extends Serializable {
 
   def size:Int = raw.length
@@ -64,7 +64,7 @@ class Sentence(
   def equivalenceHash: Int = {
     val stringCode = "org.clulab.processors.Sentence"
 
-    def getAnnotationsHash(labelsOpt: Option[Array[_]]): Int = labelsOpt
+    def getAnnotationsHash(labelsOpt: Option[Seq[_]]): Int = labelsOpt
         .map { labels =>
           val hs = labels.map(_.hashCode)
           val result = Hash.withLast(labels.length)(
@@ -170,19 +170,19 @@ class Sentence(
 
   // TODO
   def copy(
-    raw: Array[String] = raw,
-    startOffsets: Array[Int] = startOffsets,
-    endOffsets: Array[Int] = endOffsets,
-    words: Array[String] = words,
+    raw: Seq[String] = raw,
+    startOffsets: Seq[Int] = startOffsets,
+    endOffsets: Seq[Int] = endOffsets,
+    words: Seq[String] = words,
 
-    tags: Option[Array[String]] = tags,
-    lemmas: Option[Array[String]] = lemmas,
-    entities: Option[Array[String]] = entities,
-    norms: Option[Array[String]] = norms,
-    chunks: Option[Array[String]] = chunks,
+    tags: Option[Seq[String]] = tags,
+    lemmas: Option[Seq[String]] = lemmas,
+    entities: Option[Seq[String]] = entities,
+    norms: Option[Seq[String]] = norms,
+    chunks: Option[Seq[String]] = chunks,
     syntacticTree: Option[Tree] = syntacticTree,
     graphs: GraphMapType = graphs,
-    relations: Option[Array[RelationTriple]] = relations
+    relations: Option[Seq[RelationTriple]] = relations
   ): Sentence =
     new Sentence(
       raw, startOffsets, endOffsets, words,
@@ -203,31 +203,31 @@ class Sentence(
 object Sentence {
 
   def apply(
-    raw:Array[String],
-    startOffsets: Array[Int],
-    endOffsets: Array[Int]): Sentence =
+    raw:Seq[String],
+    startOffsets: Seq[Int],
+    endOffsets: Seq[Int]): Sentence =
     new Sentence(raw, startOffsets, endOffsets, raw) // words are identical to raw tokens (a common situation)
 
   def apply(
-    raw:Array[String],
-    startOffsets: Array[Int],
-    endOffsets: Array[Int],
-    words: Array[String]): Sentence =
+    raw:Seq[String],
+    startOffsets: Seq[Int],
+    endOffsets: Seq[Int],
+    words: Seq[String]): Sentence =
     new Sentence(raw, startOffsets, endOffsets, words)
 
   def apply(
-    raw: Array[String],
-    startOffsets: Array[Int],
-    endOffsets: Array[Int],
-    words: Array[String],
-    tags: Option[Array[String]],
-    lemmas: Option[Array[String]],
-    entities: Option[Array[String]],
-    norms: Option[Array[String]],
-    chunks: Option[Array[String]],
+    raw: Seq[String],
+    startOffsets: Seq[Int],
+    endOffsets: Seq[Int],
+    words: Seq[String],
+    tags: Option[Seq[String]],
+    lemmas: Option[Seq[String]],
+    entities: Option[Seq[String]],
+    norms: Option[Seq[String]],
+    chunks: Option[Seq[String]],
     tree: Option[Tree],
     deps: GraphMapType,
-    relations: Option[Array[RelationTriple]]
+    relations: Option[Seq[RelationTriple]]
   ): Sentence = {
     new Sentence(
       raw, startOffsets, endOffsets, words,
