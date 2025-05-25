@@ -81,7 +81,7 @@ object NamedEntity {
   }
 
   def isValid1(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
-    !currBioLabel.startsWith(INSIDE) || prevBioLabelOpt.forall { prevBioLabel =>
+    !currBioLabel.startsWith(INSIDE) || prevBioLabelOpt.exists { prevBioLabel =>
       prevBioLabel == currBioLabel || prevBioLabel == toBegin(currBioLabel)
     }
   }

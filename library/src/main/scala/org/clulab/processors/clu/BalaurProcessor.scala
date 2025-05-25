@@ -203,9 +203,9 @@ class BalaurProcessor protected (
     assert(labels.length == words.length)
 
     val tags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
+    val result = PostProcessor.postprocessPartOfSpeechTags(words, tags)
 
-    PostProcessor.postprocessPartOfSpeechTags(words, tags)
-    tags
+    result
   }
 
   private def mkOptionalNerLabels(

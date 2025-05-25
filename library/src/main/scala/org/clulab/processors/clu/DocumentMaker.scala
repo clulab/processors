@@ -4,6 +4,7 @@ import org.clulab.processors.Document
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.tokenizer.Tokenizer
 import org.clulab.scala.WrappedArrayBuffer._
+import org.clulab.utils.WrappedArraySeq
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -34,13 +35,14 @@ object DocumentMaker {
     charactersBetweenSentences: Int
   ): Document = {
     var characterOffset = 0
-    val sentences = texts.map { text =>
+    val sentencesArray = texts.map { text =>
       val sentence = tokenizer.tokenize(text, sentenceSplit = false, characterOffset).head // We produce a single sentence here!
 
       characterOffset = sentence.endOffsets.last + charactersBetweenSentences
       sentence
-    }.toVector // TODO: What is the best concrete collection to use?
-    val textOpt = Option.when(keepText)(sentences.mkString(mkSep(charactersBetweenSentences)))
+    }.toArray
+    val sentences = WrappedArraySeq(sentencesArray).toImmutableSeq
+    val textOpt = Option.when(keepText)(texts.mkString(mkSep(charactersBetweenSentences)))
     val document = Document(sentences, textOpt)
 
     document
@@ -52,7 +54,7 @@ object DocumentMaker {
                            charactersBetweenSentences:Int,
                            charactersBetweenTokens:Int): Document = {
     var charOffset = 0
-    var sents = new ArrayBuffer[Sentence]()
+    val sents = new ArrayBuffer[Sentence]()
     val text = new StringBuilder
     for(sentence <- sentences) {
       val startOffsets = new ArrayBuffer[Int]()
