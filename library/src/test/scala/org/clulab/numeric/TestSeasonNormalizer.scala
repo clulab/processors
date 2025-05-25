@@ -13,7 +13,7 @@ class TestSeasonNormalizer extends Test {
   val fallDateRange = "2017-09-22 -- 2017-12-21"
   val seasonDateRange = "2017-06-XX -- 2017-10-XX"
 
-  def mkEntitiesAndNorms(processor: BalaurProcessor, text: String): (Array[String], Array[String]) = {
+  def mkEntitiesAndNorms(processor: BalaurProcessor, text: String): (Seq[String], Seq[String]) = {
     val document = processor.annotate(text)
     val mentions = processor.numericEntityRecognizerOpt.get.extractFrom(document)
 

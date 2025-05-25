@@ -2,6 +2,7 @@ package org.clulab.processors.apps
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.scala.WrappedArrayBuffer._
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.InputStream
@@ -102,7 +103,7 @@ object ColumnsToDocument {
       if (l.isEmpty) {
         // end of sentence
         if (words.nonEmpty) {
-          val s = new Sentence(words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray)
+          val s = new Sentence(words, startOffsets, endOffsets, words)
           setLabels(s, labels.toArray)
           sentences += s
           words = new ArrayBuffer[String]()
@@ -139,14 +140,14 @@ object ColumnsToDocument {
     }
     if(words.nonEmpty) {
       val s = new Sentence(
-        words.toArray, startOffsets.toArray, endOffsets.toArray, words.toArray,
-        tags = Some(labels.toArray)
+        words, startOffsets, endOffsets, words,
+        tags = Some(labels)
       )
       sentences += s
     }
     logger.debug(s"Loaded ${sentences.size} sentences.")
 
-    val d = new Document(sentences.toArray)
+    val d = new Document(sentences)
     annotate(d)
 
     d

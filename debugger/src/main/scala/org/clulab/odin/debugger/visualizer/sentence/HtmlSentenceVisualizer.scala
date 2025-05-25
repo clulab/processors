@@ -18,8 +18,8 @@ class HtmlSentenceVisualizer extends SentenceVisualizer with HtmlVisualizing {
       string
     }
 
-    def getOrEmpty(arrayOpt: Option[Array[String]], index: Int): String =
-        arrayOpt.map(_(index)).getOrElse("")
+    def getOrEmpty(seqOpt: Option[Seq[String]], index: Int): String =
+        seqOpt.map(_(index)).getOrElse("")
 
     val rows = sentence.words.indices.map { i =>
       tr(
