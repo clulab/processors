@@ -4,6 +4,7 @@ import org.clulab.processors.Sentence
 import org.clulab.scala.WrappedArrayBuffer._
 
 import java.io.{BufferedReader, InputStreamReader}
+import scala.collection.compat._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 import scala.util.Using
@@ -11,15 +12,17 @@ import scala.util.Using
 import SentenceSplitter._
 
 trait SentenceSplitter {
-  def split(tokens:Array[RawToken], sentenceSplit:Boolean):Array[Sentence]
+  def split(tokens:Array[RawToken], sentenceSplit:Boolean, characterOffset: Int = 0):Seq[Sentence]
 }
 
 abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
   /**
     * Sentence splitting over a stream of tokens
-    * This includes detection of abbreviations as well
+    * This includes detection of abbreviations as well.
+    * The characterOffset is included so that Sentences
+    * in a longer text need not be edited afterward.
     **/
-  override def split(tokens:Array[RawToken], sentenceSplit:Boolean):Seq[Sentence] = {
+  override def split(tokens: Array[RawToken], sentenceSplit: Boolean, characterOffset: Int): Seq[Sentence] = {
     val sentences = new ArrayBuffer[Sentence]()
     var raw = new ArrayBuffer[String]()
     var words = new ArrayBuffer[String]()
@@ -27,49 +30,46 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
     var endPositions = new ArrayBuffer[Int]()
 
     for (i <- tokens.indices) {
-      val crt = tokens(i)
-
+      val curr: RawToken = tokens(i)
       // next and previous tokens. We need these to detect proper ends of sentences
-      var next: Option[RawToken] = None
-      if (i < tokens.length - 1) next = Some(tokens(i + 1))
-      var prev: Option[RawToken] = None
-      if (i > 0) prev = Some(tokens(i - 1))
+      val nextOpt: Option[RawToken] = Option.when(i < tokens.length - 1)(tokens(i + 1))
+      val prevOpt: Option[RawToken] = Option.when(i > 0)(tokens(i - 1))
 
       //
       // we handle end-of-sentence markers (periods, etc.) here
       // this includes detecting if a period belongs to the previous token (if it's an abbreviation)
       // and understanding if this token actually marks the end of a sentence
       //
-      if (EOS.findFirstIn(crt.word).isDefined) {
+      if (EOS.findFirstIn(curr.word).isDefined) {
         // found a token that normally indicates end of sentence
         var isEos = sentenceSplit
 
         // period that probably belongs to an abbreviation and should not be marked as EOS
-        if (crt.word == "." && prev.isDefined && isAbbreviation(prev.get.word) && crt.beginPosition == prev.get.endPosition) {
+        if (curr.word == "." && prevOpt.isDefined && isAbbreviation(prevOpt.get.word) && curr.beginPosition == prevOpt.get.endPosition) {
           // found a period that should be attached to the previous abbreviation
-          endPositions(endPositions.size - 1) = crt.endPosition
-          words(words.size - 1) = words.last + crt.word
-          raw(raw.size - 1) = raw.last + crt.raw
+          endPositions(endPositions.size - 1) = curr.endPosition + characterOffset
+          words(words.size - 1) = words.last + curr.word
+          raw(raw.size - 1) = raw.last + curr.raw
 
           // this is not an end of sentence if the next token does NOT look like the start of a sentence
           // TODO: maybe this should be handled with a binary classifier instead?
-          if (isEos && next.isDefined && !isSentStart(next.get.word)) {
+          if (isEos && nextOpt.isDefined && !isSentStart(nextOpt.get.word)) {
             isEos = false
           }
         }
 
         // regular end-of-sentence marker; treat is a distinct token
         else {
-          raw += crt.raw
-          words += crt.word
-          beginPositions += crt.beginPosition
-          endPositions += crt.endPosition
+          raw += curr.raw
+          words += curr.word
+          beginPositions += curr.beginPosition + characterOffset
+          endPositions += curr.endPosition + characterOffset
         }
 
         // found a valid end of sentence; start an empty one
         if (isEos) {
-          sentences += Sentence(raw.toSeq, beginPositions.toSeq, endPositions.toSeq, words.toSeq)
-          raw = new ArrayBuffer[String]()
+          sentences += Sentence(raw, beginPositions, endPositions, words)
+          raw = new ArrayBuffer[String]() // TODO: Check whether clear() is sufficient.
           words = new ArrayBuffer[String]()
           beginPositions = new ArrayBuffer[Int]()
           endPositions = new ArrayBuffer[Int]()
@@ -77,27 +77,27 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
       }
 
       // found a period *inside* a token; sometimes this is an EOS
-      else if(EOS_FOLLOWEDBY_BULLET.findFirstIn(crt.raw).isDefined &&
-        crt.raw.lastIndexOf('.') > 0 &&
-        next.isDefined && isSentStart(next.get.word)) {
+      else if(EOS_FOLLOWEDBY_BULLET.findFirstIn(curr.raw).isDefined &&
+        curr.raw.lastIndexOf('.') > 0 &&
+        nextOpt.isDefined && isSentStart(nextOpt.get.word)) {
         //println(s"FOUND EOS INSIDE TOKEN: ${crt.raw}")
 
         //
         // create the last token from the token fragment before the period, and the period itself
         //
-        val dotRawPosition = crt.raw.lastIndexOf('.')
+        val dotRawPosition = curr.raw.lastIndexOf('.')
         assert(dotRawPosition > 0)
-        val dotWordPosition = crt.word.lastIndexOf('.')
+        val dotWordPosition = curr.word.lastIndexOf('.')
         assert(dotWordPosition > 0)
 
-        raw += crt.raw.substring(0, dotRawPosition)
-        words += crt.word.substring(0, dotWordPosition)
-        beginPositions += crt.beginPosition
-        endPositions += crt.beginPosition + dotRawPosition
+        raw += curr.raw.substring(0, dotRawPosition)
+        words += curr.word.substring(0, dotWordPosition)
+        beginPositions += curr.beginPosition + characterOffset
+        endPositions += curr.beginPosition + dotRawPosition + characterOffset
 
         // This is just for the period with length of 1.
-        raw += crt.raw.substring(dotRawPosition, dotRawPosition + 1)
-        words += crt.word.substring(dotWordPosition, dotWordPosition + 1)
+        raw += curr.raw.substring(dotRawPosition, dotRawPosition + 1)
+        words += curr.word.substring(dotWordPosition, dotWordPosition + 1)
         beginPositions += endPositions.last
         endPositions += beginPositions.last + 1
         val lastPosition = endPositions.last
@@ -114,18 +114,18 @@ abstract class RuleBasedSentenceSplitter extends SentenceSplitter {
         //
         // add the part of the token after the period to the new sentence
         //
-        raw += crt.raw.substring(dotRawPosition + 1)
-        words += crt.word.substring(dotWordPosition + 1)
+        raw += curr.raw.substring(dotRawPosition + 1)
+        words += curr.word.substring(dotWordPosition + 1)
         beginPositions += lastPosition
         endPositions += lastPosition + raw.head.length
       }
 
       else {
         // just a regular token
-        raw += crt.raw
-        words += crt.word
-        beginPositions += crt.beginPosition
-        endPositions += crt.endPosition
+        raw += curr.raw
+        words += curr.word
+        beginPositions += curr.beginPosition + characterOffset
+        endPositions += curr.endPosition + characterOffset
       }
     }
 

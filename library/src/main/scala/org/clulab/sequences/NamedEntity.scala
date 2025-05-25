@@ -1,5 +1,7 @@
 package org.clulab.sequences
 
+import scala.collection.mutable
+
 // This is definitely not the most efficient as far as number of objects
 // created, but there should be a NamedEntity thing to hold and not just
 // shadows of it projected onto the BIO notation in an array of strings.
@@ -57,11 +59,18 @@ object NamedEntity {
     bioLabels
   }
 
+  // Only INSIDEs can be invalid and they are made valid by
+  // converting them into a BEGIN.
+  def toBegin(bioLabel: String): String = BEGIN + bioLabel.drop(INSIDE.length)
+
+  def isValid(bioLabels: Seq[String]): Boolean = bioLabels.indices.forall(isValid(bioLabels, _))
+
   def isValid(bioLabels: Seq[String], index: Int): Boolean = {
     val currBioLabel = bioLabels(index)
     !currBioLabel.startsWith(INSIDE) || {
       0 < index && {
         val prevBioLabel = bioLabels(index - 1)
+
         prevBioLabel == currBioLabel || {
           prevBioLabel == toBegin(currBioLabel)
         }
@@ -69,20 +78,43 @@ object NamedEntity {
     }
   }
 
-  def isValid(bioLabels: Seq[String]): Boolean =
-      bioLabels.indices.forall(isValid(bioLabels, _))
+  def isValid2(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
+    !currBioLabel.startsWith(INSIDE) || prevBioLabelOpt.forall { prevBioLabel =>
+      prevBioLabel == currBioLabel || prevBioLabel == toBegin(currBioLabel)
+    }
+  }
 
-  // Only INSIDEs can be invalid and they are made valid by
-  // converting them into a BEGIN.
-  def toBegin(bioLabel: String): String =
-      BEGIN + bioLabel.drop(INSIDE.length)
 
   // Note that this patches the array in place!
-  def patch(bioLabels: Seq[String]): Seq[String] = {
+  def patch2(bioLabels: mutable.Seq[String]): Seq[String] = {
     bioLabels.indices.foreach { index =>
       if (!isValid(bioLabels, index))
         bioLabels(index) = toBegin(bioLabels(index))
     }
     bioLabels
+  }
+
+  def patch1(bioLabels: Seq[String]): Seq[String] = {
+    var prevBioLabelOpt = bioLabels.lift(-1)
+    val newBioLabels = bioLabels.indices.map { index =>
+      val oldBioLabel = bioLabels(index)
+      val newBioLabel =
+          if (!isValid2(oldBioLabel, prevBioLabelOpt)) toBegin(oldBioLabel)
+          else oldBioLabel
+
+      prevBioLabelOpt = Some(newBioLabel)
+      newBioLabel
+    }
+
+    newBioLabels
+  }
+
+  def patch(bioLabels: Seq[String]): Seq[String] = {
+    val result1 = patch1(bioLabels)
+    val result2 = patch2(mutable.Seq(bioLabels: _*))
+
+    if (result1 != result2)
+      println("This went awry!")
+    result1
   }
 }

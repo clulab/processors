@@ -5,7 +5,9 @@ import org.clulab.numeric.mentions.Norm
 import org.clulab.odin.{EventMention, Mention}
 import org.clulab.processors.Document
 import org.clulab.struct.Interval
+import org.clulab.utils.WrappedArraySeq
 
+import scala.collection.mutable
 import _root_.scala.util.control.Breaks._
 
 object NumericUtils {
@@ -72,36 +74,95 @@ object NumericUtils {
     * @param mentions The numeric mentions previously extracted
     */
   def mkLabelsAndNorms(doc: Document, mentions: Seq[Mention]): (Seq[Seq[String]], Seq[Seq[String]]) = {
-    val allEntities = doc.sentences.map { sentence =>
-      sentence.entities.getOrElse(Seq.fill(sentence.size)("O"))
+    val pertinentMentions = mentions.collect {
+      case mention: Norm if NumericActions.isNumeric(mention) => mention
     }
-    val allNorms = doc.sentences.map { sentence =>
-      sentence.norms.getOrElse(Seq.fill(sentence.size)(""))
+    val mentionsBySentenceIndex = pertinentMentions.groupBy { mention => mention.sentence }
+    val zippedLabelsAndNorms = doc.sentences.zipWithIndex.map { case (sentence, index) =>
+      val mentions = mentionsBySentenceIndex.getOrElse(index, Seq.empty)
+
+      if (mentions.isEmpty) {
+        val entities = sentence.entities.getOrElse(WrappedArraySeq(Array.fill(sentence.size)("O")).toImmutableSeq)
+        val norms = sentence.norms.getOrElse(WrappedArraySeq(Array.fill(sentence.size)("")).toImmutableSeq)
+
+        (entities, norms)
+      }
+      else {
+        val mutableEntities = sentence.entities
+            .map { entities => Array(entities: _*) }
+            .getOrElse(Array.fill(sentence.size)("O"))
+        val mutableNorms = sentence.norms
+            .map { norms => Array(norms: _*) }
+            .getOrElse(Array.fill(sentence.size)(""))
+
+        mentions.foreach { mention =>
+          addLabelsAndNorms(mention.neLabel, mention.neNorm, mention.tokenInterval, mutableEntities, mutableNorms)
+        }
+        removeOneEntityBeforeAnother(mutableEntities, mutableNorms, "B-LOC", "MEASUREMENT-LENGTH")
+
+        val immutableEntities = WrappedArraySeq(mutableEntities).toImmutableSeq
+        val immutableNorms = WrappedArraySeq(mutableNorms).toImmutableSeq
+        (immutableEntities, immutableNorms)
+      }
     }
+    val unzippedLabelsAndNorms = zippedLabelsAndNorms.unzip
 
-    for (mention <- mentions) {
-      if (NumericActions.isNumeric(mention) && mention.isInstanceOf[Norm]) {
-        val sentenceIndex = mention.sentence
-        val entities = allEntities(sentenceIndex)
-        val norms = allNorms(sentenceIndex)
+    unzippedLabelsAndNorms
+  }
 
-        addLabelsAndNorms(mention.asInstanceOf[Norm], entities, norms, mention.tokenInterval)
-        removeOneEntityBeforeAnother(entities, norms, "B-LOC", "MEASUREMENT-LENGTH")
+  def removeOneEntityBeforeAnother(entities: mutable.Seq[String], norms: mutable.Seq[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
+    var triggered = false
+
+    entities.indices.reverse.foreach { index =>
+      val entity = entities(index)
+
+      if (entity == triggerEntity)
+        triggered = true
+      else {
+        if (triggered)
+          if (entity.endsWith(toBeRemovedShortened)) {
+            entities(index) = "O"
+            norms(index) = ""
+          }
+          else
+            triggered = false
       }
     }
 
-    (allEntities, allNorms)
-  }
 
-  def removeOneEntityBeforeAnother(entities: Seq[String], norms: Seq[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
     // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
     // toBeRemovedShortened is entity without BIO-
     val zippedEntities = entities.zipWithIndex
 
+    // So remove all consecutive MEASREMENT-LENGTH in front of a B-LOC
+    // Can it just be done backwards in one pass in a state matchine?
+
     zippedEntities.foreach { case (outerEntity, outerIndex) =>
       if (outerIndex > 0 && outerEntity == triggerEntity && entities(outerIndex - 1).endsWith(toBeRemovedShortened)) {
         // Go in reverse replacing indices and norms in the immediate preceding mention.
-        zippedEntities.slice(0, outerIndex).reverse
+        breakable { // TODO: rewrite
+          for ((innerEntity, innerIndex) <- zippedEntities.slice(0, outerIndex).reverse) {
+            if (innerEntity.endsWith(toBeRemovedShortened)) {
+              entities(innerIndex) = "O"
+              norms(innerIndex) = ""
+            } else break()
+          }
+        }
+      }
+    }
+  }
+
+  def removeOneEntityBeforeAnother2(entities: mutable.Seq[String], norms: mutable.Seq[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
+    // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
+    // toBeRemovedShortened is entity without BIO-
+    val zippedEntities = entities.zipWithIndex
+
+    // So remove all consecutive MEASREMENT-LENGTH in front of a B-LOC
+    // Can it just be done backwards in one pass in a state matchine?
+
+    zippedEntities.foreach { case (outerEntity, outerIndex) =>
+      if (outerIndex > 0 && outerEntity == triggerEntity && entities(outerIndex - 1).endsWith(toBeRemovedShortened)) {
+        // Go in reverse replacing indices and norms in the immediate preceding mention.
         breakable { // TODO: rewrite
           for ((innerEntity, innerIndex) <- zippedEntities.slice(0, outerIndex).reverse) {
             if (innerEntity.endsWith(toBeRemovedShortened)) {
@@ -115,10 +176,7 @@ object NumericUtils {
   }
 
   // TODO: These need to be mutable
-  private def addLabelsAndNorms(m: Norm, entities: Seq[String], norms: Seq[String], tokenInt: Interval): Unit = {
-    val label = m.neLabel
-    val norm = m.neNorm
-
+  private def addLabelsAndNorms(label: String, norm: String, tokenInt: Interval, entities: mutable.Seq[String], norms: mutable.Seq[String]): Unit = {
     // careful here: we may override some existing entities and norms
     // but, given that the numeric entity rules tend to be high precision, this is probably Ok...
     tokenInt.headOption.foreach { index =>

@@ -1,9 +1,7 @@
 package org.clulab.processors.clu
 
-import org.clulab.processors.Sentence
-
 import java.util.regex.Pattern
-import org.clulab.struct.Edge
+import scala.collection.mutable
 
 object PostProcessor {
   //
@@ -15,7 +13,7 @@ object PostProcessor {
   val WET_OR_DRY_SEASON = Pattern.compile("""(?i)[0-9]+(ds|ws)""")
 
   /** POS tag corrections, in place */
-  def postprocessPartOfSpeechTags(words: Seq[String], tags: Seq[String]): Seq[String] = {
+  def postprocessPartOfSpeechTags2(words: Seq[String], tags: mutable.Seq[String]): Seq[String] = {
 
     // unigram patterns
     words.indices.foreach { index =>
@@ -45,4 +43,42 @@ object PostProcessor {
     tags
   }
 
+  /** POS tag corrections */
+  def postprocessPartOfSpeechTags1(words: Seq[String], tags: Seq[String]): Seq[String] = {
+    val newTags = words.indices.map { index =>
+      val word = words(index)
+      val oldTag = tags(index)
+      val newTag = {
+        // unigram patterns
+        if (VERSUS_PATTERN.matcher(word).matches)
+          "CC" // "versus" seems like a CC to me. but maybe not...
+        else if (WET_OR_DRY_SEASON.matcher(word).matches)
+          "CD" // such years should be CDs because our grammars expect it
+        // bigram patterns
+        else if (word.equalsIgnoreCase("due")) {
+          if (words.lift(index + 1).map(_.toLowerCase).contains("to")) "IN" // "due" in "due to" must be a preposition
+          else oldTag
+        }
+        else if (word.equalsIgnoreCase("fall")) {
+          if (tags.lift(index + 1).contains("CD")) "NN" // "fall" followed by a CD must be NN
+          else oldTag
+        }
+        else oldTag
+      }
+
+      newTag
+    }
+
+    newTags
+  }
+
+  def postprocessPartOfSpeechTags(words: Seq[String], tags: Seq[String]): Seq[String] = {
+    val result1 = postprocessPartOfSpeechTags1(words, tags)
+    val result2 = postprocessPartOfSpeechTags2(words, mutable.Seq(tags: _*))
+
+    if (result1 != result2)
+      println("It went awry!")
+
+    result1
+  }
 }

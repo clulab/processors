@@ -27,33 +27,23 @@ object DocumentMaker {
   }
 
   /** Constructs a document of tokens from an array of untokenized sentences */
-  def mkDocumentFromSentences(tokenizer:Tokenizer,
-                              sentences:Iterable[String],
-                              keepText:Boolean,
-                              charactersBetweenSentences:Int): Document = {
-    val sents = new ArrayBuffer[Sentence]()
+  def mkDocumentFromSentences(
+    tokenizer: Tokenizer,
+    texts: Iterable[String],
+    keepText: Boolean,
+    charactersBetweenSentences: Int
+  ): Document = {
     var characterOffset = 0
-    for(text <- sentences) {
-      val sent = tokenizer.tokenize(text, sentenceSplit = false).head // we produce a single sentence here!
+    val sentences = texts.map { text =>
+      val sentence = tokenizer.tokenize(text, sentenceSplit = false, characterOffset).head // We produce a single sentence here!
 
-      // update character offsets between sentences
-      for(i <- 0 until sent.size) {
-        sent.startOffsets(i) += characterOffset
-        sent.endOffsets(i) += characterOffset
-      }
-
-      // move the character offset after the current sentence
-      characterOffset = sent.endOffsets.last + charactersBetweenSentences
-
-      //println("SENTENCE: " + sent.words.mkString(", "))
-      //println("Start offsets: " + sent.startOffsets.mkString(", "))
-      //println("End offsets: " + sent.endOffsets.mkString(", "))
-      sents += sent
-    }
+      characterOffset = sentence.endOffsets.last + charactersBetweenSentences
+      sentence
+    }.toVector // TODO: What is the best concrete collection to use?
     val textOpt = Option.when(keepText)(sentences.mkString(mkSep(charactersBetweenSentences)))
-    val doc = Document(sents.toArray, textOpt)
+    val document = Document(sentences, textOpt)
 
-    doc
+    document
   }
 
   /** Constructs a document of tokens from an array of tokenized sentences */

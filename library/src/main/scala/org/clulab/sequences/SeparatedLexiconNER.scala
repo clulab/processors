@@ -63,7 +63,7 @@ class SeparatedLexiconNER(
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence: Sentence): Array[String] = {
+  def find(sentence: Sentence): Seq[String] = {
     val seq = findLongestMatch(sentence)
     seq
   }
