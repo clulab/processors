@@ -44,7 +44,7 @@ trait Processor {
       }
     }
 
-    val combinedSentences = documents.flatMap(_.sentences).toArray
+    val combinedSentences = documents.flatMap(_.sentences)
     val combinedDocument = new Document(
       sentences = combinedSentences,
       id = headId,

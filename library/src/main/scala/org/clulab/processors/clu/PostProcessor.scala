@@ -13,7 +13,7 @@ object PostProcessor {
   val WET_OR_DRY_SEASON = Pattern.compile("""(?i)[0-9]+(ds|ws)""")
 
   /** POS tag corrections, in place */
-  def postprocessPartOfSpeechTags2(words: Seq[String], tags: mutable.Seq[String]): Seq[String] = {
+  def postprocessPartOfSpeechTags2(words: Seq[String], tags: mutable.Seq[String]): mutable.Seq[String] = {
 
     // unigram patterns
     words.indices.foreach { index =>

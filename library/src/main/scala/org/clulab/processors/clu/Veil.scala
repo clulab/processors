@@ -3,6 +3,7 @@ package org.clulab.processors.clu
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
 import org.clulab.struct.GraphMap.GraphMapType
+import org.clulab.utils.WrappedArraySeq
 
 import scala.collection.mutable.{Set => MutableSet}
 
@@ -109,7 +110,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   }
   protected lazy val veiledDocument = {
     val veiledSentences = originalDocument.sentences.zipWithIndex.map { case (originalSentence, sentenceIndex) =>
-      val wordIndexes = originalSentence.words.indices.filterNot(veilSets(sentenceIndex)).toArray
+      val wordIndexes = originalSentence.words.indices.filterNot(veilSets(sentenceIndex))
       val veiledRaw          = wordIndexes.map(originalSentence.raw)
       val veiledStartOffsets = wordIndexes.map(originalSentence.startOffsets)
       val veiledEndOffsets   = wordIndexes.map(originalSentence.endOffsets)
@@ -132,7 +133,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
       veiledArray.zipWithIndex.foreach { case (veiledString, veiledIndex) =>
         unveiledArray(unveilArray(veiledIndex)) = veiledString
       }
-      unveiledArray
+      WrappedArraySeq(unveiledArray).toImmutableSeq
     }
   }
 

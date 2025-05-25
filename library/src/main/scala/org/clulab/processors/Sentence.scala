@@ -192,8 +192,8 @@ class Sentence(
   def offset(offset: Int): Sentence = {
     if (offset == 0) this
     else {
-      val newStartOffsets = startOffsets.map(_ + offset).toArray
-      val newEndOffsets = endOffsets.map(_ + offset).toArray
+      val newStartOffsets = startOffsets.map(_ + offset)
+      val newEndOffsets = endOffsets.map(_ + offset)
 
       copy(startOffsets = newStartOffsets, endOffsets = newEndOffsets)
     }

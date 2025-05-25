@@ -190,7 +190,7 @@ class BalaurProcessor protected (
               entities = Some(newLabels(index)),
               norms = Some(newNorms(index))
             )
-          }.toArray
+          }
 
           partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
         }
@@ -199,10 +199,10 @@ class BalaurProcessor protected (
     fullyAnnotatedDocument
   }
 
-  private def mkPosTags(words: Seq[String], labels: Seq[Array[(String, Float)]]): Seq[String] = {
+  private def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    val tags = labels.map(_.head._1).toArray
+    val tags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
 
     PostProcessor.postprocessPartOfSpeechTags(words, tags)
     tags
@@ -237,7 +237,8 @@ class BalaurProcessor protected (
   private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], optionalNERLabels: Option[Seq[String]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    val genericLabels = NamedEntity.patch(labels.map(_.head._1))
+    val labelsSeq = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
+    val genericLabels = NamedEntity.patch(labelsSeq)
 
     if (optionalNERLabels.isEmpty) {
       genericLabels
@@ -256,11 +257,12 @@ class BalaurProcessor protected (
     require(generic.length == custom.length)
 
     val customNamedEntities = NamedEntity.collect(custom)
-    val result = generic.toArray // A copy of the generic labels is created here.
 
     if (customNamedEntities.isEmpty)
-      result
+      generic
     else {
+      // TODO: kwa work on combine
+      val result = generic.toArray // A copy of the generic labels is created here.
       val genericNamedEntities = NamedEntity.collect(generic)
 
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
@@ -268,13 +270,14 @@ class BalaurProcessor protected (
 
       // The custom labels override the generic ones!
       NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
+      WrappedArraySeq(result).toImmutableSeq
     }
   }
 
   private def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    labels.map(_.head._1)
+    WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
   }
 
   // The head has one score, the label has another.  Here the two scores are interpolated

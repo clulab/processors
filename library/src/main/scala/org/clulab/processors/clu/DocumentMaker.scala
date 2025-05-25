@@ -73,7 +73,7 @@ object DocumentMaker {
     }
 
     val textOpt = Option.when(keepText)(text.toString)
-    val doc = Document(sents.toArray, textOpt)
+    val doc = Document(sents, textOpt)
 
     doc
   }

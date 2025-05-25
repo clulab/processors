@@ -63,9 +63,11 @@ object NamedEntity {
   // converting them into a BEGIN.
   def toBegin(bioLabel: String): String = BEGIN + bioLabel.drop(INSIDE.length)
 
-  def isValid(bioLabels: Seq[String]): Boolean = bioLabels.indices.forall(isValid(bioLabels, _))
+  def isValid(bioLabels: Seq[String]): Boolean = bioLabels.indices.forall { index =>
+    isValid1(bioLabels(index), bioLabels.lift(index - 1))
+  }
 
-  def isValid(bioLabels: Seq[String], index: Int): Boolean = {
+  def isValid2(bioLabels: mutable.Seq[String], index: Int): Boolean = {
     val currBioLabel = bioLabels(index)
     !currBioLabel.startsWith(INSIDE) || {
       0 < index && {
@@ -78,7 +80,7 @@ object NamedEntity {
     }
   }
 
-  def isValid2(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
+  def isValid1(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
     !currBioLabel.startsWith(INSIDE) || prevBioLabelOpt.forall { prevBioLabel =>
       prevBioLabel == currBioLabel || prevBioLabel == toBegin(currBioLabel)
     }
@@ -86,9 +88,9 @@ object NamedEntity {
 
 
   // Note that this patches the array in place!
-  def patch2(bioLabels: mutable.Seq[String]): Seq[String] = {
+  def patch2(bioLabels: mutable.Seq[String]): mutable.Seq[String] = {
     bioLabels.indices.foreach { index =>
-      if (!isValid(bioLabels, index))
+      if (!isValid2(bioLabels, index))
         bioLabels(index) = toBegin(bioLabels(index))
     }
     bioLabels
@@ -99,7 +101,7 @@ object NamedEntity {
     val newBioLabels = bioLabels.indices.map { index =>
       val oldBioLabel = bioLabels(index)
       val newBioLabel =
-          if (!isValid2(oldBioLabel, prevBioLabelOpt)) toBegin(oldBioLabel)
+          if (!isValid1(oldBioLabel, prevBioLabelOpt)) toBegin(oldBioLabel)
           else oldBioLabel
 
       prevBioLabelOpt = Some(newBioLabel)
