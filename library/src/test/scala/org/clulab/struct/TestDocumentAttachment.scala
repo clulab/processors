@@ -130,7 +130,7 @@ class TestDocumentAttachment extends Test {
       (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
       (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     )
-    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     val documentString = documentSerializer.save(oldDocument)
@@ -153,7 +153,7 @@ class TestDocumentAttachment extends Test {
       (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
       (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     )
-    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     // This should be a messy string.
@@ -177,7 +177,7 @@ class TestDocumentAttachment extends Test {
       (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
       (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     )
-    val oldDocument = new Document(sentences = Array.empty[Sentence], attachments = Some(oldAttachments))
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     // This shouldn't compile.
     /*oldDocument.addAttachment("wrong", new NameMethodAttachment("name"))*/
@@ -203,7 +203,7 @@ class TestDocumentAttachment extends Test {
       (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
       (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     )
-    val oldDocument = new Document(Array.empty[Sentence], attachments = Some(oldAttachments))
+    val oldDocument = new Document(Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     // This should be a messy string.
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
