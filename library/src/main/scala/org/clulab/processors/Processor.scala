@@ -12,7 +12,7 @@ import scala.collection.mutable
 trait Processor {
 
   /** Constructs a document of tokens from free text; includes sentence splitting and tokenization. */
-  def mkDocument (text:String, keepText:Boolean = false): Document
+  def mkDocument(text:String, keepText:Boolean = false): Document
 
   // The documents here were created with Processor.mkDocument, which could have created a subclassed
   // Document or documents with certain fields already filled in.  This implementation only handles
@@ -51,7 +51,7 @@ trait Processor {
       coreferenceChains = None,
       text = combinedTextOpt,
       attachments = Some(attachments),
-      documentCreationTime = headDctOpt
+      dct = headDctOpt
     )
 
     combinedDocument
@@ -84,16 +84,22 @@ trait Processor {
   }
 
   /** Constructs a document of tokens from an array of untokenized sentences. */
-  def mkDocumentFromSentences (sentences:Iterable[String],
-                               keepText:Boolean = false,
-                               charactersBetweenSentences:Int = 1): Document
+  def mkDocumentFromSentences(
+    sentences: Iterable[String],
+    keepText: Boolean = false,
+    charactersBetweenSentences: Int = 1
+  ): Document
 
   /** Constructs a document of tokens from an array of tokenized sentences. */
-  def mkDocumentFromTokens (sentences:Iterable[Iterable[String]],
-                            keepText:Boolean = false,
-                            charactersBetweenSentences:Int = 1,
-                            charactersBetweenTokens:Int = 1): Document
+  def mkDocumentFromTokens(
+    sentences: Iterable[Iterable[String]],
+    keepText: Boolean = false,
+    charactersBetweenSentences: Int = 1,
+    charactersBetweenTokens: Int = 1
+  ): Document
 
+  /** Lemmatization; modifies the document in place. */
+  def lemmatize(words: Seq[String]): Seq[String]
 
   // Side-effecting annotations. These modify the document in place, which is not too elegant.
   // There are two reasons for this:
@@ -104,52 +110,52 @@ trait Processor {
   /** Part of speech tagging; modifies the document in place. */
   def tagPartsOfSpeech(doc: Document): Unit
 
-  /** Lemmatization; modifies the document in place. */
-  def lemmatize(words: Seq[String]): Seq[String]
-
   /** Named Entity Recognition; modifies the document in place. */
-  def recognizeNamedEntities (doc:Document): Unit
+  def recognizeNamedEntities(doc: Document): Unit
 
   /** Syntactic parsing; modifies the document in place. */
-  def parse (doc:Document): Unit
+  def parse(doc:Document): Unit
 
   /** Semantic role labeling */
-  def srl (doc: Document): Unit
+  def srl(doc: Document): Unit
 
   /** Shallow parsing; modifies the document in place. */
-  def chunking (doc:Document): Unit
+  def chunking(doc:Document): Unit
 
   /** Coreference resolution; modifies the document in place. */
-  def resolveCoreference (doc:Document): Unit
+  def resolveCoreference(doc:Document): Unit
 
   /** Discourse parsing; modifies the document in place. */
-  def discourse (doc:Document): Unit
+  def discourse(doc:Document): Unit
 
   /** Relation extraction; modifies the document in place. */
   def relationExtraction(doc:Document): Unit
 
 
   /** Annotate the given text string, specify whether to retain the text in the resultant Document. */
-  def annotate (text:String, keepText:Boolean = false): Document = {
-    val doc = mkDocument(text, keepText)
-    if (doc.sentences.nonEmpty)
-      annotate(doc)
-    else
-      doc
+  def annotate(text: String, keepText: Boolean = false): Document = {
+    val tokenizedDoc = mkDocument(text, keepText)
+    val annotatedDoc = // For now, these two documents have the same type.
+        if (tokenizedDoc.sentences.nonEmpty) annotate(tokenizedDoc)
+        else tokenizedDoc
+
+    annotatedDoc
   }
 
   /** Annotate the given sentences, specify whether to retain the text in the resultant Document. */
-  def annotateFromSentences (
-    sentences:Iterable[String],
-    keepText:Boolean = false): Document = {
+  def annotateFromSentences(
+    sentences: Iterable[String],
+    keepText: Boolean = false
+  ): Document = {
     val doc = mkDocumentFromSentences(sentences, keepText)
     annotate(doc)
   }
 
   /** Annotate the given tokens, specify whether to retain the text in the resultant Document. */
-  def annotateFromTokens (
+  def annotateFromTokens(
     sentences:Iterable[Iterable[String]],
-    keepText:Boolean = false): Document = {
+    keepText:Boolean = false
+  ): Document = {
     val doc = mkDocumentFromTokens(sentences, keepText)
     annotate(doc)
   }

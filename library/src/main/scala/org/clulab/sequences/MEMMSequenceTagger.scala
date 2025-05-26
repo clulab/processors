@@ -32,7 +32,7 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
     var sentCount = 0
     for(doc <- docs; origSentence <- doc.sentences) {
       // labels and features for one sentence
-      val sentence = if(leftToRight) origSentence else origSentence.revert()
+      val sentence = if(leftToRight) origSentence else origSentence.reverse()
       val labels =
         if(leftToRight) labelExtractor(origSentence)
         else SeqUtils.revert(labelExtractor(origSentence)).toArray
@@ -68,7 +68,7 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
   }
 
   override def classesOf(origSentence: Sentence):Seq[L] = {
-    val sentence = if(leftToRight) origSentence else origSentence.revert()
+    val sentence = if(leftToRight) origSentence else origSentence.reverse()
 
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {

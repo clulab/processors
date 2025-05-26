@@ -1,7 +1,5 @@
 package org.clulab.processors
 
-import java.io.PrintWriter
-
 import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
 import org.clulab.utils.Hash
 import org.clulab.utils.Serializer
@@ -9,6 +7,7 @@ import org.json4s.JString
 import org.json4s.JValue
 import org.json4s.jackson.prettyJson
 
+import java.io.PrintWriter
 import scala.collection.mutable
 
 /**
@@ -26,7 +25,8 @@ class Document(
   val text: Option[String] = None,
   /** Map of any arbitrary document attachments such as document creation time */
   protected val attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
-  protected val documentCreationTime:Option[String] = None
+  /** DCT is Document Creation Time */
+  protected val dct: Option[String] = None
 ) extends Serializable {
 
   def copy(
@@ -35,8 +35,8 @@ class Document(
     coreferenceChains: Option[CorefChains] = coreferenceChains,
     text: Option[String] = text,
     attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
-    documentCreationTime: Option[String] = documentCreationTime
-  ): Document = new Document(sentences, id, coreferenceChains, text, attachments, documentCreationTime)
+    dct: Option[String] = dct
+  ): Document = new Document(sentences, id, coreferenceChains, text, attachments, dct)
 
   /** Clears any internal state potentially constructed by the annotators */
   // def clear(): Unit = { }
@@ -72,17 +72,8 @@ class Document(
     Hash.ordered(sentences.map(_.ambivalenceHash))
   )
 
-  /** Adds an attachment to the document's attachment map */
-//  def addAttachment(name: String, attachment: DocumentAttachment): Unit = {
-//    if (attachments.isEmpty)
-//      attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
-//    attachments.get += name -> attachment
-//  }
-
   /** Retrieves the attachment with the given name */
   def getAttachment(name: String): Option[DocumentAttachment] = attachments.flatMap(_.get(name))
-
-  def removeAttachment(name: String): Unit = attachments.foreach(_ -= name)
 
   /** Retrieves keys to all attachments so that the entire collection can be read
     * for purposes including but not limited to serialization.  If there are no
@@ -102,9 +93,8 @@ class Document(
    * The DCT will impacts how Sentence.norms are generated for DATE expressions
    * @param dct Document creation time
    */
-//  def setDCT(dct:String): Unit = documentCreationTime = Some(dct)
 
-  def getDCT: Option[String] = documentCreationTime
+  def getDCT: Option[String] = dct
 
   def prettyPrint(pw: PrintWriter): Unit = {
     // let's print the sentence-level annotations
@@ -216,7 +206,7 @@ object Document {
       coreferenceChains = doc.coreferenceChains,
       text = doc.text,
       attachments = doc.attachments,
-      documentCreationTime = doc.documentCreationTime
+      dct = doc.dct
     )
 
     newDocument

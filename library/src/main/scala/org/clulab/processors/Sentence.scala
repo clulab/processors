@@ -96,39 +96,37 @@ class Sentence(
     *
     * @return A directed graph of dependencies if any exist, otherwise None
     */
-  def dependencies:Option[DirectedGraph[String]] = graphs match {
+  def dependencies: Option[DirectedGraph[String]] = graphs match {
     case collapsed if collapsed.contains(UNIVERSAL_ENHANCED) => collapsed.get(UNIVERSAL_ENHANCED)
     case basic if basic.contains(UNIVERSAL_BASIC) => basic.get(UNIVERSAL_BASIC)
     case _ => None
   }
 
   /** Fetches the universal basic dependencies */
-  def universalBasicDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_BASIC)
+  def universalBasicDependencies: Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_BASIC)
 
   /** Fetches the universal enhanced dependencies */
-  def universalEnhancedDependencies:Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_ENHANCED)
+  def universalEnhancedDependencies: Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_ENHANCED)
 
   /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
+  def stanfordBasicDependencies: Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
 
   /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies:Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
+  def stanfordCollapsedDependencies: Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
 
-  def semanticRoles:Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
-  def enhancedSemanticRoles:Option[DirectedGraph[String]] = graphs.get(ENHANCED_SEMANTIC_ROLES)
+  def semanticRoles: Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
+  def enhancedSemanticRoles: Option[DirectedGraph[String]] = graphs.get(ENHANCED_SEMANTIC_ROLES)
 
-  def hybridDependencies:Option[DirectedGraph[String]] = graphs.get(HYBRID_DEPENDENCIES)
-
-  def setDependencies(depType: String, deps: DirectedGraph[String]): Unit = graphs += (depType -> deps)
+  def hybridDependencies: Option[DirectedGraph[String]] = graphs.get(HYBRID_DEPENDENCIES)
 
   /**
     * Recreates the text of the sentence, preserving the original number of white spaces between tokens
     *
     * @return the text of the sentence
     */
-  def getSentenceText:String =  getSentenceFragmentText(0, words.length)
+  def getSentenceText: String =  getSentenceFragmentText(0, words.length)
 
-  def getSentenceFragmentText(start:Int, end:Int):String = {
+  def getSentenceFragmentText(start: Int, end: Int):String = {
     // optimize the single token case
     if (end - start == 1) raw(start)
     else {
@@ -147,8 +145,8 @@ class Sentence(
     }
   }
 
-  /** Reverts the current sentence */
-  def revert(): Sentence = {
+  /** Reverses the current sentence */
+  def reverse(): Sentence = {
     val reversedSentence = Sentence(
       raw.reverse,
       startOffsets.reverse,
@@ -168,7 +166,6 @@ class Sentence(
     reversedSentence
   }
 
-  // TODO
   def copy(
     raw: Seq[String] = raw,
     startOffsets: Seq[Int] = startOffsets,
@@ -203,13 +200,13 @@ class Sentence(
 object Sentence {
 
   def apply(
-    raw:Seq[String],
+    raw: Seq[String],
     startOffsets: Seq[Int],
     endOffsets: Seq[Int]): Sentence =
     new Sentence(raw, startOffsets, endOffsets, raw) // words are identical to raw tokens (a common situation)
 
   def apply(
-    raw:Seq[String],
+    raw: Seq[String],
     startOffsets: Seq[Int],
     endOffsets: Seq[Int],
     words: Seq[String]): Sentence =
