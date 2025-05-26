@@ -36,7 +36,7 @@ class Sentence(
   /** Constituent tree of this sentence; includes head words */
   val syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  val graphs: GraphMap.ImmutableType = GraphMap.immutableEmpty,
+  val graphs: GraphMap.Type = GraphMap.empty,
   /** Relation triples from OpenIE */
   val relations:Option[Seq[RelationTriple]] = None
 ) extends Serializable {
@@ -178,7 +178,7 @@ class Sentence(
     norms: Option[Seq[String]] = norms,
     chunks: Option[Seq[String]] = chunks,
     syntacticTree: Option[Tree] = syntacticTree,
-    graphs: GraphMap.ImmutableType = graphs,
+    graphs: GraphMap.Type = graphs,
     relations: Option[Seq[RelationTriple]] = relations
   ): Sentence =
     new Sentence(
@@ -223,7 +223,7 @@ object Sentence {
     norms: Option[Seq[String]] = None,
     chunks: Option[Seq[String]] = None,
     tree: Option[Tree] = None,
-    deps: GraphMap.ImmutableType = GraphMap.immutableEmpty,
+    deps: GraphMap.Type = GraphMap.empty,
     relations: Option[Seq[RelationTriple]] = None
   ): Sentence = {
     new Sentence(

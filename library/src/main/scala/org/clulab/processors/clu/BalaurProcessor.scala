@@ -309,7 +309,7 @@ class BalaurProcessor protected (
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
-  ): GraphMap.ImmutableType = {
+  ): GraphMap.Type = {
     val verbose = false
     val size = words.length
     // bht is used just for debugging purposes here
@@ -336,7 +336,7 @@ class BalaurProcessor protected (
       )
     }
     else
-      GraphMap.immutableEmpty
+      GraphMap.empty
   }
 }
 

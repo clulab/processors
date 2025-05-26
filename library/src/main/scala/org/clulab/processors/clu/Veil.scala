@@ -136,7 +136,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     }
   }
 
-  def unveilGraphs(veiledGraphs: GraphMap.ImmutableType, sentenceIndex: Int): GraphMap.ImmutableType = {
+  def unveilGraphs(veiledGraphs: GraphMap.Type, sentenceIndex: Int): GraphMap.Type = {
     val unveilArray = unveilArrays(sentenceIndex)
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
     val unveiledGraphs = veiledGraphs.map { case (name, veiledDirectedGraph) =>

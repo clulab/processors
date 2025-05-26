@@ -19,7 +19,7 @@ case class Annotation(
   /** Constituent tree of this sentence; includes head words */
   syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  graphs: GraphMap.ImmutableType = GraphMap.immutableEmpty,
+  graphs: GraphMap.Type = GraphMap.empty,
   /** Relation triples from OpenIE */
   relations:Option[Array[RelationTriple]] = None
 ) {

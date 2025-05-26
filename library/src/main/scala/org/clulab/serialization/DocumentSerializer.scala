@@ -235,7 +235,7 @@ class DocumentSerializer extends Logging {
     assert(normBuffer.isEmpty || normBuffer.size == tokenCount)
     assert(chunkBuffer.isEmpty || chunkBuffer.size == tokenCount)
 
-    val deps = GraphMap.mutableEmpty
+    var deps = GraphMap.empty
     var tree:Option[Tree] = None
     var relations:Option[Seq[RelationTriple]] = None
     while ({
@@ -266,7 +266,7 @@ class DocumentSerializer extends Logging {
       bufferOption(entityBuffer, nilEntities),
       bufferOption(normBuffer, nilNorms),
       bufferOption(chunkBuffer, nilChunks),
-      tree, deps.toMap, relations
+      tree, deps, relations
     )
   }
 

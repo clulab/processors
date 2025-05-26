@@ -1,13 +1,9 @@
 package org.clulab.struct
 
-import scala.collection.mutable
-
 object GraphMap {
-  type ImmutableType = Map[String, DirectedGraph[String]]
-  type MutableType = mutable.Map[String, DirectedGraph[String]]
+  type Type = Map[String, DirectedGraph[String]]
 
-  val immutableEmpty: ImmutableType = Map.empty
-  val mutableEmpty: MutableType = mutable.Map.empty[String, DirectedGraph[String]]
+  val empty: Type = Map.empty
 
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
