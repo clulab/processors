@@ -102,7 +102,7 @@ object JSONSerializer {
         key -> toDirectedGraph(json, Some(preferredSize))
       }.toMap
 
-      GraphMap(graphs)
+      graphs
     }
     val relations = None // TODO: Are these not serialized?
     val parsedSentence = Sentence(

@@ -1,7 +1,6 @@
 package org.clulab.processors
 
 import org.clulab.struct.{DirectedGraph, GraphMap, RelationTriple, Tree}
-import org.clulab.struct.GraphMap._
 import org.clulab.utils.Hash
 
 import scala.collection.mutable
@@ -37,7 +36,7 @@ class Sentence(
   /** Constituent tree of this sentence; includes head words */
   val syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  val graphs: GraphMapType = GraphMap(),
+  val graphs: GraphMap.ImmutableType = GraphMap.immutableEmpty,
   /** Relation triples from OpenIE */
   val relations:Option[Seq[RelationTriple]] = None
 ) extends Serializable {
@@ -97,27 +96,28 @@ class Sentence(
     * @return A directed graph of dependencies if any exist, otherwise None
     */
   def dependencies: Option[DirectedGraph[String]] = graphs match {
-    case collapsed if collapsed.contains(UNIVERSAL_ENHANCED) => collapsed.get(UNIVERSAL_ENHANCED)
-    case basic if basic.contains(UNIVERSAL_BASIC) => basic.get(UNIVERSAL_BASIC)
+    case collapsed if collapsed.contains(GraphMap.UNIVERSAL_ENHANCED) => collapsed.get(GraphMap.UNIVERSAL_ENHANCED)
+    case basic if basic.contains(GraphMap.UNIVERSAL_BASIC) => basic.get(GraphMap.UNIVERSAL_BASIC)
     case _ => None
   }
 
   /** Fetches the universal basic dependencies */
-  def universalBasicDependencies: Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_BASIC)
+  def universalBasicDependencies: Option[DirectedGraph[String]] = graphs.get(GraphMap.UNIVERSAL_BASIC)
 
   /** Fetches the universal enhanced dependencies */
-  def universalEnhancedDependencies: Option[DirectedGraph[String]] = graphs.get(UNIVERSAL_ENHANCED)
+  def universalEnhancedDependencies: Option[DirectedGraph[String]] = graphs.get(GraphMap.UNIVERSAL_ENHANCED)
 
   /** Fetches the Stanford basic dependencies */
-  def stanfordBasicDependencies: Option[DirectedGraph[String]] = graphs.get(STANFORD_BASIC)
+  def stanfordBasicDependencies: Option[DirectedGraph[String]] = graphs.get(GraphMap.STANFORD_BASIC)
 
   /** Fetches the Stanford collapsed dependencies */
-  def stanfordCollapsedDependencies: Option[DirectedGraph[String]] = graphs.get(STANFORD_COLLAPSED)
+  def stanfordCollapsedDependencies: Option[DirectedGraph[String]] = graphs.get(GraphMap.STANFORD_COLLAPSED)
 
-  def semanticRoles: Option[DirectedGraph[String]] = graphs.get(SEMANTIC_ROLES)
-  def enhancedSemanticRoles: Option[DirectedGraph[String]] = graphs.get(ENHANCED_SEMANTIC_ROLES)
+  def semanticRoles: Option[DirectedGraph[String]] = graphs.get(GraphMap.SEMANTIC_ROLES)
 
-  def hybridDependencies: Option[DirectedGraph[String]] = graphs.get(HYBRID_DEPENDENCIES)
+  def enhancedSemanticRoles: Option[DirectedGraph[String]] = graphs.get(GraphMap.ENHANCED_SEMANTIC_ROLES)
+
+  def hybridDependencies: Option[DirectedGraph[String]] = graphs.get(GraphMap.HYBRID_DEPENDENCIES)
 
   /**
     * Recreates the text of the sentence, preserving the original number of white spaces between tokens
@@ -178,7 +178,7 @@ class Sentence(
     norms: Option[Seq[String]] = norms,
     chunks: Option[Seq[String]] = chunks,
     syntacticTree: Option[Tree] = syntacticTree,
-    graphs: GraphMapType = graphs,
+    graphs: GraphMap.ImmutableType = graphs,
     relations: Option[Seq[RelationTriple]] = relations
   ): Sentence =
     new Sentence(
@@ -223,7 +223,7 @@ object Sentence {
     norms: Option[Seq[String]] = None,
     chunks: Option[Seq[String]] = None,
     tree: Option[Tree] = None,
-    deps: GraphMapType = GraphMap.EMPTY_GRAPH,
+    deps: GraphMap.ImmutableType = GraphMap.immutableEmpty,
     relations: Option[Seq[RelationTriple]] = None
   ): Sentence = {
     new Sentence(

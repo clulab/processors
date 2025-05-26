@@ -309,9 +309,8 @@ class BalaurProcessor protected (
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
-  ): GraphMap.GraphMapType = {
+  ): GraphMap.ImmutableType = {
     val verbose = false
-    val graphs = GraphMap()
     val size = words.length
     // bht is used just for debugging purposes here
     val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, topK = 25, verbose)
@@ -323,27 +322,27 @@ class BalaurProcessor protected (
       println("Roots: " + roots.get.mkString(", "))
     }
     if (deps.nonEmpty && roots.nonEmpty) {
-      // TODO: This can be made in one fell swoop.
-
       // basic dependencies that replicate treebank annotations
       val depGraph = new DirectedGraph[String](deps.get, Some(size), roots)
-      graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
-
       // enhanced dependencies as defined by Manning
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(words, lemmas, tags, depGraph)
-      graphs += GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph
 
-      // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
-      // however, this processor produces only syntactic dependencies
-      graphs += GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+      Map(
+        GraphMap.UNIVERSAL_BASIC -> depGraph,
+        GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph,
+        // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
+        // however, this processor produces only syntactic dependencies
+        GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+      )
     }
-    graphs
+    else
+      GraphMap.immutableEmpty
   }
 }
 
 object BalaurProcessor {
-  val logger:Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
-  val prefix:String = "BalaurProcessor"
+  val logger: Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
+  val prefix: String = "BalaurProcessor"
 
   val NER_TASK = "NER"
   val POS_TASK = "POS"

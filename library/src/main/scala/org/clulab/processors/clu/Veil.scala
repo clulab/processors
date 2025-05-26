@@ -2,7 +2,6 @@ package org.clulab.processors.clu
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
-import org.clulab.struct.GraphMap.GraphMapType
 import org.clulab.utils.WrappedArraySeq
 
 import scala.collection.mutable.{Set => MutableSet}
@@ -137,18 +136,16 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     }
   }
 
-  def unveilGraphs(veiledGraphs: GraphMapType, sentenceIndex: Int): GraphMapType = {
+  def unveilGraphs(veiledGraphs: GraphMap.ImmutableType, sentenceIndex: Int): GraphMap.ImmutableType = {
     val unveilArray = unveilArrays(sentenceIndex)
-    val unveiledGraphs = GraphMap()
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
-
-    veiledGraphs.foreach { case (name, veiledDirectedGraph) =>
+    val unveiledGraphs = veiledGraphs.map { case (name, veiledDirectedGraph) =>
       val unveiledEdges = veiledDirectedGraph.allEdges.map { case (veiledSource, veiledDestination, relation) =>
         Edge(unveilArray(veiledSource), unveilArray(veiledDestination), relation)
       }
       val unveiledRoots = veiledDirectedGraph.roots.map(unveilArray)
 
-      unveiledGraphs(name) = new DirectedGraph(unveiledEdges, Some(originalLength), Some(unveiledRoots))
+      name -> new DirectedGraph(unveiledEdges, Some(originalLength), Some(unveiledRoots))
     }
     unveiledGraphs
   }

@@ -52,8 +52,8 @@ package object json {
     }
   }
 
-  implicit class GraphMapOps(gm: GraphMapType) extends JSONSerialization {
-    def jsonAST: JValue = Extraction.decompose(gm.toMap.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
+  implicit class GraphMapOps(gm: GraphMap.ImmutableType) extends JSONSerialization {
+    def jsonAST: JValue = Extraction.decompose(gm.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
   }
 
   /** For Document */

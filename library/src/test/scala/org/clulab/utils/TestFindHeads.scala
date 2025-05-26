@@ -11,10 +11,10 @@ class TestFindHeads extends Test {
     val   endOffsets = Seq(0) // unused
     val sentence = new Sentence(
       words, startOffsets, endOffsets, words,
-      tags = Some(words)
+      tags = Some(words),
+      graphs = Map(UNIVERSAL_BASIC -> directedGraph)
     )
 
-    sentence.graphs(UNIVERSAL_BASIC) = directedGraph
     sentence
   }
 

@@ -1,7 +1,5 @@
 package org.clulab.struct
 
-import org.clulab.struct.GraphMap.GraphMapType
-
 // These are by the word ones and then there are relationships between words.
 // So parse, might not be a thing that is per word.
 //case class WordParse(tag: String, lemma: String, entity: String, norm: String, chunk: String)
@@ -21,7 +19,7 @@ case class Annotation(
   /** Constituent tree of this sentence; includes head words */
   syntacticTree: Option[Tree] = None,
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
-  graphs: GraphMapType = GraphMap(),
+  graphs: GraphMap.ImmutableType = GraphMap.immutableEmpty,
   /** Relation triples from OpenIE */
   relations:Option[Array[RelationTriple]] = None
 ) {
