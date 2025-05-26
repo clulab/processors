@@ -59,49 +59,26 @@ object NamedEntity {
     bioLabels
   }
 
-  // Only INSIDEs can be invalid and they are made valid by
+  // Only INSIDEs can be invalid, and they are made valid by
   // converting them into a BEGIN.
   def toBegin(bioLabel: String): String = BEGIN + bioLabel.drop(INSIDE.length)
 
   def isValid(bioLabels: Seq[String]): Boolean = bioLabels.indices.forall { index =>
-    isValid1(bioLabels(index), bioLabels.lift(index - 1))
+    isValid(bioLabels(index), bioLabels.lift(index - 1))
   }
 
-  def isValid2(bioLabels: mutable.Seq[String], index: Int): Boolean = {
-    val currBioLabel = bioLabels(index)
-    !currBioLabel.startsWith(INSIDE) || {
-      0 < index && {
-        val prevBioLabel = bioLabels(index - 1)
-
-        prevBioLabel == currBioLabel || {
-          prevBioLabel == toBegin(currBioLabel)
-        }
-      }
-    }
-  }
-
-  def isValid1(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
+  def isValid(currBioLabel: String, prevBioLabelOpt: Option[String]): Boolean = {
     !currBioLabel.startsWith(INSIDE) || prevBioLabelOpt.exists { prevBioLabel =>
       prevBioLabel == currBioLabel || prevBioLabel == toBegin(currBioLabel)
     }
   }
 
-
-  // Note that this patches the array in place!
-  def patch2(bioLabels: mutable.Seq[String]): mutable.Seq[String] = {
-    bioLabels.indices.foreach { index =>
-      if (!isValid2(bioLabels, index))
-        bioLabels(index) = toBegin(bioLabels(index))
-    }
-    bioLabels
-  }
-
-  def patch1(bioLabels: Seq[String]): Seq[String] = {
+  def patch(bioLabels: Seq[String]): Seq[String] = {
     var prevBioLabelOpt = bioLabels.lift(-1)
     val newBioLabels = bioLabels.indices.map { index =>
       val oldBioLabel = bioLabels(index)
       val newBioLabel =
-          if (!isValid1(oldBioLabel, prevBioLabelOpt)) toBegin(oldBioLabel)
+          if (!isValid(oldBioLabel, prevBioLabelOpt)) toBegin(oldBioLabel)
           else oldBioLabel
 
       prevBioLabelOpt = Some(newBioLabel)
@@ -109,14 +86,5 @@ object NamedEntity {
     }
 
     newBioLabels
-  }
-
-  def patch(bioLabels: Seq[String]): Seq[String] = {
-    val result1 = patch1(bioLabels)
-    val result2 = patch2(mutable.Seq(bioLabels: _*))
-
-    if (result1 != result2)
-      println("This went awry!")
-    result1
   }
 }
