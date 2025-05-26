@@ -23,9 +23,8 @@ class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableP
     val numericEntityRecognizerOpt = balaurProcessor
         .numericEntityRecognizerOpt
         .map(_.reloaded(new File(ruleDirOpt.get)))
-    val numericEntityRecognizerOptOpt = numericEntityRecognizerOpt.map(Option(_))
 
-    processorOpt = Some(balaurProcessor.copy(numericEntityRecognizerOptOpt = numericEntityRecognizerOptOpt))
+    processorOpt = Some(balaurProcessor.copy(numericEntityRecognizerOpt = numericEntityRecognizerOpt))
   }
 }
 

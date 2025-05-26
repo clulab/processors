@@ -4,7 +4,6 @@ import org.clulab.processors.Sentence
 import org.clulab.scala.SeqView
 import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
-import org.clulab.utils.ArrayView
 
 import java.io.File
 import scala.collection.mutable
@@ -103,7 +102,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
   )
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {
-    val wordsView = sentence.words.view(start, start + length)
+    val wordsView = sentence.words.view.slice(start, start + length)
     // A valid view/span must have a letter and at least one of the other qualifiers.
     val contentful = hasLetter(wordsView) && contentQualifiers.exists(_(wordsView))
 
@@ -314,7 +313,7 @@ object LexiconNER {
     var upperCaseLetters = 0
     val spaces = math.max(0, end - start - 1) // Spaces are between words, not after them.
 
-    ArrayView(words, start, end).foreach { word =>
+    words.view.slice(start, end).foreach { word =>
       characters += word.length
       word.foreach { c =>
         if (Character.isLetter(c)) letters += 1
@@ -347,7 +346,7 @@ object LexiconNER {
     while (offset < length) {
       val notOutsideCount = countWhile(src, offset, isNotOutside)
       // Check that there is not anything in dst that should not be overwritten.
-      if (!ArrayView(dst, offset, offset + notOutsideCount).exists(isNotOutside(_)))
+      if (!dst.view.slice(offset, offset + notOutsideCount).exists(isNotOutside(_)))
         Array.copy(src, offset, dst, offset, notOutsideCount)
       offset += notOutsideCount
 

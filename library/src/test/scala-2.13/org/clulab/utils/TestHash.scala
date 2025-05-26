@@ -16,7 +16,7 @@ class TestHash extends Test {
 
     LexiconNER(kbs, caseInsensitiveMatchings, None)
   }
-  val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
   val extractorEngine = {
     val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
 

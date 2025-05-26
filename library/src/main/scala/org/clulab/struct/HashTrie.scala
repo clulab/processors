@@ -4,11 +4,11 @@ package org.clulab.struct
 class HashTrie(caseInsensitive: Boolean = true)
     extends BooleanHashTrie("", caseInsensitive) {
 
-  def find(sequence:Array[String], label: String, outsideLabel: String): Array[String] =
+  def find(sequence:Seq[String], label: String, outsideLabel: String): Array[String] =
       if (caseInsensitive) findNormalized(sequence.map(_.toLowerCase), label, outsideLabel)
       else findNormalized(sequence, label, outsideLabel)
 
-  protected def findNormalized(tokens: Array[String], label: String, outsideLabel: String): Array[String] = {
+  protected def findNormalized(tokens: Seq[String], label: String, outsideLabel: String): Array[String] = {
     val labels = new Array[String](tokens.length)
     lazy val bLabel = "B-" + label // lazy thinking that most calls will not use it
     lazy val iLabel = "I-" + label

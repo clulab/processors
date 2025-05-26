@@ -9,6 +9,8 @@ class GraphMap protected extends mutable.HashMap[String, DirectedGraph[String]] 
 object GraphMap extends GraphMapNames {
   type GraphMapType = GraphMap
 
+  val EMPTY_GRAPH = GraphMap()
+
   def apply(): GraphMapType = new GraphMap()
 
   def apply(existing: Map[String, DirectedGraph[String]]): GraphMapType = {

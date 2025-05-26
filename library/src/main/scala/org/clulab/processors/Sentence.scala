@@ -222,12 +222,12 @@ object Sentence {
     words: Seq[String],
     tags: Option[Seq[String]],
     lemmas: Option[Seq[String]],
-    entities: Option[Seq[String]],
-    norms: Option[Seq[String]],
-    chunks: Option[Seq[String]],
-    tree: Option[Tree],
-    deps: GraphMapType,
-    relations: Option[Seq[RelationTriple]]
+    entities: Option[Seq[String]] = None,
+    norms: Option[Seq[String]] = None,
+    chunks: Option[Seq[String]] = None,
+    tree: Option[Tree] = None,
+    deps: GraphMapType = GraphMap.EMPTY_GRAPH,
+    relations: Option[Seq[RelationTriple]] = None
   ): Sentence = {
     new Sentence(
       raw, startOffsets, endOffsets, words,

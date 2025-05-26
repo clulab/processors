@@ -5,23 +5,25 @@ import com.typesafe.config.ConfigFactory
 import org.clulab.numeric.NumericEntityRecognizer
 import org.clulab.numeric.NumericUtils
 import org.clulab.processors.{Document, Processor, Sentence}
-import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, Lemmatizer, OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer, PortugueseLemmatizer, SpanishLemmatizer, Tokenizer}
+import org.clulab.processors.clu.tokenizer.Lemmatizer
+import org.clulab.processors.clu.tokenizer.{EnglishLemmatizer, PortugueseLemmatizer, SpanishLemmatizer}
+import org.clulab.processors.clu.tokenizer.Tokenizer
+import org.clulab.processors.clu.tokenizer.{OpenDomainEnglishTokenizer, OpenDomainPortugueseTokenizer, OpenDomainSpanishTokenizer}
 import org.clulab.processors.hexatagging.HexaDecoder
-import org.clulab.utils.WrappedArraySeq
 import org.clulab.scala_transformers.encoder.EncoderMaxTokensRuntimeException
 import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.sequences.{LexiconNER, NamedEntity}
 import org.clulab.struct.DirectedGraph
 import org.clulab.struct.GraphMap
-import org.clulab.struct.GraphMap.GraphMapType
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
+import org.clulab.utils.WrappedArraySeq
 import org.slf4j.{Logger, LoggerFactory}
 
 import BalaurProcessor._
 
 class BalaurProcessor protected (
   val config: Config,
-  val optionalNER: Option[LexiconNER],
+  val lexiconNerOpt: Option[LexiconNER],
   val numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
   wordTokenizer: Tokenizer,
   wordLemmatizer: Lemmatizer,
@@ -33,11 +35,11 @@ class BalaurProcessor protected (
   // standard, abbreviated constructor
   def this(
     config: Config = ConfigFactory.load("balaurprocessor"),
-    optionalNER: Option[LexiconNER] = None,
+    lexiconNerOpt: Option[LexiconNER] = None,
     seasonPathOpt: Option[String] = Some("/org/clulab/numeric/SEASON.tsv")
   ) = this(
     config,
-    optionalNER,
+    lexiconNerOpt,
     newNumericEntityRecognizerOpt(seasonPathOpt),
     mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
@@ -46,43 +48,49 @@ class BalaurProcessor protected (
   )
 
   def copy(
-    configOpt: Option[Config] = None,
-    optionalNEROpt: Option[Option[LexiconNER]] = None,
-    numericEntityRecognizerOptOpt: Option[Option[NumericEntityRecognizer]] = None,
-    wordTokenizerOpt: Option[Tokenizer] = None,
-    wordLemmatizerOpt: Option[Lemmatizer] = None,
-    tokenClassifierOpt: Option[TokenClassifier] = None
+    config: Config = config,
+    lexiconNerOpt: Option[LexiconNER] = lexiconNerOpt,
+    numericEntityRecognizerOpt: Option[NumericEntityRecognizer] = numericEntityRecognizerOpt,
+    wordTokenizer: Tokenizer = wordTokenizer,
+    wordLemmatizer: Lemmatizer = wordLemmatizer,
+    tokenClassifier: TokenClassifier = tokenClassifier
   ): BalaurProcessor = {
     new BalaurProcessor(
-      configOpt.getOrElse(this.config),
-      optionalNEROpt.getOrElse(this.optionalNER),
-      numericEntityRecognizerOptOpt.getOrElse(this.numericEntityRecognizerOpt),
-      wordTokenizerOpt.getOrElse(this.wordTokenizer),
-      wordLemmatizerOpt.getOrElse(this.wordLemmatizer),
-      tokenClassifierOpt.getOrElse(this.tokenClassifier)
+      config,
+      lexiconNerOpt,
+      numericEntityRecognizerOpt,
+      wordTokenizer,
+      wordLemmatizer,
+      tokenClassifier
     )
   }
 
+  // TODO: Try not to make a new decoder for each processor?
   val hexaDecoder = new HexaDecoder()
 
   override def getConf: Config = config
+
+  // TODO: Why not make the wordTokenizer a val then?
+  def tokenizer: Tokenizer = wordTokenizer
 
   override def mkDocument(text: String, keepText: Boolean): Document = { 
     DocumentMaker.mkDocument(tokenizer, text, keepText)
   }
 
-  def tokenizer: Tokenizer = wordTokenizer
-
-  override def mkDocumentFromSentences(sentences: Iterable[String], 
+  override def mkDocumentFromSentences(
+    sentences: Iterable[String],
     keepText: Boolean, 
-    charactersBetweenSentences: Int): Document = {     
+    charactersBetweenSentences: Int
+  ): Document = {
     DocumentMaker.mkDocumentFromSentences(tokenizer, sentences, keepText, charactersBetweenSentences)
   }
 
-  override def mkDocumentFromTokens(sentences: Iterable[Iterable[String]], 
+  override def mkDocumentFromTokens(
+    sentences: Iterable[Iterable[String]],
     keepText: Boolean, 
     charactersBetweenSentences: Int, 
-    charactersBetweenTokens: Int): Document = { 
+    charactersBetweenTokens: Int
+  ): Document = {
     DocumentMaker.mkDocumentFromTokens(sentences, keepText, charactersBetweenSentences, charactersBetweenSentences)
   }
 
@@ -108,37 +116,28 @@ class BalaurProcessor protected (
   }
 
   /** Generates cheap lemmas with the word in lower case, for languages where a lemmatizer is not available */
-  def cheapLemmatize(sentence: Sentence): Seq[String] = {
-    sentence.words.map(_.toLowerCase())
-  }
+  def cheapLemmatize(sentence: Sentence): Seq[String] =
+      sentence.words.map(_.toLowerCase())
 
-  override def recognizeNamedEntities(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: cannot call this method on its own in this procecessor!")
-  }
+  def throwCannotCallException(methodName: String): Unit =
+      throw new RuntimeException(s"ERROR: cannot call $methodName on its own in this processor!")
 
-  override def parse(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: cannot call this method on its own in this procecessor!")
-  }
+  override def recognizeNamedEntities(doc: Document): Unit = throwCannotCallException("recognizeNamedEntities")
 
-  override def srl(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: functionality not supported in this procecessor!")
-  }
+  override def parse(doc: Document): Unit = throwCannotCallException("parse")
 
-  override def chunking(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: cannot call this method on its own in this procecessor!")
-  }
+  override def chunking(doc: Document): Unit = throwCannotCallException("chunking")
 
-  override def resolveCoreference(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: functionality not supported in this procecessor!")
-  }
+  def throwNotSupportedException(methodName: String): Unit =
+      throw new RuntimeException(s"ERROR: $methodName functionality not supported in this procecessor!")
 
-  override def discourse(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: functionality not supported in this procecessor!")
-  }
+  override def srl(doc: Document): Unit = throwNotSupportedException("srl")
 
-  override def relationExtraction(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: functionality not supported in this procecessor!")
-  }
+  override def resolveCoreference(doc: Document): Unit = throwNotSupportedException("resolveCoreference")
+
+  override def discourse(doc: Document): Unit = throwNotSupportedException("discourse")
+
+  override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
   override def annotate(document: Document): Document = {
     // Process one sentence at a time through the MTL framework.
@@ -151,7 +150,7 @@ class BalaurProcessor protected (
         val allLabelsAndScores = tokenClassifier.predictWithScores(words)
         val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
         val entities = {
-          val optionalEntities = mkOptionalNerLabels(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
+          val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
           mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
         }
@@ -199,44 +198,37 @@ class BalaurProcessor protected (
   private def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
-    val tags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
-    val result = PostProcessor.postprocessPartOfSpeechTags(words, tags)
+    val rawTags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
+    val cookedTags = PostProcessor.postprocessPartOfSpeechTags(words, rawTags)
 
-    result
+    cookedTags
   }
 
-  private def mkOptionalNerLabels(
+  private def mkNerLabelsOpt(
     words: Seq[String], startOffsets: Seq[Int], endOffsets: Seq[Int],
     tags: Seq[String], lemmas: Seq[String]
   ): Option[Seq[String]] = {
-    // NER labels from the custom NER
-    optionalNER.map { ner =>
+    lexiconNerOpt.map { lexiconNer =>
       val sentence = Sentence(
-        words, // Why isn't this raw?
+        words, // TODO: Why isn't this raw?
         startOffsets,
         endOffsets,
         words,
         Some(tags),
-        Some(lemmas),
-        entities = None,
-        norms = None,
-        chunks = None,
-        tree = None,
-        deps = EMPTY_GRAPH,
-        relations = None
+        Some(lemmas)
       )
 
-      ner.find(sentence)
+      lexiconNer.find(sentence)
     }
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], optionalNERLabels: Option[Seq[String]]): Seq[String] = {
+  private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], nerLabelsOpt: Option[Seq[String]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val labelsSeq = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
     val genericLabels = NamedEntity.patch(labelsSeq)
-    val specificLabels = optionalNERLabels.map { nerLabels =>
+    val specificLabels = nerLabelsOpt.map { nerLabels =>
       //println(s"MERGING NE labels for sentence: ${sent.words.mkString(" ")}")
       //println(s"Generic labels: ${NamedEntity.patch(labels).mkString(", ")}")
       //println(s"Optional labels: ${optionalNERLabels.get.mkString(", ")}")
@@ -258,9 +250,8 @@ class BalaurProcessor protected (
     if (customNamedEntities.isEmpty)
       generic
     else {
-      // TODO: kwa work on combine
-      val result = generic.toArray // A copy of the generic labels is created here.
       val genericNamedEntities = NamedEntity.collect(generic)
+      val result = generic.toArray // A copy of the generic labels is created here.
 
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
       //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")
@@ -277,13 +268,15 @@ class BalaurProcessor protected (
     WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
   }
 
+  // TODO: This appears to be unused.
   // The head has one score, the label has another.  Here the two scores are interpolated
   // and the head and label are stored together in a single object with the score if the
   // object, the Dependency, has a valid absolute head.
   private def interpolateHeadsAndLabels(
-      sentHeadPredictionScores: Array[Array[PredictionScore]],
-      sentLabelPredictionScores: Array[Array[PredictionScore]],
-      lambda: Float): Array[Array[Dependency]] = {
+    sentHeadPredictionScores: Array[Array[PredictionScore]],
+    sentLabelPredictionScores: Array[Array[PredictionScore]],
+    lambda: Float
+  ): Array[Array[Dependency]] = {
     assert(sentHeadPredictionScores.length == sentLabelPredictionScores.length)
 
     val sentDependencies = sentHeadPredictionScores.zip(sentLabelPredictionScores).zipWithIndex.map { case ((wordHeadPredictionScores, wordLabelPredictionScores), wordIndex) =>
@@ -316,21 +309,22 @@ class BalaurProcessor protected (
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
-  ): GraphMapType = {
+  ): GraphMap.GraphMapType = {
     val verbose = false
     val graphs = GraphMap()
     val size = words.length
-
     // bht is used just for debugging purposes here
     val (bht, deps, roots) = hexaDecoder.decode(termTags, nonTermTags, topK = 25, verbose)
-    if(verbose && bht.nonEmpty) {
+
+    if (verbose && bht.nonEmpty) {
       println(bht)
       println(s"Dependencies (${deps.get.size}):")
       println(deps.mkString("\n"))
       println("Roots: " + roots.get.mkString(", "))
     }
-
     if (deps.nonEmpty && roots.nonEmpty) {
+      // TODO: This can be made in one fell swoop.
+
       // basic dependencies that replicate treebank annotations
       val depGraph = new DirectedGraph[String](deps.get, Some(size), roots)
       graphs += GraphMap.UNIVERSAL_BASIC -> depGraph
@@ -351,51 +345,38 @@ object BalaurProcessor {
   val logger:Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix:String = "BalaurProcessor"
 
-  val OUTSIDE = "O"
-  val EMPTY_GRAPH = GraphMap()
-
   val NER_TASK = "NER"
   val POS_TASK = "POS"
   val CHUNKING_TASK = "Chunking"
-  val DEPS_HEAD_TASK = "Deps Head"
-  val DEPS_LABEL_TASK = "Deps Label"
   val HEXA_TERM_TASK = "Hexa Term"
   val HEXA_NONTERM_TASK = "Hexa NonTerm"
 
-  val PARSING_INTERPOLATION_LAMBDA = 0.6f
-  val PARSING_TOPK = 5
-
   // maps a task name to a head index in the encoder
-  val TASK_TO_INDEX = Map(
-    NER_TASK -> 0,
-    POS_TASK -> 1,
-    CHUNKING_TASK -> 2,
-    HEXA_TERM_TASK -> 3, 
-    HEXA_NONTERM_TASK -> 4
-  )
+  val TASK_TO_INDEX: Map[String, Int] = Seq(
+    NER_TASK,
+    POS_TASK,
+    CHUNKING_TASK,
+    HEXA_TERM_TASK,
+    HEXA_NONTERM_TASK
+  ).zipWithIndex.toMap
 
-  def mkTokenizer(lang: String): Tokenizer = {
-    lang match {
-      case "PT" => new OpenDomainPortugueseTokenizer
-      case "ES" => new OpenDomainSpanishTokenizer
-      case _ => new OpenDomainEnglishTokenizer
-    }
+  def mkTokenizer(lang: String): Tokenizer = lang match {
+    case "PT" => new OpenDomainPortugueseTokenizer
+    case "ES" => new OpenDomainSpanishTokenizer
+    case "EN" | _ => new OpenDomainEnglishTokenizer
   }
 
-  def mkLemmatizer(lang: String): Lemmatizer = {
-    lang match {
-      case "PT" => new PortugueseLemmatizer
-      case "ES" => new SpanishLemmatizer
-      case _ => new EnglishLemmatizer
-    }
+  def mkLemmatizer(lang: String): Lemmatizer = lang match {
+    case "PT" => new PortugueseLemmatizer
+    case "ES" => new SpanishLemmatizer
+    case "EN" | _ => new EnglishLemmatizer
   }
 
   def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
-    if (config.hasPath(argPath)) config.getString(argPath)
-    else if(defaultValue.nonEmpty) defaultValue.get
-    else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
+      if (config.hasPath(argPath)) config.getString(argPath)
+      else if (defaultValue.nonEmpty) defaultValue.get
+      else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] = {
-    seasonPathOpt.map(NumericEntityRecognizer(_))
-  }
+  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
+      seasonPathOpt.map(NumericEntityRecognizer(_))
 }

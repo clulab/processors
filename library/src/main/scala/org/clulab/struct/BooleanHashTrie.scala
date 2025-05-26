@@ -261,13 +261,13 @@ class DebugBooleanHashTrie(label: String, caseInsensitive: Boolean = true) exten
     * Generates BIO labels for this sequence when complete trie paths match
     * When multiple paths match, the longest one is kept
     */
-  def find(sequence: Array[String], outsideLabel: String): Array[String] = {
+  def find(sequence: Seq[String], outsideLabel: String): Array[String] = {
     val casedSequence = if (caseInsensitive) sequence.map(_.toLowerCase) else sequence
 
     findNormalized(casedSequence, outsideLabel)
   }
 
-  private def findNormalized(sequence: Array[String], outsideLabel: String): Array[String] = {
+  private def findNormalized(sequence: Seq[String], outsideLabel: String): Array[String] = {
     val labels = new Array[String](sequence.length)
     var offset = 0
 

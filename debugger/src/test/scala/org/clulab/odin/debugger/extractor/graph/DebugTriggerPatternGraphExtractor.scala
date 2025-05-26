@@ -20,7 +20,7 @@ class DebugTriggerPatternGraphExtractor extends DebugTest {
   val resourceDir: File = new File(resourceDirName)
 
   val customLexiconNer = LexiconNER(Seq(s"$baseResourceName/FOOD.tsv"), Seq(true), Some(resourceDir))
-  val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new CluProcessor(lexiconNerOpt = Some(customLexiconNer))
   val document = processor.annotate("John eats cake.", keepText = true)
   val sentence = document.sentences.head
   val ruleName = "people-eat-food"

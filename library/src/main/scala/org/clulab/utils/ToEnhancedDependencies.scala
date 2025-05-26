@@ -23,7 +23,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 object ToEnhancedDependencies {
   type EdgeSpec = (Int, Int, String)
 
-  def generateStanfordEnhancedDependencies(words: Array[String], tags: Array[String], dg:DirectedGraph[String]): DirectedGraph[String] = {
+  def generateStanfordEnhancedDependencies(words: Array[String], tags: Seq[String], dg:DirectedGraph[String]): DirectedGraph[String] = {
     val dgi = dg.toDirectedGraphIndex()
     collapsePrepositionsStanford(words, dgi)
     raiseSubjects(dgi)

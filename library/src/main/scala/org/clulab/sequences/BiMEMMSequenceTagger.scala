@@ -233,7 +233,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
     if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
-  override def classesOf(sentence: Sentence):Array[L] = {
+  override def classesOf(sentence: Sentence):Seq[L] = {
     var firstPassLabels:Option[Array[L]] = None
     if(firstPassModel.nonEmpty)
       firstPassLabels = Some(classesOf(firstPassModel.get, sentence, None, ! leftToRight))

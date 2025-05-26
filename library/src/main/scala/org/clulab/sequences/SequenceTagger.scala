@@ -15,7 +15,7 @@ import scala.util.Using
 trait SequenceTagger[L, F] extends Tagger[L] {
   def train(docs:Iterator[Document]): Unit
 
-  def classesOf(sentence: Sentence):Array[L]
+  def classesOf(sentence: Sentence):Seq[L]
 
   /** Abstract method that generates the features for the word at the position offset in the given sentence */
   def featureExtractor(features:Counter[F], sentence: Sentence, offset:Int): Unit

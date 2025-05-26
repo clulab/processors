@@ -27,7 +27,7 @@ object OdinStarter3:
       val baseDirOpt = if isLocal then Some(resourceDir) else None
 
       LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
-    val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
+    val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
     val extractorEngine =
       val masterResource = "/org/clulab/odinstarter/main.yml"
       // We usually want to reload rules during development,

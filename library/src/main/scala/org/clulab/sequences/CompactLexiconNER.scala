@@ -1,15 +1,15 @@
 package org.clulab.sequences
 
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import java.util.Arrays
-
 import org.clulab.processors.Sentence
 import org.clulab.sequences.LexiconNER.OUTSIDE_LABEL
+import org.clulab.scala.WrappedArray._
 import org.clulab.struct.EntityValidator
 import org.clulab.struct.IntHashTrie
 import org.clulab.struct.IntTrieNode
 
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.util.Arrays
 import scala.collection.mutable
 
 /** Lexicon-based NER similar to [[org.clulab.sequences.CombinedLexiconNER CombinedLexiconNER]] but which
@@ -376,7 +376,7 @@ object CompactLexiconNER {
 
     // Assume that trieNodes are already sorted as much as necessary and all the tokens have stringIds.
     // Returns the number of parentsAdded and childrenAdded
-    def add(trieNodes: Array[IntTrieNode], parentOffset: Int, childOffset: Int): (Int, Int) = {
+    def add(trieNodes: Seq[IntTrieNode], parentOffset: Int, childOffset: Int): (Int, Int) = {
       // Area between parentOffset and parentOffset + parentRserve is for this recursive pass and
       // likewise for between childOffset and childOffset + childReserve.
       val parentReserve = trieNodes.length
