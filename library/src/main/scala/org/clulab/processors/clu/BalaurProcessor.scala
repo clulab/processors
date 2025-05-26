@@ -94,10 +94,6 @@ class BalaurProcessor protected (
     DocumentMaker.mkDocumentFromTokens(sentences, keepText, charactersBetweenSentences, charactersBetweenSentences)
   }
 
-  override def tagPartsOfSpeech(doc: Document): Unit = {
-    throw new RuntimeException("ERROR: cannot call this method on its own in this processor!")
-  }
-
   override def lemmatize(words: Seq[String]): Seq[String] = {
     val lemmas = words.zipWithIndex.map { case (word, index) =>
       val lemma = wordLemmatizer.lemmatizeWord(word)
@@ -119,8 +115,11 @@ class BalaurProcessor protected (
   def cheapLemmatize(sentence: Sentence): Seq[String] =
       sentence.words.map(_.toLowerCase())
 
+  // TODO: Just don't include anything that calls this.
   def throwCannotCallException(methodName: String): Unit =
       throw new RuntimeException(s"ERROR: cannot call $methodName on its own in this processor!")
+
+  override def tagPartsOfSpeech(doc: Document): Unit = throwCannotCallException("tagPartsOfSpeech")
 
   override def recognizeNamedEntities(doc: Document): Unit = throwCannotCallException("recognizeNamedEntities")
 
@@ -139,9 +138,9 @@ class BalaurProcessor protected (
 
   override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
-  override def annotate(document: Document): Document = {
+  override def annotate(doc: Document): Document = {
     // Process one sentence at a time through the MTL framework.
-    val partlyAnnotatedSentences = document.sentences.map { sentence =>
+    val partlyAnnotatedSentences = doc.sentences.map { sentence =>
       val words = sentence.words
       // Lemmas are created deterministically, not through the MTL framework.
       val lemmas = lemmatize(words)
@@ -167,6 +166,7 @@ class BalaurProcessor protected (
 
         partlyAnnotatedSentence
       }
+      // TODO: Improve error handling.
       catch {
         // No values, not even lemmas, will be included in the annotation is there was an exception.
         case e: EncoderMaxTokensRuntimeException =>
@@ -178,7 +178,7 @@ class BalaurProcessor protected (
           sentence
       }
     }
-    val partlyAnnotatedDocument = document.copy(sentences = partlyAnnotatedSentences)
+    val partlyAnnotatedDocument = doc.copy(sentences = partlyAnnotatedSentences)
     val fullyAnnotatedDocument = numericEntityRecognizerOpt.map { numericEntityRecognizer =>
       val numericMentions = numericEntityRecognizer.extractFrom(partlyAnnotatedDocument)
       val (newLabels, newNorms) = NumericUtils.mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
