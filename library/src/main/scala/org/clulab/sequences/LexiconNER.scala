@@ -6,7 +6,6 @@ import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
 
 import java.io.File
-import scala.collection.mutable
 
 /**
   * The abstract base class for several concrete child classes used for Named Entity
@@ -74,31 +73,31 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     }
   }
 
-  def hasCondition(wordsView: SeqView.Immutable[String], condition: Char => Boolean): Boolean =
+  def hasCondition(wordsView: SeqView.Type[String], condition: Char => Boolean): Boolean =
     wordsView.exists(_.exists(condition))
 
-  def hasLetter(wordsView: SeqView.Immutable[String]): Boolean =
+  def hasLetter(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isLetter)
 
-  def hasDigit(wordsView: SeqView.Immutable[String]): Boolean =
+  def hasDigit(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isDigit)
 
-  def hasUpperCaseLetters(wordsView: SeqView.Immutable[String]): Boolean =
+  def hasUpperCaseLetters(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isUpperCase)
 
-  def hasSpace(wordsView: SeqView.Immutable[String]): Boolean = wordsView.size > 1
+  def hasSpace(wordsView: SeqView.Type[String]): Boolean = wordsView.size > 1
 
-  def countCharacters(wordsView: SeqView.Immutable[String]): Int =
+  def countCharacters(wordsView: SeqView.Type[String]): Int =
     // Go ahead and calculate them all even though we only need to know if they exceed a value.
     wordsView.foldLeft(0) { (sum, word) => sum + word.length }
 
-  val contentQualifiers: Array[SeqView.Immutable[String] => Boolean] = Array(
+  val contentQualifiers: Array[SeqView.Type[String] => Boolean] = Array(
     // Start with the quick and easy ones.
     hasSpace,
-    { (wordsView: SeqView.Immutable[String]) => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
+    { (wordsView: SeqView.Type[String]) => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
     hasDigit,
     hasUpperCaseLetters,
-    { (wordsView: SeqView.Immutable[String]) => knownCaseInsensitives.contains(wordsView.head) }
+    { (wordsView: SeqView.Type[String]) => knownCaseInsensitives.contains(wordsView.head) }
   )
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {

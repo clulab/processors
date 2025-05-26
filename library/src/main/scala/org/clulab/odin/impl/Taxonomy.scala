@@ -1,7 +1,7 @@
 package org.clulab.odin.impl
 
-import org.clulab.scala.LazyList
 import java.util.{ Collection, Map => JMap }
+import scala.collection.compat.immutable.LazyList
 import scala.jdk.CollectionConverters._
 
 class Taxonomy(parents: Map[String, String]) {
