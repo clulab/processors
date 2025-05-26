@@ -90,11 +90,10 @@ class BalaurProcessor protected (
     throw new RuntimeException("ERROR: cannot call this method on its own in this processor!")
   }
 
-  /** Lemmatization; modifies the document in place */
   override def lemmatize(words: Seq[String]): Seq[String] = {
     val lemmas = words.zipWithIndex.map { case (word, index) =>
       val lemma = wordLemmatizer.lemmatizeWord(word)
-      // a lemma may be empty in some weird Unicode situations
+      // A lemma may be empty in some weird Unicode situations.
       val nonEmptyLemma =
           if (lemma.isEmpty) {
             logger.debug(s"""WARNING: Found empty lemma for word #$index "$word" in sentence: ${words.mkString(" ")}""")
@@ -163,11 +162,11 @@ class BalaurProcessor protected (
           allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
         )
         // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
-        val partlyAnnotatedDocument = sentence.copy(
+        val partlyAnnotatedSentence = sentence.copy(
           tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
         )
 
-        partlyAnnotatedDocument
+        partlyAnnotatedSentence
       }
       catch {
         // No values, not even lemmas, will be included in the annotation is there was an exception.
@@ -181,20 +180,18 @@ class BalaurProcessor protected (
       }
     }
     val partlyAnnotatedDocument = document.copy(sentences = partlyAnnotatedSentences)
-    val fullyAnnotatedDocument =
-        if (numericEntityRecognizerOpt.nonEmpty) {
-          val numericMentions = numericEntityRecognizerOpt.get.extractFrom(partlyAnnotatedDocument)
-          val (newLabels, newNorms) = NumericUtils.mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
-          val fullyAnnotatedSentences = partlyAnnotatedDocument.sentences.indices.map { index =>
-            partlyAnnotatedDocument.sentences(index).copy(
-              entities = Some(newLabels(index)),
-              norms = Some(newNorms(index))
-            )
-          }
+    val fullyAnnotatedDocument = numericEntityRecognizerOpt.map { numericEntityRecognizer =>
+      val numericMentions = numericEntityRecognizer.extractFrom(partlyAnnotatedDocument)
+      val (newLabels, newNorms) = NumericUtils.mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
+      val fullyAnnotatedSentences = partlyAnnotatedDocument.sentences.indices.map { index =>
+        partlyAnnotatedDocument.sentences(index).copy(
+          entities = Some(newLabels(index)),
+          norms = Some(newNorms(index))
+        )
+      }
 
-          partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
-        }
-        else partlyAnnotatedDocument
+      partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
+    }.getOrElse(partlyAnnotatedDocument)
 
     fullyAnnotatedDocument
   }
@@ -239,18 +236,18 @@ class BalaurProcessor protected (
 
     val labelsSeq = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
     val genericLabels = NamedEntity.patch(labelsSeq)
-
-    if (optionalNERLabels.isEmpty) {
-      genericLabels
-    }
-    else {
+    val specificLabels = optionalNERLabels.map { nerLabels =>
       //println(s"MERGING NE labels for sentence: ${sent.words.mkString(" ")}")
       //println(s"Generic labels: ${NamedEntity.patch(labels).mkString(", ")}")
       //println(s"Optional labels: ${optionalNERLabels.get.mkString(", ")}")
-      val mergedLabels = NamedEntity.patch(mergeNerLabels(genericLabels, optionalNERLabels.get))
+      val mergedLabels = mergeNerLabels(genericLabels, nerLabels)
+      val patchedLabels = NamedEntity.patch(mergedLabels)
       //println(s"Merged labels: ${mergedLabels.mkString(", ")}")
-      mergedLabels
-    }
+
+      patchedLabels
+    }.getOrElse(genericLabels)
+
+    specificLabels
   }
 
   private def mergeNerLabels(generic: Seq[String], custom: Seq[String]): Seq[String] = {
