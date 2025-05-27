@@ -116,10 +116,7 @@ class DocumentSerializer extends Logging {
       */
 
       val attachmentsOpt = namedDocumentAttachmentsOpt.map { namedDocumentAttachments =>
-        val attachments = mutable.HashMap[String, DocumentAttachment]()
-
-        attachments ++= namedDocumentAttachments
-        attachments
+        namedDocumentAttachments.toMap
       }
 
       val doc = new Document(
@@ -334,11 +331,12 @@ class DocumentSerializer extends Logging {
       }
 
       // Sort these so that serialization is the same each time.
-      val attachmentKeys = doc.getAttachmentKeys.toList.sorted
+      val attachments = doc.attachments.getOrElse(Map.empty)
+      val attachmentKeys = attachments.keySet
       if (attachmentKeys.nonEmpty) {
         os.println(START_ATTACHMENTS + SEP + attachmentKeys.size)
         attachmentKeys.foreach { key =>
-          val value = doc.getAttachment(key).get
+          val value = attachments(key)
           os.print(escapeAttachment(key))
           os.print(SEP)
           os.print(escapeAttachment(value.documentAttachmentBuilderFromTextClassName))

@@ -8,7 +8,6 @@ import org.json4s.JValue
 import org.json4s.jackson.prettyJson
 
 import java.io.PrintWriter
-import scala.collection.mutable
 
 /**
   * Stores all annotations for one document.
@@ -24,9 +23,13 @@ class Document(
   /** The original text corresponding to this document, if it was preserved by the corresponding processor */
   val text: Option[String] = None,
   /** Map of any arbitrary document attachments such as document creation time */
-  protected val attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
-  /** DCT is Document Creation Time */
-  protected val dct: Option[String] = None
+  val attachments: Option[DocumentAttachments.Type] = None,
+  /**
+   * The document creation time using the CoreNLP format
+   * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
+   * The DCT will impact how Sentence.norms are generated for DATE expressions.
+   */
+  val dct: Option[String] = None
 ) extends Serializable {
 
   def copy(
@@ -34,19 +37,18 @@ class Document(
     id: Option[String] = id,
     coreferenceChains: Option[CorefChains] = coreferenceChains,
     text: Option[String] = text,
-    attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None,
+    attachments: Option[DocumentAttachments.Type] = None,
     dct: Option[String] = dct
   ): Document = new Document(sentences, id, coreferenceChains, text, attachments, dct)
 
   /** Clears any internal state potentially constructed by the annotators */
-  // def clear(): Unit = { }
+  def clear(): Unit = { } // This is for subclass support.
 
   /**
     * Used to compare Documents.
     * @return a hash (Int) based primarily on the sentences, ignoring attachments
     */
   def equivalenceHash: Int = {
-
     val stringCode = "org.clulab.processors.Document"
 
     // Hash representing the sentences.
@@ -71,30 +73,6 @@ class Document(
     Hash(Document.getClass.getName),
     Hash.ordered(sentences.map(_.ambivalenceHash))
   )
-
-  /** Retrieves the attachment with the given name */
-  def getAttachment(name: String): Option[DocumentAttachment] = attachments.flatMap(_.get(name))
-
-  /** Retrieves keys to all attachments so that the entire collection can be read
-    * for purposes including but not limited to serialization.  If there are no
-    * attachments, that is attachments == None, an empty set is returned.
-    * This does not distinguish between None and Some(HashMap.empty), especially
-    * since the latter should not be possible because of the lazy initialization.
-    */
-  def getAttachmentKeys: collection.Set[String] = {
-    attachments.map { attachments =>
-      attachments.keySet
-    }.getOrElse(collection.Set.empty[String])
-  }
-
-  /**
-   * Sets the document creation time using the CoreNLP format.
-   * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
-   * The DCT will impacts how Sentence.norms are generated for DATE expressions
-   * @param dct Document creation time
-   */
-
-  def getDCT: Option[String] = dct
 
   def prettyPrint(pw: PrintWriter): Unit = {
     // let's print the sentence-level annotations
@@ -311,6 +289,11 @@ trait JsonSerializerAble {
   * Placeholder for document attachment, to be used to store any meta data such as document creation time.
   */
 trait DocumentAttachment extends DocumentAble with DocumentSerializerAble with JsonSerializerAble
+
+object DocumentAttachments {
+  type Type = Map[String, DocumentAttachment]
+}
+
 
 /**
  * Designed to store intermediate attachments that are only used to pass information between processor components.

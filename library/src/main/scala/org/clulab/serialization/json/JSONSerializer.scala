@@ -1,9 +1,9 @@
 package org.clulab.serialization.json
 
 import java.io.File
-import org.clulab.processors.{Document, DocumentAttachment, DocumentAttachmentBuilderFromJson, Sentence}
+import org.clulab.processors.{Document, DocumentAttachment, DocumentAttachmentBuilderFromJson, DocumentAttachments, Sentence}
 import org.clulab.struct.Edge
-import org.clulab.struct.{DirectedGraph, GraphMap}
+import org.clulab.struct.DirectedGraph
 import org.clulab.utils.FileUtils
 import org.json4s
 import org.json4s.JsonDSL._
@@ -24,13 +24,12 @@ object JSONSerializer {
 
   def jsonAST(f: File): JValue = jsonAST(FileUtils.getTextFromFile(f))
 
-  protected def getDocumentAttachments(jValue: JValue): Option[mutable.HashMap[String, DocumentAttachment]] = {
+  protected def getDocumentAttachments(jValue: JValue): Option[DocumentAttachments.Type] = {
     // See also DocumentSerializer for text version of nearly the same thing.
     (jValue \ DOCUMENT_ATTACHMENTS_KEY) match {
       case jObject: JObject =>
-        val attachments = new mutable.HashMap[String, DocumentAttachment]()
         val keys = jObject.values.keys
-        keys.foreach { (key: String) =>
+        val keyAndDocumentAttachmentPairs = keys.flatMap { (key: String) =>
           (jObject \ key) match {
             case jObject: JObject =>
               val documentAttachmentBuilderFromJsonClassName = (jObject \ DOCUMENT_ATTACHMENTS_BUILDER_KEY).extract[String]
@@ -40,15 +39,16 @@ object JSONSerializer {
               val documentAttachmentBuilder = obj.asInstanceOf[DocumentAttachmentBuilderFromJson]
               val value = (jObject \ DOCUMENT_ATTACHMENTS_VALUE_KEY)
               val documentAttachment = documentAttachmentBuilder.mkDocumentAttachment(value)
-              attachments(key) = documentAttachment
+
+              Some((key, documentAttachment))
             case jValue: JValue =>
               val text = prettyJson(jValue)
               throw new RuntimeException(s"ERROR: While deserializing document attachments expected JObject but found this: $text")
             // case _ => // noop.  It should never get here.  (Famous last words.)
-            case null => // noop.  It should never get here.  (Famous last words.)  Scala 3 prefers null over _.
+            case null => None // noop.  It should never get here.  (Famous last words.)  Scala 3 prefers null over _.
           }
         }
-        Some(attachments)
+        Some(keyAndDocumentAttachmentPairs.toMap)
       case _ => // Leave documentAttachments as is: None
         None
     }

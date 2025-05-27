@@ -26,23 +26,21 @@ trait Processor {
 
     val headId = headDocument.id
     require(tailDocuments.forall(_.id == headId))
-    val headDctOpt = headDocument.getDCT
-    require(documents.tail.forall(_.getDCT == headDctOpt))
+    val headDctOpt = headDocument.dct
+    require(documents.tail.forall(_.dct == headDctOpt))
     // Coreference chains involve Mentions that include references to documents.  The Mentions are being
     // moved to a new Document and it would be infeasible to move the chains.
     require(documents.forall(_.coreferenceChains.isEmpty))
 
-    val attachments = mutable.HashMap[String, DocumentAttachment]()
-
-    documents.foreach { document =>
-      document.getAttachmentKeys.foreach { attachmentKey =>
-        val valueOpt = attachments.get(attachmentKey)
-        val isValid = valueOpt.forall(_ == document.getAttachment(attachmentKey).get)
-
-        require(isValid, "The attachments cannot contradict each other.")
-        attachments(attachmentKey) = document.getAttachment(attachmentKey).get
-      }
+    val allAttachments = documents.flatMap { document =>
+      document.attachments.getOrElse(Map.empty).toSeq
     }
+    // This will remove duplicate (key, value) pairs.
+    val distinctAttachments = allAttachments.distinct
+    // If for any key, there are different, contradictory values, only one value will make it into the map.
+    val attachments = distinctAttachments.toMap
+
+    require(attachments.size == distinctAttachments.length, "Attachments can't contradict each other.  Each key needs to map onto the same value.")
 
     val combinedSentences = documents.flatMap(_.sentences)
     val combinedDocument = new Document(
