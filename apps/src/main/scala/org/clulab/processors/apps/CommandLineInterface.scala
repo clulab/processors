@@ -3,7 +3,7 @@ package org.clulab.processors.apps
 import org.clulab.processors.Document
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.serialization.CoNLLUSerializer
-import org.clulab.utils.{FileUtils, StringUtils}
+import org.clulab.utils.{FileUtils, StringUtils, WrappedArraySeq}
 
 import java.io.PrintWriter
 import scala.util.Using
@@ -36,7 +36,11 @@ object CommandLineInterface extends App {
       } else if(props.containsKey(TOKENS)) {
         // one sentence per line; sentences are tokenized
         val sents = FileUtils.getLinesFromFile(props.getProperty(INPUT))
-        val tokenizedSents = sents.map(_.split("\\s+").toSeq)
+        val tokenizedSents = sents.map { sent =>
+          val tokens = sent.split("\\s+")
+
+          WrappedArraySeq(tokens).toImmutableSeq
+        }
         proc.annotateFromTokens(tokenizedSents)
       } else {
         // assume raw text
