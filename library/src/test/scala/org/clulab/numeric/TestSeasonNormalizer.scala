@@ -17,8 +17,8 @@ class TestSeasonNormalizer extends Test {
     val document = processor.annotate(text)
     val mentions = processor.numericEntityRecognizerOpt.get.extractFrom(document)
 
-    NumericUtils.mkLabelsAndNorms(document, mentions)
-    (document.sentences.head.entities.get, document.sentences.head.norms.get)
+    val (entities, norms) = NumericUtils.mkLabelsAndNorms(document, mentions)
+    (entities.head, norms.head)
   }
 
   behavior of "Default seasonal BalaurProcessor"

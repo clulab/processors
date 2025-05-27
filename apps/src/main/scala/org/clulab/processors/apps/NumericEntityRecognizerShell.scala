@@ -34,9 +34,11 @@ class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends Reloadabl
   /** The actual work, including printing out the output */
   def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
+    // This gets the same numericEntityRecognizer already used in the annotation
+    // so that the mentions, since thrown away, can be recalculated.
     val mentions = proc.get.numericEntityRecognizerOpt.map(_.extractFrom(doc)).getOrElse(Seq.empty)
 
-    NumericUtils.mkLabelsAndNorms(doc, mentions)
+    // The doc should already have been annotated two lines above.
     NumericUtils.displayMentions(mentions, doc)
   }
 
