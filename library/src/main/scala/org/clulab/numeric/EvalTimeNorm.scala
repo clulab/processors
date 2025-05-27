@@ -12,10 +12,10 @@ object EvalTimeNorm {
 
   def runEval(
     proc: Processor,
-    ner: NumericEntityRecognizer,
-    testFile: String
+    timeNormEvalDir: String,
+    testFile: String,
+    ner: NumericEntityRecognizer
   ): Double = {
-    val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
     val goldStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$testFile")
     val goldLines = Source.fromInputStream(goldStream).getLines()
     // Build a Map with the gold time expressions.
@@ -58,13 +58,9 @@ object EvalTimeNorm {
     fscore
   }
 
-  def run(proc: BalaurProcessor): Double = {
+  def run(proc: BalaurProcessor, timeNormEvalDir: String, testFile: String): Double = {
     val ner = proc.numericEntityRecognizerOpt.get
 
-    test(proc, ner)
-  }
-
-  def test(proc: Processor, ner: NumericEntityRecognizer): Double = {
-    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+    runEval(proc, timeNormEvalDir, testFile, ner)
   }
 }
