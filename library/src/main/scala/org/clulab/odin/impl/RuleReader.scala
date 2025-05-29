@@ -13,6 +13,7 @@ import java.net.URL
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.{Collection, Map => JMap}
+import scala.collection.compat._
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
 import scala.util.Using
@@ -28,8 +29,7 @@ class RuleReader(val actions: Actions, val charset: Charset, val ruleDir: Option
   private val mirror = new ActionMirror(actions)
 
   val ruleYamlOpt =
-      if (OdinConfig.keepRule) Some(new Yaml(new Constructor(classOf[Map[String, Any]])))
-      else None
+      Option.when(OdinConfig.keepRule)(new Yaml(new Constructor(classOf[Map[String, Any]])))
 
   def read(input: String): Vector[Extractor] = {
     val rules = getRules(input)
