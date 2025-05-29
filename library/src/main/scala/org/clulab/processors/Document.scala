@@ -1,13 +1,11 @@
 package org.clulab.processors
 
-import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
+import org.clulab.struct.CorefChains
 import org.clulab.utils.Hash
 import org.clulab.utils.Serializer
 import org.json4s.JString
 import org.json4s.JValue
 import org.json4s.jackson.prettyJson
-
-import java.io.PrintWriter
 
 /**
   * Stores all annotations for one document.
