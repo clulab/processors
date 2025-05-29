@@ -2,7 +2,7 @@ package org.clulab.processors.apps
 
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.processors.clu.{BalaurProcessor, DocumentPrettyPrinter}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
 
@@ -11,7 +11,6 @@ import java.io.PrintWriter
 import scala.collection.compat._
 import scala.collection.parallel.ParSeq
 import scala.util.Using
-
 
 object InfiniteParallelProcessorsExample {
 
@@ -36,9 +35,6 @@ object InfiniteParallelProcessorsExample {
     val documentSerializer = new DocumentSerializer
 
     def processFiles(parFiles: ParSeq[File], processor: Processor): Unit = {
-
-      def printDocument(document: Document, printWriter: PrintWriter): Unit = document.prettyPrint(printWriter)
-
       parFiles.foreach { file =>
         println(s"Processing ${file.getName}...")
 
@@ -46,7 +42,7 @@ object InfiniteParallelProcessorsExample {
         val outputFile = new File(outputDir + "/" + file.getName)
         val document = processor.annotate(text)
         val printedDocument = StringUtils.viaPrintWriter { printWriter =>
-          printDocument(document, printWriter)
+          new DocumentPrettyPrinter(printWriter).print(document)
         }
         val savedDocument = documentSerializer.save(document)
         val outputDocument = printedDocument + savedDocument
