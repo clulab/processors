@@ -8,7 +8,6 @@ import org.clulab.struct.Interval
 import org.clulab.utils.WrappedArraySeq
 
 import scala.collection.mutable
-import _root_.scala.util.control.Breaks._
 
 object NumericUtils {
   def displayMentions(mentions: Seq[Mention], doc: Document): Unit = {
@@ -128,54 +127,8 @@ object NumericUtils {
             triggered = false
       }
     }
-
-
-    // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
-    // toBeRemovedShortened is entity without BIO-
-    val zippedEntities = entities.zipWithIndex
-
-    // So remove all consecutive MEASREMENT-LENGTH in front of a B-LOC
-    // Can it just be done backwards in one pass in a state matchine?
-
-    zippedEntities.foreach { case (outerEntity, outerIndex) =>
-      if (outerIndex > 0 && outerEntity == triggerEntity && entities(outerIndex - 1).endsWith(toBeRemovedShortened)) {
-        // Go in reverse replacing indices and norms in the immediate preceding mention.
-        breakable { // TODO: rewrite
-          for ((innerEntity, innerIndex) <- zippedEntities.slice(0, outerIndex).reverse) {
-            if (innerEntity.endsWith(toBeRemovedShortened)) {
-              entities(innerIndex) = "O"
-              norms(innerIndex) = ""
-            } else break()
-          }
-        }
-      }
-    }
   }
 
-  def removeOneEntityBeforeAnother2(entities: mutable.Seq[String], norms: mutable.Seq[String], triggerEntity: String, toBeRemovedShortened: String): Unit = {
-    // removes entities and norms for unallowable entity sequences, e.g., don't extract 'in' as 'inch' before B-LOC in '... Sahal 108 in Senegal'
-    // toBeRemovedShortened is entity without BIO-
-    val zippedEntities = entities.zipWithIndex
-
-    // So remove all consecutive MEASREMENT-LENGTH in front of a B-LOC
-    // Can it just be done backwards in one pass in a state matchine?
-
-    zippedEntities.foreach { case (outerEntity, outerIndex) =>
-      if (outerIndex > 0 && outerEntity == triggerEntity && entities(outerIndex - 1).endsWith(toBeRemovedShortened)) {
-        // Go in reverse replacing indices and norms in the immediate preceding mention.
-        breakable { // TODO: rewrite
-          for ((innerEntity, innerIndex) <- zippedEntities.slice(0, outerIndex).reverse) {
-            if (innerEntity.endsWith(toBeRemovedShortened)) {
-              entities(innerIndex) = "O"
-              norms(innerIndex) = ""
-            } else break()
-          }
-        }
-      }
-    }
-  }
-
-  // TODO: These need to be mutable
   private def addLabelsAndNorms(label: String, norm: String, tokenInt: Interval, entities: mutable.Seq[String], norms: mutable.Seq[String]): Unit = {
     // careful here: we may override some existing entities and norms
     // but, given that the numeric entity rules tend to be high precision, this is probably Ok...

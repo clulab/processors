@@ -110,15 +110,15 @@ object ColumnsToDocument {
       labeledSentence
     }
 
-    for (line <- source.getLines()) {
-      val l = line.trim
+    source.getLines().map(_.trim).foreach { l =>
       if (l.isEmpty) {
         // end of sentence
         if (words.nonEmpty) {
           sentences += mkSentence()
           charOffset += 1
         }
-      } else {
+      }
+      else {
         // within the same sentence
         val bits = l.split("\\s+")
         if (bits.length < 2)
@@ -139,7 +139,8 @@ object ColumnsToDocument {
           charOffset = bits(wordPos).length
           endOffsets += charOffset
           charOffset += 1
-        } else {
+        }
+        else {
           // println("Skipped line: " + l)
         }
       }
