@@ -21,7 +21,7 @@ class ColumnsToDocument
 object ColumnsToDocument {
   type LabelSetter = (Sentence, Seq[String]) => Sentence
   type Annotator = (Document) => Document
-  val logger:Logger = LoggerFactory.getLogger(classOf[ColumnsToDocument])
+  val logger: Logger = LoggerFactory.getLogger(classOf[ColumnsToDocument])
 
   val WORD_POS_CONLLX = 1
   val TAG_POS_CONLLX = 4

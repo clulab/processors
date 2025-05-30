@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
 import scala.util.Using
 
 /**
-  * Sequence tagger using a maximum entrop Markov model (MEMM)
+  * Sequence tagger using a maximum entropy Markov model (MEMM)
   * User: mihais
   * Date: 8/26/17
   */
