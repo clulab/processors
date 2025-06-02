@@ -82,7 +82,7 @@ class IntHashTrie(val caseInsensitive: Boolean = true) extends Serializable {
     * When multiple paths are found, the longest one is kept
     * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
     */
-  def findAt(sequenceNormalized: Array[String], offset: Int): IntTrieNode.Match = {
+  def findAt(sequenceNormalized: Seq[String], offset: Int): IntTrieNode.Match = {
     val longestMatch = new IntTrieNode.Match()
 
     entries.get(sequenceNormalized(offset)).map { tree =>
@@ -134,7 +134,7 @@ case class IntTrieNode(token:String, var completePath: Int, var children: Option
     * @param longestMatch      The value of the longest match interval
     * @return true if search should stop here; false otherwise
     */
-  def find(sequence: Array[String],
+  def find(sequence: Seq[String],
       startOffset: Int,
       currentSpanLength: Int,
       longestMatch: IntTrieNode.Match): Boolean = {

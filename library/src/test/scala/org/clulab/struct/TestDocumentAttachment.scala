@@ -1,7 +1,6 @@
 package org.clulab.struct
 
-import org.clulab.processors.Document
-import org.clulab.processors.Sentence
+import org.clulab.processors.{Document, DocumentAttachment, Sentence}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.serialization.json._
 import org.clulab.struct.test.CaseClass
@@ -124,68 +123,76 @@ class TestDocumentAttachment extends Test {
 //  }
 
   "Document with TextNameDocumentAttachment" should "serialize as text" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = Map[String, DocumentAttachment](
+      (FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     val documentString = documentSerializer.save(oldDocument)
 
     val newDocument = documentSerializer.load(documentString)
-    require(newDocument.getAttachment(FIRST_KEY) == oldDocument.getAttachment(FIRST_KEY))
-    require(newDocument.getAttachment(MIDDLE_KEY) == oldDocument.getAttachment(MIDDLE_KEY))
-    require(newDocument.getAttachment(LAST_KEY) == oldDocument.getAttachment(LAST_KEY))
-    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name ==
-        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name)
+    val newAttachments = newDocument.attachments.get
+
+    require(newAttachments(FIRST_KEY) == oldAttachments(FIRST_KEY))
+    require(newAttachments(MIDDLE_KEY) == oldAttachments(MIDDLE_KEY))
+    require(newAttachments(LAST_KEY) == oldAttachments(LAST_KEY))
+    require(newAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name ==
+        oldAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name)
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
   }
 
   "Document with ObjectNameDocumentAttachment" should "serialize as text" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = Map[String, DocumentAttachment](
+      (FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     val documentSerializer = new DocumentSerializer()
     // This should be a messy string.
     val documentString = documentSerializer.save(oldDocument)
-
     val newDocument = documentSerializer.load(documentString)
-    require(newDocument.getAttachment(FIRST_KEY) == oldDocument.getAttachment(FIRST_KEY))
-    require(newDocument.getAttachment(MIDDLE_KEY) == oldDocument.getAttachment(MIDDLE_KEY))
-    require(newDocument.getAttachment(LAST_KEY) == oldDocument.getAttachment(LAST_KEY))
-    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name ==
-        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name)
+    val newAttachments = newDocument.attachments.get
+
+    require(newAttachments(FIRST_KEY) == oldAttachments(FIRST_KEY))
+    require(newAttachments(MIDDLE_KEY) == oldAttachments(MIDDLE_KEY))
+    require(newAttachments(LAST_KEY) == oldAttachments(LAST_KEY))
+    require(newAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name ==
+        oldAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name)
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
   }
 
   "Document with TextNameDocumentAttachments" should "serialize as json" in {
-    val oldDocument = new Document(Array.empty[Sentence])
+    val oldAttachments = Map[String, DocumentAttachment](
+      (FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new TextNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(sentences = Seq.empty[Sentence], attachments = Some(oldAttachments))
 
-    oldDocument.addAttachment(FIRST_KEY, new TextNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new TextNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new TextNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
     // This shouldn't compile.
     /*oldDocument.addAttachment("wrong", new NameMethodAttachment("name"))*/
 
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
-
     val newDocument: Document = JSONSerializer.toDocument(parseJson(documentString))
-    newDocument.getAttachment(FIRST_KEY) should be (oldDocument.getAttachment(FIRST_KEY))
-    newDocument.getAttachment(MIDDLE_KEY) should be (oldDocument.getAttachment(MIDDLE_KEY))
-    newDocument.getAttachment(LAST_KEY) should be (oldDocument.getAttachment(LAST_KEY))
-    newDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name should be (
-      oldDocument.getAttachment(ALIAS_KEY).asInstanceOf[Option[NameDocumentAttachment]].get.name
+    val newAttachments = newDocument.attachments.get
+
+    newAttachments(FIRST_KEY) should be (oldAttachments(FIRST_KEY))
+    newAttachments(MIDDLE_KEY) should be (oldAttachments(MIDDLE_KEY))
+    newAttachments(LAST_KEY) should be (oldAttachments(LAST_KEY))
+    newAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name should be (
+      oldAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name
     )
 
     // This one must be avoided.
@@ -193,25 +200,26 @@ class TestDocumentAttachment extends Test {
   }
 
   "Document with ObjectNameDocumentAttachment" should "serialize as json" in {
-    val oldDocument = new Document(Array.empty[Sentence])
-
-    oldDocument.addAttachment(FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME))
-    oldDocument.addAttachment(MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME))
-    oldDocument.addAttachment(LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME))
-    oldDocument.addAttachment(ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    val oldAttachments = Map[String, DocumentAttachment](
+      (FIRST_KEY, new ObjectNameDocumentAttachment(FIRST_NAME)),
+      (MIDDLE_KEY, new ObjectNameDocumentAttachment(MIDDLE_NAME)),
+      (LAST_KEY, new ObjectNameDocumentAttachment(LAST_NAME)),
+      (ALIAS_KEY, new NameDocumentAttachment(ALIAS_NAME))
+    )
+    val oldDocument = new Document(Seq.empty[Sentence], attachments = Some(oldAttachments))
 
     // This should be a messy string.
     val documentString = prettyJson(renderJValue(oldDocument.jsonAST))
-
     val newDocument: Document = JSONSerializer.toDocument(parseJson(documentString))
-    require(newDocument.getAttachment(FIRST_KEY) == oldDocument.getAttachment(FIRST_KEY))
-    require(newDocument.getAttachment(MIDDLE_KEY) == oldDocument.getAttachment(MIDDLE_KEY))
-    require(newDocument.getAttachment(LAST_KEY) == oldDocument.getAttachment(LAST_KEY))
-    require(newDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name ==
-        oldDocument.getAttachment(ALIAS_KEY).get.asInstanceOf[NameDocumentAttachment].name)
+    val newAttachments = newDocument.attachments.get
+
+    require(newAttachments(FIRST_KEY) == oldAttachments(FIRST_KEY))
+    require(newAttachments(MIDDLE_KEY) == oldAttachments(MIDDLE_KEY))
+    require(newAttachments(LAST_KEY) == oldAttachments(LAST_KEY))
+    require(newAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name ==
+        oldAttachments(ALIAS_KEY).asInstanceOf[NameDocumentAttachment].name)
 
     // This one must be avoided.
     /*require(newDocument == oldDocument)*/
   }
 }
-

@@ -14,7 +14,7 @@ class ParseObj(doc: Document) {
       head + xml.Utility.escape(text) + tail
     }
 
-    def getTdAtOptString(option: Option[Array[String]], n: Int): String = {
+    def getTdAtOptString(option: Option[Seq[String]], n: Int): String = {
       val text =
         if (option.isEmpty) ""
         else option.get(n)
@@ -22,9 +22,9 @@ class ParseObj(doc: Document) {
       getTd(text)
     }
 
-    def getTdAtString(values: Array[String], n: Int): String = getTd(values(n))
+    def getTdAtString(values: Seq[String], n: Int): String = getTd(values(n))
 
-    def getTdAtInt(values: Array[Int], n: Int): String = getTd(values(n).toString, true)
+    def getTdAtInt(values: Seq[Int], n: Int): String = getTd(values(n).toString, true)
 
     def edgesToString(to: Int): String = {
       val edges = sentence.dependencies.map(_.incomingEdges(to)).getOrElse(Array.empty)

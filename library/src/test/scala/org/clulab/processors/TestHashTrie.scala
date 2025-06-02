@@ -19,7 +19,7 @@ class TestHashTrie extends Test {
 
     //println("TRIE:\n" + trie)
 
-    val tokens = Array("a", "a", "b", "d", "a", "b", "d", "b", "b", "b")
+    val tokens = Seq("a", "a", "b", "d", "a", "b", "d", "b", "b", "b")
     val labels = trie.find(tokens, "O")
     //println("TOKENS: " + tokens.mkString(" "))
     //println("LABELS: " + labels.mkString(" "))
@@ -44,7 +44,7 @@ class TestHashTrie extends Test {
     trie.add(Array("this", "is", "c", "test"))
     trie.add(Array("this", "is", "b", "test"))
 
-    val labels = trie.find(Array("this", "is", "c", "test"), "o")
+    val labels = trie.find(Seq("this", "is", "c", "test"), "o")
 
     sameLabels(Array("B-hello", "I-hello", "I-hello", "I-hello"), labels)
   }
@@ -55,7 +55,7 @@ class TestHashTrie extends Test {
     trie.add(Array("this", "is", "c", "test"))
     trie.add(Array("this", "is", "d", "test"))
 
-    val labels = trie.find(Array("this", "is", "b", "test"), "o")
+    val labels = trie.find(Seq("this", "is", "b", "test"), "o")
 
     sameLabels(Array("o", "o", "o", "o"), labels)
   }

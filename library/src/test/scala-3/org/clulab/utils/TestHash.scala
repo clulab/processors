@@ -17,7 +17,7 @@ class TestHash extends Test {
 
     LexiconNER(kbs, caseInsensitiveMatchings, None)
   }
-  val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
   val extractorEngine = {
     val rules = FileUtils.getTextFromResource("/org/clulab/odinstarter/main.yml")
 
@@ -35,7 +35,8 @@ class TestHash extends Test {
   behavior of "Hash"
 
   it should "compute the expected equivalence hash for a Document" in {
-    val expectedHash = 1145238653
+    val expectedHash = -1029127286
+//    val expectedHash = 1145238653
     val actualHash = document.equivalenceHash
 
     actualHash should be (expectedHash)
@@ -57,7 +58,8 @@ class TestHash extends Test {
   }
 
   it should "compute the expected equivalence hashes for Mentions" in {
-    val expectedHashes = Array(1317064233, 418554464, 269168883, 1021871359, 1657321605)
+    val expectedHashes = Array(-674187334, 1183699787, 391766831, -495035159, -2089326276)
+//    val expectedHashes = Array(1317064233, 418554464, 269168883, 1021871359, 1657321605)
     val actualHashes = allMentions.map(getEquivalenceHash)
 
     actualHashes should be (expectedHashes)

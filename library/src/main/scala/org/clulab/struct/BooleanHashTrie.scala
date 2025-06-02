@@ -80,7 +80,7 @@ class BooleanHashTrie(val label: String, val caseInsensitive: Boolean = true) ex
     * When multiple paths are found, the longest one is kept
     * Text must be normalized (i.e., case folding) BEFORE this call, if necessary!
     */
-  def findAt(sequenceNormalized: Array[String], offset: Int): BooleanTrieNode.Match = {
+  def findAt(sequenceNormalized: Seq[String], offset: Int): BooleanTrieNode.Match = {
     val longestMatch = new BooleanTrieNode.Match()
 
     entries.get(sequenceNormalized(offset)).map { tree =>
@@ -129,7 +129,7 @@ case class BooleanTrieNode(token: String, var completePath: Boolean, var childre
     * @param longestMatch      The value of the longest match interval
     * @return true if search should stop here; false otherwise
     */
-  def find(sequence: Array[String],
+  def find(sequence: Seq[String],
       startOffset: Int,
       currentSpanLength: Int,
       longestMatch: BooleanTrieNode.Match): Boolean = {
@@ -261,13 +261,13 @@ class DebugBooleanHashTrie(label: String, caseInsensitive: Boolean = true) exten
     * Generates BIO labels for this sequence when complete trie paths match
     * When multiple paths match, the longest one is kept
     */
-  def find(sequence: Array[String], outsideLabel: String): Array[String] = {
+  def find(sequence: Seq[String], outsideLabel: String): Array[String] = {
     val casedSequence = if (caseInsensitive) sequence.map(_.toLowerCase) else sequence
 
     findNormalized(casedSequence, outsideLabel)
   }
 
-  private def findNormalized(sequence: Array[String], outsideLabel: String): Array[String] = {
+  private def findNormalized(sequence: Seq[String], outsideLabel: String): Array[String] = {
     val labels = new Array[String](sequence.length)
     var offset = 0
 

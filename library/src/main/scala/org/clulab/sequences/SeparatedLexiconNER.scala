@@ -63,7 +63,7 @@ class SeparatedLexiconNER(
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence: Sentence): Array[String] = {
+  def find(sentence: Sentence): Seq[String] = {
     val seq = findLongestMatch(sentence)
     seq
   }
@@ -110,7 +110,7 @@ class SeparatedLexiconNER(
     labels
   }
 
-  protected def findAt(tokens: Array[String], caseInsensitiveTokens: Array[String], offset: Int): (Int, Int) = {
+  protected def findAt(tokens: Seq[String], caseInsensitiveTokens: Seq[String], offset: Int): (Int, Int) = {
     def findAt(matcher: BooleanHashTrie): Int =
         matcher.findAt(if (matcher.caseInsensitive) caseInsensitiveTokens else tokens, offset).length
 

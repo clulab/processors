@@ -1,6 +1,10 @@
 package org.clulab.struct
 
-trait GraphMapNames {
+object GraphMap {
+  type Type = Map[String, DirectedGraph[String]]
+
+  val empty: Type = Map.empty
+
   val UNIVERSAL_BASIC = "universal-basic" // basic Universal dependencies
   val UNIVERSAL_ENHANCED = "universal-enhanced" // collapsed (or enhanced) Universal dependencies
   val STANFORD_BASIC = "stanford-basic" // basic Stanford dependencies

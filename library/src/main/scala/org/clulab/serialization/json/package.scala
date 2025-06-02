@@ -22,7 +22,7 @@ package object json {
   }
 
   // Arrays cannot be directly converted to JValue
-  implicit class ArrayOps(s: Option[Array[String]]) {
+  implicit class ArrayOps(s: Option[Seq[String]]) {
     def toSerializableJSON: Option[List[String]] = s match {
       case Some(s) => Some(s.toList)
       case None => None
@@ -52,8 +52,8 @@ package object json {
     }
   }
 
-  implicit class GraphMapOps(gm: GraphMap) extends JSONSerialization {
-    def jsonAST: JValue = Extraction.decompose(gm.toMap.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
+  implicit class GraphMapOps(gm: GraphMap.Type) extends JSONSerialization {
+    def jsonAST: JValue = Extraction.decompose(gm.map { case (k, v) => k -> v.jsonAST }) // instead of mapValues
   }
 
   /** For Document */
@@ -61,10 +61,11 @@ package object json {
 
     def jsonAST: JValue = {
       // See also DocumentSerializer for a similar text implementation.
-      val attachmentKeys = doc.getAttachmentKeys.toList.sorted
+      val attachments = doc.attachments.getOrElse(Map.empty)
+      val attachmentKeys = attachments.keySet.toList.sorted
       val documentAttachments: JValue = if (attachmentKeys.nonEmpty) {
         val jFields = attachmentKeys.map { key =>
-          val value = doc.getAttachment(key).get
+          val value = attachments(key)
           JField(key,
               (DOCUMENT_ATTACHMENTS_BUILDER_KEY -> JString(value.documentAttachmentBuilderFromJsonClassName)) ~
               (DOCUMENT_ATTACHMENTS_VALUE_KEY -> value.toJsonSerializer)

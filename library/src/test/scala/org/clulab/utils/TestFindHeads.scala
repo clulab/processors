@@ -6,13 +6,15 @@ import org.clulab.struct.{DirectedGraph, Edge, Interval}
 
 class TestFindHeads extends Test {
 
-  def newSentence(words: Array[String], directedGraph: DirectedGraph[String]): Sentence = {
-    val startOffsets = Array(0) // unused
-    val   endOffsets = Array(0) // unused
-    val sentence = new Sentence(words, startOffsets, endOffsets, words)
+  def newSentence(words: Seq[String], directedGraph: DirectedGraph[String]): Sentence = {
+    val startOffsets = Seq(0) // unused
+    val   endOffsets = Seq(0) // unused
+    val sentence = new Sentence(
+      words, startOffsets, endOffsets, words,
+      tags = Some(words),
+      graphs = Map(UNIVERSAL_BASIC -> directedGraph)
+    )
 
-    sentence.graphs(UNIVERSAL_BASIC) = directedGraph
-    sentence.tags = Some(words)
     sentence
   }
 
@@ -115,7 +117,7 @@ class TestFindHeads extends Test {
     val len: Int = 78
     val directedGraph = DirectedGraph(edges)
     val tokenInterval = Interval(0, len)
-    val words = 1.to(len).map { index => s"word$index" }.toArray
+    val words = 1.to(len).map { index => s"word$index" }
     val sentence = newSentence(words, directedGraph)
     val heads = DependencyUtils.findHeadsStrict(tokenInterval, sentence)
 

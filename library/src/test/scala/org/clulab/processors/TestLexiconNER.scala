@@ -24,8 +24,8 @@ import scala.util.Using
 class TestLexiconNER extends CluTest {
 
   def mkSentence(text: String): Sentence = {
-    val doc = proc.mkDocument(text)
-    proc.annotate(doc)
+    val simpleDoc = proc.mkDocument(text)
+    val doc = proc.annotate(simpleDoc)
     doc.sentences.head
   }
 

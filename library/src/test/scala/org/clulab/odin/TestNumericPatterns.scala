@@ -9,12 +9,12 @@ class TestNumericPatterns extends Test {
 
   val text = "blah"
   val doc = Document(
-    Array(
+    Seq(
       Sentence(
-        Array("blah"),
-        Array(0),
-        Array(4),
-        Array("blah")
+        Seq("blah"),
+        Seq(0),
+        Seq(4),
+        Seq("blah")
       )
     )
   )
