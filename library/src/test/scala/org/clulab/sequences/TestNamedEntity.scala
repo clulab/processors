@@ -45,8 +45,7 @@ class TestNamedEntity extends Test {
         val customBioLabels = customBioLabelString.split(" +")
         val genericNamedEntities = NamedEntity.collect(genericBioLabels)
         val customNamedEntities = NamedEntity.collect(customBioLabels)
-        NamedEntity.combine(genericBioLabels, genericNamedEntities, customNamedEntities)
-        val actualCombinedBioLabels = genericBioLabels
+        val actualCombinedBioLabels = NamedEntity.combine(genericBioLabels, genericNamedEntities, customNamedEntities)
         val actualCombinedBioLabelString = actualCombinedBioLabels.mkString(" ")
         val formattedExpectedCombinedBioLabelString = expectedCombinedBioLabelString.split(" +").mkString(" ")
 
