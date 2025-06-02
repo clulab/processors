@@ -250,15 +250,12 @@ class BalaurProcessor protected (
     if (customNamedEntities.isEmpty)
       generic
     else {
-      val genericNamedEntities = NamedEntity.collect(generic)
-      val result = generic.toArray // A copy of the generic labels is created here.
-
       //println(s"Generic NamedEntity: ${genericNamedEntities.mkString(", ")}")
       //println(s"Custom NamedEntity: ${customNamedEntities.mkString(", ")}")
+      val genericNamedEntities = NamedEntity.collect(generic)
+      val combinedNamedEntities = NamedEntity.combine(generic, genericNamedEntities, customNamedEntities)
 
-      // The custom labels override the generic ones!
-      NamedEntity.combine(result, genericNamedEntities, customNamedEntities)
-      WrappedArraySeq(result).toImmutableSeq
+      combinedNamedEntities
     }
   }
 

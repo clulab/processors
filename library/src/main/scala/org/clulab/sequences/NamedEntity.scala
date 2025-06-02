@@ -1,5 +1,7 @@
 package org.clulab.sequences
 
+import org.clulab.utils.WrappedArraySeq
+
 import scala.collection.mutable
 
 // This is definitely not the most efficient as far as number of objects
@@ -43,11 +45,12 @@ object NamedEntity {
     namedEntities
   }
 
-  def combine(bioLabels: Array[String], genericNamedEntities: Seq[NamedEntity], customNamedEntities: Seq[NamedEntity]): Unit = {
+  def combine(bioLabels: Seq[String], genericNamedEntities: Seq[NamedEntity], customNamedEntities: Seq[NamedEntity]): Seq[String] = {
+    val bioLabelsArray = bioLabels.toArray
     // Neither named entities sequence can contain overlapping elements within the sequence.
     // At most, there is overlap between sequences.  Use is made of that fact.
     // The NamedEntities never have empty Ranges, so end - 1 is always at least start.
-    val outsides = bioLabels.indices.filter(bioLabels(_) == OUTSIDE)
+    val outsides = bioLabelsArray.indices.filter(bioLabelsArray(_) == OUTSIDE)
     val validStarts = (genericNamedEntities.map(_.range.start) ++ outsides).toSet
     // The -1 is used to coordinate ends (exclusive) with the OUTSIDE positions (inclusive).
     val validEnds = (genericNamedEntities.map(_.range.end - 1) ++ outsides).toSet
@@ -56,8 +59,9 @@ object NamedEntity {
     }
 
     validCustomNamedEntities.foreach { customNamedEntity =>
-      customNamedEntity.fill(bioLabels)
+      customNamedEntity.fill(bioLabelsArray)
     }
+    WrappedArraySeq(bioLabelsArray).toImmutableSeq
   }
 
   // Only INSIDEs can be invalid, and they are made valid by
