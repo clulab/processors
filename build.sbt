@@ -46,6 +46,12 @@ lazy val webapp = project
     crossScalaVersions := Seq(scala212)
   )
 
+lazy val webapp2 = project
+  .dependsOn(library)
+  .settings(
+    crossScalaVersions := Seq(scala212, scala3, scala213) // There is no scala211 for this.
+  )
+
 lazy val debugger = project
   .dependsOn(library % "compile -> compile; test -> test")
 
