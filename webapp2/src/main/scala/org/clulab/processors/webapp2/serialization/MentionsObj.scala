@@ -17,7 +17,7 @@ class MentionsObj(mentions: Seq[Mention]) {
 
   def getTrField(field: String, text: String): Fragment = {
     tr(
-      td(style := "align: right")(s"$field:" ),
+      td(style := "text-align: right")(s"$field:" ),
       td(text)
     )
   }
@@ -27,7 +27,7 @@ class MentionsObj(mentions: Seq[Mention]) {
 
   def getTrTable(field: String, fragment: Fragment): Fragment = {
     tr(
-      td(style := "align: right")(
+      td(style := "text-align: right")(
         s"$field:",
         raw("&nbsp;")
       ),
