@@ -15,9 +15,25 @@ import scala.beans.BeanProperty
 import scala.jdk.CollectionConverters._
 
 class InformationExtractor(config: Config, printStream: PrintStream) {
+  implicit val mentionOrder: Ordering[Mention] = {
+    val mentionRank: Map[Class[_], Int] = Map(
+      classOf[TextBoundMention] -> 0,
+      classOf[EventMention] -> 1,
+      classOf[RelationMention] -> 2,
+      classOf[CrossSentenceMention] -> 3
+    )
+
+    Unordered[Mention]
+        .orElseBy(_.sentence)
+        .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
+        .orElseBy(_.getClass.getName)
+        .orElseBy(_.arguments.size)
+        .orElseBy(_.tokenInterval)
+        .orElse(-1)
+  }
   val customLexiconNerConfigs = config.getConfigList("customLexiconNer").asScala.map { config =>
     ConfigBeanFactory.create(config, classOf[CustomLexiconNerConfig])
-  }
+  }.toSeq
   val extractorEngineConfig = ConfigBeanFactory.create(config.getConfig("extractorEngine"), classOf[ExtractorEngineConfig])
 
   val processor = {
@@ -40,22 +56,6 @@ class InformationExtractor(config: Config, printStream: PrintStream) {
     extractorEngine.extractFrom(document)
   }
 
-  implicit val mentionOrder = {
-    val mentionRank: Map[Class[_], Int] = Map(
-      classOf[TextBoundMention] -> 0,
-      classOf[EventMention] -> 1,
-      classOf[RelationMention] -> 2,
-      classOf[CrossSentenceMention] -> 3
-    )
-
-    Unordered[Mention]
-        .orElseBy(_.sentence)
-        .orElseBy { mention => mentionRank.getOrElse(mention.getClass, mentionRank.size) }
-        .orElseBy(_.getClass.getName)
-        .orElseBy(_.arguments.size)
-        .orElseBy(_.tokenInterval)
-        .orElse(-1)
-  }
 
   def printMention(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
     val sentence = mention.sentenceObj

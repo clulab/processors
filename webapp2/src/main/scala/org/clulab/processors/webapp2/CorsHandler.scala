@@ -1,5 +1,6 @@
 package org.clulab.processors.webapp2
 
+import cask.Request
 import cask.internal.DispatchTrie
 import cask.main.{Main, Routes}
 import cask.model.Response
@@ -12,11 +13,11 @@ import scala.jdk.CollectionConverters._
 
 class CorsHandler(
   dispatchTrie: DispatchTrie[Map[String, (Routes, EndpointMetadata[_])]],
-  mainDecorators: Seq[Decorator[_, _, _]],
+  mainDecorators: Seq[Decorator[_, _, _, _]],
   debugMode: Boolean,
-  handleNotFound: () => Response.Raw,
-  handleMethodNotAllowed: () => Response.Raw,
-  handleError: (Routes, EndpointMetadata[_], Result.Error) => Response.Raw
+  handleNotFound: (Request) => Response.Raw,
+  handleMethodNotAllowed: (Request) => Response.Raw,
+  handleError: (Routes, EndpointMetadata[_], Result.Error, Request) => Response.Raw
 )(implicit logger: Logger) extends Main.DefaultHandler(
   dispatchTrie,
   mainDecorators,
