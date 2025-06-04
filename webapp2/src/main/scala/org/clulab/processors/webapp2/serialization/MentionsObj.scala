@@ -1,66 +1,45 @@
 package org.clulab.processors.webapp2.serialization
 
 import org.clulab.odin._
+import scalatags.Text.all._
+import scalatags.generic.Frag
+import scalatags.text.Builder
 
 class MentionsObj(mentions: Seq[Mention]) {
-  val tableHeader = """
-    |<table style="margin-top: 0;">
-    |""".stripMargin
-  val tableTrailer = """
-    |</table>
-    |""".stripMargin
-  val leftTdHeader = """
-    |<tr>
-    |  <td align="right">
-    |""".stripMargin
-  val rightTdHeader = """
-    |<tr>
-    |  <td>
-    |""".stripMargin
-  val tdSeparator = """
-    |  </td>
-    |  <td>
-    |""".stripMargin
-  val tdTrailer = """
-    |  </td>
-    |</tr>
-    |""".stripMargin
+  type Fragment = Frag[Builder, String]
 
-  def getTrSeparator(wide: Boolean): String = {
-    val style = if (wide) """ style = "width: 100%;"""" else ""
-    s"""
-      |<tr>
-      |  <th>Field</th>
-      |  <th$style>Value</th>
-      |</tr>
-      |""".stripMargin
+  def getTrSeparator(wide: Boolean): Fragment = {
+    tr(
+      th("Field"),
+      th(style := (if (wide) "width: 100%;" else ""))("Value")
+    )
   }
 
-  def getTd(field: String, text: String): String =
-    s"""
-       |$leftTdHeader
-       |    ${xml.Utility.escape(field)}:
-       |$tdSeparator
-       |    ${xml.Utility.escape(text)}
-       |$tdTrailer
-       |""".stripMargin
+  def getTrField(field: String, text: String): Fragment = {
+    tr(
+      td(style := "align: right")(s"$field:" ),
+      td(text)
+    )
+  }
 
-  def getTds(field: String, strings: Seq[String]): String =
-      getTd(field, strings.mkString(", "))
+  def getTrFields(field: String, strings: Seq[String]): Fragment =
+      getTrField(field, strings.mkString(", "))
 
-  def openTable(field: String): String = s"""
-      |$leftTdHeader
-      |  ${xml.Utility.escape(field)}:&nbsp;
-      |$tdSeparator
-      |  $tableHeader
-      |""".stripMargin
+  def getTrTable(field: String, fragment: Fragment): Fragment = {
+    tr(
+      td(style := "align: right")(
+        s"$field:",
+        raw("&nbsp;")
+      ),
+      td(
+        table(style := "margin-top: 0;")(
+          fragment
+        )
+      )
+    )
+  }
 
-  val closeTable: String = s"""
-      |  $tableTrailer
-      |$tdTrailer
-      |""".stripMargin
-
-  def mkMentionsObj(mention: Mention, sb: StringBuilder, nameOpt: Option[String] = None, depth: Int = 0): Unit = {
+  def mkMentionsObj(mention: Mention, nameOpt: Option[String] = None, depth: Int = 0): Fragment = {
     val sentence = mention.sentenceObj
     val tokenInterval = mention.tokenInterval
     val name = nameOpt.getOrElse("<none>")
@@ -73,49 +52,59 @@ class MentionsObj(mentions: Seq[Mention]) {
     val chunks = sentence.chunks.map(tokenInterval.map(_)).getOrElse(Seq.empty)
     val raws = tokenInterval.map(sentence.raw)
 
-    sb
-        .append(getTrSeparator(depth != 0))
-        .append(getTd ("Sentence #", (mention.sentence + 1).toString))
-        .append(getTd ("Name", name))
-        .append(getTd ("Type", mention.getClass.getSimpleName))
-        .append(getTd ("FoundBy", mention.foundBy))
-        .append(getTd ("Sentence", mention.sentenceObj.getSentenceText))
-        .append(getTds("Labels", labels))
-        .append(getTds("Words", words))
-        .append(getTds("Tags", tags))
-        .append(getTds("Lemmas", lemmas))
-        .append(getTds("Entities", entities))
-        .append(getTds("Norms", norms))
-        .append(getTds("Chunks", chunks))
-        .append(getTds("Raw", raws))
-        .append(getTds("Attachments", mention.attachments.toSeq.map(_.toString).sorted))
+    val sentenceRows = frag(
+      getTrSeparator(depth != 0),
+      getTrField ("Sentence #", (mention.sentence + 1).toString),
+      getTrField ("Name", name),
+      getTrField ("Type", mention.getClass.getSimpleName),
+      getTrField ("FoundBy", mention.foundBy),
+      getTrField ("Sentence", mention.sentenceObj.getSentenceText),
+      getTrFields("Labels", labels),
+      getTrFields("Words", words),
+      getTrFields("Tags", tags),
+      getTrFields("Lemmas", lemmas),
+      getTrFields("Entities", entities),
+      getTrFields("Norms", norms),
+      getTrFields("Chunks", chunks),
+      getTrFields("Raw", raws),
+      getTrFields("Attachments", mention.attachments.toSeq.map(_.toString).sorted)
+    )
 
-    mention match {
-      case textBoundMention: TextBoundMention =>
+    val mentionRows = mention match {
+      case textBoundMention: TextBoundMention => frag()
       case eventMention: EventMention =>
-        sb.append(openTable("Trigger"))
-        mkMentionsObj(eventMention.trigger, sb, None, depth + 1)
-        sb.append(closeTable)
-      case relationMention: RelationMention =>
-      case crossSentenceMention: CrossSentenceMention =>
-      case _ =>
+        getTrTable("Trigger", mkMentionsObj(eventMention.trigger, None, depth + 1))
+      case relationMention: RelationMention => frag()
+      case crossSentenceMention: CrossSentenceMention => frag()
+      case _ => frag()
     }
 
-    if (mention.arguments.nonEmpty) {
-      sb.append(openTable("Arguments"))
-      for (name <- mention.arguments.keys.toSeq.sorted; mention <- mention.arguments(name).sorted)
-        mkMentionsObj(mention, sb, Some(name), depth + 1)
-      sb.append(closeTable)
+    val argumentRows = if (mention.arguments.nonEmpty) {
+      val mentionsObjs = mention.arguments.keys.toSeq.sorted.flatMap { name =>
+        mention.arguments(name).sorted.map { mention =>
+          mkMentionsObj(mention, Some(name), depth + 1)
+        }
+      }
+
+      getTrTable("Arguments", mentionsObjs)
     }
+    else frag()
+
+    frag(
+      sentenceRows,
+      mentionRows,
+      argumentRows
+    )
   }
 
   def mkHtml: String = {
-    val sb = new StringBuilder(tableHeader)
-
-    mentions.foreach { mention =>
-      mkMentionsObj(mention, sb)
+    val mentionsObjs = mentions.map { mention =>
+      mkMentionsObj(mention)
     }
-    sb.append(tableTrailer)
-    sb.toString
+    val fragment = table(style := "margin-top: 0;")(
+      mentionsObjs
+    )
+
+    fragment.toString
   }
 }
