@@ -29,7 +29,7 @@ class ParseObj(doc: Document) {
     def getTdAtInt(values: Seq[Int], n: Int): Fragment = getTd(values(n).toString, true)
 
     def edgesToString(to: Int): String = {
-      val edges = sentence.dependencies.map(_.incomingEdges(to)).getOrElse(Array.empty)
+      val edges = sentence.dependencies.map(_.incomingEdges(to)).getOrElse(Array.empty[(Int, String)]).toSeq
 
       edges.map(edge => sentence.words(edge._1) + "\u291c" + edge._2 + "\u2192" + sentence.words(to)).mkString(", ")
     }
