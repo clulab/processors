@@ -1,6 +1,45 @@
 package org.clulab.odin.impl
 
+import scala.util.parsing.combinator.{JavaTokenParsers, Parsers}
+
+// Maybe extend WrappedTokenConstraintParsers instead?
+
 class TokenPatternParsers(val unit: String, val config: OdinConfig) extends TokenConstraintParsers {
+
+  // TODO: Maybe keep level apparent here in addition to name.
+  class Wrap[+T](name: String, depth: Int, parser: Parser[T]) extends Parser[T] {
+    def apply(in: Input): ParseResult[T] = {
+      val parseResult = parser.apply(in)
+
+      if (parseResult.successful && parseResult.get.isInstanceOf[Sourced[T]]) {
+        val start = in.offset
+        val end = parseResult.next.offset
+        val source = in.source.subSequence(start, end).toString
+        val mappedParseResult = parseResult.get match {
+          case tokenPattern: TokenPattern =>
+            val sourcedTokenPattern = tokenPattern.copyWithSource(source)
+            val sourcedParseResult = parseResult.map { in: T => sourcedTokenPattern }
+
+            sourcedParseResult
+          case programFragment: ProgramFragment =>
+            val sourcedProgramFragment = programFragment.copyWithSource(source)
+            val sourceParseResult = parseResult.map { in: T => sourcedProgramFragment }
+
+            sourceParseResult
+          case _ => parseResult
+        }
+
+        mappedParseResult.asInstanceOf[ParseResult[T]]
+      }
+      else parseResult
+    }
+    override def ^^[U](f: T => U): Parser[U] = {
+      val result = super.^^(f)
+
+      new Wrap(s"$name ^^", depth + 1, result)
+    }
+    // Maybe need a variation of this that takes a sequence of some kind.
+  }
 
   // comments are considered whitespace
   override val whiteSpace = """(\s|#.*)+""".r
@@ -10,14 +49,14 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     case failure: NoSuccess => sys.error(failure.msg)
   }
 
-  def tokenPattern: Parser[TokenPattern] = splitPattern ^^ { frag =>
+  def tokenPattern: Parser[TokenPattern] = new Wrap("tokenPattern", 0, splitPattern) ^^ { frag =>
     val f = frag.capture(TokenPattern.GlobalCapture)
     f.setOut(Done)
     new TokenPattern(f.in)
   }
 
   def splitPattern: Parser[ProgramFragment] =
-    rep1sep(concatPattern, "|") ^^ { chunks =>
+    new Wrap("splitPattern", 0, rep1sep(concatPattern, "|")) ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
@@ -26,14 +65,14 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     }
 
   def concatPattern: Parser[ProgramFragment] =
-    rep1(quantifiedPattern) ^^ { chunks =>
+    new Wrap("concatPattern", 0, rep1(quantifiedPattern)) ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(lhs, rhs)
       }
     }
 
   def quantifiedPattern: Parser[ProgramFragment] =
-    atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern
+    new Wrap("quantifiedPattern", 0, atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern)
 
   // In GraphPatterns each argument can have a quantifier.
   // This parser accepts something that looks like an arg quantifier.
@@ -48,20 +87,20 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   // in case the arg was written as name:label (which looks like an odinIdentifier)
   // we need to ensure it is not followed by '=' (with an optional argument quantifier in between)
   def singleTokenPattern: Parser[ProgramFragment] =
-    (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint) ^^ {
+    new Wrap("singleTokenPattern", 0, (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint)) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
   def assertionPattern: Parser[ProgramFragment] =
-    sentenceAssertion | lookaheadAssertion | lookbehindAssertion
+    new Wrap("assertionPattern", 0, sentenceAssertion | lookaheadAssertion | lookbehindAssertion)
 
-  def sentenceAssertion: Parser[ProgramFragment] = ("^" | "$") ^^ {
+  def sentenceAssertion: Parser[ProgramFragment] = new Wrap("sentenceAssertion", 0, ("^" | "$")) ^^ {
     case "^" => ProgramFragment(MatchSentenceStart())
     case "$" => ProgramFragment(MatchSentenceEnd())
   }
 
   def lookaheadAssertion: Parser[ProgramFragment] =
-    ("(?=" | "(?!") ~ splitPattern <~ ")" ^^ {
+    new Wrap("lookaheadAssertion", 0, ("(?=" | "(?!") ~ splitPattern <~ ")") ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookAhead(frag.in, op.endsWith("!")))
@@ -69,14 +108,14 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   // MatchLookBehind builds the pattern in reverse
   def lookbehindAssertion: Parser[ProgramFragment] =
-    ("(?<=" | "(?<!") ~ splitPatternRev <~ ")" ^^ {
+    new Wrap("lookbehindAssertion", 0, ("(?<=" | "(?<!") ~ splitPatternRev <~ ")") ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookBehind(frag.in, op.endsWith("!")))
     }
 
   def capturePattern: Parser[ProgramFragment] =
-    "(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")" ^^ {
+    new Wrap("capturePattern", 0, "(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")") ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePattern")
     }
@@ -178,7 +217,11 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   * Helps the compiler by keeping track of the input and output
   * instructions of a partially compiled TokenPattern.
   */
-class ProgramFragment(val in: Inst, val out: List[Inst]) {
+class ProgramFragment(val in: Inst, val out: List[Inst], sourceOpt: Option[String] = None) extends Sourced[ProgramFragment] {
+
+  override def copyWithSource(source: String): ProgramFragment = {
+    new ProgramFragment(in, out, Some(source))
+  }
 
   import ProgramFragment.findOut
 
@@ -278,7 +321,6 @@ class ProgramFragment(val in: Inst, val out: List[Inst]) {
   def repeatPattern(n: Int): ProgramFragment = {
     ProgramFragment(repeat(n))
   }
-
 }
 
 object ProgramFragment {

@@ -6,7 +6,7 @@ import org.clulab.odin.impl.{Inst, TokenPattern}
 import org.clulab.odin.impl.TokenPattern.{GlobalCapture, Result}
 import org.clulab.processors.Document
 
-class DebuggingTokenPattern(debugger: Debugger, start: Inst) extends TokenPattern(start) {
+class DebuggingTokenPattern(debugger: Debugger, start: Inst, source: String) extends TokenPattern(start, Some(source)) {
 
   override def findPrefixOf(tok: Int, sent: Int, doc: Document, state: State): Seq[Result] = {
     DebuggingThompsonVM.evaluate(debugger, start, tok, sent, doc, state) map {
@@ -42,7 +42,8 @@ object DebuggingTokenPattern {
   def apply(debugger: Debugger, tokenPattern: TokenPattern): DebuggingTokenPattern = {
     new DebuggingTokenPattern(
       debugger,
-      tokenPattern.start
+      tokenPattern.start,
+      tokenPattern.sourceOpt.get
     )
   }
 }
