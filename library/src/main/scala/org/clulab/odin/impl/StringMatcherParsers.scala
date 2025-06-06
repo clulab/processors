@@ -10,14 +10,14 @@ trait StringMatcherParsers extends RegexParsers with SourcingParsers {
   def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 
   // a StringMatcher that compares to a string
-  def exactStringMatcher: Parser[ExactStringMatcher] = "exactStringMatcher" !!!
-  stringLiteral ^^ {
+  def exactStringMatcher: Parser[ExactStringMatcher] = withSource("exactStringMatcher",
+  stringLiteral) ^^ {
     string => new ExactStringMatcher(string)
   }
 
   // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[RegexStringMatcher] = "regexStringMatcher" !!!
-  regexLiteral ^^ {
+  def regexStringMatcher: Parser[RegexStringMatcher] = withSource("regexStringMatcher",
+  regexLiteral) ^^ {
     regex => new RegexStringMatcher(regex)
   }
 

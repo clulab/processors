@@ -17,13 +17,13 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   def dependencyPattern: Parser[GraphPattern] =
     triggerPatternGraphPattern | triggerMentionGraphPattern
 
-  def triggerPatternGraphPattern: Parser[GraphPattern] = "triggerPatternGraphPattern" !!!
-    ("(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern)) ^^ {
+  def triggerPatternGraphPattern: Parser[GraphPattern] = withSource("triggerPatternGraphPattern",
+    ("(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern))) ^^ {
       case trigger ~ arguments => new TriggerPatternGraphPattern(trigger, arguments, config)
     }
 
-  def triggerMentionGraphPattern: Parser[GraphPattern] = "triggerMentionGraphPattern" !!!
-    (javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern)) ^^ {
+  def triggerMentionGraphPattern: Parser[GraphPattern] = withSource("triggerMentionGraphPattern",
+    (javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern))) ^^ {
       case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName.equalsIgnoreCase("trigger") =>
         new TriggerMentionGraphPattern(anchorLabel, arguments, config)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>

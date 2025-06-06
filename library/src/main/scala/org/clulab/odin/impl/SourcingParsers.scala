@@ -5,13 +5,8 @@ import scala.util.parsing.combinator.Parsers
 
 trait SourcingParsers extends Parsers {
 
-  implicit def toWrapped(name: String): Object {def !!![T](parser: Parser[T]): SourcingParser[T]} = new {
-    def !!![T](parser: Parser[T]) = new SourcingParser(name, parser) // for debugging
-    // def !!![T](parser: Parser[T]) = parser              // for production
-  }
-
-//  def withSource[T](name: String, parser: Parser[T]): SourcingParser[T] =
-//      new SourcingParser(name, parser)
+  def withSource[T](name: String, parser: Parser[T]): Parser[T] = new SourcingParser(name, parser)
+//  def withSource[T](name: String, parser: Parser[T]): Parser[T] = parser
 
   class SourcingParser[+T](name: String, parser: Parser[T]) extends Parser[T] {
 

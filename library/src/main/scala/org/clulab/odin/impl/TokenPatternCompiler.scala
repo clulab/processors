@@ -12,15 +12,15 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     case failure: NoSuccess => sys.error(failure.msg)
   }
 
-  def tokenPattern: Parser[TokenPattern] = "tokenPattern" !!!
-    splitPattern ^^ { frag =>
+  def tokenPattern: Parser[TokenPattern] = withSource("tokenPattern",
+    splitPattern) ^^ { frag =>
       val f = frag.capture(TokenPattern.GlobalCapture)
       f.setOut(Done)
       new TokenPattern(f.in)
     }
 
-  def splitPattern: Parser[ProgramFragment] = "splitPattern" !!!
-    rep1sep(concatPattern, "|") ^^ { chunks =>
+  def splitPattern: Parser[ProgramFragment] = withSource("splitPattern",
+    rep1sep(concatPattern, "|")) ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
@@ -29,14 +29,14 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     }
 
   def concatPattern: Parser[ProgramFragment] =
-    "concatPattern" !!! rep1(quantifiedPattern) ^^ { chunks =>
+    withSource("concatPattern", rep1(quantifiedPattern)) ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(lhs, rhs)
       }
     }
 
-  def quantifiedPattern: Parser[ProgramFragment] = "quantifiedPattern" !!!
-    (atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern)
+  def quantifiedPattern: Parser[ProgramFragment] = withSource("quantifiedPattern",
+    (atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern))
 
   // In GraphPatterns each argument can have a quantifier.
   // This parser accepts something that looks like an arg quantifier.
@@ -50,37 +50,37 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   // OR
   // in case the arg was written as name:label (which looks like an odinIdentifier)
   // we need to ensure it is not followed by '=' (with an optional argument quantifier in between)
-  def singleTokenPattern: Parser[ProgramFragment] = "singleTokenPattern" !!!
-    (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint) ^^ {
+  def singleTokenPattern: Parser[ProgramFragment] = withSource("singleTokenPattern",
+    (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint)) ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
-  def assertionPattern: Parser[ProgramFragment] = "assertionPattern" !!!
-    (sentenceAssertion | lookaheadAssertion | lookbehindAssertion)
+  def assertionPattern: Parser[ProgramFragment] = withSource("assertionPattern",
+    (sentenceAssertion | lookaheadAssertion | lookbehindAssertion))
 
-  def sentenceAssertion: Parser[ProgramFragment] = "sentenceAssertion" !!!
-    ("^" | "$") ^^ {
+  def sentenceAssertion: Parser[ProgramFragment] = withSource("sentenceAssertion",
+    ("^" | "$")) ^^ {
       case "^" => ProgramFragment(MatchSentenceStart())
       case "$" => ProgramFragment(MatchSentenceEnd())
     }
 
-  def lookaheadAssertion: Parser[ProgramFragment] = "lookaheadAssertion" !!!
-    (("(?=" | "(?!") ~ splitPattern <~ ")") ^^ {
+  def lookaheadAssertion: Parser[ProgramFragment] = withSource("lookaheadAssertion",
+    (("(?=" | "(?!") ~ splitPattern <~ ")")) ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookAhead(frag.in, op.endsWith("!")))
     }
 
   // MatchLookBehind builds the pattern in reverse
-  def lookbehindAssertion: Parser[ProgramFragment] = "lookbehindAssertion" !!!
-    (("(?<=" | "(?<!") ~ splitPatternRev <~ ")") ^^ {
+  def lookbehindAssertion: Parser[ProgramFragment] = withSource("lookbehindAssertion",
+    (("(?<=" | "(?<!") ~ splitPatternRev <~ ")")) ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookBehind(frag.in, op.endsWith("!")))
     }
 
-  def capturePattern: Parser[ProgramFragment] = "capturePattern" !!!
-    ("(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")") ^^ {
+  def capturePattern: Parser[ProgramFragment] = withSource("capturePattern",
+    ("(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")")) ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePattern")
     }
