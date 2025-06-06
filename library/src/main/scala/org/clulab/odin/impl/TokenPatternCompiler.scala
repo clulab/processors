@@ -12,15 +12,22 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     case failure: NoSuccess => sys.error(failure.msg)
   }
 
-  def tokenPattern: Parser[TokenPattern] = withSource("tokenPattern",
-    splitPattern) ^^ { frag =>
+  def tokenPattern: Parser[TokenPattern] = {
+    val parser1 = splitPattern
+    val parser2 = withSource("tokenPattern", parser1)
+    val parser3 = parser2 ^^ { frag =>
       val f = frag.capture(TokenPattern.GlobalCapture)
       f.setOut(Done)
       new TokenPattern(f.in)
     }
 
-  def splitPattern: Parser[ProgramFragment] = withSource("splitPattern",
-    rep1sep(concatPattern, "|")) ^^ { chunks =>
+    parser3
+  }
+
+  def splitPattern: Parser[ProgramFragment] = {
+    val parser1 = rep1sep(concatPattern, "|")
+    val parser2 = withSource("splitPattern", parser1)
+    val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
@@ -28,15 +35,23 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       }
     }
 
-  def concatPattern: Parser[ProgramFragment] =
-    withSource("concatPattern", rep1(quantifiedPattern)) ^^ { chunks =>
+    parser3
+  }
+
+  def concatPattern: Parser[ProgramFragment] = {
+    val parser1 = rep1(quantifiedPattern)
+    val parser2 = withSource("concatPattern", parser1)
+    val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(lhs, rhs)
       }
     }
 
-  def quantifiedPattern: Parser[ProgramFragment] = withSource("quantifiedPattern",
-    (atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern))
+    parser3
+  }
+
+  def quantifiedPattern: Parser[ProgramFragment] =
+      (atomicPattern ||| repeatedPattern ||| rangePattern ||| exactPattern)
 
   // In GraphPatterns each argument can have a quantifier.
   // This parser accepts something that looks like an arg quantifier.
@@ -50,52 +65,84 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   // OR
   // in case the arg was written as name:label (which looks like an odinIdentifier)
   // we need to ensure it is not followed by '=' (with an optional argument quantifier in between)
-  def singleTokenPattern: Parser[ProgramFragment] = withSource("singleTokenPattern",
-    (unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint)) ^^ {
+  def singleTokenPattern: Parser[ProgramFragment] = {
+    val parser1 = unitConstraint <~ not(":" | opt(argQuantifier) ~ "=") | tokenConstraint
+    val parser2 = withSource("singleTokenPattern", parser1)
+    val parser3 = parser2 ^^ {
       case constraint => ProgramFragment(MatchToken(constraint))
     }
 
-  def assertionPattern: Parser[ProgramFragment] = withSource("assertionPattern",
-    (sentenceAssertion | lookaheadAssertion | lookbehindAssertion))
+    parser3
+  }
 
-  def sentenceAssertion: Parser[ProgramFragment] = withSource("sentenceAssertion",
-    ("^" | "$")) ^^ {
+  def assertionPattern: Parser[ProgramFragment] =
+      sentenceAssertion | lookaheadAssertion | lookbehindAssertion
+
+  def sentenceAssertion: Parser[ProgramFragment] = {
+    val parser1 = "^" | "$"
+    val parser2 = withSource("sentenceAssertion", parser1)
+    val parser3 = parser2 ^^ {
       case "^" => ProgramFragment(MatchSentenceStart())
       case "$" => ProgramFragment(MatchSentenceEnd())
     }
 
-  def lookaheadAssertion: Parser[ProgramFragment] = withSource("lookaheadAssertion",
-    (("(?=" | "(?!") ~ splitPattern <~ ")")) ^^ {
+    parser3
+  }
+
+  def lookaheadAssertion: Parser[ProgramFragment] = {
+    val parser1 = ("(?=" | "(?!") ~ splitPattern <~ ")"
+    val parser2 = withSource("lookaheadAssertion", parser1)
+    val parser3 = parser2 ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookAhead(frag.in, op.endsWith("!")))
     }
 
+    parser3
+  }
+
   // MatchLookBehind builds the pattern in reverse
-  def lookbehindAssertion: Parser[ProgramFragment] = withSource("lookbehindAssertion",
-    (("(?<=" | "(?<!") ~ splitPatternRev <~ ")")) ^^ {
+  def lookbehindAssertion: Parser[ProgramFragment] = {
+    val parser1 = ("(?<=" | "(?<!") ~ splitPatternRev <~ ")"
+    val parser2 = withSource("lookbehindAssertion", parser1)
+    val parser3 = parser2 ^^ {
       case op ~ frag =>
         frag.setOut(Done)
         ProgramFragment(MatchLookBehind(frag.in, op.endsWith("!")))
     }
 
-  def capturePattern: Parser[ProgramFragment] = withSource("capturePattern",
-    ("(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")")) ^^ {
+    parser3
+  }
+
+  def capturePattern: Parser[ProgramFragment] = {
+    val parser1 = "(?<" ~ javaIdentifier ~ ">" ~ splitPattern ~ ")"
+    val parser2 = withSource("capturePattern", parser1)
+    val parser3 = parser2 ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePattern")
     }
 
-  def mentionPattern: Parser[ProgramFragment] =
-    "@" ~> opt(javaIdentifier <~ ":") ~ exactStringMatcher ~ opt("." ~> javaIdentifier) ^^ {
+    parser3
+  }
+
+  def mentionPattern: Parser[ProgramFragment] = {
+    val parser1 = "@" ~> opt(javaIdentifier <~ ":") ~ exactStringMatcher ~ opt("." ~> javaIdentifier)
+    val parser2 = withSource("mentionPattern", parser1)
+    val parser3 = parser2 ^^ {
       case name ~ matcher ~ arg => ProgramFragment(MatchMention(matcher, name, arg))
     }
+
+    parser3
+  }
 
   def atomicPattern: Parser[ProgramFragment] =
     assertionPattern | singleTokenPattern | mentionPattern |
     capturePattern | "(" ~> splitPattern <~ ")"
 
-  def repeatedPattern: Parser[ProgramFragment] =
-    atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
+  def repeatedPattern: Parser[ProgramFragment] = {
+    val parser1 = atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?")
+    val parser2 = withSource("repeatedPattern", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ "?"  => frag.greedyOptional
       case frag ~ "??" => frag.lazyOptional
       case frag ~ "*"  => frag.greedyStar
@@ -105,26 +152,41 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       case _ => sys.error("unrecognized repeatedPattern operator")
     }
 
+    parser3
+  }
+
   // positive integer
   def int: Parser[Int] =
     """\d+""".r ^^ { _.toInt }
 
-  def rangePattern: Parser[ProgramFragment] =
-    atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?") ^^ {
+  def rangePattern: Parser[ProgramFragment] = {
+    val parser1 = atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?")
+    val parser2 = withSource("rangePattern", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
       case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
       case _ => sys.error("unrecognized rangePattern")
     }
 
-  def exactPattern: Parser[ProgramFragment] =
-    atomicPattern ~ ("{" ~> int <~ "}") ^^ {
+    parser3
+  }
+
+  def exactPattern: Parser[ProgramFragment] = {
+    val parser1 = atomicPattern ~ ("{" ~> int <~ "}")
+    val parser2 = withSource("exactPattern", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ n => frag.repeatPattern(n)
     }
 
+    parser3
+  }
+
   // reverse grammar
 
-  def splitPatternRev: Parser[ProgramFragment] =
-    rep1sep(concatPatternRev, "|") ^^ { chunks =>
+  def splitPatternRev: Parser[ProgramFragment] = {
+    val parser1 = rep1sep(concatPatternRev, "|")
+    val parser2 = withSource("splitPatternRev", parser1)
+    val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
           val split = Split(lhs.in, rhs.in)
@@ -132,28 +194,43 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       }
     }
 
-  def concatPatternRev: Parser[ProgramFragment] =
-    rep1(quantifiedPatternRev) ^^ { chunks =>
+    parser3
+  }
+
+  def concatPatternRev: Parser[ProgramFragment] = {
+    val parser1 = rep1(quantifiedPatternRev)
+    val parser2 = withSource("concatPatternRev", parser1)
+    val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) => ProgramFragment(rhs, lhs)
       }
     }
 
+    parser3
+  }
+
   def quantifiedPatternRev: Parser[ProgramFragment] =
     atomicPatternRev ||| repeatedPatternRev ||| rangePatternRev ||| exactPatternRev
 
-  def capturePatternRev: Parser[ProgramFragment] =
-    "(?<" ~ javaIdentifier ~ ">" ~ splitPatternRev ~ ")" ^^ {
+  def capturePatternRev: Parser[ProgramFragment] = {
+    val parser1 = "(?<" ~ javaIdentifier ~ ">" ~ splitPatternRev ~ ")"
+    val parser2 = withSource("capturePatternRev", parser1)
+    val parser3 = parser2 ^^ {
       case "(?<" ~ name ~ ">" ~ frag ~ ")" => frag.capture(name)
       case _ => sys.error("unrecognized capturePatternRev")
     }
+
+    parser3
+  }
 
   def atomicPatternRev: Parser[ProgramFragment] =
     assertionPattern | singleTokenPattern | mentionPattern |
     capturePatternRev | "(" ~> splitPatternRev <~ ")"
 
-  def repeatedPatternRev: Parser[ProgramFragment] =
-    atomicPatternRev ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?") ^^ {
+  def repeatedPatternRev: Parser[ProgramFragment] = {
+    val parser1 = atomicPatternRev ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?")
+    val parser2 = withSource("repeatedPatternRev", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ "?" => frag.greedyOptional
       case frag ~ "??" => frag.lazyOptional
       case frag ~ "*" => frag.greedyStar
@@ -163,17 +240,30 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
       case _ => sys.error("unrecognized repeatedPatternRev operator")
     }
 
-  def rangePatternRev: Parser[ProgramFragment] =
-    atomicPatternRev ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?") ^^ {
+    parser3
+  }
+
+  def rangePatternRev: Parser[ProgramFragment] = {
+    val parser1 = atomicPatternRev ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?")
+    val parser2 = withSource("rangePatternRev", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
       case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
       case _ => sys.error("unrecognized rangePatternRev")
     }
 
-  def exactPatternRev: Parser[ProgramFragment] =
-    atomicPatternRev ~ ("{" ~> int <~ "}") ^^ {
+    parser3
+  }
+
+  def exactPatternRev: Parser[ProgramFragment] = {
+    val parser1 = atomicPatternRev ~ ("{" ~> int <~ "}")
+    val parser2 = withSource("exactPatternRev", parser1)
+    val parser3 = parser2 ^^ {
       case frag ~ n => frag.repeatPattern(n)
     }
+
+    parser3
+  }
 
 }
 

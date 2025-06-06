@@ -10,15 +10,25 @@ trait StringMatcherParsers extends RegexParsers with SourcingParsers {
   def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 
   // a StringMatcher that compares to a string
-  def exactStringMatcher: Parser[ExactStringMatcher] = withSource("exactStringMatcher",
-  stringLiteral) ^^ {
-    string => new ExactStringMatcher(string)
+  def exactStringMatcher: Parser[ExactStringMatcher] = {
+    val parser1 = stringLiteral
+    val parser2 = withSource("exactStringMatcher", parser1)
+    val parser3 = parser2 ^^ {
+      string => new ExactStringMatcher(string)
+    }
+
+    parser3
   }
 
   // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[RegexStringMatcher] = withSource("regexStringMatcher",
-  regexLiteral) ^^ {
-    regex => new RegexStringMatcher(regex)
+  def regexStringMatcher: Parser[RegexStringMatcher] = {
+    val parser1 = regexLiteral
+    val parser2 = withSource("regexStringMatcher", parser1)
+    val parser3 = parser2 ^^ {
+      regex => new RegexStringMatcher(regex)
+    }
+
+    parser3
   }
 
   // any valid string literal (with or without quotes)

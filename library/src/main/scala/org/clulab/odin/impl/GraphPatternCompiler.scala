@@ -17,13 +17,20 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
   def dependencyPattern: Parser[GraphPattern] =
     triggerPatternGraphPattern | triggerMentionGraphPattern
 
-  def triggerPatternGraphPattern: Parser[GraphPattern] = withSource("triggerPatternGraphPattern",
-    ("(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern))) ^^ {
+  def triggerPatternGraphPattern: Parser[GraphPattern] = {
+    val parser1 = "(?i)trigger".r ~> "=" ~> tokenPattern ~ rep1(argPattern)
+    val parser2 = withSource("triggerPatternGraphPattern", parser1)
+    val parser3 = parser2 ^^ {
       case trigger ~ arguments => new TriggerPatternGraphPattern(trigger, arguments, config)
     }
 
-  def triggerMentionGraphPattern: Parser[GraphPattern] = withSource("triggerMentionGraphPattern",
-    (javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern))) ^^ {
+    parser3
+  }
+
+  def triggerMentionGraphPattern: Parser[GraphPattern] = {
+    val parser1 = javaIdentifier ~ ":" ~ javaIdentifier ~ rep1(argPattern)
+    val parser2 = withSource("triggerMentionGraphPattern", parser1)
+    val parser3 = parser2 ^^ {
       case anchorName ~ ":" ~ anchorLabel ~ arguments if anchorName.equalsIgnoreCase("trigger") =>
         new TriggerMentionGraphPattern(anchorLabel, arguments, config)
       case anchorName ~ ":" ~ anchorLabel ~ arguments =>
@@ -31,6 +38,9 @@ class GraphPatternCompiler(unit: String, config: OdinConfig) extends TokenPatter
         new RelationGraphPattern(anchorName, anchorLabel, arguments, config)
       case _ => ???
     }
+
+    parser3
+  }
 
   def argPattern: Parser[ArgumentPattern] =
     javaIdentifier ~ ":" ~ javaIdentifier ~ opt("?" ||| "*" ||| "*?" ||| "+" ||| "+?" |||
