@@ -113,16 +113,16 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     val stringEmpty = ""
     val details = inst match {
       case Done => stringEmpty
-      case inst: Pass => stringEmpty
-      case inst: Split => stringEmpty
+      case inst: Pass => s"${getReason(inst, isFirst = true)}"
+      case inst: Split => s"${getReason(inst, isFirst = true)}"
       case inst: SaveStart => s"name = ${inst.name}"
       case inst: SaveEnd => s"name = ${inst.name}"
       case inst: MatchToken => s"c = ${visualizeTokenConstraint(indent, inst.c)}"
       case inst: MatchMention => s"m = ${visualizeStringMatcher(indent, inst.m)}, name = ${inst.name}, arg = ${inst.arg}"
       case inst: MatchSentenceStart => stringEmpty
       case inst: MatchSentenceEnd => stringEmpty
-      case inst: MatchLookAhead => s"negative = ${inst.negative}"
-      case inst: MatchLookBehind => s"negative = ${inst.negative}"
+      case inst: MatchLookAhead => s"negative = ${inst.negative}${getReason(inst)}"
+      case inst: MatchLookBehind => s"negative = ${inst.negative}${getReason(inst)}"
     }
     val formattedDetails =
       if (details.isEmpty) ""

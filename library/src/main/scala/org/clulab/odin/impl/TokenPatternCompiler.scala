@@ -25,12 +25,12 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   }
 
   def splitPattern: Parser[ProgramFragment] = {
-    val parser1 = rep1sep(concatPattern, "|")
+    val parser1 = rep1sep(concatPattern, ProgramFragment.split)
     val parser2 = withSource("splitPattern", parser1)
     val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
-          val split = Split(lhs.in, rhs.in)
+          val split = Split(lhs.in, rhs.in, ProgramFragment.split)
           ProgramFragment(split, lhs.out ++ rhs.out)
       }
     }
@@ -90,12 +90,17 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   }
 
   def lookaheadAssertion: Parser[ProgramFragment] = {
-    val parser1 = ("(?=" | "(?!") ~ splitPattern <~ ")"
+    import ProgramFragment._
+
+    val parser1 = (parPosLookAhead | parNegLookAhead) ~ splitPattern <~ ")"
     val parser2 = withSource("lookaheadAssertion", parser1)
     val parser3 = parser2 ^^ {
       case op ~ frag =>
+        val negative = op.endsWith("!")
+        val reason = if (negative) negLookAhead else posLookAhead
+
         frag.setOut(Done)
-        ProgramFragment(MatchLookAhead(frag.in, op.endsWith("!")))
+        ProgramFragment(MatchLookAhead(frag.in, negative, reason))
     }
 
     parser3
@@ -103,12 +108,17 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
 
   // MatchLookBehind builds the pattern in reverse
   def lookbehindAssertion: Parser[ProgramFragment] = {
-    val parser1 = ("(?<=" | "(?<!") ~ splitPatternRev <~ ")"
+    import ProgramFragment._
+
+    val parser1 = (parPosLookBehind | parNegLookBehind) ~ splitPatternRev <~ ")"
     val parser2 = withSource("lookbehindAssertion", parser1)
     val parser3 = parser2 ^^ {
       case op ~ frag =>
+        val negative = op.endsWith("!")
+        val reason = if (negative) negLookBehind else posLookBehind
+
         frag.setOut(Done)
-        ProgramFragment(MatchLookBehind(frag.in, op.endsWith("!")))
+        ProgramFragment(MatchLookBehind(frag.in, negative, reason))
     }
 
     parser3
@@ -140,15 +150,17 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     capturePattern | "(" ~> splitPattern <~ ")"
 
   def repeatedPattern: Parser[ProgramFragment] = {
-    val parser1 = atomicPattern ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?")
+    import ProgramFragment._
+
+    val parser1 = atomicPattern ~ (greedyOptional ||| lazyOptional ||| greedyStar ||| lazyStar ||| greedyPlus ||| lazyPlus)
     val parser2 = withSource("repeatedPattern", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ "?"  => frag.greedyOptional
-      case frag ~ "??" => frag.lazyOptional
-      case frag ~ "*"  => frag.greedyStar
-      case frag ~ "*?" => frag.lazyStar
-      case frag ~ "+"  => frag.greedyPlus
-      case frag ~ "+?" => frag.lazyPlus
+      case frag ~ ProgramFragment.greedyOptional => frag.greedyOptional
+      case frag ~ ProgramFragment.lazyOptional   => frag.lazyOptional
+      case frag ~ ProgramFragment.greedyStar     => frag.greedyStar
+      case frag ~ ProgramFragment.lazyStar       => frag.lazyStar
+      case frag ~ ProgramFragment.greedyPlus     => frag.greedyPlus
+      case frag ~ ProgramFragment.lazyPlus       => frag.lazyPlus
       case _ => sys.error("unrecognized repeatedPattern operator")
     }
 
@@ -184,12 +196,12 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   // reverse grammar
 
   def splitPatternRev: Parser[ProgramFragment] = {
-    val parser1 = rep1sep(concatPatternRev, "|")
+    val parser1 = rep1sep(concatPatternRev, ProgramFragment.split)
     val parser2 = withSource("splitPatternRev", parser1)
     val parser3 = parser2 ^^ { chunks =>
       chunks.tail.foldLeft(chunks.head) {
         case (lhs, rhs) =>
-          val split = Split(lhs.in, rhs.in)
+          val split = Split(lhs.in, rhs.in, ProgramFragment.split)
           ProgramFragment(split, lhs.out ++ rhs.out)
       }
     }
@@ -228,15 +240,17 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     capturePatternRev | "(" ~> splitPatternRev <~ ")"
 
   def repeatedPatternRev: Parser[ProgramFragment] = {
-    val parser1 = atomicPatternRev ~ ("?" ||| "??" ||| "*" ||| "*?" ||| "+" ||| "+?")
+    import ProgramFragment._
+
+    val parser1 = atomicPatternRev ~ (greedyOptional ||| lazyOptional ||| greedyStar ||| lazyStar ||| greedyPlus ||| lazyPlus)
     val parser2 = withSource("repeatedPatternRev", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ "?" => frag.greedyOptional
-      case frag ~ "??" => frag.lazyOptional
-      case frag ~ "*" => frag.greedyStar
-      case frag ~ "*?" => frag.lazyStar
-      case frag ~ "+" => frag.greedyPlus
-      case frag ~ "+?" => frag.lazyPlus
+      case frag ~ ProgramFragment.greedyOptional => frag.greedyOptional
+      case frag ~ ProgramFragment.lazyOptional   => frag.lazyOptional
+      case frag ~ ProgramFragment.greedyStar     => frag.greedyStar
+      case frag ~ ProgramFragment.lazyStar       => frag.lazyStar
+      case frag ~ ProgramFragment.greedyPlus     => frag.greedyPlus
+      case frag ~ ProgramFragment.lazyPlus       => frag.lazyPlus
       case _ => sys.error("unrecognized repeatedPatternRev operator")
     }
 
@@ -301,41 +315,47 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
   }
 
   def greedyOptional: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(in, epsilon)
+    val reason = ProgramFragment.greedyOptional
+    val epsilon = Pass(reason)
+    val split = Split(in, epsilon, reason)
     ProgramFragment(split, epsilon :: out)
   }
 
   def lazyOptional: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(epsilon, in)
+    val reason = ProgramFragment.lazyOptional
+    val epsilon = Pass(reason)
+    val split = Split(epsilon, in, reason)
     ProgramFragment(split, epsilon :: out)
   }
 
   def greedyStar: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(in, epsilon)
+    val reason = ProgramFragment.greedyStar
+    val epsilon = Pass(reason)
+    val split = Split(in, epsilon, reason)
     setOut(split)
     ProgramFragment(split, epsilon)
   }
 
   def lazyStar: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(epsilon, in)
+    val reason = ProgramFragment.lazyStar
+    val epsilon = Pass(reason)
+    val split = Split(epsilon, in, reason)
     setOut(split)
     ProgramFragment(split, epsilon)
   }
 
   def greedyPlus: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(in, epsilon)
+    val reason = ProgramFragment.greedyPlus
+    val epsilon = Pass(reason)
+    val split = Split(in, epsilon, reason)
     setOut(split)
     ProgramFragment(in, epsilon)
   }
 
   def lazyPlus: ProgramFragment = {
-    val epsilon = Pass()
-    val split = Split(epsilon, in)
+    val reason = ProgramFragment.lazyPlus
+    val epsilon = Pass(reason)
+    val split = Split(epsilon, in, reason)
     setOut(split)
     ProgramFragment(in, epsilon)
   }
@@ -379,6 +399,26 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
 }
 
 object ProgramFragment {
+  val greedyOptional = "?"
+  val   lazyOptional = "??"
+  val     greedyStar = "*"
+  val       lazyStar = "*?"
+  val     greedyPlus = "+"
+  val       lazyPlus = "+?"
+
+  val split = "|"
+
+  val posLookAhead = "?="
+  val negLookAhead = "?!"
+
+  val parPosLookAhead = s"($posLookAhead"
+  val parNegLookAhead = s"($negLookAhead"
+
+  val posLookBehind = "?<="
+  val negLookBehind = "?<!"
+
+  val parPosLookBehind = s"($posLookBehind"
+  val parNegLookBehind = s"($negLookBehind"
 
   def apply(in: Inst, out: Inst): ProgramFragment =
     new ProgramFragment(in, List(out))
@@ -409,7 +449,7 @@ object ProgramFragment {
         case Nil => out
         case i :: rest => i match {
           case i if seen contains i => traverse(rest, seen, out)
-          case i @ Split(lhs, rhs) => traverse(lhs :: rhs :: rest, seen + i, out)
+          case i @ Split(lhs, rhs, _) => traverse(lhs :: rhs :: rest, seen + i, out)
           case i if i.getNext == null => traverse(rest, seen + i, i :: out)
           case i => traverse(i.getNext :: rest, seen + i, out)
         }
