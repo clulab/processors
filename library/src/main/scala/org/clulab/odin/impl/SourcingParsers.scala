@@ -13,53 +13,21 @@ trait SourcingParsers extends Parsers {
     def apply(in: Input): ParseResult[T] = {
       val parseResult = parser.apply(in)
 
+      def copy(parseResult: ParseResult[T], source: String): ParseResult[T] = {
+        val result = parseResult.get.asInstanceOf[Sourced[T]]
+        val sourcedResult = result.copyWithSource(source)
+        val sourcedParseResult = parseResult.map { (in: T) => sourcedResult }
+
+        sourcedParseResult
+      }
+
       if (parseResult.successful && parseResult.get.isInstanceOf[Sourced[_]]) {
         val start = in.offset
         val end = parseResult.next.offset
         val source = in.source.subSequence(start, end).toString
-        val mappedParseResult = parseResult.get match {
-          // StringMatchers
-          case result: ExactStringMatcher =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourcedParseResult = parseResult.map { (in: T) => sourcedResult }
+        val mappedParseResult = copy(parseResult, source)
 
-            sourcedParseResult
-          case result: RegexStringMatcher =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourcedParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourcedParseResult
-          // TokenPatterns
-          case result: TokenPattern =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourcedParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourcedParseResult
-          case result: ProgramFragment => // TODO
-            val sourcedResult = result.copyWithSource(source)
-            val sourceParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourceParseResult
-          // GraphPatterns
-          case result: TriggerPatternGraphPattern =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourceParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourceParseResult
-          case result: TriggerMentionGraphPattern =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourceParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourceParseResult
-          case result: RelationGraphPattern =>
-            val sourcedResult = result.copyWithSource(source)
-            val sourceParseResult = parseResult.map { (in: T) => sourcedResult }
-
-            sourceParseResult
-          case _ => parseResult
-        }
-
-        mappedParseResult.asInstanceOf[ParseResult[T]]
+        mappedParseResult
       }
       else parseResult
     }
