@@ -49,8 +49,8 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
   def visualizeStringMatcher(indent: Int, stringMatcher: StringMatcher): String = {
     val className = stringMatcher.getClass.getSimpleName
     val details = stringMatcher match {
-      case stringMatcher: ExactStringMatcher => s"string = ${stringMatcher.string}"
-      case stringMatcher: RegexStringMatcher => s"regex = ${stringMatcher.regex.toString}"
+      case stringMatcher: ExactStringMatcher => s"string = ${stringMatcher.string}${getSource(stringMatcher)}"
+      case stringMatcher: RegexStringMatcher => s"regex = ${stringMatcher.regex.toString}${getSource(stringMatcher)}"
     }
     val formattedDetails =
       if (details.isEmpty) ""
@@ -133,7 +133,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
 
   def visualizeTokenPattern(indent: Int, tokenPattern: TokenPattern): String = {
     val className = tokenPattern.getClass.getSimpleName
-    val details = "..."
+    val details = s"${getSource(tokenPattern, isFirst = true)}"
     val formattedDetails =
       if (details.isEmpty) ""
       else s"($details)"

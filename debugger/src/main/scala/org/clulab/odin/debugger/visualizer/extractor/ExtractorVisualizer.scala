@@ -1,7 +1,7 @@
 package org.clulab.odin.debugger.visualizer.extractor
 
 import org.clulab.odin.debugger.visualization.Visualization
-import org.clulab.odin.impl.{Done, Extractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Split}
+import org.clulab.odin.impl.{Done, Extractor, Inst, MatchLookAhead, MatchLookBehind, MatchMention, MatchSentenceEnd, MatchSentenceStart, MatchToken, Pass, SaveEnd, SaveStart, Sourced, Split}
 
 case class InstChild(name: String, inst: Inst, wide: Boolean)
 
@@ -62,5 +62,13 @@ abstract class ExtractorVisualizer() {
     }
 
     sortedInsts
+  }
+
+  def getSource(sourced: Sourced[_], isFirst: Boolean = false): String = {
+    sourced.sourceOpt.map { source =>
+      val prefix = if (isFirst) "" else ", "
+
+      s"${prefix}source = $source"
+    }.getOrElse("")
   }
 }

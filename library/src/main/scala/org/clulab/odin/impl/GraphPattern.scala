@@ -98,10 +98,16 @@ trait GraphPattern {
 
 // creates an EventMention using a TokenPattern for the trigger
 class TriggerPatternGraphPattern(
-    val trigger: TokenPattern,
-    val arguments: Seq[ArgumentPattern],
-    val config: OdinConfig
-) extends GraphPattern {
+  val trigger: TokenPattern,
+  val arguments: Seq[ArgumentPattern],
+  val config: OdinConfig,
+  val sourceOpt: Option[String] = None
+) extends GraphPattern with Sourced[TriggerPatternGraphPattern] {
+
+  def copyWithSource(source: String): TriggerPatternGraphPattern = {
+    new TriggerPatternGraphPattern(trigger, arguments, config, Some(source))
+  }
+
   def getMentions(
       sent: Int,
       doc: Document,
@@ -118,10 +124,16 @@ class TriggerPatternGraphPattern(
 
 // creates an EventMention by matching trigger mentions
 class TriggerMentionGraphPattern(
-    val triggerLabel: String,
-    val arguments: Seq[ArgumentPattern],
-    val config: OdinConfig
-) extends GraphPattern {
+  val triggerLabel: String,
+  val arguments: Seq[ArgumentPattern],
+  val config: OdinConfig,
+  val sourceOpt: Option[String] = None
+) extends GraphPattern with Sourced[GraphPattern] {
+
+  def copyWithSource(source: String): TriggerMentionGraphPattern = {
+    new TriggerMentionGraphPattern(triggerLabel, arguments, config, Some(source))
+  }
+
   def getMentions(
       sent: Int,
       doc: Document,
@@ -140,11 +152,17 @@ class TriggerMentionGraphPattern(
 
 // creates a RelationMention by matching mentions
 class RelationGraphPattern(
-    val anchorName: String,
-    val anchorLabel: String,
-    val arguments: Seq[ArgumentPattern],
-    val config: OdinConfig
-) extends GraphPattern {
+  val anchorName: String,
+  val anchorLabel: String,
+  val arguments: Seq[ArgumentPattern],
+  val config: OdinConfig,
+  val sourceOpt: Option[String] = None
+) extends GraphPattern with Sourced[RelationGraphPattern] {
+
+  def copyWithSource(source: String): RelationGraphPattern = {
+    new RelationGraphPattern(anchorName, anchorLabel, arguments, config, Some(source))
+  }
+
   def getMentions(
       sent: Int,
       doc: Document,
