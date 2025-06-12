@@ -8,12 +8,13 @@ class TestEvalTimeNorm extends Test {
   behavior of "temporal parser"
 
   it should "not degrade in performance" in {
+    val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
+    val testFile = "WorldModelersDatesRangesTimex.csv"
+    val seasonPath = "/org/clulab/numeric/custom/SEASON.tsv"
     val expectedFscore = 0.85
-    val proc = new BalaurProcessor(seasonPathOpt = Some("/org/clulab/numeric/custom/SEASON.tsv"))
-    val ner = NumericEntityRecognizer(seasonPath = "/org/clulab/numeric/custom/SEASON.tsv")
-    val actualFscore = EvalTimeNorm.test(proc, ner)
+    val proc = new BalaurProcessor(seasonPathOpt = Some(seasonPath))
+    val actualFscore = EvalTimeNorm.run(proc, timeNormEvalDir, testFile)
+
     actualFscore should be >= expectedFscore
   }
-
 }
-

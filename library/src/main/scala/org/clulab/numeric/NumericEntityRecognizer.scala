@@ -19,41 +19,29 @@ class NumericEntityRecognizer protected (val lexiconNer: LexiconNER, val actions
     new NumericEntityRecognizer(lexiconNer, actions, extractorEngine)
   }
 
-  /** Matches the lexicon NER on this document, setting the `entities` field */
-  def matchLexiconNer(document: Document): Seq[Option[Array[String]]] = {
-    val originalEntities = new ArrayBuffer[Option[Array[String]]]()
-
-    for(sent <- document.sentences) {
-      originalEntities += sent.entities
-
-      val labels = lexiconNer.find(sent)
-      // this needs to happen in place, otherwise Odin does not see these labels
-      // we will restore the original Sentence.entities at the end in `extractFrom`
-      sent.entities = Some(labels)
-      // println(s"ENTITIES: ${sent.entities.get.mkString(" ")}")
-    }
-
-    originalEntities
-  }
-
   /**
     * Entry point for numeric entity recognition
     * @param doc Input document
     * @return sets in place the sequence of NER labels and sequence of NER norms (using the TempEval-2 notation)
     */
-  def extractFrom(doc:Document): Seq[Mention] = {
-    // dictionaries
-    val originalEntities = matchLexiconNer(doc)
-    // grammars
-    var mentions = extractor.extractFrom(doc)
+  def extractFrom(doc: Document): Seq[Mention] = {
+    val newSentences = doc.sentences.map { sentence =>
+      val newEntities = lexiconNer.find(sentence)
 
-    // restore the original entities
-    for(i <- originalEntities.indices) {
-      doc.sentences(i).entities = originalEntities(i)
+      sentence.copy(entities = Some(newEntities))
+    }
+    val newDocument = doc.copy(sentences = newSentences)
+    val mentions = {
+      val dirtyMentions = extractor.extractFrom(newDocument)
+      val cleanMentions = actions.cleanupAction(dirtyMentions)
+
+      cleanMentions
     }
 
-    // global actions *after* all grammars are done
-    actions.cleanupAction(mentions)
+    // These mentions will have doc pointing to the newDocument,
+    // but sentence will be the index into the new sentences and
+    // will be valid for the original doc.
+    mentions
   }
 }
 

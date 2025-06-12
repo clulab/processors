@@ -8,5 +8,5 @@ import org.clulab.processors.Sentence
   * Date: 10/12/17
   */
 trait Tagger[L] {
-  def find(sentence:Sentence):Array[L]
+  def find(sentence:Sentence):Seq[L]
 }

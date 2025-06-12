@@ -24,8 +24,8 @@ class TestJSONSerializer extends Test {
 
 
   "A Document with an ID" should "produce json with an \"id\" field" in {
-    val d = jsonStringToDocument(""" {"sentences":[{"raw":["Gonzo","married","Camilla","."], "words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
-    d.id = Some("this-is-an-id")
+    val id = "this-is-an-id"
+    val d = jsonStringToDocument(s""" {"id":"$id","sentences":[{"raw":["Gonzo","married","Camilla","."], "words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     (d.jsonAST \ "id") should equal (JString("this-is-an-id"))
   }
 
@@ -35,8 +35,7 @@ class TestJSONSerializer extends Test {
   }
 
   "A Document with text" should "produce json with a \"text\" field" in {
-    val d = jsonStringToDocument(""" {"sentences":[{"raw":["Gonzo","married","Camilla","."], "words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
-    d.text = Some(text)
+    val d = jsonStringToDocument(s""" {"text":"$text","sentences":[{"raw":["Gonzo","married","Camilla","."], "words":["Gonzo","married","Camilla","."],"startOffsets":[0,6,14,21],"endOffsets":[5,13,21,22],"tags":["NNP","VBD","NNP","."],"lemmas":["Gonzo","marry","Camilla","."],"entities":["O","O","PERSON","O"],"norms":["O","O","O","O"],"chunks":["B-NP","B-VP","B-NP","O"],"graphs":{"stanford-basic":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]},"stanford-collapsed":{"edges":[{"source":1,"destination":0,"relation":"nsubj"},{"source":1,"destination":2,"relation":"dobj"},{"source":1,"destination":3,"relation":"punct"}],"roots":[1]}}}]} """)
     (d.jsonAST \ "text") should equal (JString(text))
   }
 
@@ -61,11 +60,11 @@ class TestJSONSerializer extends Test {
     class Scratch(var document: Document) extends JSONSerialization {
       def jsonAST: JValue = document.jsonAST
     }
-    
-    doc.text = Some("This is a test") // Original failing test requires text
+
+    val docWithText = doc.copy(sentences = doc.sentences, text = Some("This is a test"))
     val documentSerializer = new DocumentSerializer()
-    val expectedDocAsJSON = new Scratch(doc).json()
-    val docSaved = documentSerializer.save(doc, keepText = true)
+    val expectedDocAsJSON = new Scratch(docWithText).json()
+    val docSaved = documentSerializer.save(docWithText, keepText = true)
     val docLoaded = documentSerializer.load(docSaved)
     val actualDocAsJSON = new Scratch(docLoaded).json()
     

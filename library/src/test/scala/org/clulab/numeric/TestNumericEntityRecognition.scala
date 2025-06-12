@@ -15,7 +15,7 @@ class TestNumericEntityRecognition extends Test {
   class HabitusTokenizer(tokenizer: Tokenizer) extends Tokenizer(tokenizer.lexer, tokenizer.steps, tokenizer.sentenceSplitter) {
     // TODO: Make sure en dash is preserved in raw somehow!
 
-    override def tokenize(text: String, sentenceSplit: Boolean = true): Array[Sentence] = {
+    override def tokenize(text: String, sentenceSplit: Boolean = true, characterOffset: Int): Seq[Sentence] = {
       // Cheat and swap out some en dashes if necessary.
       val habitusText =
         if (text.contains(HabitusTokenizer.endash))
@@ -23,7 +23,7 @@ class TestNumericEntityRecognition extends Test {
         else
           text
 
-      tokenizer.tokenize(habitusText, sentenceSplit)
+      tokenizer.tokenize(habitusText, sentenceSplit, characterOffset)
     }
   }
 
@@ -653,10 +653,10 @@ class TestNumericEntityRecognition extends Test {
   }
 
   /** Runs the actual numeric entity recognizer */
-  def numericParse(sentence: String): (Array[String], Array[String], Array[String]) = {
+  def numericParse(sentence: String): (Seq[String], Seq[String], Seq[String]) = {
     val doc = proc.annotate(sentence)
     val mentions = ner.extractFrom(doc)
-    setLabelsAndNorms(doc, mentions)
+    NumericUtils.mkLabelsAndNorms(doc, mentions)
 
     // assume 1 sentence per doc
     val sent = doc.sentences.head

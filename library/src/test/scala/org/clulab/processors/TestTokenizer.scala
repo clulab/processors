@@ -223,7 +223,7 @@ class TestTokenizer extends Test {
     }
   }
 
-  def tok(s:String):Array[Sentence] = {
+  def tok(s: String): Seq[Sentence] = {
     println(s"Tokenizing text: $s")
     val t = new OpenDomainEnglishTokenizer(None)
     val sents = t.tokenize(s)

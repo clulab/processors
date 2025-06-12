@@ -9,7 +9,6 @@ class TestProcessor extends CluTest {
 
   "Processor" should "tokenize raw text correctly" in {
     val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
-    doc.clear()
 
     doc.sentences(0).words(0) should be ("John")
     doc.sentences(0).words(1) should be ("Doe")
@@ -40,8 +39,8 @@ class TestProcessor extends CluTest {
   }
 
   it should "POS tag correctly" in {
-    val doc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
-    proc.annotate(doc)
+    val simpleDoc = proc.mkDocument("John Doe went to China. There, he visited Beijing.")
+    val doc = proc.annotate(simpleDoc)
     
     doc.sentences(0).tags.get(0) should be ("NNP")
     doc.sentences(0).tags.get(1) should be ("NNP")
@@ -59,17 +58,16 @@ class TestProcessor extends CluTest {
   }
 
   it should "POS tag parentheses correctly" in {
-    val doc = proc.mkDocument("This is a test (of parentheses).")
-    proc.annotate(doc)
+    val simpleDoc = proc.mkDocument("This is a test (of parentheses).")
+    val doc = proc.annotate(simpleDoc)
 
     doc.sentences(0).tags.get(4) should be ("-LRB-")
     doc.sentences(0).tags.get(7) should be ("-RRB-")
   }
 
   it should "recognize syntactic chunks correctly" in {
-    val doc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
-    proc.annotate(doc)
-    doc.clear()
+    val simpleDoc = proc.mkDocument("He reckons the current account deficit will narrow to only 1.8 billion.")
+    val doc = proc.annotate(simpleDoc)
 
     doc.sentences(0).chunks.get(0) should be ("B-NP")
     doc.sentences(0).chunks.get(1) should be ("B-VP")
@@ -86,9 +84,8 @@ class TestProcessor extends CluTest {
   }
 
   it should "lemmatize text correctly" in {
-    val doc = proc.mkDocument("John Doe went to the shops.")
-    proc.annotate(doc)
-    doc.clear()
+    val simpleDoc = proc.mkDocument("John Doe went to the shops.")
+    val doc = proc.annotate(simpleDoc)
 
     doc.sentences(0).lemmas.get(0) should be ("john")
     doc.sentences(0).lemmas.get(2) should be ("go")
@@ -112,40 +109,44 @@ class TestProcessor extends CluTest {
   }
 
   it should "parse MWEs correctly" in {
-    var sent = "Foods such as icecream are tasty."
-    var doc = proc.mkDocument(sent)
-    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+    {
+      val sent = "Foods such as icecream are tasty."
+      val simpleDoc = proc.mkDocument(sent)
+      println(s"WORDS: ${simpleDoc.sentences.head.words.mkString(", ")}")
 
-    proc.annotate(doc)
-    println(s"Enhanced universal dependencies for sentence: $sent")
-    println(doc.sentences.head.universalEnhancedDependencies.get)
+      val doc = proc.annotate(simpleDoc)
+      println(s"Enhanced universal dependencies for sentence: $sent")
+      println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be (false)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod_such_as") should be(true)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(0, 3, "nmod") should be(false)
+    }
+    {
+      val sent = "There was famine due to drought."
+      val simpleDoc = proc.mkDocument(sent)
+      println(s"WORDS: ${simpleDoc.sentences.head.words.mkString(", ")}")
 
-    sent = "There was famine due to drought."
-    doc = proc.mkDocument(sent)
-    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
+      val doc = proc.annotate(simpleDoc)
+      println(s"Enhanced universal dependencies for sentence: $sent")
+      println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    proc.annotate(doc)
-    println(s"Enhanced universal dependencies for sentence: $sent")
-    println(doc.sentences.head.universalEnhancedDependencies.get)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod_due_to") should be(true)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 3, "amod") should be(false)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod") should be(false)
+    }
+    {
+      val sent = "They ate cake due to hunger."
+      val simpleDoc = proc.mkDocument(sent)
+      println(s"WORDS: ${simpleDoc.sentences.head.words.mkString(", ")}")
 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod_due_to") should be (true)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 3, "amod") should be (false)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(2, 5, "nmod") should be (false)
+      val doc = proc.annotate(simpleDoc)
+      println(s"Enhanced universal dependencies for sentence: $sent")
+      println(doc.sentences.head.universalEnhancedDependencies.get)
 
-    sent = "They ate cake due to hunger."
-    doc = proc.mkDocument(sent)
-    println(s"WORDS: ${doc.sentences.head.words.mkString(", ")}")
-
-    proc.annotate(doc)
-    println(s"Enhanced universal dependencies for sentence: $sent")
-    println(doc.sentences.head.universalEnhancedDependencies.get)
-
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be (true) 
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 3, "amod") should be (false)
-    doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be (false)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod_due_to") should be(true)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 3, "amod") should be(false)
+      doc.sentences.head.universalEnhancedDependencies.get.hasEdge(1, 5, "nmod") should be(false)
+    }
   }
 
   it should "parse incomplete sentence without crashing" in {

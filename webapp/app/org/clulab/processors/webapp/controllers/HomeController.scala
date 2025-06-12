@@ -33,7 +33,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
       val kbs = customLexiconNerConfigs.map(_.kb)
       val caseInsensitiveMatchings = customLexiconNerConfigs.map(_.caseInsensitiveMatching)
       val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
-      val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
+      val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
 
       processor
     }

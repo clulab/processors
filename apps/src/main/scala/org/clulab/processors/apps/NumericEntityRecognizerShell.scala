@@ -1,6 +1,6 @@
 package org.clulab.processors.apps
 
-import org.clulab.numeric.{displayMentions, setLabelsAndNorms}
+import org.clulab.numeric.NumericUtils
 import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.ReloadableShell
@@ -23,9 +23,8 @@ class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableP
     val numericEntityRecognizerOpt = balaurProcessor
         .numericEntityRecognizerOpt
         .map(_.reloaded(new File(ruleDirOpt.get)))
-    val numericEntityRecognizerOptOpt = numericEntityRecognizerOpt.map(Option(_))
 
-    processorOpt = Some(balaurProcessor.copy(numericEntityRecognizerOptOpt = numericEntityRecognizerOptOpt))
+    processorOpt = Some(balaurProcessor.copy(numericEntityRecognizerOpt = numericEntityRecognizerOpt))
   }
 }
 
@@ -35,10 +34,12 @@ class NumericEntityRecognizerShell(ruleDirOpt: Option[String]) extends Reloadabl
   /** The actual work, including printing out the output */
   def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
+    // This gets the same numericEntityRecognizer already used in the annotation
+    // so that the mentions, since thrown away, can be recalculated.
     val mentions = proc.get.numericEntityRecognizerOpt.map(_.extractFrom(doc)).getOrElse(Seq.empty)
 
-    setLabelsAndNorms(doc, mentions)
-    displayMentions(mentions, doc)
+    // The doc should already have been annotated two lines above.
+    NumericUtils.displayMentions(mentions, doc)
   }
 
   def reload(): Unit = {

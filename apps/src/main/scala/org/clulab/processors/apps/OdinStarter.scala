@@ -6,6 +6,7 @@ import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
 import java.io.File
+import scala.collection.compat._
 
 object OdinStarter extends App {
   // When using an IDE rather than sbt, make sure the working directory for the run
@@ -20,11 +21,11 @@ object OdinStarter extends App {
     val kbs = kbsAndCaseInsensitiveMatchings.map(_._1)
     val caseInsensitiveMatchings = kbsAndCaseInsensitiveMatchings.map(_._2)
     val isLocal = kbs.forall(new File(resourceDir, _).exists)
-    val baseDirOpt = if (isLocal) Some(resourceDir) else None
+    val baseDirOpt = Option.when(isLocal)(resourceDir)
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
-  val processor = new BalaurProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
   val extractorEngine = {
     val masterResource = "/org/clulab/odinstarter/main.yml"
     // We usually want to reload rules during development,

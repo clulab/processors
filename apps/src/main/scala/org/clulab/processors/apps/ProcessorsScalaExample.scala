@@ -34,5 +34,5 @@ object ProcessorsScalaExample extends App {
     println()
   }
 
-  def mkString[T](elems: Array[T]): String = elems.mkString(" ")
+  def mkString[T](elems: Seq[T]): String = elems.mkString(" ")
 }
