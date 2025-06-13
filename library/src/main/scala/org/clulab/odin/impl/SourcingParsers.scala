@@ -25,9 +25,9 @@ trait SourcingParsers extends Parsers {
         val start = in.offset
         val end = parseResult.next.offset
         val source = in.source.subSequence(start, end).toString
-        val mappedParseResult = copy(parseResult, source)
+        val sourcedParseResult = copy(parseResult, source)
 
-        mappedParseResult
+        sourcedParseResult
       }
       else parseResult
     }

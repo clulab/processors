@@ -56,8 +56,12 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   // In GraphPatterns each argument can have a quantifier.
   // This parser accepts something that looks like an arg quantifier.
   // Used in singleTokenPattern, as part of a negative lookahead
-  def argQuantifier: Parser[String] =
-    "?" | "*?" | "*" | "+?" | "+" | """\{[0-9,]+\}\??""".r
+  // Note that there is no lazyOptional here.
+  def argQuantifier: Parser[String] = {
+    import ProgramFragment._
+
+    greedyOptional | lazyStar | greedyStar | lazyPlus | greedyPlus | """\{[0-9,]+\}\??""".r
+  }
 
   // when matching the default token field (unitConstraint)
   // we need to make sure that the next token is not a ':'
@@ -89,18 +93,17 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     parser3
   }
 
+  def isNegative(op: String): Boolean = op.endsWith("!")
+
   def lookaheadAssertion: Parser[ProgramFragment] = {
     import ProgramFragment._
 
-    val parser1 = (parPosLookAhead | parNegLookAhead) ~ splitPattern <~ ")"
+    val parser1 = "(" ~> (posLookAhead | negLookAhead) ~ splitPattern <~ ")"
     val parser2 = withSource("lookaheadAssertion", parser1)
     val parser3 = parser2 ^^ {
       case op ~ frag =>
-        val negative = op.endsWith("!")
-        val reason = if (negative) negLookAhead else posLookAhead
-
         frag.setOut(Done)
-        ProgramFragment(MatchLookAhead(frag.in, negative, reason))
+        ProgramFragment(MatchLookAhead(frag.in, negative = isNegative(op), reason = op))
     }
 
     parser3
@@ -110,15 +113,12 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   def lookbehindAssertion: Parser[ProgramFragment] = {
     import ProgramFragment._
 
-    val parser1 = (parPosLookBehind | parNegLookBehind) ~ splitPatternRev <~ ")"
+    val parser1 = "(" ~> (posLookBehind | negLookBehind) ~ splitPatternRev <~ ")"
     val parser2 = withSource("lookbehindAssertion", parser1)
     val parser3 = parser2 ^^ {
       case op ~ frag =>
-        val negative = op.endsWith("!")
-        val reason = if (negative) negLookBehind else posLookBehind
-
         frag.setOut(Done)
-        ProgramFragment(MatchLookBehind(frag.in, negative, reason))
+        ProgramFragment(MatchLookBehind(frag.in, negative = isNegative(op), reason = op))
     }
 
     parser3
@@ -149,19 +149,23 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     assertionPattern | singleTokenPattern | mentionPattern |
     capturePattern | "(" ~> splitPattern <~ ")"
 
-  def repeatedPattern: Parser[ProgramFragment] = {
+  def repetition: Parser[Repetition] =  {
     import ProgramFragment._
 
-    val parser1 = atomicPattern ~ (greedyOptional ||| lazyOptional ||| greedyStar ||| lazyStar ||| greedyPlus ||| lazyPlus)
+    val parser1 = greedyOptional ||| lazyOptional ||| greedyStar ||| lazyStar ||| greedyPlus ||| lazyPlus
+    val parser2 = withSource("repetition", parser1)
+    val parser3 = parser2 ^^ {
+      case repeater: String => new Repetition(repeater)
+    }
+
+    parser3
+  }
+
+  def repeatedPattern: Parser[ProgramFragment] = {
+    val parser1 = atomicPattern ~ repetition
     val parser2 = withSource("repeatedPattern", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ ProgramFragment.greedyOptional => frag.greedyOptional
-      case frag ~ ProgramFragment.lazyOptional   => frag.lazyOptional
-      case frag ~ ProgramFragment.greedyStar     => frag.greedyStar
-      case frag ~ ProgramFragment.lazyStar       => frag.lazyStar
-      case frag ~ ProgramFragment.greedyPlus     => frag.greedyPlus
-      case frag ~ ProgramFragment.lazyPlus       => frag.lazyPlus
-      case _ => sys.error("unrecognized repeatedPattern operator")
+      case frag ~ repetition => frag.repetition(repetition)
     }
 
     parser3
@@ -171,23 +175,43 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
   def int: Parser[Int] =
     """\d+""".r ^^ { _.toInt }
 
-  def rangePattern: Parser[ProgramFragment] = {
-    val parser1 = atomicPattern ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?")
-    val parser2 = withSource("rangePattern", parser1)
+  def inexactRange: Parser[InexactRange] = {
+    val parser1 =  "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?")
+    val parser2 = withSource("inexactRange", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
-      case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
+      case "{" ~ fromOpt ~ "," ~ toOpt ~ "}" => new InexactRange(fromOpt, toOpt)
+      case "{" ~ fromOpt ~ "," ~ toOpt ~ "}?" => new InexactRange(fromOpt, toOpt, isLazy = true)
       case _ => sys.error("unrecognized rangePattern")
     }
 
     parser3
   }
 
+  def exactRange: Parser[ExactRange] = {
+    val parser1 = "{" ~> int <~ "}"
+    val parser2 = withSource("exactRange", parser1)
+    val parser3 = parser2 ^^ {
+      case n => new ExactRange(n)
+    }
+
+    parser3
+  }
+
+  def rangePattern: Parser[ProgramFragment] = {
+    val parser1 = atomicPattern ~ inexactRange
+    val parser2 = withSource("rangePattern", parser1)
+    val parser3 = parser2 ^^ {
+      case frag ~ inexactRange => frag.inexactRange(inexactRange)
+    }
+
+    parser3
+  }
+
   def exactPattern: Parser[ProgramFragment] = {
-    val parser1 = atomicPattern ~ ("{" ~> int <~ "}")
+    val parser1 = atomicPattern ~ exactRange
     val parser2 = withSource("exactPattern", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ n => frag.repeatPattern(n)
+      case frag ~ exactRange => frag.exactRange(exactRange)
     }
 
     parser3
@@ -240,40 +264,30 @@ class TokenPatternParsers(val unit: String, val config: OdinConfig) extends Toke
     capturePatternRev | "(" ~> splitPatternRev <~ ")"
 
   def repeatedPatternRev: Parser[ProgramFragment] = {
-    import ProgramFragment._
-
-    val parser1 = atomicPatternRev ~ (greedyOptional ||| lazyOptional ||| greedyStar ||| lazyStar ||| greedyPlus ||| lazyPlus)
+    val parser1 = atomicPatternRev ~ repetition
     val parser2 = withSource("repeatedPatternRev", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ ProgramFragment.greedyOptional => frag.greedyOptional
-      case frag ~ ProgramFragment.lazyOptional   => frag.lazyOptional
-      case frag ~ ProgramFragment.greedyStar     => frag.greedyStar
-      case frag ~ ProgramFragment.lazyStar       => frag.lazyStar
-      case frag ~ ProgramFragment.greedyPlus     => frag.greedyPlus
-      case frag ~ ProgramFragment.lazyPlus       => frag.lazyPlus
-      case _ => sys.error("unrecognized repeatedPatternRev operator")
+      case frag ~ repetition => frag.repetition(repetition)
     }
 
     parser3
   }
 
   def rangePatternRev: Parser[ProgramFragment] = {
-    val parser1 = atomicPatternRev ~ "{" ~ opt(int) ~ "," ~ opt(int) ~ ("}" ||| "}?")
+    val parser1 = atomicPatternRev ~ inexactRange
     val parser2 = withSource("rangePatternRev", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ "{" ~ from ~ "," ~ to ~ "}" => frag.greedyRange(from, to)
-      case frag ~ "{" ~ from ~ "," ~ to ~ "}?" => frag.lazyRange(from, to)
-      case _ => sys.error("unrecognized rangePatternRev")
+      case frag ~ inexactRange => frag.inexactRange(inexactRange)
     }
 
     parser3
   }
 
   def exactPatternRev: Parser[ProgramFragment] = {
-    val parser1 = atomicPatternRev ~ ("{" ~> int <~ "}")
+    val parser1 = atomicPatternRev ~ exactRange
     val parser2 = withSource("exactPatternRev", parser1)
     val parser3 = parser2 ^^ {
-      case frag ~ n => frag.repeatPattern(n)
+      case frag ~ exactRange => frag.exactRange(exactRange)
     }
 
     parser3
@@ -291,8 +305,6 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
   override def copyWithSource(source: String): ProgramFragment = {
     new ProgramFragment(in, out, Some(source))
   }
-
-  import ProgramFragment.findOut
 
   /** Connects a new instruction to the output instructions.
     *
@@ -360,10 +372,21 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
     ProgramFragment(in, epsilon)
   }
 
+  def inexactRange(inexactRange: InexactRange): ProgramFragment = {
+    if (inexactRange.isLazy) lazyRange(inexactRange)
+    else greedyRange(inexactRange)
+  }
+
+  def exactRange(exactRange: ExactRange): ProgramFragment = {
+    repeatPattern(exactRange)
+  }
+
   /** Returns a new ProgramFragment that matches the current fragment
     * between `from` and `to` times greedily.
     */
-  def greedyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+  def greedyRange(inexactRange: InexactRange): ProgramFragment = {
+    val from = inexactRange.fromOpt
+    val to = inexactRange.toOpt
     require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
     if (from.isDefined && to.isDefined)
       require(from.get < to.get, "'to' must be greater than 'from'")
@@ -373,13 +396,18 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
       greedyOptional.repeat(n)
     }
     val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(greedyStar))
-    ProgramFragment(fragments)
+    val withoutSource = ProgramFragment(fragments)
+    val withSource = inexactRange.sourceOpt.map { source => withoutSource.copyWithSource(source) }.getOrElse(withoutSource)
+
+    withSource
   }
 
   /** Returns a new ProgramFragment that matches the current fragment
     * between `from` and `to` times lazily.
     */
-  def lazyRange(from: Option[Int], to: Option[Int]): ProgramFragment = {
+  def lazyRange(inexactRange: InexactRange): ProgramFragment = {
+    val from = inexactRange.fromOpt
+    val to = inexactRange.toOpt
     require(from.isDefined || to.isDefined, "either 'from' or 'to' must be specified")
     if (from.isDefined && to.isDefined)
       require(from.get < to.get, "'to' must be greater than 'from'")
@@ -389,13 +417,45 @@ class ProgramFragment(val in: Inst, val out: List[Inst], override val sourceOpt:
       lazyOptional.repeat(n)
     }
     val fragments = required.getOrElse(Nil) ++ optional.getOrElse(Seq(lazyStar))
-    ProgramFragment(fragments)
+    val withoutSource = ProgramFragment(fragments)
+    val withSource = inexactRange.sourceOpt.map { source => withoutSource.copyWithSource(source) }.getOrElse(withoutSource)
+
+    withSource
   }
 
   /** Repeats and concatenates the current fragment `n` times. */
-  def repeatPattern(n: Int): ProgramFragment = {
+  def repeatPattern(exactRange: ExactRange): ProgramFragment = {
+    val n = exactRange.at
+
     ProgramFragment(repeat(n))
   }
+
+  def repetition(repetition: Repetition): ProgramFragment = repetition.repeater match {
+    case ProgramFragment.greedyOptional => greedyOptional
+    case ProgramFragment.lazyOptional   => lazyOptional
+    case ProgramFragment.greedyStar     => greedyStar
+    case ProgramFragment.lazyStar       => lazyStar
+    case ProgramFragment.greedyPlus     => greedyPlus
+    case ProgramFragment.lazyPlus       => lazyPlus
+  }
+}
+
+class InexactRange(val fromOpt: Option[Int], val toOpt: Option[Int], val isLazy: Boolean = false, val sourceOpt: Option[String] = None) extends Sourced[InexactRange] {
+
+  override def copyWithSource(source: String): InexactRange =
+    new InexactRange(fromOpt, toOpt, isLazy, Some(source))
+}
+
+class ExactRange(val at: Int, val sourceOpt: Option[String] = None) extends Sourced[ExactRange] {
+
+  override def copyWithSource(source: String): ExactRange =
+    new ExactRange(at, Some(source))
+}
+
+class Repetition(val repeater: String, val sourceOpt: Option[String] = None) extends Sourced[Repetition] {
+
+  override def copyWithSource(source: String): Repetition =
+    new Repetition(repeater, Some(source))
 }
 
 object ProgramFragment {
@@ -411,14 +471,8 @@ object ProgramFragment {
   val posLookAhead = "?="
   val negLookAhead = "?!"
 
-  val parPosLookAhead = s"($posLookAhead"
-  val parNegLookAhead = s"($negLookAhead"
-
   val posLookBehind = "?<="
   val negLookBehind = "?<!"
-
-  val parPosLookBehind = s"($posLookBehind"
-  val parNegLookBehind = s"($negLookBehind"
 
   def apply(in: Inst, out: Inst): ProgramFragment =
     new ProgramFragment(in, List(out))
