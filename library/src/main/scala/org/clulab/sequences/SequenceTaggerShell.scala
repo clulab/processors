@@ -5,6 +5,7 @@ import java.io.File
 import jline.console.ConsoleReader
 import jline.console.history.FileHistory
 import org.clulab.processors.Sentence
+import org.clulab.scala.WrappedArray._
 
 /**
   * Simple shell for sequence taggers

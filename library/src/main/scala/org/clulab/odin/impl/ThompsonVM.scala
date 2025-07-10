@@ -303,6 +303,10 @@ object ThompsonVM {
   }
 }
 
+trait Reasoned {
+  val reason: String
+}
+
 // instruction
 sealed trait Inst {
   protected var posId: Int = 0 // These indeed need to be mutable in TokenPattern.assignIds
@@ -350,13 +354,13 @@ case object Done extends Inst {
 }
 
 // no operation
-case class Pass() extends Inst {
+case class Pass(reason: String) extends Inst with Reasoned {
   def dup() = copy()
 }
 
 // split execution
-case class Split(lhs: Inst, rhs: Inst) extends Inst {
-  def dup() = Split(lhs.deepcopy(), rhs.deepcopy())
+case class Split(lhs: Inst, rhs: Inst, reason: String) extends Inst with Reasoned {
+  def dup() = Split(lhs.deepcopy(), rhs.deepcopy(), reason)
   override def hashCode: Int = (lhs, rhs, super.hashCode).##
 
   override def equals(other: Any): Boolean = {
@@ -454,8 +458,8 @@ case class MatchSentenceEnd() extends Inst {
 }
 
 // zero-width look-ahead assertion
-case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
-  def dup() = MatchLookAhead(start.deepcopy(), negative)
+case class MatchLookAhead(start: Inst, negative: Boolean, reason: String) extends Inst with Reasoned {
+  def dup() = MatchLookAhead(start.deepcopy(), negative, reason)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
   override def equals(other: Any): Boolean = {
@@ -471,8 +475,8 @@ case class MatchLookAhead(start: Inst, negative: Boolean) extends Inst {
 }
 
 // zero-width look-behind assertion
-case class MatchLookBehind(start: Inst, negative: Boolean) extends Inst {
-  def dup() = MatchLookBehind(start.deepcopy(), negative)
+case class MatchLookBehind(start: Inst, negative: Boolean, reason: String) extends Inst with Reasoned {
+  def dup() = MatchLookBehind(start.deepcopy(), negative, reason)
   override def hashCode: Int = (start, negative, super.hashCode).##
 
   override def equals(other: Any): Boolean = {

@@ -4,6 +4,7 @@ import org.clulab.odin.impl.{Done, ExactStringMatcher, MatchLookAhead, MatchLook
 import org.clulab.utils.Test
 
 class TestInst extends Test {
+  val reason = "no reason"
 
   behavior of "Inst"
 
@@ -28,8 +29,8 @@ class TestInst extends Test {
   }
 
   it should "distinguish MatchLookAhead and MatchLookBehind" in {
-    val matchLookAhead = MatchLookAhead(Pass(), true)
-    val matchLookBehind = MatchLookBehind(Pass(), true)
+    val matchLookAhead = MatchLookAhead(Pass(reason), true, reason)
+    val matchLookBehind = MatchLookBehind(Pass(reason), true, reason)
 
     // These will match, but == should not.
     val aheadHash = matchLookAhead.##
@@ -57,8 +58,8 @@ class TestInst extends Test {
   }
 
   it should "distinguish between Pass and Pass" in {
-    val inst1 = Pass()
-    val inst2 = Pass()
+    val inst1 = Pass(reason)
+    val inst2 = Pass(reason)
 
     val hash1a = inst1.##
     val hash2a = inst2.##
@@ -106,16 +107,16 @@ class TestInst extends Test {
     // true is for deep, false is for shallow
     val instAndDeeps = Seq(
       // (Done, false), // This won't work because it is an object!
-      (Pass(), false),
-      (Split(MatchSentenceStart(), MatchSentenceEnd()), true),
+      (Pass(reason), false),
+      (Split(MatchSentenceStart(), MatchSentenceEnd(), reason), true),
       (SaveStart("hello", null), false),
       (SaveEnd("goodbye"), false),
       (MatchToken(TokenWildcard), false),
       (MatchMention(new ExactStringMatcher("string"), None, None), false),
       (MatchSentenceStart(), false),
       (MatchSentenceEnd(), false),
-      (MatchLookAhead(Pass(), true), true),
-      (MatchLookBehind(Pass(), true), true)
+      (MatchLookAhead(Pass(reason), true, reason), true),
+      (MatchLookBehind(Pass(reason), true, reason), true)
     )
 
     instAndDeeps.foreach { case (inst, deep) =>
@@ -131,7 +132,7 @@ class TestInst extends Test {
           deepcopy.getNext should be (null)
         }
         {
-          inst.setNext(Pass())
+          inst.setNext(Pass(reason))
           val duplicate = inst.dup()
 
           duplicate.getNext should be (null)
@@ -160,14 +161,15 @@ class TestInst extends Test {
             inst
           },
           {
-            val inst = new Pass
+            val inst = new Pass(reason)
             inst.setNext {
               val inst = MatchToken(new WordConstraint(new RegexStringMatcher("Accepted|^FAO$".r)))
               inst.setNext(Done)
               inst
             }
             inst
-          }
+          },
+          reason
         )
         inst
       }

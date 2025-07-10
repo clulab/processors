@@ -61,13 +61,13 @@ class TestTokenPattern extends Test {
   }
 
   val text4 = "a b c d e f g h i c"
-  val tokens = text4.split(" ")
+  val tokens = text4.split(" ").toSeq
   val doc = Document(
-    Array(
+    Seq(
       Sentence(
         tokens,
-        Array(0, 2, 4, 6, 8, 10, 12, 14, 16, 18),
-        Array(1, 3, 5, 7, 9, 11, 13, 15, 17, 19),
+        Seq(0, 2, 4, 6, 8, 10, 12, 14, 16, 18),
+        Seq(1, 3, 5, 7, 9, 11, 13, 15, 17, 19),
         tokens
       )
     )
@@ -614,11 +614,11 @@ class TestTokenPattern extends Test {
 
   val text8 = "x a a b a b a b a b c d"
   val doc8 = Document(
-    Array(
+    Seq(
       Sentence(
-        text8.split(" "),
-        Array(0, 2, 4, 6, 8, 10, 12, 14, 16, 18),
-        Array(1, 3, 5, 7, 9, 11, 13, 15, 17, 19)
+        text8.split(" ").toSeq,
+        Seq(0, 2, 4, 6, 8, 10, 12, 14, 16, 18),
+        Seq(1, 3, 5, 7, 9, 11, 13, 15, 17, 19)
       )
     )
   )

@@ -2,6 +2,7 @@ package org.clulab.numeric
 
 import org.clulab.numeric.mentions.Norm
 import org.clulab.processors.Processor
+import org.clulab.processors.clu.BalaurProcessor
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source
@@ -9,9 +10,12 @@ import scala.util.Using
 
 object EvalTimeNorm {
 
-  def runEval(proc: Processor, ner: NumericEntityRecognizer,
-              testFile: String): Double = {
-    val timeNormEvalDir = "/org/clulab/numeric/TimeNormEvalSet"
+  def runEval(
+    proc: Processor,
+    timeNormEvalDir: String,
+    testFile: String,
+    ner: NumericEntityRecognizer
+  ): Double = {
     val goldStream = getClass.getResourceAsStream(s"$timeNormEvalDir/$testFile")
     val goldLines = Source.fromInputStream(goldStream).getLines()
     // Build a Map with the gold time expressions.
@@ -34,8 +38,9 @@ object EvalTimeNorm {
       }
       val doc = proc.annotate(docText)
       val mentions = ner.extractFrom(doc)
-      setLabelsAndNorms(doc, mentions)
-      val prediction =  mentions.collect{
+      // The following line does not change the document.
+      // NumericUtils.mkLabelsAndNorms(doc, mentions)
+      val prediction = mentions.collect{
         case m: Norm if m.neLabel.equals("DATE") || m.neLabel.equals("DATE-RANGE") =>
           (m.startOffset.toString, m.endOffset.toString, m.neNorm)
       }.toSet
@@ -53,13 +58,9 @@ object EvalTimeNorm {
     fscore
   }
 
-  def run(proc: Processor): Double = {
-    val ner = NumericEntityRecognizer()
+  def run(proc: BalaurProcessor, timeNormEvalDir: String, testFile: String): Double = {
+    val ner = proc.numericEntityRecognizerOpt.get
 
-    test(proc, ner)
-  }
-
-  def test(proc: Processor, ner: NumericEntityRecognizer): Double = {
-    runEval(proc, ner, "WorldModelersDatesRangesTimex.csv")
+    runEval(proc, timeNormEvalDir, testFile, ner)
   }
 }

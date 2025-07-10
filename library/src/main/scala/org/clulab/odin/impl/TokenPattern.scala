@@ -36,8 +36,12 @@ object TokenPattern {
   }
 }
 
-class TokenPattern(val start: Inst) {
+class TokenPattern(val start: Inst, val sourceOpt: Option[String] = None) extends Sourced[TokenPattern] {
   import TokenPattern._
+
+  def copyWithSource(source: String): TokenPattern = {
+    new TokenPattern(start, Some(source))
+  }
 
   private def assignIds(): Unit = {
     def assigner(id: Int, instructions: List[Inst]): Unit = {

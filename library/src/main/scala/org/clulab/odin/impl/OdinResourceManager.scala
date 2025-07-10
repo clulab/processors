@@ -1,6 +1,7 @@
 package org.clulab.odin.impl
 
 import java.io.{BufferedInputStream, InputStream}
+import scala.collection.compat._
 import scala.io.Source
 
 /**
@@ -22,8 +23,7 @@ object OdinResourceManager {
     val embeddingsOption: Option[OdinResource] = constructorMap("embeddings")
     // cast as EmbeddingsResources, if present
     val embeddings: Option[EmbeddingsResource] =
-      if (embeddingsOption.nonEmpty) Some(embeddingsOption.get.asInstanceOf[EmbeddingsResource])
-      else None
+      Option.when(embeddingsOption.nonEmpty)(embeddingsOption.get.asInstanceOf[EmbeddingsResource])
     new OdinResourceManager(embeddings)
   }
 

@@ -31,7 +31,7 @@ object DebuggingOdinStarterApp extends App {
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
-  val processor = new CluProcessor(optionalNER = Some(customLexiconNer))
+  val processor = new CluProcessor(lexiconNerOpt = Some(customLexiconNer))
   val exampleGlobalAction = (inMentions: Seq[Mention], state: State) => {
     val outMentions = inMentions.map { mention =>
       if (mention.words.length % 2 == 0)

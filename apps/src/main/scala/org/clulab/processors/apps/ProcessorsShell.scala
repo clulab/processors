@@ -1,7 +1,7 @@
 package org.clulab.processors.apps
 
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.processors.clu.{BalaurProcessor, DocumentPrettyPrinter}
 import org.clulab.utils.CliReader
 import org.clulab.utils.ExitMenuItem
 import org.clulab.utils.HelpMenuItem
@@ -27,6 +27,7 @@ class ProcessorsShell extends Shell {
 
   val lineReader = new CliReader(proc.prompt, "user.home", ".processorshellhistory")
   val printWriter = new PrintWriter(System.out)
+  val documentPrinter = new DocumentPrettyPrinter(printWriter)
 
   def prepareProcessor(message: String, promptedReloadableProcessor: PromptedReloadableProcessor): Unit = {
     lineReader.setPrompt(promptedReloadableProcessor.prompt)
@@ -40,8 +41,8 @@ class ProcessorsShell extends Shell {
 
   override def work(text: String): Unit = {
     val doc = proc.get.annotate(text)
-    doc.prettyPrint(printWriter)
-    printWriter.flush()
+
+    documentPrinter.print(doc)
   }
 
   // We inherit now just from Shell, so no reloading is performed.

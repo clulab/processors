@@ -3,7 +3,7 @@ package org.clulab.odin.impl
 import org.clulab.processors.Document
 
 trait Values {
-  def values(strings: Option[Array[String]], msg: String): Array[String] =
+  def values(strings: Option[Seq[String]], msg: String): Seq[String] =
     strings match {
       case None => sys.error(msg)
       case Some(strings) => strings

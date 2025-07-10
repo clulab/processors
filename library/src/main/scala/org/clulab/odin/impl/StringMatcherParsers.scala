@@ -1,21 +1,34 @@
 package org.clulab.odin.impl
 
+import scala.language.reflectiveCalls
 import scala.util.matching.Regex
 import scala.util.parsing.combinator._
 
-trait StringMatcherParsers extends RegexParsers {
+trait StringMatcherParsers extends RegexParsers with SourcingParsers {
 
   // any valid StringMatcher
   def stringMatcher: Parser[StringMatcher] = exactStringMatcher | regexStringMatcher
 
   // a StringMatcher that compares to a string
-  def exactStringMatcher: Parser[ExactStringMatcher] = stringLiteral ^^ {
-    string => new ExactStringMatcher(string)
+  def exactStringMatcher: Parser[ExactStringMatcher] = {
+    val parser1 = stringLiteral
+    val parser2 = withSource("exactStringMatcher", parser1)
+    val parser3 = parser2 ^^ {
+      string => new ExactStringMatcher(string)
+    }
+
+    parser3
   }
 
   // a StringMatcher that uses a regex
-  def regexStringMatcher: Parser[RegexStringMatcher] = regexLiteral ^^ {
-    regex => new RegexStringMatcher(regex)
+  def regexStringMatcher: Parser[RegexStringMatcher] = {
+    val parser1 = regexLiteral
+    val parser2 = withSource("regexStringMatcher", parser1)
+    val parser3 = parser2 ^^ {
+      regex => new RegexStringMatcher(regex)
+    }
+
+    parser3
   }
 
   // any valid string literal (with or without quotes)
@@ -44,14 +57,20 @@ trait StringMatcherParsers extends RegexParsers {
 
 }
 
-sealed trait StringMatcher {
+sealed trait StringMatcher extends Sourced[StringMatcher] {
   def matches(s: String): Boolean
 }
 
-class ExactStringMatcher(val string: String) extends StringMatcher {
+class ExactStringMatcher(val string: String, val sourceOpt: Option[String] = None) extends StringMatcher {
   def matches(s: String): Boolean = string == s
+
+  override def copyWithSource(source: String): StringMatcher =
+      new ExactStringMatcher(string, Some(source))
 }
 
-class RegexStringMatcher(val regex: Regex) extends StringMatcher {
+class RegexStringMatcher(val regex: Regex, val sourceOpt: Option[String] = None) extends StringMatcher {
   def matches(s: String): Boolean = regex.findFirstIn(s).nonEmpty
+
+  override def copyWithSource(source: String): StringMatcher =
+      new RegexStringMatcher(regex, Some(source))
 }

@@ -1,3 +1,5 @@
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+
 // Latest version numbers were updated on 2024 July 11.
 addSbtPlugin("com.jsuereth"      % "sbt-pgp"      % "1.1.2-1") // up to 2.2.1 *
 addSbtPlugin("org.xerial.sbt"    % "sbt-sonatype" % "2.3")     // up to 3.9.21 *

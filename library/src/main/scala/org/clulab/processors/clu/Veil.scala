@@ -2,7 +2,7 @@ package org.clulab.processors.clu
 
 import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.struct.{DirectedGraph, Edge, GraphMap, RelationTriple, Tree}
-import org.clulab.struct.GraphMap._
+import org.clulab.utils.WrappedArraySeq
 
 import scala.collection.mutable.{Set => MutableSet}
 
@@ -48,7 +48,7 @@ class VeiledText(originalText: String, veiledLetters: Seq[Range]) extends Veil {
   }
 
   protected def unveilDocument(veiledDocument: Document): Document = {
-    val unveiledDocument = veiledDocument.copy(textOpt = Some(originalText))
+    val unveiledDocument = veiledDocument.copy(text = Some(originalText))
 
     unveiledDocument
   }
@@ -109,7 +109,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   }
   protected lazy val veiledDocument = {
     val veiledSentences = originalDocument.sentences.zipWithIndex.map { case (originalSentence, sentenceIndex) =>
-      val wordIndexes = originalSentence.words.indices.filterNot(veilSets(sentenceIndex)).toArray
+      val wordIndexes = originalSentence.words.indices.filterNot(veilSets(sentenceIndex))
       val veiledRaw          = wordIndexes.map(originalSentence.raw)
       val veiledStartOffsets = wordIndexes.map(originalSentence.startOffsets)
       val veiledEndOffsets   = wordIndexes.map(originalSentence.endOffsets)
@@ -122,7 +122,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     originalDocument.copy(veiledSentences)
   }
 
-  def unveilStringArray(veiledArrayOpt: Option[Array[String]], sentenceIndex: Int, veil: String): Option[Array[String]] = {
+  def unveilStringArray(veiledArrayOpt: Option[Seq[String]], sentenceIndex: Int, veil: String): Option[Seq[String]] = {
     val unveilArray = unveilArrays(sentenceIndex)
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
 
@@ -132,22 +132,20 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
       veiledArray.zipWithIndex.foreach { case (veiledString, veiledIndex) =>
         unveiledArray(unveilArray(veiledIndex)) = veiledString
       }
-      unveiledArray
+      WrappedArraySeq(unveiledArray).toImmutableSeq
     }
   }
 
-  def unveilGraphs(veiledGraphs: GraphMap, sentenceIndex: Int): GraphMap = {
+  def unveilGraphs(veiledGraphs: GraphMap.Type, sentenceIndex: Int): GraphMap.Type = {
     val unveilArray = unveilArrays(sentenceIndex)
-    val unveiledGraphs = GraphMap()
     val originalLength = originalDocument.sentences(sentenceIndex).words.length
-
-    veiledGraphs.foreach { case (name, veiledDirectedGraph) =>
+    val unveiledGraphs = veiledGraphs.map { case (name, veiledDirectedGraph) =>
       val unveiledEdges = veiledDirectedGraph.allEdges.map { case (veiledSource, veiledDestination, relation) =>
         Edge(unveilArray(veiledSource), unveilArray(veiledDestination), relation)
       }
       val unveiledRoots = veiledDirectedGraph.roots.map(unveilArray)
 
-      unveiledGraphs(name) = new DirectedGraph(unveiledEdges, Some(originalLength), Some(unveiledRoots))
+      name -> new DirectedGraph(unveiledEdges, Some(originalLength), Some(unveiledRoots))
     }
     unveiledGraphs
   }
@@ -156,7 +154,7 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
   def unveilSyntacticTree(syntacticTreeOpt: Option[Tree]): Option[Tree] = syntacticTreeOpt
 
   // TODO
-  def unveilRelations(relations: Option[Array[RelationTriple]]): Option[Array[RelationTriple]] = relations
+  def unveilRelations(relations: Option[Seq[RelationTriple]]): Option[Seq[RelationTriple]] = relations
 
   protected def unveilSentence(veiledSentence: Sentence, sentenceIndex: Int): Sentence = {
     val originalSentence = originalDocument.sentences(sentenceIndex)
@@ -164,21 +162,27 @@ class VeiledDocument(originalDocument: Document, veiledWords: Seq[(Int, Range)])
     val unveiledStartOffsets = originalSentence.startOffsets
     val unveiledEndOffsets = originalSentence.endOffsets
     val unveiledWords = originalSentence.words
+
     val unveiledSentence = veiledSentence.copy(unveiledRaw, unveiledStartOffsets, unveiledEndOffsets, unveiledWords)
 
-    def unveilStringArray(veiledArrayOpt: Option[Array[String]], veil: String): Option[Array[String]] =
+    def unveilStringArray(veiledArrayOpt: Option[Seq[String]], veil: String): Option[Seq[String]] =
         this.unveilStringArray(veiledArrayOpt, sentenceIndex, veil)
 
-    unveiledSentence.tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)
-    unveiledSentence.lemmas   = unveilStringArray(unveiledSentence.lemmas,   Veil.veiledLemma)
-    unveiledSentence.entities = unveilStringArray(unveiledSentence.entities, Veil.veiledEntity)
-    unveiledSentence.norms    = unveilStringArray(unveiledSentence.norms,    Veil.veiledNorm)
-    unveiledSentence.chunks   = unveilStringArray(unveiledSentence.chunks,   Veil.veiledChunk)
+    val tags     = unveilStringArray(unveiledSentence.tags,     Veil.veiledTag)
+    val lemmas   = unveilStringArray(unveiledSentence.lemmas,   Veil.veiledLemma)
+    val entities = unveilStringArray(unveiledSentence.entities, Veil.veiledEntity)
+    val norms    = unveilStringArray(unveiledSentence.norms,    Veil.veiledNorm)
+    val chunks   = unveilStringArray(unveiledSentence.chunks,   Veil.veiledChunk)
 
-    unveiledSentence.syntacticTree = unveilSyntacticTree(unveiledSentence.syntacticTree)
-    unveiledSentence.graphs = unveilGraphs(unveiledSentence.graphs, sentenceIndex)
-    unveiledSentence.relations = unveilRelations(unveiledSentence.relations)
-    unveiledSentence
+    val syntacticTree = unveilSyntacticTree(unveiledSentence.syntacticTree)
+    val graphs = unveilGraphs(unveiledSentence.graphs, sentenceIndex)
+    val relations = unveilRelations(unveiledSentence.relations)
+
+    val newSentence = Sentence(
+      unveiledSentence.raw, unveiledSentence.startOffsets, unveiledSentence.endOffsets, unveiledSentence.words,
+      tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations
+    )
+    newSentence
   }
 
   protected def unveilDocument(veiledDocument: Document): Document = {

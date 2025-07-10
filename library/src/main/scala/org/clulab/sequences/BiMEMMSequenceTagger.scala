@@ -168,7 +168,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
       // original sentence
       val origSentence = sentences(sentOffset)
       // actual sentence to be used
-      val sentence = if (leftToRight) origSentence else origSentence.revert()
+      val sentence = if (leftToRight) origSentence else origSentence.reverse()
       // labels to be learned
       val labels =
         if (leftToRight) labelExtractor(origSentence)
@@ -211,7 +211,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
                 origSentence: Sentence,
                 firstPassLabels:Option[Array[L]],
                 leftToRight:Boolean): Array[L] = {
-    val sentence = if(leftToRight) origSentence else origSentence.revert()
+    val sentence = if(leftToRight) origSentence else origSentence.reverse()
 
     val firstPass =
       if(firstPassLabels.nonEmpty) {
@@ -233,7 +233,7 @@ abstract class BiMEMMSequenceTagger[L: ClassTag, F: ClassTag](
     if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
   }
 
-  override def classesOf(sentence: Sentence):Array[L] = {
+  override def classesOf(sentence: Sentence):Seq[L] = {
     var firstPassLabels:Option[Array[L]] = None
     if(firstPassModel.nonEmpty)
       firstPassLabels = Some(classesOf(firstPassModel.get, sentence, None, ! leftToRight))

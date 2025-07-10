@@ -54,7 +54,7 @@ libraryDependencies ++= {
     "org.scalatest"              %% "scalatest"                  % "3.2.15"  % Test,   // up to 3.2.19, Apache-2.0
     // for odin
     "org.apache.commons"          % "commons-text"               % "1.1",              // up to 1.12.0, Apache-2.0
-    "org.scala-lang.modules"     %% "scala-collection-compat"    % "2.11.0",           // up to 2.12.0 // Apache-2.0
+    "org.scala-lang.modules"     %% "scala-collection-compat"    % "2.13.0",           // up to 2.13.0 // Apache-2.0
     "org.scala-lang.modules"     %% "scala-parser-combinators"   % combinatorsVersion, // Apache-2.0
     "org.yaml"                    % "snakeyaml"                  % "1.14",             // up to 2.2, Apache-2.0
     // progress bar for training

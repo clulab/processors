@@ -2,7 +2,7 @@ package org.clulab.processors.apps
 
 import org.clulab.processors.Document
 import org.clulab.processors.Processor
-import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.processors.clu.{BalaurProcessor, DocumentPrettyPrinter}
 import org.clulab.serialization.DocumentSerializer
 import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
 
@@ -13,9 +13,6 @@ import scala.util.Using
 object ParallelProcessorsExample {
 
   def mainWithCallback(args: Array[String])(callback: (File, String) => Unit): Unit = {
-
-    def printDocument(document: Document, printWriter: PrintWriter): Unit = document.prettyPrint(printWriter)
-
     val inputDir = args(0)
     val outputDir = args(1)
     val extension = args(2)
@@ -56,7 +53,7 @@ object ParallelProcessorsExample {
           throw throwable
       }
       val printedDocument = StringUtils.viaPrintWriter { printWriter =>
-        printDocument(document, printWriter)
+        new DocumentPrettyPrinter(printWriter).print(document)
       }
       val savedDocument = documentSerializer.save(document)
       val outputDocument = printedDocument + savedDocument

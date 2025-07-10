@@ -49,8 +49,8 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
   def visualizeStringMatcher(indent: Int, stringMatcher: StringMatcher): String = {
     val className = stringMatcher.getClass.getSimpleName
     val details = stringMatcher match {
-      case stringMatcher: ExactStringMatcher => s"string = ${stringMatcher.string}"
-      case stringMatcher: RegexStringMatcher => s"regex = ${stringMatcher.regex.toString}"
+      case stringMatcher: ExactStringMatcher => s"string = ${stringMatcher.string}${getSource(stringMatcher)}"
+      case stringMatcher: RegexStringMatcher => s"regex = ${stringMatcher.regex.toString}${getSource(stringMatcher)}"
     }
     val formattedDetails =
       if (details.isEmpty) ""
@@ -113,16 +113,16 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
     val stringEmpty = ""
     val details = inst match {
       case Done => stringEmpty
-      case inst: Pass => stringEmpty
-      case inst: Split => stringEmpty
+      case inst: Pass => s"${getReason(inst, isFirst = true)}"
+      case inst: Split => s"${getReason(inst, isFirst = true)}"
       case inst: SaveStart => s"name = ${inst.name}"
       case inst: SaveEnd => s"name = ${inst.name}"
       case inst: MatchToken => s"c = ${visualizeTokenConstraint(indent, inst.c)}"
       case inst: MatchMention => s"m = ${visualizeStringMatcher(indent, inst.m)}, name = ${inst.name}, arg = ${inst.arg}"
       case inst: MatchSentenceStart => stringEmpty
       case inst: MatchSentenceEnd => stringEmpty
-      case inst: MatchLookAhead => s"negative = ${inst.negative}"
-      case inst: MatchLookBehind => s"negative = ${inst.negative}"
+      case inst: MatchLookAhead => s"negative = ${inst.negative}${getReason(inst)}"
+      case inst: MatchLookBehind => s"negative = ${inst.negative}${getReason(inst)}"
     }
     val formattedDetails =
       if (details.isEmpty) ""
@@ -133,7 +133,7 @@ class TextExtractorVisualizer() extends ExtractorVisualizer() {
 
   def visualizeTokenPattern(indent: Int, tokenPattern: TokenPattern): String = {
     val className = tokenPattern.getClass.getSimpleName
-    val details = "..."
+    val details = s"${getSource(tokenPattern, isFirst = true)}"
     val formattedDetails =
       if (details.isEmpty) ""
       else s"($details)"

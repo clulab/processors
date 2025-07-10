@@ -8,6 +8,7 @@ import org.clulab.struct.DirectedGraphEdgeIterator;
 import org.clulab.utils.JavaUtils;
 
 import java.util.Iterator;
+import scala.collection.Seq;
 
 public class ProcessorsJavaExample {
     public static void main(String [] args) throws Exception {
@@ -20,25 +21,25 @@ public class ProcessorsJavaExample {
         // You are basically done.  The rest of this code simply prints out the annotations.
 
         // Let's print the sentence-level annotations.
-        for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length; sentenceIndex++) {
-            Sentence sentence = doc.sentences()[sentenceIndex];
+        for (int sentenceIndex = 0; sentenceIndex < doc.sentences().length(); sentenceIndex++) {
+            Sentence sentence = doc.sentences().apply(sentenceIndex);
             System.out.println("Sentence #" + sentenceIndex + ":");
-            System.out.println("Tokens: " + mkString(sentence.words()));
-            System.out.println("Start character offsets: " + mkString(sentence.startOffsets()));
-            System.out.println("End character offsets: " + mkString(sentence.endOffsets()));
+            System.out.println("Tokens: " + mkStringStr(sentence.words()));
+            System.out.println("Start character offsets: " + mkStringInt(sentence.startOffsets()));
+            System.out.println("End character offsets: " + mkStringInt(sentence.endOffsets()));
 
             // These annotations are optional, so they are stored using Option objects,
             // hence the isDefined() and get() calls.
             if (sentence.lemmas().isDefined())
-                System.out.println("Lemmas: " + mkString(sentence.lemmas().get()));
+                System.out.println("Lemmas: " + mkStringStr(sentence.lemmas().get()));
             if (sentence.tags().isDefined())
-                System.out.println("POS tags: " + mkString(sentence.tags().get()));
+                System.out.println("POS tags: " + mkStringStr(sentence.tags().get()));
             if (sentence.chunks().isDefined())
-                System.out.println("Chunks: " + mkString(sentence.chunks().get()));
+                System.out.println("Chunks: " + mkStringStr(sentence.chunks().get()));
             if (sentence.entities().isDefined())
-                System.out.println("Named entities: " + mkString(sentence.entities().get()));
+                System.out.println("Named entities: " + mkStringStr(sentence.entities().get()));
             if (sentence.norms().isDefined())
-                System.out.println("Normalized entities: " + mkString(sentence.norms().get()));
+                System.out.println("Normalized entities: " + mkStringStr(sentence.norms().get()));
             if (sentence.dependencies().isDefined()) {
                 System.out.println("Syntactic dependencies:");
                 Iterator<scala.Tuple3<Object, Object, String>> iterator =
@@ -53,27 +54,27 @@ public class ProcessorsJavaExample {
         }
     }
 
-    public static String mkString(String[] strings, String sep) {
+    public static String mkStringStr(Seq<String> strings, String sep) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < strings.length; i ++) {
+        for (int i = 0; i < strings.length(); i ++) {
             if (i > 0) stringBuilder.append(sep);
-            stringBuilder.append(strings[i]);
+            stringBuilder.append(strings.apply(i));
         }
         return stringBuilder.toString();
     }
 
-    public static String mkString(String[] strings) { return mkString(strings, " "); }
+    public static String mkStringStr(Seq<String> strings) { return mkStringStr(strings, " "); }
 
-    public static String mkString(int[] ints, String sep) {
+    public static String mkStringInt(Seq<Object> ints, String sep) {
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < ints.length; i ++) {
+        for (int i = 0; i < ints.length(); i ++) {
             if (i > 0) stringBuilder.append(sep);
-            stringBuilder.append(ints[i]);
+            stringBuilder.append(ints.apply(i));
         }
         return stringBuilder.toString();
     }
 
-    public static String mkString(int[] ints) { return mkString(ints, " "); }
+    public static String mkStringInt(Seq<Object> ints) { return mkStringInt(ints, " "); }
 
     public static<T> Iterable<T> iteratorToIterable(Iterator<T> iterator) { return () -> iterator; }
 }

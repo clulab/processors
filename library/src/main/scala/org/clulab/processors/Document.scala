@@ -1,46 +1,52 @@
 package org.clulab.processors
 
-import java.io.PrintWriter
-
-import org.clulab.struct.{CorefChains, DirectedGraphEdgeIterator}
+import org.clulab.struct.CorefChains
 import org.clulab.utils.Hash
 import org.clulab.utils.Serializer
 import org.json4s.JString
 import org.json4s.JValue
 import org.json4s.jackson.prettyJson
 
-import scala.collection.mutable
-
 /**
   * Stores all annotations for one document.
   *   Written by: Mihai Surdeanu and Gus Hahn-Powell.
   *   Last Modified: Add apply method to copy Document.
   */
-class Document(val sentences: Array[Sentence]) extends Serializable {
-
+class Document(
+  val sentences: Seq[Sentence],
   /** Unique id for this document, if any */
-  var id: Option[String] = None
-
+  val id: Option[String] = None,
   /** Clusters of coreferent mentions */
-  var coreferenceChains: Option[CorefChains] = None
-
+  val coreferenceChains: Option[CorefChains] = None,
   /** The original text corresponding to this document, if it was preserved by the corresponding processor */
-  var text: Option[String] = None
-
+  val text: Option[String] = None,
   /** Map of any arbitrary document attachments such as document creation time */
-  protected var attachments: Option[mutable.HashMap[String, DocumentAttachment]] = None
+  val attachments: Option[DocumentAttachments.Type] = None,
+  /**
+   * The document creation time using the CoreNLP format
+   * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
+   * The DCT will impact how Sentence.norms are generated for DATE expressions.
+   */
+  val dct: Option[String] = None
+) extends Serializable {
 
-  protected var documentCreationTime:Option[String] = None
+  def copy(
+    sentences: Seq[Sentence] = sentences,
+    id: Option[String] = id,
+    coreferenceChains: Option[CorefChains] = coreferenceChains,
+    text: Option[String] = text,
+    attachments: Option[DocumentAttachments.Type] = None,
+    dct: Option[String] = dct
+  ): Document = new Document(sentences, id, coreferenceChains, text, attachments, dct)
 
   /** Clears any internal state potentially constructed by the annotators */
-  def clear(): Unit = { }
+  def clear(): Unit = { } // This is for subclass support.
 
   /**
     * Used to compare Documents.
     * @return a hash (Int) based primarily on the sentences, ignoring attachments
     */
   def equivalenceHash: Int = {
-
     val stringCode = "org.clulab.processors.Document"
 
     // Hash representing the sentences.
@@ -66,133 +72,6 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
     Hash.ordered(sentences.map(_.ambivalenceHash))
   )
 
-  /** Adds an attachment to the document's attachment map */
-  def addAttachment(name: String, attachment: DocumentAttachment): Unit = {
-    if (attachments.isEmpty)
-      attachments = Some(new mutable.HashMap[String, DocumentAttachment]())
-    attachments.get += name -> attachment
-  }
-
-  /** Retrieves the attachment with the given name */
-  def getAttachment(name: String): Option[DocumentAttachment] = attachments.flatMap(_.get(name))
-
-  def removeAttachment(name: String): Unit = attachments.foreach(_ -= name)
-
-  /** Retrieves keys to all attachments so that the entire collection can be read
-    * for purposes including but not limited to serialization.  If there are no
-    * attachments, that is attachments == None, an empty set is returned.
-    * This does not distinguish between None and Some(HashMap.empty), especially
-    * since the latter should not be possible because of the lazy initialization.
-    */
-  def getAttachmentKeys: collection.Set[String] = {
-    attachments.map { attachments =>
-      attachments.keySet
-    }.getOrElse(collection.Set.empty[String])
-  }
-
-  /**
-   * Sets the document creation time using the CoreNLP format.
-   * See useFixedDate here for more details: https://stanfordnlp.github.io/CoreNLP/ner.html#setting-document-date
-   * The DCT will impacts how Sentence.norms are generated for DATE expressions
-   * @param dct Document creation time
-   */
-  def setDCT(dct:String): Unit = documentCreationTime = Some(dct)
-
-  def getDCT: Option[String] = documentCreationTime
-
-  def prettyPrint(pw: PrintWriter): Unit = {
-    // let's print the sentence-level annotations
-    var sentenceCount = 0
-    for (sentence <- sentences) {
-      pw.println("Sentence #" + sentenceCount + ":")
-      pw.println("Tokens: " + sentence.words.zipWithIndex.mkString(" "))
-      pw.println("Start character offsets: " + sentence.startOffsets.mkString(" "))
-      pw.println("End character offsets: " + sentence.endOffsets.mkString(" "))
-
-      // these annotations are optional, so they are stored using Option objects, hence the foreach statement
-      sentence.lemmas.foreach(lemmas => pw.println(s"Lemmas: ${lemmas.mkString(" ")}"))
-      sentence.tags.foreach(tags => pw.println(s"POS tags: ${tags.mkString(" ")}"))
-      sentence.chunks.foreach(chunks => pw.println(s"Chunks: ${chunks.mkString(" ")}"))
-      sentence.entities.foreach(entities => pw.println(s"Named entities: ${entities.mkString(" ")}"))
-      sentence.norms.foreach(norms => pw.println(s"Normalized entities: ${norms.mkString(" ")}"))
-      sentence.universalBasicDependencies.foreach(dependencies => {
-        pw.println("Basic syntactic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next()
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.universalEnhancedDependencies.foreach(dependencies => {
-        pw.println("Enhanced syntactic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next()
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.semanticRoles.foreach(dependencies => {
-        pw.println("Semantic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next()
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.enhancedSemanticRoles.foreach(dependencies => {
-        pw.println("Enhanced semantic dependencies:")
-        val iterator = new DirectedGraphEdgeIterator[String](dependencies)
-        while(iterator.hasNext) {
-          val dep = iterator.next()
-          // note that we use offsets starting at 0 (unlike CoreNLP, which uses offsets starting at 1)
-          pw.println(" head:" + dep._1 + " modifier:" + dep._2 + " label:" + dep._3)
-        }
-      })
-      sentence.syntacticTree.foreach(tree => {
-        pw.println("Constituent tree: " + tree.toStringDepth(showHead = false))
-        // see the org.clulab.struct.Tree class for more information
-        // on syntactic trees, including access to head phrases/words
-      })
-
-      sentenceCount += 1
-      pw.println("\n")
-    }
-
-    // let's print the coreference chains
-    coreferenceChains.foreach(chains => {
-      for (chain <- chains.getChains) {
-        pw.println("Found one coreference chain containing the following mentions:")
-        for (mention <- chain) {
-          // note that all these offsets start at 0 too
-          pw.println("\tsentenceIndex:" + mention.sentenceIndex +
-            " headIndex:" + mention.headIndex +
-            " startTokenOffset:" + mention.startOffset +
-            " endTokenOffset:" + mention.endOffset +
-            " text: " + sentences(mention.sentenceIndex).words.slice(mention.startOffset, mention.endOffset).mkString("[", " ", "]"))
-        }
-      }
-    })
-  }
-
-  def assimilate(document: Document, textOpt: Option[String]): Document = {
-    id = document.id
-    coreferenceChains = document.coreferenceChains
-    text = textOpt
-    attachments = document.attachments
-    documentCreationTime = document.documentCreationTime
-    this
-  }
-
-  // sentences are a val, so they must be initialized through the construction of a new Document.
-  // Thereafter, the remaining values can be assimilated from the old document.  The shortcut
-  // is used so that subclasses don't have to duplicate almost everything in their copy.
-  def copy(sentences: Array[Sentence] = sentences, textOpt: Option[String] = text): Document = {
-    new Document(sentences).assimilate(this, textOpt)
-  }
-
   def offset(offset: Int): Document =
       // If a subclass of Document constructs itself with an attachment or a documentCreationTime that
       // would be overwritten on the copy(), then it should provide its own copy() method(s).
@@ -202,20 +81,37 @@ class Document(val sentences: Array[Sentence]) extends Serializable {
 
 object Document {
 
-  def apply(sentences: Array[Sentence]): Document = new Document(sentences)
+  def apply(sentences: Seq[Sentence]): Document = apply(sentences, text = None)
 
-  def apply(id: Option[String], sentences: Array[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
-    val d = Document(sentences)
-    d.id = id
-    d.coreferenceChains = coref
-    d.text = text
-    d
+  def apply(sentences: Seq[Sentence], text: Option[String]): Document = apply(id = None, sentences, coref = None, text)
+
+  def apply(id: Option[String], sentences: Seq[Sentence], coref: Option[CorefChains], text: Option[String]): Document = {
+    val document = new Document(
+      sentences,
+      id = id,
+      coreferenceChains = coref,
+      text = text
+    )
+
+    document
   }
 
-  /** Return a new Document with relevant fields copied from the given Document. */
-  def apply (doc: Document): Document =
-    Document(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
+  /** Return a new Document with some relevant fields copied from the given Document. */
+  def apply(doc: Document): Document =
+    apply(doc.id, doc.sentences, doc.coreferenceChains, doc.text)
 
+  def apply(doc: Document, sentences: Seq[Sentence]): Document = {
+    val newDocument = new Document(
+      sentences,
+      id = doc.id,
+      coreferenceChains = doc.coreferenceChains,
+      text = doc.text,
+      attachments = doc.attachments,
+      dct = doc.dct
+    )
+
+    newDocument
+  }
 }
 
 /**
@@ -316,6 +212,11 @@ trait JsonSerializerAble {
   * Placeholder for document attachment, to be used to store any meta data such as document creation time.
   */
 trait DocumentAttachment extends DocumentAble with DocumentSerializerAble with JsonSerializerAble
+
+object DocumentAttachments {
+  type Type = Map[String, DocumentAttachment]
+}
+
 
 /**
  * Designed to store intermediate attachments that are only used to pass information between processor components.

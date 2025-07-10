@@ -3,6 +3,7 @@ package org.clulab.odin.impl
 import org.clulab.odin.impl.MarkdownGeneration._
 import org.clulab.odin.impl.RuleReader.{DefaultAction, Rule}
 
+import scala.collection.compat._
 import scala.collection.mutable.ArrayBuffer
 
 case class RuleSchema(
@@ -180,7 +181,7 @@ object MarkdownGeneration {
       extractorType = "CrossSentenceExtractor",
       labels = x.labels,
       priority = priorityString(x.priority),
-      action = if (r.action != DefaultAction) Some(r.action) else None,
+      action = Option.when(r.action != DefaultAction)(r.action),
       keep = x.keep,
       additional = Map(
         "leftWindow" -> x.leftWindow.toString,
@@ -198,7 +199,7 @@ object MarkdownGeneration {
       extractorType = "TokenExtractor",
       labels = x.labels,
       priority = priorityString(x.priority),
-      action = if (r.action != DefaultAction) Some(r.action) else None,
+      action = Option.when(r.action != DefaultAction)(r.action),
       keep = x.keep,
       additional = Map.empty,
       arguments = Seq.empty
@@ -213,7 +214,7 @@ object MarkdownGeneration {
       extractorType = "GraphExtractor",
       labels = x.labels,
       priority = priorityString(x.priority),
-      action = if (r.action != DefaultAction) Some(r.action) else None,
+      action = Option.when(r.action != DefaultAction)(r.action),
       keep = x.keep,
       additional = Map.empty,
       arguments = toArgSchema(x.pattern.arguments)

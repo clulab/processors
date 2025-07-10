@@ -30,7 +30,7 @@ object ProcessCoNLL03 extends App {
     }
   }
 
-  def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Array[String]] = None, chunks: Option[Array[String]] = None): Unit = {
+  def saveSent(pw: PrintWriter, sent: Array[Row], tags: Option[Seq[String]] = None, chunks: Option[Seq[String]] = None): Unit = {
     if (tags.isDefined) {
       assert(sent.length == tags.get.length)
       //println("Using generated POS tags")

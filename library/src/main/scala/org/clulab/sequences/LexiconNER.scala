@@ -1,12 +1,11 @@
 package org.clulab.sequences
 
 import org.clulab.processors.Sentence
+import org.clulab.scala.SeqView
 import org.clulab.scala.WrappedArray._
 import org.clulab.struct.{EntityValidator, TrueEntityValidator}
-import org.clulab.utils.ArrayView
 
 import java.io.File
-import scala.collection.mutable
 
 /**
   * The abstract base class for several concrete child classes used for Named Entity
@@ -55,7 +54,7 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     * @param sentence The input sentence
     * @return An array of BIO notations the store the outcome of the matches
     */
-  def find(sentence: Sentence): Array[String]
+  def find(sentence: Sentence): Seq[String]
   def getLabels: Seq[String]
 
   /**
@@ -74,49 +73,49 @@ abstract class LexiconNER(val knownCaseInsensitives: Set[String], val useLemmas:
     }
   }
 
-  def hasCondition(wordsView: ArrayView[String], condition: Char => Boolean): Boolean =
+  def hasCondition(wordsView: SeqView.Type[String], condition: Char => Boolean): Boolean =
     wordsView.exists(_.exists(condition))
 
-  def hasLetter(wordsView: ArrayView[String]): Boolean =
+  def hasLetter(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isLetter)
 
-  def hasDigit(wordsView: ArrayView[String]): Boolean =
+  def hasDigit(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isDigit)
 
-  def hasUpperCaseLetters(wordsView: ArrayView[String]): Boolean =
+  def hasUpperCaseLetters(wordsView: SeqView.Type[String]): Boolean =
     hasCondition(wordsView, Character.isUpperCase)
 
-  def hasSpace(wordsView: ArrayView[String]): Boolean = wordsView.length > 1
+  def hasSpace(wordsView: SeqView.Type[String]): Boolean = wordsView.size > 1
 
-  def countCharacters(wordsView: ArrayView[String]): Int =
+  def countCharacters(wordsView: SeqView.Type[String]): Int =
     // Go ahead and calculate them all even though we only need to know if they exceed a value.
     wordsView.foldLeft(0) { (sum, word) => sum + word.length }
 
-  val contentQualifiers: Array[ArrayView[String] => Boolean] = Array(
+  val contentQualifiers: Array[SeqView.Type[String] => Boolean] = Array(
     // Start with the quick and easy ones.
     hasSpace,
-    { wordsView => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
+    { (wordsView: SeqView.Type[String]) => countCharacters(wordsView) > LexiconNER.KNOWN_CASE_INSENSITIVE_LENGTH },
     hasDigit,
     hasUpperCaseLetters,
-    { wordsView => knownCaseInsensitives.contains(wordsView.head) }
+    { (wordsView: SeqView.Type[String]) => knownCaseInsensitives.contains(wordsView.head) }
   )
 
   protected def contentfulSpan(sentence: Sentence, start: Int, length: Int): Boolean = {
-    val wordsView = ArrayView(sentence.words, start, start + length)
+    val wordsView = sentence.words.view.slice(start, start + length)
     // A valid view/span must have a letter and at least one of the other qualifiers.
     val contentful = hasLetter(wordsView) && contentQualifiers.exists(_(wordsView))
 
     contentful
   }
 
-  protected val getTokens: Sentence => Array[String] =
+  protected val getTokens: Sentence => Seq[String] =
     // Decide this once and for all and don't revisit it each time getTokens is called.
     if (useLemmas) getLemmas
     else getWords
 
-  protected def getLemmas(sentence: Sentence): Array[String] = sentence.lemmas.get
+  protected def getLemmas(sentence: Sentence): Seq[String] = sentence.lemmas.get
 
-  protected def getWords(sentence: Sentence): Array[String] = sentence.words
+  protected def getWords(sentence: Sentence): Seq[String] = sentence.words
 }
 
 object LexiconNER {
@@ -313,7 +312,7 @@ object LexiconNER {
     var upperCaseLetters = 0
     val spaces = math.max(0, end - start - 1) // Spaces are between words, not after them.
 
-    ArrayView(words, start, end).foreach { word =>
+    words.view.slice(start, end).foreach { word =>
       characters += word.length
       word.foreach { c =>
         if (Character.isLetter(c)) letters += 1
@@ -346,7 +345,7 @@ object LexiconNER {
     while (offset < length) {
       val notOutsideCount = countWhile(src, offset, isNotOutside)
       // Check that there is not anything in dst that should not be overwritten.
-      if (!ArrayView(dst, offset, offset + notOutsideCount).exists(isNotOutside(_)))
+      if (!dst.view.slice(offset, offset + notOutsideCount).exists(isNotOutside(_)))
         Array.copy(src, offset, dst, offset, notOutsideCount)
       offset += notOutsideCount
 

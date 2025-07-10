@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
 import scala.util.Using
 
 /**
-  * Sequence tagger using a maximum entrop Markov model (MEMM)
+  * Sequence tagger using a maximum entropy Markov model (MEMM)
   * User: mihais
   * Date: 8/26/17
   */
@@ -32,7 +32,7 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
     var sentCount = 0
     for(doc <- docs; origSentence <- doc.sentences) {
       // labels and features for one sentence
-      val sentence = if(leftToRight) origSentence else origSentence.revert()
+      val sentence = if(leftToRight) origSentence else origSentence.reverse()
       val labels =
         if(leftToRight) labelExtractor(origSentence)
         else SeqUtils.revert(labelExtractor(origSentence)).toArray
@@ -67,8 +67,8 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
     logger.debug("Finished training.")
   }
 
-  override def classesOf(origSentence: Sentence):Array[L] = {
-    val sentence = if(leftToRight) origSentence else origSentence.revert()
+  override def classesOf(origSentence: Sentence):Seq[L] = {
+    val sentence = if(leftToRight) origSentence else origSentence.reverse()
 
     val history = new ArrayBuffer[L]()
     for(i <- 0 until sentence.size) {
@@ -80,7 +80,7 @@ abstract class MEMMSequenceTagger[L: ClassTag, F: ClassTag](var order:Int = 1, v
       history += label
     }
 
-    if(leftToRight) history.toArray else SeqUtils.revert(history).toArray
+    if(leftToRight) history else SeqUtils.revert(history)
   }
 
   override def save(file: File): Unit = {

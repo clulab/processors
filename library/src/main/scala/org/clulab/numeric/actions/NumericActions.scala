@@ -252,14 +252,14 @@ class NumericActions(seasonNormalizer: SeasonNormalizer, unitNormalizer: UnitNor
   /** filter out season homonyms (fall, spring) **/
   def postprocessNumericEntities(mentions: Seq[Mention]): Seq[Mention] = {
 
-    def prevWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+    def prevWordsMatch(words: Seq[String], wordIndex: Int): Boolean = {
       val prevWords = words.slice(wordIndex - 2, wordIndex).map(_.toLowerCase)
 
       prevWords.exists(NumericActions.preSeasons) ||
           prevWords.containsSlice(NumericActions.inThe)
     }
 
-    def contextWordsMatch(words: Array[String], wordIndex: Int): Boolean = {
+    def contextWordsMatch(words: Seq[String], wordIndex: Int): Boolean = {
       val window = 5
       val contextWords = words.slice(wordIndex - window, wordIndex + window).map(_.toLowerCase)
 

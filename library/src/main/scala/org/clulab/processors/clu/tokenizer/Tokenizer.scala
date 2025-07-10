@@ -70,7 +70,7 @@ class Tokenizer(
   }
 
   /** Tokenization and sentence splitting */
-  def tokenize(text: String, sentenceSplit: Boolean = true): Array[Sentence] = {
+  def tokenize(text: String, sentenceSplit: Boolean = true, characterOffset: Int = 0): Seq[Sentence] = {
     // raw tokenization, using the antlr grammar
     val rawTokens = readTokens(text)
     // now apply all the additional non-Antlr steps such as solving contractions, normalization, post-processing
@@ -78,7 +78,7 @@ class Tokenizer(
       step.process(rawTokens)
     }
     // sentence splitting, including detection of abbreviations
-    val sentences = sentenceSplitter.split(stepTokens, sentenceSplit)
+    val sentences = sentenceSplitter.split(stepTokens, sentenceSplit, characterOffset)
 
     sentences
   }
