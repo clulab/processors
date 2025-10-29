@@ -29,10 +29,19 @@ class ScienceUtils {
         else
           os.append(unicodes(c))
       } else {
-        os.append(c)
+        // Some combining characters in origText can result in spaces in the normText,
+        // particularly if they can't combine with anything.  However, there can be no
+        // spaces within words, so they are not added.
+        if (c != ' ')
+          os.append(c)
       }
     }
-    os.toString()
+    val tmpResult = os.toString()
+    // A word of DEL will not be used at all in the LongTokenization so that it is
+    // not processed at all.  It is better that it never exists.
+    val result = if (tmpResult == ScienceUtils.DEL) "" else tmpResult
+
+    result
   }
 
   /**
@@ -140,6 +149,7 @@ object ScienceUtils {
   val ACCENTED_CHARACTERS: String = "org/clulab/processors/bionlp/accented_characters.tsv"
 
   val charset = StandardCharsets.UTF_8
+  val DEL = "\u007f"
 
   private def loadAccents:Set[Char] = {
     val acf = getClass.getClassLoader.getResourceAsStream(ACCENTED_CHARACTERS)
