@@ -66,9 +66,18 @@ class TokenizerStepNormalization extends TokenizerStep {
 
       // replace common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
       else {
-        val word = scienceUtils.replaceUnicodeWithAscii(input.word)
-        // Some strings will have been replaced by empty strings.  They are not allowed in RawTokens.
-        if (word.nonEmpty)
+        val asciiWord = scienceUtils.replaceUnicodeWithAscii(input.word)
+        // Unicode combining characters in input.word can result in spaces in asciiWord,
+        // particularly if the characters can't combine with anything.  Because there may
+        // be no spaces within words, spaces are filtered out of asciiWord here.
+        val word = asciiWord.filter(_ != ' ')
+
+        // Some strings will have been replaced by empty strings.  They are not allowed in the
+        // word of RawTokens.
+        // A word of DEL will not appear at all in the LongTokenization used in the BalaurProcessor
+        // so that the word never gets processed.  It is better that it not exist.  At this point we
+        // don't know for certain that the BalaurProcessor will be used, but it is assumed so.
+        if (word.nonEmpty && word != TokenizerStepNormalization.DEL)
           output += RawToken(
             input.raw,
             input.beginPosition,
@@ -150,6 +159,7 @@ class TokenizerStepAccentedNormalization extends TokenizerStepNormalization {
 }
 
 object TokenizerStepNormalization {
+  val DEL = "\u007f"
   val PARENS = Map(
     "(" -> "-LRB-",
     ")" -> "-RRB-",
