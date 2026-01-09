@@ -7,10 +7,10 @@ import org.clulab.processors.Sentence
 import scala.collection.mutable.ArrayBuffer
 
 /** English open domain tokenizer */
-class OpenDomainEnglishTokenizer(postProcessor:Option[TokenizerStep] = None) extends Tokenizer(
+class OpenDomainEnglishTokenizer(preProcessor:Option[TokenizerStep] = None) extends Tokenizer(
   lexer = new OpenDomainEnglishLexer,
-  // the postprocessor must go first because it assumes that .word == .raw
-  postProcessor.toList ++ Seq(
+  // the preprocessor must go **first** because it assumes that .word == .raw
+  preProcessor.toList ++ Seq(
     new TokenizerStepContractions,
     new TokenizerStepNormalization,
     new TokenizerStepHyphens
@@ -18,17 +18,17 @@ class OpenDomainEnglishTokenizer(postProcessor:Option[TokenizerStep] = None) ext
   new EnglishSentenceSplitter)
 
 /** Portuguese open domain tokenizer */
-class OpenDomainPortugueseTokenizer(postProcessor:Option[TokenizerStep] = None) extends Tokenizer(
+class OpenDomainPortugueseTokenizer(preProcessor:Option[TokenizerStep] = None) extends Tokenizer(
   lexer = new OpenDomainPortugueseTokenizerLexer,
-  // the postprocessor must go first because it assumes that .word == .raw
-  postProcessor.toList ++ Seq(new TokenizerStepPortugueseContractions, new TokenizerStepAccentedNormalization),
+  // the preprocessor must go first because it assumes that .word == .raw
+  preProcessor.toList ++ Seq(new TokenizerStepPortugueseContractions, new TokenizerStepAccentedNormalization),
   new PortugueseSentenceSplitter)
 
 /** Spanish open domain tokenizer */
-class OpenDomainSpanishTokenizer(postProcessor:Option[TokenizerStep] = None) extends Tokenizer(
+class OpenDomainSpanishTokenizer(preProcessor:Option[TokenizerStep] = None) extends Tokenizer(
   lexer = new OpenDomainSpanishTokenizerLexer,
-  // the postprocessor must go first because it assumes that .word == .raw
-  postProcessor.toList ++ Seq(new TokenizerStepSpanishContractions, new TokenizerStepAccentedNormalization),
+  // the preprocessor must go first because it assumes that .word == .raw
+  preProcessor.toList ++ Seq(new TokenizerStepSpanishContractions, new TokenizerStepAccentedNormalization),
   new SpanishSentenceSplitter)
 
 /**
