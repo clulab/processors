@@ -66,12 +66,8 @@ class BalaurProcessor protected (
     )
   }
 
-  // TODO: Try not to make a new decoder for each processor?
-  val hexaDecoder = new HexaDecoder()
-
   override def getConf: Config = config
 
-  // TODO: Why not make the wordTokenizer a val then?
   def tokenizer: Tokenizer = wordTokenizer
 
   override def mkDocument(text: String, keepText: Boolean): Document = { 
@@ -294,7 +290,7 @@ class BalaurProcessor protected (
     WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
   }
 
-  // TODO: This appears to be unused.
+  // TODO: This appears to be unused. But let's keep as an alternative scoring method
   // The head has one score, the label has another.  Here the two scores are interpolated
   // and the head and label are stored together in a single object with the score if the
   // object, the Dependency, has a valid absolute head.
@@ -404,4 +400,7 @@ object BalaurProcessor {
 
   def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
       seasonPathOpt.map(NumericEntityRecognizer(_))
+
+  /** Converts hexa tags into dependencies */
+  protected val hexaDecoder = new HexaDecoder()
 }
