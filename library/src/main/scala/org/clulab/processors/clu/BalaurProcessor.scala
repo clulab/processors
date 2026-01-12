@@ -36,11 +36,12 @@ class BalaurProcessor protected (
   def this(
     config: Config = ConfigFactory.load("balaurprocessor"),
     lexiconNerOpt: Option[LexiconNER] = None,
+    useNumericEntityRecognizer: Boolean = true,
     seasonPathOpt: Option[String] = Some("/org/clulab/numeric/SEASON.tsv")
   ) = this(
     config,
     lexiconNerOpt,
-    newNumericEntityRecognizerOpt(seasonPathOpt),
+    if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
     mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
@@ -138,6 +139,44 @@ class BalaurProcessor protected (
 
   override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
+  /**
+   * Converts the MTL predictions into Sentence fields, in a new sentence
+   * Inherit BalaurProcessor and redefine this method if you use a non-standard MTL model
+   */
+  def assignSentenceAnnotations(sentence: Sentence,
+                                lemmas: Seq[String],
+                                allLabelsAndScores: Array[Array[Array[(String, Float)]]]): Sentence = {
+    val words = sentence.words
+    val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
+    val entities = {
+      val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
+
+      mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
+    }
+    val chunks = mkChunkLabels(words, allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)))
+    val graphs = mkDependencyLabelsUsingHexaTags(
+      words, lemmas, tags,
+      allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)),
+      allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
+    )
+
+    // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
+    val partlyAnnotatedSentence = sentence.copy(
+      tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
+    )
+
+    partlyAnnotatedSentence
+  }
+
+  /**
+   * Implements domain-specific corrections to Sentence annotations (e.g., in Reach or reach-lite)
+   * Inherit BalaurProcessor and redefine this method if you need to implement custom adjustments
+   * @param sentence
+   */
+  def correctAnnotations(sentence: Sentence): Unit = {
+    // empty in the open-domain BalaurProcessor
+  }
+
   override def annotate(doc: Document): Document = {
     // Process one sentence at a time through the MTL framework.
     val partlyAnnotatedSentences = doc.sentences.map { sentence =>
@@ -147,24 +186,8 @@ class BalaurProcessor protected (
 
       try {
         val allLabelsAndScores = tokenClassifier.predictWithScores(words)
-        val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
-        val entities = {
-          val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
+        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
 
-          mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
-        }
-        val chunks = mkChunkLabels(words, allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)))
-        val graphs = mkDependencyLabelsUsingHexaTags(
-          words, lemmas, tags,
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
-        )
-        // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
-        val partlyAnnotatedSentence = sentence.copy(
-          tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
-        )
-
-        partlyAnnotatedSentence
       }
       // TODO: Improve error handling.
       catch {
@@ -178,6 +201,7 @@ class BalaurProcessor protected (
           sentence
       }
     }
+
     val partlyAnnotatedDocument = doc.copy(sentences = partlyAnnotatedSentences)
     val fullyAnnotatedDocument = numericEntityRecognizerOpt.map { numericEntityRecognizer =>
       val numericMentions = numericEntityRecognizer.extractFrom(partlyAnnotatedDocument)
@@ -187,6 +211,11 @@ class BalaurProcessor protected (
           entities = Some(newLabels(index)),
           norms = Some(newNorms(index))
         )
+      }
+
+      // custom annotation corrections
+      fullyAnnotatedSentences.map { sentence =>
+        correctAnnotations(sentence)
       }
 
       partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
