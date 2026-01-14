@@ -66,7 +66,7 @@ class TokenizerStepNormalization extends TokenizerStep {
 
       // replace common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
       else {
-        val asciiWord = scienceUtils.replaceUnicodeWithAscii(input.word)
+        val asciiWord = scienceUtils.replaceUnicodeWithAsciiInWord(input.word)
         // Unicode combining characters in input.word can result in spaces in asciiWord,
         // particularly if the characters can't combine with anything.  Because there may
         // be no spaces within words, spaces are filtered out of asciiWord here.
@@ -149,7 +149,7 @@ class TokenizerStepAccentedNormalization extends TokenizerStepNormalization {
           input.raw,
           input.beginPosition,
           input.endPosition,
-          scienceUtils.replaceUnicodeWithAscii(input.word, keepAccents = true)
+          scienceUtils.replaceUnicodeWithAsciiInWord(input.word, keepAccents = true)
         )
       }
     }
