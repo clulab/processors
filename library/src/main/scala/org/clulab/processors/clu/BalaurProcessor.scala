@@ -30,7 +30,7 @@ class BalaurProcessor protected (
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
 ) extends Processor with Configured {
   // This comes from scala-transformers, so we can't make a class from it here.
-  type PredictionScore = (String, Float)
+  private type PredictionScore = (String, Float)
 
   // standard, abbreviated constructor
   def this(
@@ -124,7 +124,7 @@ class BalaurProcessor protected (
 
   override def chunking(doc: Document): Unit = throwCannotCallException("chunking")
 
-  def throwNotSupportedException(methodName: String): Unit =
+  private def throwNotSupportedException(methodName: String): Unit =
       throw new RuntimeException(s"ERROR: $methodName functionality not supported in this procecessor!")
 
   override def srl(doc: Document): Unit = throwNotSupportedException("srl")
@@ -167,10 +167,11 @@ class BalaurProcessor protected (
   /**
    * Implements domain-specific corrections to Sentence annotations (e.g., in Reach or reach-lite)
    * Inherit BalaurProcessor and redefine this method if you need to implement custom adjustments
-   * @param sentence
+   * @param sentence Input sentence
    */
-  def correctAnnotations(sentence: Sentence): Unit = {
+  def correctAnnotations(sentence: Sentence): Sentence = {
     // empty in the open-domain BalaurProcessor
+    sentence
   }
 
   override def annotate(doc: Document): Document = {
@@ -209,15 +210,18 @@ class BalaurProcessor protected (
         )
       }
 
-      // custom annotation corrections
-      fullyAnnotatedSentences.map { sentence =>
-        correctAnnotations(sentence)
-      }
-
       partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
     }.getOrElse(partlyAnnotatedDocument)
 
-    fullyAnnotatedDocument
+    // custom annotation corrections
+    // applied right at the end
+    val correctedFullyAnnotatedSents = fullyAnnotatedDocument.sentences.map { sentence =>
+      correctAnnotations(sentence)
+    }
+
+    val fullyAnnotatedDocumentWithCorrections =
+      fullyAnnotatedDocument.copy(sentences = correctedFullyAnnotatedSents)
+    fullyAnnotatedDocumentWithCorrections
   }
 
   private def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
@@ -366,14 +370,14 @@ object BalaurProcessor {
   val logger: Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix: String = "BalaurProcessor"
 
-  val NER_TASK = "NER"
-  val POS_TASK = "POS"
-  val CHUNKING_TASK = "Chunking"
-  val HEXA_TERM_TASK = "Hexa Term"
-  val HEXA_NONTERM_TASK = "Hexa NonTerm"
+  protected val NER_TASK = "NER"
+  protected val POS_TASK = "POS"
+  protected val CHUNKING_TASK = "Chunking"
+  protected val HEXA_TERM_TASK = "Hexa Term"
+  protected val HEXA_NONTERM_TASK = "Hexa NonTerm"
 
   // maps a task name to a head index in the encoder
-  val TASK_TO_INDEX: Map[String, Int] = Seq(
+  protected val TASK_TO_INDEX: Map[String, Int] = Seq(
     NER_TASK,
     POS_TASK,
     CHUNKING_TASK,
@@ -381,24 +385,24 @@ object BalaurProcessor {
     HEXA_NONTERM_TASK
   ).zipWithIndex.toMap
 
-  def mkTokenizer(lang: String): Tokenizer = lang match {
+  private def mkTokenizer(lang: String): Tokenizer = lang match {
     case "PT" => new OpenDomainPortugueseTokenizer
     case "ES" => new OpenDomainSpanishTokenizer
     case "EN" | _ => new OpenDomainEnglishTokenizer
   }
 
-  def mkLemmatizer(lang: String): Lemmatizer = lang match {
+  private def mkLemmatizer(lang: String): Lemmatizer = lang match {
     case "PT" => new PortugueseLemmatizer
     case "ES" => new SpanishLemmatizer
     case "EN" | _ => new EnglishLemmatizer
   }
 
-  def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
+  private def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
       if (config.hasPath(argPath)) config.getString(argPath)
       else if (defaultValue.nonEmpty) defaultValue.get
       else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
+  private def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
       seasonPathOpt.map(NumericEntityRecognizer(_))
 
   /** Converts hexa tags into dependencies */

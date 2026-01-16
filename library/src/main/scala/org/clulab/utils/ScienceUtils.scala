@@ -46,9 +46,14 @@ class ScienceUtils {
 
   /** Replaces common Unicode characters with the corresponding ASCII string in texts that may contain white spaces */
   def replaceUnicodeWithAsciiInText(origText:String, keepAccents:Boolean = false):String = {
-    val tokens = origText.split("\\s+")
-    val normTokens = tokens.map (replaceUnicodeWithAsciiInWord(_))
-    normTokens.mkString(" ") // all white spaces are converted into a single space
+    // Regex that matches either a run of non-whitespace or a run of whitespace
+    val parts = """\S+|\s+""".r.findAllIn(origText)
+
+    // process both whitespace and non-whitespace parts
+    parts.map { part =>
+      if (part.forall(_.isWhitespace)) part
+      else replaceUnicodeWithAsciiInWord(part)
+    }.mkString
   }
 
   /**
