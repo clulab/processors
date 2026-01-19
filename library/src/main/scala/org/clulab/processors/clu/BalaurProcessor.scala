@@ -135,25 +135,54 @@ class BalaurProcessor protected (
 
   override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
+  //
+  // task names
+  // need to be in the class so they can be overridden through inheritance
+  //
+  val NER_TASK = "NER"
+  val POS_TASK = "POS"
+  val CHUNKING_TASK = "Chunking"
+  val HEXA_TERM_TASK = "Hexa Term"
+  val HEXA_NONTERM_TASK = "Hexa NonTerm"
+
+  //
+  // maps a task name to a head index in the encoder
+  // needs to be in the class so they can be overridden through inheritance
+  //
+  val TASK_TO_INDEX: Map[String, Int] = Seq(
+    NER_TASK,
+    POS_TASK,
+    CHUNKING_TASK,
+    HEXA_TERM_TASK,
+    HEXA_NONTERM_TASK
+  ).zipWithIndex.toMap
+
   /**
    * Converts the MTL predictions into Sentence fields, in a new sentence
    * Inherit BalaurProcessor and redefine this method if you use a non-standard MTL model
    */
   def assignSentenceAnnotations(sentence: Sentence,
                                 lemmas: Seq[String],
-                                allLabelsAndScores: Array[Array[Array[(String, Float)]]]): Sentence = {
+                                allLabelsAndScores: Array[Array[Array[(String, Float)]]],
+                                nerTaskIndex: Int = TASK_TO_INDEX(NER_TASK),
+                                posTaskIndex: Int = TASK_TO_INDEX(POS_TASK),
+                                chunkingTaskIndex: Int = TASK_TO_INDEX(CHUNKING_TASK),
+                                hexaTermTaskIndex: Int = TASK_TO_INDEX(HEXA_TERM_TASK),
+                                hexaNonTermTaskIndex: Int = TASK_TO_INDEX(HEXA_NONTERM_TASK)): Sentence = {
     val words = sentence.words
-    val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
+    val tags = mkPosTags(words, allLabelsAndScores(posTaskIndex))
     val entities = {
+      // these come from the (optional) lexicon NER
       val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
-      mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
+      // these come from the neural NER
+      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
     }
-    val chunks = mkChunkLabels(words, allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)))
+    val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
     val graphs = mkDependencyLabelsUsingHexaTags(
       words, lemmas, tags,
-      allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)),
-      allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
+      allLabelsAndScores(hexaTermTaskIndex),
+      allLabelsAndScores(hexaNonTermTaskIndex)
     )
 
     // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
@@ -184,7 +213,6 @@ class BalaurProcessor protected (
       try {
         val allLabelsAndScores = tokenClassifier.predictWithScores(words)
         assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
-
       }
       // TODO: Improve error handling.
       catch {
@@ -224,7 +252,7 @@ class BalaurProcessor protected (
     fullyAnnotatedDocumentWithCorrections
   }
 
-  private def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
+  protected def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val rawTags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
@@ -233,7 +261,7 @@ class BalaurProcessor protected (
     cookedTags
   }
 
-  private def mkNerLabelsOpt(
+  protected def mkNerLabelsOpt(
     words: Seq[String], startOffsets: Seq[Int], endOffsets: Seq[Int],
     tags: Seq[String], lemmas: Seq[String]
   ): Option[Seq[String]] = {
@@ -252,7 +280,7 @@ class BalaurProcessor protected (
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], nerLabelsOpt: Option[Seq[String]]): Seq[String] = {
+  protected def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], nerLabelsOpt: Option[Seq[String]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val labelsSeq = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
@@ -288,7 +316,7 @@ class BalaurProcessor protected (
     }
   }
 
-  private def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
+  protected def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
     WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
@@ -331,7 +359,7 @@ class BalaurProcessor protected (
     sentDependencies.toArray
   }
 
-  private def mkDependencyLabelsUsingHexaTags(
+  protected def mkDependencyLabelsUsingHexaTags(
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
@@ -370,39 +398,24 @@ object BalaurProcessor {
   val logger: Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix: String = "BalaurProcessor"
 
-  protected val NER_TASK = "NER"
-  protected val POS_TASK = "POS"
-  protected val CHUNKING_TASK = "Chunking"
-  protected val HEXA_TERM_TASK = "Hexa Term"
-  protected val HEXA_NONTERM_TASK = "Hexa NonTerm"
-
-  // maps a task name to a head index in the encoder
-  protected val TASK_TO_INDEX: Map[String, Int] = Seq(
-    NER_TASK,
-    POS_TASK,
-    CHUNKING_TASK,
-    HEXA_TERM_TASK,
-    HEXA_NONTERM_TASK
-  ).zipWithIndex.toMap
-
-  private def mkTokenizer(lang: String): Tokenizer = lang match {
+  protected def mkTokenizer(lang: String): Tokenizer = lang match {
     case "PT" => new OpenDomainPortugueseTokenizer
     case "ES" => new OpenDomainSpanishTokenizer
     case "EN" | _ => new OpenDomainEnglishTokenizer
   }
 
-  private def mkLemmatizer(lang: String): Lemmatizer = lang match {
+  protected def mkLemmatizer(lang: String): Lemmatizer = lang match {
     case "PT" => new PortugueseLemmatizer
     case "ES" => new SpanishLemmatizer
     case "EN" | _ => new EnglishLemmatizer
   }
 
-  private def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
+  protected def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
       if (config.hasPath(argPath)) config.getString(argPath)
       else if (defaultValue.nonEmpty) defaultValue.get
       else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  private def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
+  protected def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
       seasonPathOpt.map(NumericEntityRecognizer(_))
 
   /** Converts hexa tags into dependencies */
