@@ -135,40 +135,26 @@ class BalaurProcessor protected (
 
   override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
-  //
-  // task names
-  // need to be in the class so they can be overridden through inheritance
-  //
-  val NER_TASK = "NER"
-  val POS_TASK = "POS"
-  val CHUNKING_TASK = "Chunking"
-  val HEXA_TERM_TASK = "Hexa Term"
-  val HEXA_NONTERM_TASK = "Hexa NonTerm"
-
-  //
-  // maps a task name to a head index in the encoder
-  // needs to be in the class so they can be overridden through inheritance
-  //
-  val TASK_TO_INDEX: Map[String, Int] = Seq(
-    NER_TASK,
-    POS_TASK,
-    CHUNKING_TASK,
-    HEXA_TERM_TASK,
-    HEXA_NONTERM_TASK
-  ).zipWithIndex.toMap
+  /**
+   * Maps a task name to a head index in the encoder
+   * Override this method for quick customization, if you use the same tasks but in different order
+   */
+  def taskIndex(taskName: String): Int = {
+    TASK_TO_INDEX(taskName)
+  }
 
   /**
    * Converts the MTL predictions into Sentence fields, in a new sentence
-   * Inherit BalaurProcessor and redefine this method if you use a non-standard MTL model
+   * Inherit BalaurProcessor and override this method if you use a non-standard MTL model
    */
   def assignSentenceAnnotations(sentence: Sentence,
                                 lemmas: Seq[String],
                                 allLabelsAndScores: Array[Array[Array[(String, Float)]]],
-                                nerTaskIndex: Int = TASK_TO_INDEX(NER_TASK),
-                                posTaskIndex: Int = TASK_TO_INDEX(POS_TASK),
-                                chunkingTaskIndex: Int = TASK_TO_INDEX(CHUNKING_TASK),
-                                hexaTermTaskIndex: Int = TASK_TO_INDEX(HEXA_TERM_TASK),
-                                hexaNonTermTaskIndex: Int = TASK_TO_INDEX(HEXA_NONTERM_TASK)): Sentence = {
+                                nerTaskIndex: Int = taskIndex(NER_TASK),
+                                posTaskIndex: Int = taskIndex(POS_TASK),
+                                chunkingTaskIndex: Int = taskIndex(CHUNKING_TASK),
+                                hexaTermTaskIndex: Int = taskIndex(HEXA_TERM_TASK),
+                                hexaNonTermTaskIndex: Int = taskIndex(HEXA_NONTERM_TASK)): Sentence = {
     val words = sentence.words
     val tags = mkPosTags(words, allLabelsAndScores(posTaskIndex))
     val entities = {
@@ -397,6 +383,23 @@ class BalaurProcessor protected (
 object BalaurProcessor {
   val logger: Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix: String = "BalaurProcessor"
+
+  //
+  // task names supported by the MTL tasks
+  //
+  val NER_TASK = "NER"
+  val POS_TASK = "POS"
+  val CHUNKING_TASK = "Chunking"
+  val HEXA_TERM_TASK = "Hexa Term"
+  val HEXA_NONTERM_TASK = "Hexa NonTerm"
+
+  val TASK_TO_INDEX: Map[String, Int] = Seq(
+    NER_TASK,
+    POS_TASK,
+    CHUNKING_TASK,
+    HEXA_TERM_TASK,
+    HEXA_NONTERM_TASK
+  ).zipWithIndex.toMap
 
   protected def mkTokenizer(lang: String): Tokenizer = lang match {
     case "PT" => new OpenDomainPortugueseTokenizer
