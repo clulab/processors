@@ -21,7 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import BalaurProcessor._
 
-class BalaurProcessor protected (
+class BalaurProcessor (
   val config: Config,
   val lexiconNerOpt: Option[LexiconNER],
   val numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
@@ -162,7 +162,7 @@ class BalaurProcessor protected (
       val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
       // these come from the neural NER
-      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
+      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), None) // optionalEntities)
     }
     val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
     val graphs = mkDependencyLabelsUsingHexaTags(
@@ -189,6 +189,10 @@ class BalaurProcessor protected (
     sentence
   }
 
+  def forward(words: Seq[String]): Array[Array[Array[(String, Float)]]] = {
+    tokenClassifier.predictWithScores(words)
+  }
+
   override def annotate(doc: Document): Document = {
     // Process one sentence at a time through the MTL framework.
     val partlyAnnotatedSentences = doc.sentences.map { sentence =>
@@ -197,7 +201,7 @@ class BalaurProcessor protected (
       val lemmas = lemmatize(words)
 
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(words)
+        val allLabelsAndScores = forward(words)
         assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
       }
       // TODO: Improve error handling.
@@ -401,13 +405,13 @@ object BalaurProcessor {
     HEXA_NONTERM_TASK
   ).zipWithIndex.toMap
 
-  protected def mkTokenizer(lang: String): Tokenizer = lang match {
+  def mkTokenizer(lang: String): Tokenizer = lang match {
     case "PT" => new OpenDomainPortugueseTokenizer
     case "ES" => new OpenDomainSpanishTokenizer
     case "EN" | _ => new OpenDomainEnglishTokenizer
   }
 
-  protected def mkLemmatizer(lang: String): Lemmatizer = lang match {
+  def mkLemmatizer(lang: String): Lemmatizer = lang match {
     case "PT" => new PortugueseLemmatizer
     case "ES" => new SpanishLemmatizer
     case "EN" | _ => new EnglishLemmatizer
