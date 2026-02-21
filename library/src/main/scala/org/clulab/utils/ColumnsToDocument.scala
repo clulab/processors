@@ -1,9 +1,7 @@
-package org.clulab.processors.apps
+package org.clulab.utils
 
-import org.clulab.processors.{Document, Processor, Sentence}
 import org.clulab.processors.clu.BalaurProcessor
-import org.clulab.scala.WrappedArrayBuffer._
-import org.clulab.utils.WrappedArraySeq
+import org.clulab.processors.{Document, Processor, Sentence}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.InputStream
@@ -28,39 +26,14 @@ object ColumnsToDocument {
   val WORD_POS_CONLLU = 1
   val TAG_POS_CONLLU = 3
 
-  var proc: Processor = new BalaurProcessor()
-  var prevLang: String = "en"
-
-  protected def setProcessor(lang: String): Unit = {
-    if (lang != prevLang) {
-      if (lang == "pt") {
-        println("Using Portuguese processors")
-        throw new RuntimeException(s"ERROR: language '$lang' not supported!")
-        //this.proc = new PortugueseCluProcessor()
-      }
-      else if (lang == "es") {
-        println("Using Spanish processors")
-        //this.proc = new SpanishCluProcessor()
-        throw new RuntimeException(s"ERROR: language '$lang' not supported!")
-      }
-      else {
-        println("Using English processors")
-        this.proc = new BalaurProcessor()
-      }
-      this.prevLang = lang
-    }
-  }
-
   def readFromFile(
     fn: String,
     wordPos: Int = WORD_POS_CONLLX,
     labelPos: Int = TAG_POS_CONLLX,
     setLabels: LabelSetter,
     annotate: Annotator,
-    filterOutContractions: Boolean = false,
-    lang: String = "en"
+    filterOutContractions: Boolean = false
   ): Document = {
-    setProcessor(lang)
     Using.resource(Source.fromFile(fn)) { source =>
       readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
     }
@@ -72,10 +45,8 @@ object ColumnsToDocument {
     labelPos: Int = TAG_POS_CONLLX,
     setLabels: LabelSetter,
     annotate: Annotator,
-    filterOutContractions: Boolean = false,
-    lang: String = "en"
+    filterOutContractions: Boolean = false
   ): Document = {
-    setProcessor(lang)
     Using.resource(Source.fromInputStream(stream)) { source =>
       readFromSource(source, wordPos, labelPos, setLabels, annotate, filterOutContractions)
     }
@@ -98,14 +69,13 @@ object ColumnsToDocument {
 
     def mkSentence(): Sentence = {
       val wordsSeq = new WrappedArraySeq(words.toArray).toImmutableSeq
-      val unlabeledSentence = new Sentence(wordsSeq, startOffsets, endOffsets, wordsSeq)
+      val unlabeledSentence = new Sentence(wordsSeq, startOffsets.toSeq, endOffsets.toSeq, wordsSeq)
 
       words.clear()
       startOffsets.clear()
       endOffsets.clear()
 
       val labeledSentence = setLabels(unlabeledSentence, labels.toSeq)
-
       labels.clear()
       labeledSentence
     }
@@ -145,12 +115,26 @@ object ColumnsToDocument {
         }
       }
     }
-    if (words.nonEmpty)
-      sentences += mkSentence()
+    if (words.nonEmpty) {
+      val sent = mkSentence()
+      sentences += sent
+      //println("words: " + sent.words.mkString(", "))
+      //println("labels: " + sent.entities.get.mkString(", "))
+    }
     logger.debug(s"Loaded ${sentences.size} sentences.")
 
-    val unannotatedSentence = new Document(sentences)
+    val unannotatedSentence = new Document(sentences.toSeq)
+
+    /*
+    for(sent <- unannotatedSentence.sentences) {
+      println("words: " + sent.words.mkString(", "))
+      println("labels: " + sent.entities.get.mkString(", "))
+    }
+    */
+
     val annotatedSentence = annotate(unannotatedSentence)
+
+
 
     annotatedSentence
   }

@@ -15,7 +15,7 @@ class TestBioPreProcessor extends Test {
 
   "ScienceUtils" should "convert (known) Unicode to ASCII" in {
     val s = "\u2714alpha\u03B1\u25B6"
-    val ps = su.replaceUnicodeWithAscii(s)
+    val ps = su.replaceUnicodeWithAsciiInWord(s)
     ps should be ("valphaalpha>")
   }
 

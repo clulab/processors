@@ -15,10 +15,10 @@ class ScienceUtils {
 
   /**
     * Replaces common Unicode characters with the corresponding ASCII string, e.g., \u0277 is replaced with "omega"
-    * @param origText The text to be processed
+    * @param origText The text to be processed, which must be a single token (i.e., no spaces)
     * @return The processed text
     */
-  def replaceUnicodeWithAscii(origText:String, keepAccents:Boolean = false):String = {
+  def replaceUnicodeWithAsciiInWord(origText:String, keepAccents:Boolean = false):String = {
     val normText = normalizeUnicode(origText)
     val os = new StringBuilder()
     for(i <- 0 until normText.length) {
@@ -42,6 +42,18 @@ class ScienceUtils {
     val result = if (tmpResult == ScienceUtils.DEL) "" else tmpResult
 
     result
+  }
+
+  /** Replaces common Unicode characters with the corresponding ASCII string in texts that may contain white spaces */
+  def replaceUnicodeWithAsciiInText(origText:String, keepAccents:Boolean = false):String = {
+    // Regex that matches either a run of non-whitespace or a run of whitespace
+    val parts = """\S+|\s+""".r.findAllIn(origText)
+
+    // process both whitespace and non-whitespace parts
+    parts.map { part =>
+      if (part.forall(_.isWhitespace)) part
+      else replaceUnicodeWithAsciiInWord(part)
+    }.mkString
   }
 
   /**

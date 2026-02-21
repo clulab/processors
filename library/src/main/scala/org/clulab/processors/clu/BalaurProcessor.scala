@@ -21,7 +21,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import BalaurProcessor._
 
-class BalaurProcessor protected (
+class BalaurProcessor (
   val config: Config,
   val lexiconNerOpt: Option[LexiconNER],
   val numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
@@ -30,17 +30,18 @@ class BalaurProcessor protected (
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
 ) extends Processor with Configured {
   // This comes from scala-transformers, so we can't make a class from it here.
-  type PredictionScore = (String, Float)
+  private type PredictionScore = (String, Float)
 
   // standard, abbreviated constructor
   def this(
     config: Config = ConfigFactory.load("balaurprocessor"),
     lexiconNerOpt: Option[LexiconNER] = None,
+    useNumericEntityRecognizer: Boolean = true,
     seasonPathOpt: Option[String] = Some("/org/clulab/numeric/SEASON.tsv")
   ) = this(
     config,
     lexiconNerOpt,
-    newNumericEntityRecognizerOpt(seasonPathOpt),
+    if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
     mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
@@ -65,12 +66,8 @@ class BalaurProcessor protected (
     )
   }
 
-  // TODO: Try not to make a new decoder for each processor?
-  val hexaDecoder = new HexaDecoder()
-
   override def getConf: Config = config
 
-  // TODO: Why not make the wordTokenizer a val then?
   def tokenizer: Tokenizer = wordTokenizer
 
   override def mkDocument(text: String, keepText: Boolean): Document = { 
@@ -127,7 +124,7 @@ class BalaurProcessor protected (
 
   override def chunking(doc: Document): Unit = throwCannotCallException("chunking")
 
-  def throwNotSupportedException(methodName: String): Unit =
+  private def throwNotSupportedException(methodName: String): Unit =
       throw new RuntimeException(s"ERROR: $methodName functionality not supported in this procecessor!")
 
   override def srl(doc: Document): Unit = throwNotSupportedException("srl")
@@ -138,6 +135,64 @@ class BalaurProcessor protected (
 
   override def relationExtraction(doc: Document): Unit = throwNotSupportedException("relationExtraction")
 
+  /**
+   * Maps a task name to a head index in the encoder
+   * Override this method for quick customization, if you use the same tasks but in different order
+   */
+  def taskIndex(taskName: String): Int = {
+    TASK_TO_INDEX(taskName)
+  }
+
+  /**
+   * Converts the MTL predictions into Sentence fields, in a new sentence
+   * Inherit BalaurProcessor and override this method if you use a non-standard MTL model
+   */
+  def assignSentenceAnnotations(sentence: Sentence,
+                                lemmas: Seq[String],
+                                allLabelsAndScores: Array[Array[Array[(String, Float)]]],
+                                nerTaskIndex: Int = taskIndex(NER_TASK),
+                                posTaskIndex: Int = taskIndex(POS_TASK),
+                                chunkingTaskIndex: Int = taskIndex(CHUNKING_TASK),
+                                hexaTermTaskIndex: Int = taskIndex(HEXA_TERM_TASK),
+                                hexaNonTermTaskIndex: Int = taskIndex(HEXA_NONTERM_TASK)): Sentence = {
+    val words = sentence.words
+    val tags = mkPosTags(words, allLabelsAndScores(posTaskIndex))
+    val entities = {
+      // these come from the (optional) lexicon NER
+      val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
+
+      // these come from the neural NER
+      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
+    }
+    val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
+    val graphs = mkDependencyLabelsUsingHexaTags(
+      words, lemmas, tags,
+      allLabelsAndScores(hexaTermTaskIndex),
+      allLabelsAndScores(hexaNonTermTaskIndex)
+    )
+
+    // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
+    val partlyAnnotatedSentence = sentence.copy(
+      tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
+    )
+
+    partlyAnnotatedSentence
+  }
+
+  /**
+   * Implements domain-specific corrections to Sentence annotations (e.g., in Reach or reach-lite)
+   * Inherit BalaurProcessor and redefine this method if you need to implement custom adjustments
+   * @param sentence Input sentence
+   */
+  def correctAnnotations(sentence: Sentence): Sentence = {
+    // empty in the open-domain BalaurProcessor
+    sentence
+  }
+
+  def forward(words: Seq[String]): Array[Array[Array[(String, Float)]]] = {
+    tokenClassifier.predictWithScores(words)
+  }
+
   override def annotate(doc: Document): Document = {
     // Process one sentence at a time through the MTL framework.
     val partlyAnnotatedSentences = doc.sentences.map { sentence =>
@@ -146,25 +201,8 @@ class BalaurProcessor protected (
       val lemmas = lemmatize(words)
 
       try {
-        val allLabelsAndScores = tokenClassifier.predictWithScores(words)
-        val tags = mkPosTags(words, allLabelsAndScores(TASK_TO_INDEX(POS_TASK)))
-        val entities = {
-          val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
-
-          mkNamedEntityLabels(words, allLabelsAndScores(TASK_TO_INDEX(NER_TASK)), optionalEntities)
-        }
-        val chunks = mkChunkLabels(words, allLabelsAndScores(TASK_TO_INDEX(CHUNKING_TASK)))
-        val graphs = mkDependencyLabelsUsingHexaTags(
-          words, lemmas, tags,
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_TERM_TASK)), 
-          allLabelsAndScores(TASK_TO_INDEX(HEXA_NONTERM_TASK))
-        )
-        // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
-        val partlyAnnotatedSentence = sentence.copy(
-          tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
-        )
-
-        partlyAnnotatedSentence
+        val allLabelsAndScores = forward(words)
+        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
       }
       // TODO: Improve error handling.
       catch {
@@ -178,6 +216,7 @@ class BalaurProcessor protected (
           sentence
       }
     }
+
     val partlyAnnotatedDocument = doc.copy(sentences = partlyAnnotatedSentences)
     val fullyAnnotatedDocument = numericEntityRecognizerOpt.map { numericEntityRecognizer =>
       val numericMentions = numericEntityRecognizer.extractFrom(partlyAnnotatedDocument)
@@ -192,10 +231,18 @@ class BalaurProcessor protected (
       partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
     }.getOrElse(partlyAnnotatedDocument)
 
-    fullyAnnotatedDocument
+    // custom annotation corrections
+    // applied right at the end
+    val correctedFullyAnnotatedSents = fullyAnnotatedDocument.sentences.map { sentence =>
+      correctAnnotations(sentence)
+    }
+
+    val fullyAnnotatedDocumentWithCorrections =
+      fullyAnnotatedDocument.copy(sentences = correctedFullyAnnotatedSents)
+    fullyAnnotatedDocumentWithCorrections
   }
 
-  private def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
+  protected def mkPosTags(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val rawTags = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
@@ -204,7 +251,7 @@ class BalaurProcessor protected (
     cookedTags
   }
 
-  private def mkNerLabelsOpt(
+  protected def mkNerLabelsOpt(
     words: Seq[String], startOffsets: Seq[Int], endOffsets: Seq[Int],
     tags: Seq[String], lemmas: Seq[String]
   ): Option[Seq[String]] = {
@@ -223,7 +270,7 @@ class BalaurProcessor protected (
   }
 
   /** Must be called after assignPosTags and lemmatize because it requires Sentence.tags and Sentence.lemmas */
-  private def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], nerLabelsOpt: Option[Seq[String]]): Seq[String] = {
+  protected def mkNamedEntityLabels(words: Seq[String], labels: Array[Array[(String, Float)]], nerLabelsOpt: Option[Seq[String]]): Seq[String] = {
     assert(labels.length == words.length)
 
     val labelsSeq = WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
@@ -259,13 +306,13 @@ class BalaurProcessor protected (
     }
   }
 
-  private def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
+  protected def mkChunkLabels(words: Seq[String], labels: Array[Array[(String, Float)]]): Seq[String] = {
     assert(labels.length == words.length)
 
     WrappedArraySeq(labels.map(_.head._1)).toImmutableSeq
   }
 
-  // TODO: This appears to be unused.
+  // TODO: This appears to be unused. But let's keep as an alternative scoring method
   // The head has one score, the label has another.  Here the two scores are interpolated
   // and the head and label are stored together in a single object with the score if the
   // object, the Dependency, has a valid absolute head.
@@ -302,7 +349,7 @@ class BalaurProcessor protected (
     sentDependencies.toArray
   }
 
-  private def mkDependencyLabelsUsingHexaTags(
+  protected def mkDependencyLabelsUsingHexaTags(
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
@@ -341,13 +388,15 @@ object BalaurProcessor {
   val logger: Logger = LoggerFactory.getLogger(classOf[BalaurProcessor])
   val prefix: String = "BalaurProcessor"
 
+  //
+  // task names supported by the MTL tasks
+  //
   val NER_TASK = "NER"
   val POS_TASK = "POS"
   val CHUNKING_TASK = "Chunking"
   val HEXA_TERM_TASK = "Hexa Term"
   val HEXA_NONTERM_TASK = "Hexa NonTerm"
 
-  // maps a task name to a head index in the encoder
   val TASK_TO_INDEX: Map[String, Int] = Seq(
     NER_TASK,
     POS_TASK,
@@ -368,11 +417,14 @@ object BalaurProcessor {
     case "EN" | _ => new EnglishLemmatizer
   }
 
-  def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
+  protected def getConfigArgString (config: Config, argPath: String, defaultValue: Option[String]): String =
       if (config.hasPath(argPath)) config.getString(argPath)
       else if (defaultValue.nonEmpty) defaultValue.get
       else throw new RuntimeException(s"ERROR: parameter $argPath must be defined!")
 
-  def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
+  protected def newNumericEntityRecognizerOpt(seasonPathOpt: Option[String]): Option[NumericEntityRecognizer] =
       seasonPathOpt.map(NumericEntityRecognizer(_))
+
+  /** Converts hexa tags into dependencies */
+  protected val hexaDecoder = new HexaDecoder()
 }
