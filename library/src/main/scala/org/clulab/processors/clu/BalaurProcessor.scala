@@ -162,7 +162,7 @@ class BalaurProcessor (
       val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
       // these come from the neural NER
-      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), None) // optionalEntities)
+      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
     }
     val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
     val graphs = mkDependencyLabelsUsingHexaTags(
