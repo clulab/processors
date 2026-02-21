@@ -9,7 +9,7 @@ import java.io.PrintWriter
 object EvaluateCoNLL extends App {
   val WORD_POS = 0 // in the column format
   val TAG_POS = 1 // in the column format
-  val ANNOTATION_POS = 5 // in the processors annotations produced by forward()
+  val ANNOTATION_POS = 0 // in the processors annotations produced by forward()
 
   val fileName = "test.txt"
   val pw = new PrintWriter(fileName + ".conll")
