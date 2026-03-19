@@ -25,6 +25,7 @@ class BalaurProcessor (
   val config: Config,
   val lexiconNerOpt: Option[LexiconNER],
   val numericEntityRecognizerOpt: Option[NumericEntityRecognizer],
+  val preferredNERModelOpt: Option[TokenClassifier], // if present use this instead of the MTL NER
   wordTokenizer: Tokenizer,
   wordLemmatizer: Lemmatizer,
   tokenClassifier: TokenClassifier // multi-task classifier for all tasks addressed
@@ -32,7 +33,7 @@ class BalaurProcessor (
   // This comes from scala-transformers, so we can't make a class from it here.
   private type PredictionScore = (String, Float)
 
-  // standard, abbreviated constructor
+  // standard, abbreviated constructor for most common usage
   def this(
     config: Config = ConfigFactory.load("balaurprocessor"),
     lexiconNerOpt: Option[LexiconNER] = None,
@@ -42,6 +43,7 @@ class BalaurProcessor (
     config,
     lexiconNerOpt,
     if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
+    None,
     mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
@@ -52,6 +54,7 @@ class BalaurProcessor (
     config: Config = config,
     lexiconNerOpt: Option[LexiconNER] = lexiconNerOpt,
     numericEntityRecognizerOpt: Option[NumericEntityRecognizer] = numericEntityRecognizerOpt,
+    preferredNERModelOpt: Option[TokenClassifier] = preferredNERModelOpt,
     wordTokenizer: Tokenizer = wordTokenizer,
     wordLemmatizer: Lemmatizer = wordLemmatizer,
     tokenClassifier: TokenClassifier = tokenClassifier
@@ -60,6 +63,7 @@ class BalaurProcessor (
       config,
       lexiconNerOpt,
       numericEntityRecognizerOpt,
+      preferredNERModelOpt,
       wordTokenizer,
       wordLemmatizer,
       tokenClassifier
@@ -150,6 +154,7 @@ class BalaurProcessor (
   def assignSentenceAnnotations(sentence: Sentence,
                                 lemmas: Seq[String],
                                 allLabelsAndScores: Array[Array[Array[(String, Float)]]],
+                                nerLabelsAndScores: Option[Array[Array[Array[(String, Float)]]]],
                                 nerTaskIndex: Int = taskIndex(NER_TASK),
                                 posTaskIndex: Int = taskIndex(POS_TASK),
                                 chunkingTaskIndex: Int = taskIndex(CHUNKING_TASK),
@@ -162,7 +167,11 @@ class BalaurProcessor (
       val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
 
       // these come from the neural NER
-      mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
+      if(nerLabelsAndScores.isEmpty) {
+        mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
+      } else {
+        mkNamedEntityLabels(words, nerLabelsAndScores.get(0), optionalEntities)
+      }
     }
     val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
     val graphs = mkDependencyLabelsUsingHexaTags(
@@ -189,8 +198,8 @@ class BalaurProcessor (
     sentence
   }
 
-  def forward(words: Seq[String]): Array[Array[Array[(String, Float)]]] = {
-    tokenClassifier.predictWithScores(words)
+  def forward(words: Seq[String], classifier: TokenClassifier = tokenClassifier): Array[Array[Array[(String, Float)]]] = {
+    classifier.predictWithScores(words)
   }
 
   override def annotate(doc: Document): Document = {
@@ -202,7 +211,10 @@ class BalaurProcessor (
 
       try {
         val allLabelsAndScores = forward(words)
-        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
+        val nerLabelsAndScores = preferredNERModelOpt.map { preferredNERModel =>
+          forward(words, preferredNERModel)
+        }
+        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores, nerLabelsAndScores)
       }
       // TODO: Improve error handling.
       catch {
