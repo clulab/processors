@@ -43,7 +43,6 @@ class BalaurProcessor (
     config,
     lexiconNerOpt,
     if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
-    None,
     mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
     // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
