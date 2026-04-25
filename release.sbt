@@ -9,8 +9,11 @@ releaseProcess := Seq[ReleaseStep](
   commitReleaseVersion,
   tagRelease,
   releaseStepCommandAndRemaining("+publishSigned"),
+  releaseStepCommandAndRemaining("sonaUpload"),
   setNextVersion,
   commitNextVersion,
-  releaseStepCommandAndRemaining("sonatypeReleaseAll"),
-  pushChanges
+//  pushChanges
 )
+
+Global / onChangedBuildSource := ReloadOnSourceChanges
+Global / useGpg := false // GPG doesn't need to be installed, particularly for Windows.

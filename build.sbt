@@ -1,16 +1,16 @@
-// These were last checked on 2025-05-09.
+// Latest version numbers were updated on 2026-04-24.
 val scala211 = "2.11.12" // up to 2.11.12
-val scala212 = "2.12.20" // up to 2.12.20
-val scala213 = "2.13.16" // up to 2.13.16
+val scala212 = "2.12.21" // up to 2.12.21
+val scala213 = "2.13.18" // up to 2.13.18
 val scala30  = "3.0.2"   // up to 3.0.2
 val scala31  = "3.1.3"   // up to 3.1.3
 val scala32  = "3.2.2"   // up to 3.2.2
-val scala33  = "3.3.6"   // up to 3.3.6 (LTS)
+val scala33  = "3.3.7"   // up to 3.3.7 (LTS)
 val scala34  = "3.4.3"   // up to 3.4.3
 val scala35  = "3.5.2"   // up to 3.5.2
 val scala36  = "3.6.4"   // up to 3.6.4
-val scala37  = "3.7.0"   // up to 3.7.0
-
+val scala37  = "3.7.4"   // up to 3.7.4
+val scala38  = "3.8.3"   // up to 3.8.3
 // See https://www.scala-lang.org/blog/2022/08/17/long-term-compatibility-plans.html.
 // Scala30: "If you are maintaining a library, you should drop Scala 3.0."  Dropped.
 // Scala31: This is a LTS (long term support) version before it was called that.
@@ -19,13 +19,14 @@ val scala37  = "3.7.0"   // up to 3.7.0
 val scala3 = scala33
 
 ThisBuild / crossScalaVersions := Seq(scala212, scala3, scala213, scala211)
-ThisBuild / scalaVersion := crossScalaVersions.value.head
+ThisBuild / scalaVersion := scala212
 
 lazy val root = (project in file("."))
   // Skip webapp because it only works for particular Scala versions.
   // It needs to be released separately (if at all).
   .aggregate(library, apps, debugger)
   .settings(
+    crossScalaVersions := Nil,
     publish / skip := true
   )
 
