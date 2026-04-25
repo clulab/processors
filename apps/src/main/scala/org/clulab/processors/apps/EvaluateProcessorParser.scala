@@ -10,7 +10,7 @@ import org.clulab.processors.clu.BalaurProcessor
 object EvaluateProcessorParser extends App {
   val TEST_FILE_NAME = "data/en/deps/universal/wsj/test.labels"
   val sents = ColumnReader.readColumns(TEST_FILE_NAME)
-  val proc = new BalaurProcessor()
+  val proc = BalaurProcessor()
 
   var errorCount = 0
   var wordCount = 0

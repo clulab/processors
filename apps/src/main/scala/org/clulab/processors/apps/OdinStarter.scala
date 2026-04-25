@@ -25,7 +25,7 @@ object OdinStarter extends App {
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
-  val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
+  val processor = BalaurProcessor(customLexiconNer)
   val extractorEngine = {
     val masterResource = "/org/clulab/odinstarter/main.yml"
     // We usually want to reload rules during development,

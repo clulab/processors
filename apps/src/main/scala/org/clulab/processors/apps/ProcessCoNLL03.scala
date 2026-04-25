@@ -12,7 +12,7 @@ import scala.util.Using
  * The words and gold NE labels are in the first and fourth columns, respectively. These are not changed
  */
 object ProcessCoNLL03 extends App {
-  val proc = new BalaurProcessor()
+  val proc = BalaurProcessor()
   val rows = ColumnReader.readColumns(args(0))
   println(s"Found ${rows.length} sentences.")
 

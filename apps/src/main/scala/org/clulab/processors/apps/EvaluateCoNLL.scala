@@ -14,7 +14,7 @@ object EvaluateCoNLL extends App {
   val fileName = "test.txt"
   val pw = new PrintWriter(fileName + ".conll")
 
-  val proc = new BalaurProcessor()
+  val proc = BalaurProcessor()
   val goldDoc = ColumnsToDocument.readFromFile(fileName, WORD_POS, TAG_POS, labelSetter, annotator, filterOutContractions = false)
   val sentences = goldDoc.sentences
   println(s"Read a doc with ${sentences.length} sentences.")

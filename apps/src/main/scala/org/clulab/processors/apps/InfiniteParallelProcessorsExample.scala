@@ -16,11 +16,11 @@ object InfiniteParallelProcessorsExample {
 
   class ProcessorProvider(reuseProcessor: Boolean) {
     protected val processorOpt: Option[Processor] =
-        Option.when(reuseProcessor)(new BalaurProcessor())
+        Option.when(reuseProcessor)(BalaurProcessor())
 
     def newOrReusedProcessor: Processor =
         if (reuseProcessor) processorOpt.get
-        else new BalaurProcessor()
+        else BalaurProcessor()
   }
 
   def mainWithCallback(args: Array[String])(callback: (File, String) => Unit): Unit = {

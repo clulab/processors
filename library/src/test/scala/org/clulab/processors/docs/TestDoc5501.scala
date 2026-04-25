@@ -7,7 +7,7 @@ import org.clulab.utils.Test
 class TestDoc5501 extends Test {
   val file = "./library/src/test/resources/55015a60e1382326932d7199.txt"
   val text = FileUtils.getTextFromFile(file)
-  val processor = new BalaurProcessor()
+  val processor = BalaurProcessor()
 
   behavior of "BalaurProcessor"
 

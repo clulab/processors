@@ -27,7 +27,7 @@ object ParallelProcessorsExample {
     val startupTimer = new Timer("This is how long it takes to start up")
     startupTimer.start()
 
-    val processor: Processor = new BalaurProcessor()
+    val processor: Processor = BalaurProcessor()
     processor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
     startupTimer.stop()
     println(startupTimer.toString)

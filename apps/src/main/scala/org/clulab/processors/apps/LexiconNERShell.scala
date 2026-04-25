@@ -6,7 +6,7 @@ import org.clulab.utils.ReloadableProcessor
 import org.clulab.utils.Shell
 
 class LexiconNERShell(val lexiconNer: LexiconNER) extends Shell {
-  val proc = new ReloadableProcessor(() => new BalaurProcessor(), true)
+  val proc = new ReloadableProcessor(() => BalaurProcessor(), true)
 
   override def work(text: String): Unit = {
     val doc = proc.get.mkDocument(text)

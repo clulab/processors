@@ -1,8 +1,11 @@
 package org.clulab.numeric
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.clulab.processors.Sentence
 import org.clulab.processors.clu.BalaurProcessor
+import org.clulab.processors.clu.BalaurProcessor.{getConfigArgString, mkLemmatizer, mkTokenizer, newNumericEntityRecognizerOpt, prefix}
 import org.clulab.processors.clu.tokenizer.Tokenizer
+import org.clulab.scala_transformers.encoder.TokenClassifier
 import org.clulab.struct.Interval
 import org.clulab.utils.{Test, Timer}
 import org.scalatest.concurrent.TimeLimits
@@ -41,7 +44,7 @@ class TestNumericEntityRecognition extends Test {
     val replacer: Regex.Match => String = m => s"${m.group(1)}$dash${m.group(2)}"
   }
 
-  class HabitusProcessor() extends BalaurProcessor {
+  class HabitusProcessor extends BalaurProcessor {
     lazy val habitusTokenizer: HabitusTokenizer = new HabitusTokenizer(super.tokenizer)
     override def tokenizer: Tokenizer = habitusTokenizer
   }

@@ -10,7 +10,7 @@ object ExtractSentencesApp extends App {
   val fileName = args.lift(1).getOrElse("sentences.txt")
 
   val files = FileUtils.findFiles(directoryName, ".txt")
-  val processor = new BalaurProcessor()
+  val processor = BalaurProcessor()
   var count = 0
 
   Using.resource(FileUtils.printWriterFromFile(fileName)) { printWriter =>

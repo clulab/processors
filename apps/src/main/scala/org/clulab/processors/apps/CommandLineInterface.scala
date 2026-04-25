@@ -26,7 +26,7 @@ object CommandLineInterface extends App {
     new ProcessorsShell().shell()
   } else {
     // process a file in batch mode
-    val proc = new BalaurProcessor()
+    val proc = BalaurProcessor()
 
     val doc: Document =
       if (props.containsKey(SENTS)) {

@@ -167,7 +167,7 @@ trait Processor {
 
 object Processor {
   def apply(): Processor = {
-    new BalaurProcessor()
+    BalaurProcessor()
   }
 
   def mkProcessor(): Processor = {

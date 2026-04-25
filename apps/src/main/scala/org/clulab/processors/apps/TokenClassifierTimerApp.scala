@@ -9,7 +9,7 @@ object TokenClassifierTimerApp extends App {
   val fileName = args.lift(0).getOrElse("../corpora/sentences/sentences.txt")
 
   val processor = {
-    val processor = new BalaurProcessor()
+    val processor = BalaurProcessor()
     processor.annotate("This is just to prime the pump.")
     processor
   }

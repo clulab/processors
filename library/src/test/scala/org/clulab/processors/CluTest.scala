@@ -29,7 +29,7 @@ class CluTest extends Test with BeforeAndAfterAll {
     )
     val lexiconNer = LexiconNER(kbs, Seq(false), useLemmasForMatching = false) // case sensitive match on this KB
 
-    new BalaurProcessor(lexiconNerOpt = Some(lexiconNer))
+    BalaurProcessor(lexiconNer)
   }
 
   def stop(): Unit = {

@@ -4,7 +4,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Test
 
 class TestNumericMentions extends Test {
-  val processor = new CluProcessor()
+  val processor = CluProcessor()
 
   behavior of "MeasurementMention"
 

@@ -4,7 +4,7 @@ import org.clulab.processors.clu.CluProcessor
 import org.clulab.utils.Test
 
 class TestHolidays extends Test {
-  val processor = new CluProcessor()
+  val processor = CluProcessor()
   val badBefore = ignore
   val badAfter = ignore
   val unstable = ignore

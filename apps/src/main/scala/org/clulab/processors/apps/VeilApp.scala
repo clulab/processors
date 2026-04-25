@@ -44,7 +44,7 @@ object VeilApp extends App {
     }
   }
 
-  val processor = new BalaurProcessor()
+  val processor = BalaurProcessor()
 
   veilText(processor)
   veilDocument(processor)
