@@ -4,7 +4,7 @@ import org.clulab.processors.clu.BalaurProcessor
 import org.clulab.utils.Test
 
 class TestNamedEntityRecognition extends Test {
-  val processor = new BalaurProcessor()
+  val processor = BalaurProcessor()
 
   behavior of "named entity recognition"
 

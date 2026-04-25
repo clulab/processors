@@ -7,7 +7,7 @@ import org.clulab.odin.debugger.visualizer.extractor.TextExtractorVisualizer
 import org.clulab.odin.debugger.visualizer.rule.TextRuleVisualizer
 import org.clulab.odin.impl.OdinConfig
 import org.clulab.odin.{ExtractorEngine, Mention, State}
-import org.clulab.processors.clu.CluProcessor
+import org.clulab.processors.clu.{BalaurProcessor, CluProcessor}
 import org.clulab.sequences.LexiconNER
 import org.clulab.utils.FileUtils
 
@@ -31,7 +31,7 @@ object DebuggingOdinStarterApp extends App {
 
     LexiconNER(kbs, caseInsensitiveMatchings, baseDirOpt)
   }
-  val processor = new CluProcessor(lexiconNerOpt = Some(customLexiconNer))
+  val processor = BalaurProcessor(customLexiconNer)
   val exampleGlobalAction = (inMentions: Seq[Mention], state: State) => {
     val outMentions = inMentions.map { mention =>
       if (mention.words.length % 2 == 0)

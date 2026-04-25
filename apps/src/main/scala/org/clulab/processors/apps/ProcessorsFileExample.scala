@@ -11,7 +11,7 @@ import org.clulab.processors.clu.BalaurProcessor
  * Date: 4/16/14
  */
 object ProcessorsFileExample {
-  val proc = new BalaurProcessor()
+  val proc = BalaurProcessor()
 
   def main(args:Array[String]): Unit = {
     val text = FileUtils.getTextFromFile(args(0))

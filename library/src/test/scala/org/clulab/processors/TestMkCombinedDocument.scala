@@ -25,7 +25,7 @@ class TestMkCombinedDocument extends Test {
   )
   val separator = "  "
   val documentSerializer = new DocumentSerializer()
-  val processor = new BalaurProcessor()
+  val processor = BalaurProcessor()
 
   def toString(document: Document): String = {
     StringUtils.viaPrintWriter { printWriter =>

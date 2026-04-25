@@ -14,7 +14,7 @@ class LexiconSentimentAnalyzer {
   import LexiconSentimentAnalyzer._
 
   val lexiconNer: LexiconNER = mkLexicon()
-  val proc: Processor = new BalaurProcessor()
+  val proc: Processor = BalaurProcessor()
 
   private def mkLexicon(): LexiconNER = {
     // Bing Liu's words are case insensitive, so we must have caseInsensitiveMatching = true

@@ -40,7 +40,7 @@ class InformationExtractor(config: Config, printStream: PrintStream) {
     val kbs = customLexiconNerConfigs.map(_.kb)
     val caseInsensitiveMatchings = customLexiconNerConfigs.map(_.caseInsensitiveMatching)
     val customLexiconNer = LexiconNER(kbs, caseInsensitiveMatchings, None)
-    val processor = new BalaurProcessor(lexiconNerOpt = Some(customLexiconNer))
+    val processor = BalaurProcessor(customLexiconNer)
 
     processor
   }

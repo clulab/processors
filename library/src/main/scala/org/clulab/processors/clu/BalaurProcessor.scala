@@ -40,13 +40,14 @@ class BalaurProcessor (
     useNumericEntityRecognizer: Boolean = true,
     seasonPathOpt: Option[String] = Some("/org/clulab/numeric/SEASON.tsv")
   ) = this(
-    config,
-    lexiconNerOpt,
-    if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
-    mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
-    mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
-    // TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
-    TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
+    config = config,
+    lexiconNerOpt = lexiconNerOpt,
+    numericEntityRecognizerOpt = if(useNumericEntityRecognizer) newNumericEntityRecognizerOpt(seasonPathOpt) else None,
+    None,
+    wordTokenizer = mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+    wordLemmatizer = mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+    // tokenClassifier = TokenClassifier.fromFiles(config.getString(s"$prefix.modelName"))
+    tokenClassifier = TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
   )
 
   def copy(
@@ -438,4 +439,30 @@ object BalaurProcessor {
 
   /** Converts hexa tags into dependencies */
   protected val hexaDecoder = new HexaDecoder()
+
+  def apply(): BalaurProcessor = {
+    val config = ConfigFactory.load("balaurprocessor")
+    new BalaurProcessor(
+      config,
+      None,
+      newNumericEntityRecognizerOpt(Some("/org/clulab/numeric/SEASON.tsv")),
+      None,
+      mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+      mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+      TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
+    )
+  }
+
+  def apply(lexiconNEROpt: LexiconNER): BalaurProcessor = {
+    val config = ConfigFactory.load("balaurprocessor")
+    new BalaurProcessor(
+      config,
+      Some(lexiconNEROpt),
+      newNumericEntityRecognizerOpt(Some("/org/clulab/numeric/SEASON.tsv")),
+      None,
+      mkTokenizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+      mkLemmatizer(getConfigArgString(config, s"$prefix.language", Some("EN"))),
+      TokenClassifier.fromResources(config.getString(s"$prefix.modelName"))
+    )
+  }
 }

@@ -24,7 +24,7 @@ class TestSeasonNormalizer extends Test {
   behavior of "Default seasonal BalaurProcessor"
 
   it should "find autumn but not rainy season" in {
-    val processor = new BalaurProcessor()
+    val processor = BalaurProcessor()
 
     val (autumnEntities, autumnNorms) = mkEntitiesAndNorms(processor, autumnText)
     autumnEntities should contain (bDateRange)

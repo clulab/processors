@@ -21,7 +21,7 @@ import java.io.PrintWriter
   * Last Modified: Fix compiler warning: remove redundant match case clause.
   */
 class ProcessorsShell extends Shell {
-  val balaur = new PromptedReloadableProcessor("(balaur)>>> ", () => new BalaurProcessor(), true)
+  val balaur = new PromptedReloadableProcessor("(balaur)>>> ", () => BalaurProcessor(), true)
 
   var proc = balaur // Note that the initial proc does not get initialized.
 

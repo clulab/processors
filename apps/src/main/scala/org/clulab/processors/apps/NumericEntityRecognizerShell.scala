@@ -7,7 +7,7 @@ import org.clulab.utils.ReloadableShell
 
 import java.io.File
 
-class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableProcessor(() => new BalaurProcessor(), true) {
+class ReloadableNumericProcessor(ruleDirOpt: Option[String]) extends ReloadableProcessor(() => BalaurProcessor(), true) {
 
   override def get: BalaurProcessor = {
     val processor = super.get.asInstanceOf[BalaurProcessor]
