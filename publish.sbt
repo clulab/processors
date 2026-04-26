@@ -47,11 +47,10 @@ ThisBuild / publishTo := {
     Some("Artifactory Realm" at location)
   }
   else {
-    val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
+      Some("central-snapshots" at "https://central.sonatype.com/repository/maven-snapshots/")
     else
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
+      localStaging.value
   }
 }
 ThisBuild / scmInfo := Some(
