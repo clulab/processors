@@ -4,12 +4,12 @@ import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.{BalaurProcessor, DocumentPrettyPrinter}
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
+import org.clulab.utils.{FileUtils, Parallelizer, StringUtils, Timer}
 
 import java.io.File
 import java.io.PrintWriter
 import scala.collection.compat._
-import scala.collection.parallel.ParSeq
+import scala.collection.parallel.ParIterable
 import scala.util.Using
 
 object InfiniteParallelProcessorsExample {
@@ -31,10 +31,9 @@ object InfiniteParallelProcessorsExample {
     val reuseProcessor = args.lift(4).map(_ == "true").getOrElse(false)
 
     val files = FileUtils.findFiles(inputDir, extension)
-    val parFiles = ThreadUtils.parallelize(files, threads)
     val documentSerializer = new DocumentSerializer
 
-    def processFiles(parFiles: ParSeq[File], processor: Processor): Unit = {
+    def processFiles(parFiles: ParIterable[File], processor: Processor): Unit = {
       parFiles.foreach { file =>
         println(s"Processing ${file.getName}...")
 
@@ -51,21 +50,24 @@ object InfiniteParallelProcessorsExample {
       }
     }
 
-    val processorProvider = new ProcessorProvider(reuseProcessor)
-    val untimed = processorProvider.newOrReusedProcessor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
+    Using.resource(new Parallelizer(files, threads)) { parallelizer =>
+      val parFiles = parallelizer.par
+      val processorProvider = new ProcessorProvider(reuseProcessor)
+      val untimed = processorProvider.newOrReusedProcessor.annotate("I am happy to join with you today in what will go down in history as the greatest demonstration for freedom in the history of our nation.")
 
-    val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
-    timer.start()
+      val timer = new Timer(s"$threads threads processing ${parFiles.size} files")
+      timer.start()
 
-    var done = false
+      var done = false
 
-    // In the debugger you can change done to true in order to stop looping and check memory.
-    while (!done) {
-      processFiles(parFiles, processorProvider.newOrReusedProcessor)
+      // In the debugger you can change done to true in order to stop looping and check memory.
+      while (!done) {
+        processFiles(parFiles, processorProvider.newOrReusedProcessor)
+      }
+
+      timer.stop()
+      println(timer.toString)
     }
-
-    timer.stop()
-    println(timer.toString)
   }
 
   def run(args: Array[String]): Unit = {

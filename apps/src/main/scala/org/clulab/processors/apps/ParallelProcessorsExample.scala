@@ -4,7 +4,7 @@ import org.clulab.processors.Document
 import org.clulab.processors.Processor
 import org.clulab.processors.clu.{BalaurProcessor, DocumentPrettyPrinter}
 import org.clulab.serialization.DocumentSerializer
-import org.clulab.utils.{FileUtils, StringUtils, ThreadUtils, Timer}
+import org.clulab.utils.{FileUtils, Parallelizer, StringUtils, Timer}
 
 import java.io.File
 import java.io.PrintWriter
@@ -21,7 +21,6 @@ object ParallelProcessorsExample {
 
     val files = FileUtils.findFiles(inputDir, extension)
     val serFiles = files.sortBy(-_.length)
-    val parFiles = ThreadUtils.parallelize(serFiles, threads)
     val documentSerializer = new DocumentSerializer
 
     val startupTimer = new Timer("This is how long it takes to start up")
@@ -33,12 +32,12 @@ object ParallelProcessorsExample {
     println(startupTimer.toString)
 
     val label =
-      if (parallel) s"$threads threads processing ${parFiles.size} files in parallel"
-      else s"1 threads processing ${parFiles.size} files in serial"
+      if (parallel) s"$threads threads processing ${serFiles.size} files in parallel"
+      else s"1 threads processing ${serFiles.size} files in serial"
     val timer = new Timer(label)
     timer.start()
 
-    (if (parallel) parFiles else serFiles).iterator.foreach { file =>
+    def processFile(file: File): Unit = {
       println(s"Processing ${file.getName}...")
 
       val text = FileUtils.getTextFromFile(file)
@@ -60,6 +59,13 @@ object ParallelProcessorsExample {
 
       callback(outputFile, outputDocument)
     }
+
+    if (parallel) {
+      Using.resource(new Parallelizer(serFiles, threads)) { parallelizer =>
+        parallelizer.par.foreach(processFile)
+      }
+    }
+    else serFiles.foreach(processFile)
 
     timer.stop()
     println(timer.toString)

@@ -3,16 +3,14 @@ package org.clulab.learning
 import java.io.{Serializable, Writer}
 import org.clulab.scala.WrappedArrayBuffer._
 import org.clulab.struct.{Counter, Lexicon}
-import org.clulab.utils.MathUtils
-import org.clulab.utils.ThreadUtils
+import org.clulab.utils.{MathUtils, Parallelizer}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import RFClassifier._
-import org.clulab.utils.ThreadUtils
 
-import scala.util.Random
+import scala.util.{Random, Using}
 
 /**
   * An in-house implementation of random forests
@@ -87,13 +85,14 @@ class RFClassifier[L, F](numTrees:Int = 100,
     logger.debug("Beginning tree building...")
     numThreads match {
       case 0 => // use as many threads as possible
-        val parBags = ThreadUtils.parallelize(bags.toSet)
+        val parBags = Parallelizer.parallelize(bags.toSet)
         trees = Some(parBags.map(buildTreeMain).toArray)
       case 1 => // sequential run in the same thread
         trees = Some(bags.map(buildTreeMain).toArray)
       case _ => // use a specific number of threads
-        val parBags = ThreadUtils.parallelize(bags.toSet, numThreads)
-        trees = Some(parBags.map(buildTreeMain).toArray)
+        trees = Some(Using.resource(new Parallelizer(bags.toSet, numThreads)) { parallelizer =>
+          parallelizer.par.map(buildTreeMain).toArray
+        })
     }
 
     if(verbose) {

@@ -3,9 +3,10 @@ package org.clulab.learning
 import java.io.{Reader, Writer}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import org.clulab.struct.Counter
-import org.clulab.utils.ThreadUtils
+import org.clulab.utils.Parallelizer
 
 import scala.collection.mutable
+import scala.util.Using
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
@@ -171,11 +172,13 @@ object Datasets {
     while(meatLeftOnTheBone) {
       var bestGroup:String = null
       var bestFeatures:Set[Int] = null
-      val workingGroups = ThreadUtils.parallelize(featureGroups.keySet.filter(! chosenGroups.contains(_)), nCores)
-
       // this is parallelized!
-      val scores = workingGroups.map(scoreGroup(_,
-        featureGroups, chosenFeatures, dataset, classifierFactory, numFolds, scoringMetric)).toList
+      val scores = Using.resource(
+        new Parallelizer(featureGroups.keySet.filter(! chosenGroups.contains(_)), nCores)
+      ) { parallelizer =>
+        parallelizer.par.map(scoreGroup(_,
+          featureGroups, chosenFeatures, dataset, classifierFactory, numFolds, scoringMetric)).toList
+      }
 
       for (gs <- scores) {
         val group: String = gs._1
@@ -484,5 +487,4 @@ object ScaleRange {
     sc
   }
 }
-
 
