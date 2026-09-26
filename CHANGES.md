@@ -1,3 +1,4 @@
++ **10.0.3** - Close the ForkJoinPool after parallel operations, update to scala-transformers-encoder version 0.7.3, use Java 8 for compilation.
 + **10.0.2** - Improved customization of BalaurProcessor. It now supports custom models for NN NER, which is useful for reach-lite.
 + **10.0.1** - Added CommandLineInterface for batch parsing jobs. Updated processors-model to 0.3.2.
 + **10.0.0** - MAJOR reorganization. New syntactic parser in BalaurProcessor using the algorithm of Amini et al. (2023). Removed CoreNLP and GloVe. Everything is Apache now.
