@@ -20,8 +20,6 @@ import org.clulab.utils.WrappedArraySeq
 import org.slf4j.{Logger, LoggerFactory}
 import BalaurProcessor._
 
-import scala.collection.mutable.ArrayBuffer
-
 class BalaurProcessor (
   val config: Config,
   val lexiconNerOpt: Option[LexiconNER],
@@ -385,9 +383,8 @@ class BalaurProcessor (
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(words, lemmas, tags, depGraph)
 
       // keep track of the top term/nonterm hexatags as well
-      val other = new ArrayBuffer[String]()
-      for(i <- termTags.indices) {
-        other += s"${termTags(i).head._1}|${nonTermTags(i).head._1}"
+      val other = Seq.tabulate(termTags.length) { index =>
+        s"${termTags(index).head._1}|${nonTermTags(index).head._1}"
       }
 
       (
@@ -398,7 +395,7 @@ class BalaurProcessor (
           // however, this processor produces only syntactic dependencies
           GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
         ),
-        Some(other.toSeq)
+        Some(other)
       )
     }
     else
