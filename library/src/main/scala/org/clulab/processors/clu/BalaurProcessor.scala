@@ -148,6 +148,12 @@ class BalaurProcessor (
     TASK_TO_INDEX(taskName)
   }
 
+  private def mkO(len: Int): Seq[String] = {
+    val os = new ArrayBuffer[String]()
+    for(i <- 0 until len) os += "O"
+    os
+  }
+
   /**
    * Converts the MTL predictions into Sentence fields, in a new sentence
    * Inherit BalaurProcessor and override this method if you use a non-standard MTL model
@@ -155,28 +161,26 @@ class BalaurProcessor (
   def assignSentenceAnnotations(sentence: Sentence,
                                 lemmas: Seq[String],
                                 allLabelsAndScores: Array[Array[Array[(String, Float)]]],
-                                nerLabelsAndScores: Option[Array[Array[Array[(String, Float)]]]],
-                                nerTaskIndex: Int = taskIndex(NER_TASK),
-                                posTaskIndex: Int = taskIndex(POS_TASK),
-                                chunkingTaskIndex: Int = taskIndex(CHUNKING_TASK),
                                 hexaTermTaskIndex: Int = taskIndex(HEXA_TERM_TASK),
                                 hexaNonTermTaskIndex: Int = taskIndex(HEXA_NONTERM_TASK)): Sentence = {
     val words = sentence.words
-    val tags = mkPosTags(words, allLabelsAndScores(posTaskIndex))
-    val entities = {
-      // these come from the (optional) lexicon NER
-      val optionalEntities = mkNerLabelsOpt(words, sentence.startOffsets, sentence.endOffsets, tags, lemmas)
+    val tags = mkO(sentence.size)
+    val entities = mkO(sentence.size)
+    val chunks = mkO(sentence.size)
 
-      // these come from the neural NER
-      if(nerLabelsAndScores.isEmpty) {
-        mkNamedEntityLabels(words, allLabelsAndScores(nerTaskIndex), optionalEntities)
-      } else {
-        mkNamedEntityLabels(words, nerLabelsAndScores.get(0), optionalEntities)
-      }
+    /*
+    println("TERMS:")
+    for(i <- allLabelsAndScores(hexaTermTaskIndex).indices) {
+      println(allLabelsAndScores(hexaTermTaskIndex)(i).mkString(", "))
     }
-    val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
+    println("NON-TERMS:")
+    for(i <- allLabelsAndScores(hexaNonTermTaskIndex).indices) {
+      println(allLabelsAndScores(hexaNonTermTaskIndex)(i).mkString(", "))
+    }
+    */
+
     val (graphs, other) = mkDependencyLabelsUsingHexaTags(
-      words, lemmas, tags,
+      words, lemmas,
       allLabelsAndScores(hexaTermTaskIndex),
       allLabelsAndScores(hexaNonTermTaskIndex)
     )
@@ -211,11 +215,9 @@ class BalaurProcessor (
       val lemmas = lemmatize(words)
 
       try {
+        // println("WORDS: " + words.mkString(", "))
         val allLabelsAndScores = forward(words)
-        val nerLabelsAndScores = preferredNERModelOpt.map { preferredNERModel =>
-          forward(words, preferredNERModel)
-        }
-        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores, nerLabelsAndScores)
+        assignSentenceAnnotations(sentence, lemmas, allLabelsAndScores)
       }
       // TODO: Improve error handling.
       catch {
@@ -231,18 +233,7 @@ class BalaurProcessor (
     }
 
     val partlyAnnotatedDocument = doc.copy(sentences = partlyAnnotatedSentences)
-    val fullyAnnotatedDocument = numericEntityRecognizerOpt.map { numericEntityRecognizer =>
-      val numericMentions = numericEntityRecognizer.extractFrom(partlyAnnotatedDocument)
-      val (newLabels, newNorms) = NumericUtils.mkLabelsAndNorms(partlyAnnotatedDocument, numericMentions)
-      val fullyAnnotatedSentences = partlyAnnotatedDocument.sentences.indices.map { index =>
-        partlyAnnotatedDocument.sentences(index).copy(
-          entities = Some(newLabels(index)),
-          norms = Some(newNorms(index))
-        )
-      }
-
-      partlyAnnotatedDocument.copy(sentences = fullyAnnotatedSentences)
-    }.getOrElse(partlyAnnotatedDocument)
+    val fullyAnnotatedDocument = partlyAnnotatedDocument
 
     // custom annotation corrections
     // applied right at the end
@@ -363,7 +354,7 @@ class BalaurProcessor (
   }
 
   protected def mkDependencyLabelsUsingHexaTags(
-    words: Seq[String], lemmas: Seq[String], tags: Seq[String],
+    words: Seq[String], lemmas: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
   ): (GraphMap.Type, Option[Seq[String]]) = {
@@ -381,8 +372,6 @@ class BalaurProcessor (
     if (deps.nonEmpty && roots.nonEmpty) {
       // basic dependencies that replicate treebank annotations
       val depGraph = new DirectedGraph[String](deps.get, Some(size), roots)
-      // enhanced dependencies as defined by Manning
-      val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(words, lemmas, tags, depGraph)
 
       // keep track of the top term/nonterm hexatags as well
       val other = new ArrayBuffer[String]()
@@ -393,16 +382,21 @@ class BalaurProcessor (
       (
         Map(
           GraphMap.UNIVERSAL_BASIC -> depGraph,
-          GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph,
-          // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
-          // however, this processor produces only syntactic dependencies
-          GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+          GraphMap.UNIVERSAL_ENHANCED -> depGraph,
+          GraphMap.HYBRID_DEPENDENCIES -> depGraph
         ),
         Some(other.toSeq)
       )
     }
-    else
-      (GraphMap.empty, None)
+    else {
+      // keep track of the top term/nonterm hexatags as well
+      val other = new ArrayBuffer[String]()
+      for(i <- termTags.indices) {
+        other += s"${termTags(i).head._1}|${nonTermTags(i).head._1}"
+      }
+
+      (GraphMap.empty, Some(other.toSeq))
+    }
   }
 }
 
@@ -413,16 +407,10 @@ object BalaurProcessor {
   //
   // task names supported by the MTL tasks
   //
-  val NER_TASK = "NER"
-  val POS_TASK = "POS"
-  val CHUNKING_TASK = "Chunking"
   val HEXA_TERM_TASK = "Hexa Term"
   val HEXA_NONTERM_TASK = "Hexa NonTerm"
 
   val TASK_TO_INDEX: Map[String, Int] = Seq(
-    NER_TASK,
-    POS_TASK,
-    CHUNKING_TASK,
     HEXA_TERM_TASK,
     HEXA_NONTERM_TASK
   ).zipWithIndex.toMap
