@@ -38,7 +38,9 @@ class Sentence(
   /** DAG of syntactic and semantic dependencies; word offsets start at 0 */
   val graphs: GraphMap.Type = GraphMap.empty,
   /** Relation triples from OpenIE */
-  val relations:Option[Seq[RelationTriple]] = None
+  val relations:Option[Seq[RelationTriple]] = None,
+  /** Other debugging information, e.g., the hexa tags produced by the parser */
+  val other: Option[Seq[String]] = None
 ) extends Serializable {
 
   def size:Int = raw.length
@@ -157,10 +159,11 @@ class Sentence(
       entities.map(_.reverse),
       norms.map(_.reverse),
       chunks.map(_.reverse),
-      // TODO: revert syntacticTree and graphs!
+      // TODO: revert syntacticTree, graphs, relations, and other!
       syntacticTree,
       graphs,
-      relations
+      relations,
+      other
     )
 
     reversedSentence
@@ -179,11 +182,13 @@ class Sentence(
     chunks: Option[Seq[String]] = chunks,
     syntacticTree: Option[Tree] = syntacticTree,
     graphs: GraphMap.Type = graphs,
-    relations: Option[Seq[RelationTriple]] = relations
+    relations: Option[Seq[RelationTriple]] = relations,
+    other: Option[Seq[String]] = other
   ): Sentence =
     new Sentence(
       raw, startOffsets, endOffsets, words,
-      tags, lemmas, entities, norms, chunks, syntacticTree, graphs, relations
+      tags, lemmas, entities, norms, chunks, syntacticTree, graphs,
+      relations, other
     )
 
   def offset(offset: Int): Sentence = {
@@ -224,11 +229,13 @@ object Sentence {
     chunks: Option[Seq[String]] = None,
     tree: Option[Tree] = None,
     deps: GraphMap.Type = GraphMap.empty,
-    relations: Option[Seq[RelationTriple]] = None
+    relations: Option[Seq[RelationTriple]] = None,
+    other: Option[Seq[String]] = None
   ): Sentence = {
     new Sentence(
       raw, startOffsets, endOffsets, words,
-      tags, lemmas, entities, norms, chunks, tree, deps, relations
+      tags, lemmas, entities, norms, chunks, tree, deps,
+      relations, other
     )
   }
 }

@@ -1,3 +1,4 @@
++ **10.0.4** - We now output the hexa tags as extra columns in the CoNLL-U output format.
 + **10.0.3** - Close the ForkJoinPool after parallel operations, update to scala-transformers-encoder version 0.7.3, use Java 8 for compilation.
 + **10.0.2** - Improved customization of BalaurProcessor. It now supports custom models for NN NER, which is useful for reach-lite.
 + **10.0.1** - Added CommandLineInterface for batch parsing jobs. Updated processors-model to 0.3.2.

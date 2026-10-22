@@ -18,8 +18,9 @@ import org.clulab.struct.GraphMap
 import org.clulab.utils.{Configured, MathUtils, ToEnhancedDependencies}
 import org.clulab.utils.WrappedArraySeq
 import org.slf4j.{Logger, LoggerFactory}
-
 import BalaurProcessor._
+
+import scala.collection.mutable.ArrayBuffer
 
 class BalaurProcessor (
   val config: Config,
@@ -174,7 +175,7 @@ class BalaurProcessor (
       }
     }
     val chunks = mkChunkLabels(words, allLabelsAndScores(chunkingTaskIndex))
-    val graphs = mkDependencyLabelsUsingHexaTags(
+    val (graphs, other) = mkDependencyLabelsUsingHexaTags(
       words, lemmas, tags,
       allLabelsAndScores(hexaTermTaskIndex),
       allLabelsAndScores(hexaNonTermTaskIndex)
@@ -182,7 +183,7 @@ class BalaurProcessor (
 
     // Entities and norms need to still be patched and filled in, so this is only a partly annotated sentence.
     val partlyAnnotatedSentence = sentence.copy(
-      tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs
+      tags = Some(tags), lemmas = Some(lemmas), entities = Some(entities), chunks = Some(chunks), graphs = graphs, other = other
     )
 
     partlyAnnotatedSentence
@@ -365,7 +366,7 @@ class BalaurProcessor (
     words: Seq[String], lemmas: Seq[String], tags: Seq[String],
     termTags: Array[Array[PredictionScore]],
     nonTermTags: Array[Array[PredictionScore]]
-  ): GraphMap.Type = {
+  ): (GraphMap.Type, Option[Seq[String]]) = {
     val verbose = false
     val size = words.length
     // bht is used just for debugging purposes here
@@ -383,16 +384,25 @@ class BalaurProcessor (
       // enhanced dependencies as defined by Manning
       val enhancedDepGraph = ToEnhancedDependencies.generateUniversalEnhancedDependencies(words, lemmas, tags, depGraph)
 
-      Map(
-        GraphMap.UNIVERSAL_BASIC -> depGraph,
-        GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph,
-        // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
-        // however, this processor produces only syntactic dependencies
-        GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+      // keep track of the top term/nonterm hexatags as well
+      val other = new ArrayBuffer[String]()
+      for(i <- termTags.indices) {
+        other += s"${termTags(i).head._1}|${nonTermTags(i).head._1}"
+      }
+
+      (
+        Map(
+          GraphMap.UNIVERSAL_BASIC -> depGraph,
+          GraphMap.UNIVERSAL_ENHANCED -> enhancedDepGraph,
+          // ideally, hybrid dependencies should contain both syntactic dependencies and semantic roles
+          // however, this processor produces only syntactic dependencies
+          GraphMap.HYBRID_DEPENDENCIES -> enhancedDepGraph
+        ),
+        Some(other.toSeq)
       )
     }
     else
-      GraphMap.empty
+      (GraphMap.empty, None)
   }
 }
 
